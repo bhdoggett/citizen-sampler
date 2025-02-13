@@ -84,9 +84,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         onTouchStart={handlePressPad}
         onMouseUp={handleReleasePad}
         onTouchEnd={handleReleasePad}
-        className="bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-14 h-14"
+        className="bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-14 h-14 active:bg-slate-500"
       >
-        {sample.duration}
+        {sample.label}
       </button>
     </div>
   );

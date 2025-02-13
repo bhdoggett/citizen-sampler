@@ -5,6 +5,8 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { SampleType } from "./types/SampleType";
 import { useAudioContext } from "./contexts/AudioContext";
+import Link from "next/link";
+import GenreBar from "./components/GenreBar";
 
 export default function Home() {
   const { audioContext, fetchSamples, njbSamples } = useAudioContext();
@@ -12,7 +14,14 @@ export default function Home() {
   return (
     <div className="flex flex-col justify-center items-center my-5 block">
       <h1 className="text-xl font-bold block">Drum the National Jukebox</h1>
+      <GenreBar />
       {njbSamples && <DrumMachine samples={njbSamples} />}
+      <Link
+        className="text-sm text-blue-700"
+        href="https://www.loc.gov/collections/national-jukebox/about-this-collection/"
+      >
+        Learn About the National JukeBox
+      </Link>
     </div>
   );
 }

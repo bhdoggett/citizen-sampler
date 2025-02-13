@@ -7,17 +7,28 @@ const AudioContextContext = createContext(null);
 
 export const AudioProvider = ({ children }) => {
   const [audioContext, setAudioContext] = useState(null);
-  const [query, setQuery] = useState<string>("jazz");
+  const [query, setQuery] = useState<string>("popular+music");
   const [njbSamples, setNjbSamples] = useState(null);
 
-  const baseUrl: string = `https://www.loc.gov/audio/?q=${query}&fa=partof:national+jukebox&fo=json`;
+  const url: string = `https://www.loc.gov/audio/?q=${query}&fa=partof:national+jukebox&fo=json`;
 
   useEffect(() => {
-    const context = new (window.AudioContext || window.webkitAudioContext)();
-    setAudioContext(context);
+    let context: AudioContext | null = null;
+
+    const initializeAudioContext = () => {
+      if (audioContext) {
+        console.log("Closing previous AudioContext...");
+        audioContext.close(); // Close previous context
+      }
+
+      context = new (window.AudioContext || window.webkitAudioContext)();
+      setAudioContext(context);
+    };
+
+    initializeAudioContext();
 
     const fetchSamples = async () => {
-      const response = await axios.get(baseUrl);
+      const response = await axios.get(url);
       const results = response.data.content.results;
 
       console.log("results:", results);
@@ -45,12 +56,14 @@ export const AudioProvider = ({ children }) => {
     fetchSamples();
 
     return () => context.close();
-  }, [baseUrl]);
+  }, [query]);
 
   // useEffect(() => fetchSamples(), []);
 
   return (
-    <AudioContextContext.Provider value={{ audioContext, njbSamples }}>
+    <AudioContextContext.Provider
+      value={{ audioContext, njbSamples, setQuery }}
+    >
       {children}
     </AudioContextContext.Provider>
   );
