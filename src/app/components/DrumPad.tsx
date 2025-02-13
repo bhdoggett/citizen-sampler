@@ -24,8 +24,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         setBuffer(audioBuffer);
 
         // Set random start time for the sample
-        const randomStart = Math.random() * (audioBuffer.duration - 1);
-        setSampleStart(randomStart);
+        const randomStart = Math.random() * audioBuffer.duration - 1;
+
+        if (sample.type === "nbjSample") {
+          setSampleStart(randomStart);
+        } else {
+          setSampleStart(0);
+        }
       } catch (error) {
         console.error("Error loading audio sample:", error);
       }

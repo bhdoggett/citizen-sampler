@@ -8,7 +8,7 @@ const AudioContextContext = createContext(null);
 export const AudioProvider = ({ children }) => {
   const [audioContext, setAudioContext] = useState(null);
   const [query, setQuery] = useState<string>("jazz");
-  const [samples, setSamples] = useState(null);
+  const [njbSamples, setNjbSamples] = useState(null);
 
   const baseUrl: string = `https://www.loc.gov/audio/?q=${query}&fa=partof:national+jukebox&fo=json`;
 
@@ -23,7 +23,7 @@ export const AudioProvider = ({ children }) => {
       console.log("results:", results);
 
       const fetchedSamples = results.slice(0, 16).map((result) => {
-        const sample: SampleType = { title: result.title };
+        const sample: SampleType = { title: result.title, type: "nbjSample" };
 
         if (result.resources?.[0]?.media)
           sample.audioUrl = result.resources[0].media;
@@ -39,7 +39,7 @@ export const AudioProvider = ({ children }) => {
         return sample;
       });
 
-      setSamples(fetchedSamples);
+      setNjbSamples(fetchedSamples);
     };
 
     fetchSamples();
@@ -50,7 +50,7 @@ export const AudioProvider = ({ children }) => {
   // useEffect(() => fetchSamples(), []);
 
   return (
-    <AudioContextContext.Provider value={{ audioContext, samples }}>
+    <AudioContextContext.Provider value={{ audioContext, njbSamples }}>
       {children}
     </AudioContextContext.Provider>
   );

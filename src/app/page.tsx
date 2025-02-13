@@ -7,42 +7,12 @@ import { SampleType } from "./types/SampleType";
 import { useAudioContext } from "./contexts/AudioContext";
 
 export default function Home() {
-  const { audioContext, fetchSamples, samples } = useAudioContext();
+  const { audioContext, fetchSamples, njbSamples } = useAudioContext();
 
   return (
-    <div className="flex justify-center items-center my-5">
-      {samples && <DrumMachine samples={samples} />}
+    <div className="flex flex-col justify-center items-center my-5 block">
+      <h1 className="text-xl font-bold block">Drum the National Jukebox</h1>
+      {njbSamples && <DrumMachine samples={njbSamples} />}
     </div>
   );
 }
-
-// useEffect(() => {
-//   const fetchSamples = async () => {
-//     const response = await axios.get(baseUrl);
-//     const results = response.data.content.results;
-
-//     console.log("results:", results);
-
-//     const fetchedSamples = results.map((result, index) => {
-//       if (index < 8) {
-//         const sample: SampleType = { title: result.title };
-
-//         if (result.resources?.[0]?.media)
-//           sample.audioUrl = result.resources[0].media;
-//         if (result.image_url) sample.imageUrl = result.image_url;
-//         if (result.contributor) sample.contributor = result.contributor;
-//         if (result.contributor_composer)
-//           sample.composer = result.contributor_composer;
-//         if (result.contributor_musical_group)
-//           sample.group = result.contributor_musical_group;
-//         if (result.contributor_primary)
-//           sample.primary = result.contributor_primary;
-
-//         return sample;
-//       }
-//     });
-
-//     setSamples(fetchedSamples);
-//   };
-//   fetchSamples();
-// }, []);

@@ -1,16 +1,52 @@
 "use client";
 import { useAudioContext } from "../contexts/AudioContext";
 import DrumPad from "./DrumPad";
+import { SampleType } from "../types/SampleType";
 
 const DrumMachine = () => {
-  const { samples } = useAudioContext();
+  const { njbSamples } = useAudioContext();
+  console.log("njbSamples:", njbSamples);
 
-  console.log("samples:", samples);
+  const kick: SampleType = {
+    title: "Kick_Cobalt_2",
+    type: "drumKit",
+    audioUrl: "/samples/drums/kicks/Kick_Cobalt_2.wav",
+  };
+
+  const snare: SampleType = {
+    title: "Snare_Astral_1",
+    type: "drumKit",
+    audioUrl: "/samples/drums/snares/Snare_Astral_1.wav",
+  };
+
+  const hat: SampleType = {
+    title: "ClosedHH_Alessya_DS",
+    type: "drumKit",
+    audioUrl: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
+  };
+
+  const perc: SampleType = {
+    title: "Perc_Spicy_7",
+    type: "drumKit",
+    audioUrl: "/samples/drums/perc/Perc_Spicy_7.wav",
+  };
+
+  const kitSamples = [kick, snare, hat, perc];
+
   return (
-    <div className="grid grid-cols-4 gap-4">
-      {samples.map((sample, index) => (
-        <DrumPad sample={sample} key={index} />
-      ))}
+    <div>
+      <div className="grid grid-cols-4 gap-4 my-3">
+        {njbSamples.map((sample, index) => (
+          <DrumPad sample={sample} key={index} />
+        ))}
+      </div>
+      <hr />
+      <div className="grid grid-cols-4 gap-4 my-3">
+        {" "}
+        {kitSamples.map((sample, index) => (
+          <DrumPad sample={sample} key={index} />
+        ))}
+      </div>
     </div>
   );
 };

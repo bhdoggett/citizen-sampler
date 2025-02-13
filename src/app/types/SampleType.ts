@@ -1,5 +1,6 @@
 export type SampleType = {
   title: string;
+  type: string;
   audioUrl?: string;
   imageUrl?: string;
   contributor?: string;
