@@ -16,41 +16,41 @@ export const AudioProvider = ({ children }) => {
     const context = new (window.AudioContext || window.webkitAudioContext)();
     setAudioContext(context);
 
+    const fetchSamples = async () => {
+      const response = await axios.get(baseUrl);
+      const results = response.data.content.results;
+
+      console.log("results:", results);
+
+      const fetchedSamples = results.slice(0, 16).map((result) => {
+        const sample: SampleType = { title: result.title };
+
+        if (result.resources?.[0]?.media)
+          sample.audioUrl = result.resources[0].media;
+        if (result.image_url) sample.imageUrl = result.image_url;
+        if (result.contributor) sample.contributor = result.contributor;
+        if (result.contributor_composer)
+          sample.composer = result.contributor_composer;
+        if (result.contributor_musical_group)
+          sample.group = result.contributor_musical_group;
+        if (result.contributor_primary)
+          sample.primary = result.contributor_primary;
+
+        return sample;
+      });
+
+      setSamples(fetchedSamples);
+    };
+
+    fetchSamples();
+
     return () => context.close();
-  }, []);
+  }, [baseUrl]);
 
-  const fetchSamples = async () => {
-    const response = await axios.get(baseUrl);
-    const results = response.data.content.results;
-
-    console.log("results:", results);
-
-    const fetchedSamples = results.slice(0, 16).map((result) => {
-      const sample: SampleType = { title: result.title };
-
-      if (result.resources?.[0]?.media)
-        sample.audioUrl = result.resources[0].media;
-      if (result.image_url) sample.imageUrl = result.image_url;
-      if (result.contributor) sample.contributor = result.contributor;
-      if (result.contributor_composer)
-        sample.composer = result.contributor_composer;
-      if (result.contributor_musical_group)
-        sample.group = result.contributor_musical_group;
-      if (result.contributor_primary)
-        sample.primary = result.contributor_primary;
-
-      return sample;
-    });
-
-    setSamples(fetchedSamples);
-  };
-
-  useEffect(() => fetchSamples(), []);
+  // useEffect(() => fetchSamples(), []);
 
   return (
-    <AudioContextContext.Provider
-      value={{ audioContext, fetchSamples, samples }}
-    >
+    <AudioContextContext.Provider value={{ audioContext, samples }}>
       {children}
     </AudioContextContext.Provider>
   );

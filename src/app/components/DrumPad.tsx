@@ -1,48 +1,75 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { SampleType } from "../types/SampleType";
+import { useAudioContext } from "../contexts/AudioContext";
 
 type DrumPadProps = {
   sample: SampleType;
 };
 
 const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
-  const [audio, setAudio] = useState<HTMLAudioElement>(null);
+  const { audioContext } = useAudioContext(); // Get the shared AudioContext
   const [sampleStart, setSampleStart] = useState<number>(0);
+  const [buffer, setBuffer] = useState<AudioBuffer | null>(null);
+  const sourceRef = useRef<AudioBufferSourceNode | null>(null); // Store latest source
+  const gainNodeRef = useRef<GainNode | null>(null);
 
   useEffect(() => {
-    const newAudio = new Audio(sample.audioUrl);
+    // Fetch the sample audio buffer
+    const loadAudio = async () => {
+      try {
+        const response = await fetch(sample.audioUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        setBuffer(audioBuffer);
 
-    const handleMetadata = () => {
-      if (newAudio.duration && newAudio.duration > 1) {
-        const randomStart = Math.random() * (newAudio.duration - 1);
+        // Set random start time for the sample
+        const randomStart = Math.random() * (audioBuffer.duration - 1);
         setSampleStart(randomStart);
-        console.log("random start is at second:", randomStart);
+      } catch (error) {
+        console.error("Error loading audio sample:", error);
       }
     };
 
-    newAudio.preload = "auto";
-    newAudio.addEventListener("loadedmetadata", handleMetadata);
+    loadAudio();
+  }, [audioContext, sample.audioUrl]);
 
-    setAudio(newAudio);
-
-    return () => {
-      newAudio.removeEventListener("loadedmetadata", handleMetadata);
-    };
-  }, [sample.audioUrl]);
+  useEffect(() => {
+    if (audioContext && !gainNodeRef.current) {
+      const gainNode = audioContext.createGain();
+      gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+      gainNode.connect(audioContext.destination);
+      gainNodeRef.current = gainNode;
+    }
+  }, []);
 
   const handlePressPad = () => {
-    if (!audio || isNaN(audio.duration)) {
-      console.error("Audio not loaded yet or has invalid duration.");
+    if (audioContext.state === "suspended") {
+      audioContext.resume();
+      console.log("AudioContext resumed");
+    }
+
+    if (!buffer || !gainNodeRef.current) {
+      console.error("Audio buffer or gain node not initialized.");
       return;
     }
-    audio.currentTime = sampleStart;
-    audio.play();
+
+    // Create a new AudioBufferSourceNode each time
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(gainNodeRef.current);
+    source.start(0, sampleStart); // Play from random start time
+
+    // Save reference so we can stop it
+    sourceRef.current = source;
   };
 
   const handleReleasePad = () => {
-    audio.pause();
-    audio.currentTime = sampleStart;
+    if (sourceRef.current) {
+      sourceRef.current.stop();
+      sourceRef.current.disconnect(); // Prevent memory leaks
+      sourceRef.current = null; // Clear ref
+    }
   };
 
   return (
