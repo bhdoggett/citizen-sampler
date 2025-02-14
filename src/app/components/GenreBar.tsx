@@ -12,7 +12,7 @@ const GenreBar = () => {
   return (
     <div className="my-3">
       <button
-        className="border border-slate-600 bg-slate-300 rounded-sm mx-1 w-20"
+        className="border border-slate-600 bg-slate-300 rounded-sm mx-1 w-20 focus:bg-black focus:text-white focus:font-bold"
         onClick={() => handleClick("jazz")}
       >
         Jazz
@@ -31,9 +31,9 @@ const GenreBar = () => {
       </button>
       <button
         className="border border-slate-600 bg-slate-300 rounded-sm mx-1 w-20"
-        onClick={() => handleClick("country")}
+        onClick={() => handleClick("popular+music")}
       >
-        Country
+        Popular
       </button>
     </div>
   );

@@ -1,79 +1,35 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { SampleType } from "../types/SampleType";
 import { useAudioContext } from "../contexts/AudioContext";
+import * as Tone from "tone";
 
 type DrumPadProps = {
   sample: SampleType;
 };
 
 const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
-  const { audioContext } = useAudioContext(); // Get the shared AudioContext
-  const [sampleStart, setSampleStart] = useState<number>(0);
-  const [buffer, setBuffer] = useState<AudioBuffer | null>(null);
-  const sourceRef = useRef<AudioBufferSourceNode | null>(null); // Store latest source
-  const gainNodeRef = useRef<GainNode | null>(null);
+  const { playSample, masterGain } = useAudioContext();
+  const [gainNode, _] = useState(() => new Tone.Gain(1).connect(masterGain)); // Create and connect Gain
+  const [player, setPlayer] = useState<Tone.Player | null>(null);
 
   useEffect(() => {
-    // Fetch the sample audio buffer
-    const loadAudio = async () => {
-      try {
-        const response = await fetch(sample.audioUrl);
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        setBuffer(audioBuffer);
-
-        // Set random start time for the sample
-        const randomStart = Math.random() * audioBuffer.duration - 1;
-
-        if (sample.type === "nbjSample") {
-          setSampleStart(randomStart);
-        } else {
-          setSampleStart(0);
-        }
-      } catch (error) {
-        console.error("Error loading audio sample:", error);
-      }
+    return () => {
+      gainNode.disconnect(); // Cleanup gain node when component unmounts
     };
-
-    loadAudio();
-  }, [audioContext, sample.audioUrl]);
-
-  useEffect(() => {
-    if (audioContext && !gainNodeRef.current) {
-      const gainNode = audioContext.createGain();
-      gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-      gainNode.connect(audioContext.destination);
-      gainNodeRef.current = gainNode;
-    }
   }, []);
 
-  const handlePressPad = () => {
-    if (audioContext.state === "suspended") {
-      audioContext.resume();
-      console.log("AudioContext resumed");
-    }
+  const handlePressPad = async () => {
+    if (!sample.audioUrl) return;
 
-    if (!buffer || !gainNodeRef.current) {
-      console.error("Audio buffer or gain node not initialized.");
-      return;
-    }
-
-    // Create a new AudioBufferSourceNode each time
-    const source = audioContext.createBufferSource();
-    source.buffer = buffer;
-    source.connect(gainNodeRef.current);
-    source.start(0, sampleStart); // Play from random start time
-
-    // Save reference so we can stop it
-    sourceRef.current = source;
+    const newPlayer = await playSample(sample.audioUrl, gainNode);
+    setPlayer(newPlayer);
   };
 
   const handleReleasePad = () => {
-    if (sourceRef.current) {
-      sourceRef.current.stop();
-      sourceRef.current.disconnect(); // Prevent memory leaks
-      sourceRef.current = null; // Clear ref
+    if (player) {
+      player.stop();
+      setPlayer(null);
     }
   };
 

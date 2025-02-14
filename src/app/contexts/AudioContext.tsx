@@ -1,31 +1,47 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
+import * as Tone from "tone";
 import { SampleType } from "../types/SampleType";
 
 const AudioContextContext = createContext(null);
 
 export const AudioProvider = ({ children }) => {
-  const [audioContext, setAudioContext] = useState(null);
-  const [query, setQuery] = useState<string>("popular+music");
+  const [audioContext, setAudioContext] = useState(Tone.getContext());
+  const [query, setQuery] = useState<string>("jazz");
   const [njbSamples, setNjbSamples] = useState(null);
+  const [genre, setGenre] = useState<string>("jazz");
 
   const url: string = `https://www.loc.gov/audio/?q=${query}&fa=partof:national+jukebox&fo=json`;
 
+  const masterGain = new Tone.Gain(1).toDestination(); // Adjust volume here
+
+  const genreUrl = `/samples/national-jukebox/${genre}/exerpts`;
+
   useEffect(() => {
-    let context: AudioContext | null = null;
-
-    const initializeAudioContext = () => {
-      if (audioContext) {
-        console.log("Closing previous AudioContext...");
-        audioContext.close(); // Close previous context
-      }
-
-      context = new (window.AudioContext || window.webkitAudioContext)();
-      setAudioContext(context);
+    // Ensure the Tone.js context is started once
+    const init = async () => {
+      await Tone.start();
+      console.log("Tone.js started");
+      setAudioContext(Tone.getContext());
     };
+    init();
+  }, []);
 
-    initializeAudioContext();
+  useEffect(() => {
+    // let context: AudioContext | null = null;
+
+    // const initializeAudioContext = () => {
+    //   if (audioContext) {
+    //     console.log("Closing previous AudioContext...");
+    //     audioContext.close(); // Close previous context
+    //   }
+
+    //   context = new (window.AudioContext || window.webkitAudioContext)();
+    //   setAudioContext(context);
+    // };
+
+    // initializeAudioContext();
 
     const fetchSamples = async () => {
       const response = await axios.get(url);
@@ -55,14 +71,33 @@ export const AudioProvider = ({ children }) => {
 
     fetchSamples();
 
-    return () => context.close();
+    // return () => context.close();
   }, [query]);
 
-  // useEffect(() => fetchSamples(), []);
+  const playSample = async (audioUrl, gainNode) => {
+    if (!audioUrl) return;
+
+    await Tone.start();
+
+    return new Promise((resolve) => {
+      const newPlayer = new Tone.Player(audioUrl, () => {
+        newPlayer.connect(gainNode);
+        newPlayer.start();
+        resolve(newPlayer);
+      });
+    });
+  };
 
   return (
     <AudioContextContext.Provider
-      value={{ audioContext, njbSamples, setQuery }}
+      value={{
+        audioContext,
+        playSample,
+        njbSamples,
+        setQuery,
+        setGenre,
+        masterGain,
+      }}
     >
       {children}
     </AudioContextContext.Provider>

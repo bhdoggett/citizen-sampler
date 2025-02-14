@@ -5,14 +5,15 @@ import { SampleType } from "../types/SampleType";
 import { useState, useEffect } from "react";
 
 const DrumMachine = () => {
-  const { audioContext, njbSamples } = useAudioContext();
+  const { njbSamples } = useAudioContext();
   const [contextVersion, setContextVersion] = useState(0);
+
   console.log("njbSamples:", njbSamples);
 
   useEffect(() => {
     setContextVersion((prev) => prev + 1);
     console.log("Current Context Version:", contextVersion);
-  }, [audioContext]);
+  }, [njbSamples]);
 
   const kick: SampleType = {
     title: "Kick_Cobalt_2",
