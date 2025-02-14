@@ -75,17 +75,30 @@ export const AudioProvider = ({ children }) => {
   }, [query]);
 
   const playSample = async (audioUrl, gainNode) => {
-    if (!audioUrl) return;
+    if (!audioUrl) {
+      console.error("No audio URL provided");
+      return;
+    }
 
-    await Tone.start();
+    await Tone.start(); // Ensure Tone.js context is started
 
-    return new Promise((resolve) => {
-      const newPlayer = new Tone.Player(audioUrl, () => {
-        newPlayer.connect(gainNode);
-        newPlayer.start();
-        resolve(newPlayer);
-      });
-    });
+    console.log("Playing sample:", audioUrl);
+
+    try {
+      const newPlayer = new Tone.Player({
+        url: audioUrl,
+        onload: () => {
+          console.log("Sample loaded:", audioUrl);
+          newPlayer.connect(gainNode);
+          newPlayer.start();
+        },
+        onerror: (err) => console.error("Error loading sample:", err),
+      }).toDestination();
+
+      return newPlayer;
+    } catch (error) {
+      console.error("Failed to play sample:", error);
+    }
   };
 
   return (

@@ -29,7 +29,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   const handleReleasePad = () => {
     if (player) {
       player.stop();
-      setPlayer(null);
+      console.log("Player stopped");
+      setPlayer(null); // Reset the player state to null
     }
   };
 
