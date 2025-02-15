@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import * as Tone from "tone";
 import { SampleType } from "../types/SampleType";
+import fs from "fs";
 
 const AudioContextContext = createContext(null);
 
@@ -11,6 +12,22 @@ export const AudioProvider = ({ children }) => {
   const [query, setQuery] = useState<string>("jazz");
   const [njbSamples, setNjbSamples] = useState(null);
   const [genre, setGenre] = useState<string>("jazz");
+
+  const [files, setFiles] = useState<[]>(null);
+
+  type Genre = "classical" | "folk-songs" | "jazz" | "popular";
+  const getSamples = async (genre: string) => {
+    const folderPath = `/samples/national-jukebox/${genre}/excerpts`;
+    return new Promise((resolve, reject) => {
+      fs.readdir(folderPath, (err, files) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(files);
+        }
+      });
+    });
+  };
 
   const url: string = `https://www.loc.gov/audio/?q=${query}&fa=partof:national+jukebox&fo=json`;
 
@@ -29,20 +46,6 @@ export const AudioProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // let context: AudioContext | null = null;
-
-    // const initializeAudioContext = () => {
-    //   if (audioContext) {
-    //     console.log("Closing previous AudioContext...");
-    //     audioContext.close(); // Close previous context
-    //   }
-
-    //   context = new (window.AudioContext || window.webkitAudioContext)();
-    //   setAudioContext(context);
-    // };
-
-    // initializeAudioContext();
-
     const fetchSamples = async () => {
       const response = await axios.get(url);
       const results = response.data.content.results;
@@ -74,42 +77,43 @@ export const AudioProvider = ({ children }) => {
     // return () => context.close();
   }, [query]);
 
-  const playSample = async (audioUrl, gainNode) => {
-    if (!audioUrl) {
-      console.error("No audio URL provided");
-      return;
-    }
+  // const playSample = async (audioUrl, gainNode) => {
+  //   if (!audioUrl) {
+  //     console.error("No audio URL provided");
+  //     return;
+  //   }
 
-    await Tone.start(); // Ensure Tone.js context is started
+  //   await Tone.start(); // Ensure Tone.js context is started
 
-    console.log("Playing sample:", audioUrl);
+  //   console.log("Playing sample:", audioUrl);
 
-    try {
-      const newPlayer = new Tone.Player({
-        url: audioUrl,
-        onload: () => {
-          console.log("Sample loaded:", audioUrl);
-          newPlayer.connect(gainNode);
-          newPlayer.start();
-        },
-        onerror: (err) => console.error("Error loading sample:", err),
-      }).toDestination();
+  //   try {
+  //     const newPlayer = new Tone.Player({
+  //       url: audioUrl,
+  //       onload: () => {
+  //         console.log("Sample loaded:", audioUrl);
+  //         newPlayer.connect(gainNode);
+  //         newPlayer.start();
+  //       },
+  //       onerror: (err) => console.error("Error loading sample:", err),
+  //     }).toDestination();
 
-      return newPlayer;
-    } catch (error) {
-      console.error("Failed to play sample:", error);
-    }
-  };
+  //     return newPlayer;
+  //   } catch (error) {
+  //     console.error("Failed to play sample:", error);
+  //   }
+  // };
 
   return (
     <AudioContextContext.Provider
       value={{
         audioContext,
-        playSample,
+        // playSample,
         njbSamples,
         setQuery,
         setGenre,
         masterGain,
+        getSamples,
       }}
     >
       {children}
