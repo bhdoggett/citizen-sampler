@@ -2,11 +2,11 @@
 import { useAudioContext } from "../contexts/AudioContext";
 
 const GenreBar = () => {
-  const { setQuery } = useAudioContext();
+  const { setGenre } = useAudioContext();
 
-  const handleClick = (query) => {
-    setQuery(query);
-    console.log("Changing query to:", query);
+  const handleClick = (genre) => {
+    setGenre(genre);
+    console.log("Changing genre to:", genre);
   };
 
   return (
@@ -25,13 +25,13 @@ const GenreBar = () => {
       </button>
       <button
         className="border border-slate-600 bg-slate-300 rounded-sm mx-1 w-20"
-        onClick={() => handleClick("ethnic+music")}
+        onClick={() => handleClick("folk-songs")}
       >
-        Ethnic
+        Folk
       </button>
       <button
         className="border border-slate-600 bg-slate-300 rounded-sm mx-1 w-20"
-        onClick={() => handleClick("popular+music")}
+        onClick={() => handleClick("popular")}
       >
         Popular
       </button>

@@ -21,7 +21,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
       url: sample.audioUrl,
       autostart: false,
       onload: () => {
-        console.log(`Sample loaded: ${sample.title}`);
         setIsLoaded(true); // Mark as loaded
       },
       onerror: (error) => {
@@ -39,7 +38,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         console.log("Player disposed");
       }
     };
-  }, [sample.audioUrl]);
+  }, [sample]);
 
   const handlePressPad = () => {
     if (!isLoaded) {
