@@ -11,7 +11,7 @@ export const AudioProvider = ({ children }) => {
   const [audioContext, setAudioContext] = useState(Tone.getContext());
   // const [query, setQuery] = useState<string>("jazz");
   const [njbSamples, setNjbSamples] = useState(null);
-  const [genre, setGenre] = useState<Genrey>(null);
+  const [genre, setGenre] = useState<Genre | null>("jazz");
 
   // const url: string = `https://www.loc.gov/audio/?q=${query}&fa=partof:national+jukebox&fo=json`;
 
@@ -32,13 +32,11 @@ export const AudioProvider = ({ children }) => {
       try {
         const response = await fetch("/fileList.json");
         const result = await response.json();
-        const allSamples: SampleType[] = Array.from(
-          result[genre],
-          (sample) => ({
-            type: njbSamples,
-            audioUrl: `/samples/national-jukebox/${genre}/excerpts/${sample}`,
-          })
-        );
+        console.log(result);
+        const allSamples = Array.from(result[genre], (sample) => ({
+          type: njbSamples,
+          audioUrl: `/samples/national-jukebox/${genre}/excerpts/${sample}`,
+        }));
         console.log(allSamples);
 
         const sampleSet = allSamples.slice(0, 16);

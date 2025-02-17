@@ -1,6 +1,7 @@
 "use client";
 import { useAudioContext } from "../contexts/AudioContext";
 import DrumPad from "./DrumPad";
+import Transport from "./Transport";
 import { SampleType } from "../types/SampleType";
 import { useState, useEffect } from "react";
 
