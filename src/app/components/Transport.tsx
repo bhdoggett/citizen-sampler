@@ -2,23 +2,19 @@
 import { useState, useEffect } from "react";
 import * as Tone from "tone";
 import { Circle, Play, Square, Music3 } from "lucide-react";
-import { useAudioContext } from "../contexts/AudioContext";
 
 const Transport = () => {
-  const [metronomeActive, setMetronomeActive] = useState<boolean>(false);
-  const [timeSignature, setTimeSignature] = useState<number[]>([4, 4]);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [metronomeActive, setMetronomeActive] = useState(false);
+  const [numBars, setNumBars] = useState<number>(2);
+  const [timeSignature, setTimeSignature] = useState([4, 4]);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [bpm, setBpm] = useState(120);
 
-const handleBpmChange = (newBpm) => {
-  setBpm(newBpm);
-  transport.bpm.value = newBpm;
-};
-  const loop = Tone.Loop;
-
   const transport = Tone.getTransport();
+  transport.bpm.value = bpm;
+  transport.timeSignature = timeSignature[0];
 
-  // Create a synth for the metronome click
+  // Metronome synths
   const metronomeDownBeat = new Tone.Synth({
     oscillator: { type: "square" },
     envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
@@ -29,62 +25,44 @@ const handleBpmChange = (newBpm) => {
     envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
   }).toDestination();
 
-  // Schedule the metronome tick
-  transport.scheduleRepeat((time) => {
-    if (!isPlaying) {
-      return;
-    }
-
-    if (metronomeActive) {
-      metronomeDownBeat.triggerAttackRelease("C6", "1n", time);
-    }
-  }, "1n");
-
   useEffect(() => {
     let beatCount = 0;
 
-    transport.scheduleRepeat((time) => {
-      if (!isPlaying) {
-        return;
+    const metronomeLoop = transport.scheduleRepeat((time) => {
+      if (!isPlaying || !metronomeActive) return;
+
+      // Get the current beat position within the measure
+      const [bars, beats] = transport.position.split(":").map(Number);
+      beatCount = beats % timeSignature[0];
+
+      if (beatCount === 0) {
+        metronomeDownBeat.triggerAttackRelease("C6", "8n", time); // Fire on every downbeat
+      } else {
+        metronomeOtherBeats.triggerAttackRelease("G5", "8n", time);
       }
+    }, `${timeSignature[1]}n`); // Fire on every beat except the downbeat
 
-      if (metronomeActive) {
-        beatCount = (beatCount + 1) % timeSignature[0]; // Loop beat count from 0 to 3
+    return () => {
+      transport.clear(metronomeLoop);
+    };
+  }, [isPlaying, metronomeActive, timeSignature, transport.bpm]);
 
-        if (beatCount !== 0) {
-          metronomeOtherBeats.triggerAttackRelease("G5", "8n", time);
-        }
-      }
-    }, `${timeSignature[1]}n`);
-  }, [
-    isPlaying,
-    metronomeActive,
-    timeSignature,
-    transport.bpm,
-    metronomeDownBeat,
-    metronomeOtherBeats,
-    transport,
-  ]);
+  // Function to toggle metronome without restarting beat count
+  const handleToggleMetronome = () => {
+    setMetronomeActive((prev) => !prev);
+  };
 
-  // Function to start the metronome
-  const handleToggleMetronome = () => setMetronomeActive((prev) => !prev);
-
-  const handlePlay = () => {
-    if (isPlaying) {
-      return;
-    }
+  const handlePlay = async () => {
+    if (isPlaying) return;
+    await Tone.start(); // Ensure audio context is unlocked
     transport.start();
     setIsPlaying(true);
-    console.log("Play started, isPlaying state is:", isPlaying);
   };
 
   const handleStop = () => {
-    if (!isPlaying) {
-      return;
-    }
+    if (!isPlaying) return;
     transport.stop();
     setIsPlaying(false);
-    console.log("play stopped, isPlaying State is:", isPlaying);
   };
 
   return (
@@ -97,7 +75,7 @@ const handleBpmChange = (newBpm) => {
       <Square className="hover:fill-slate-300" onClick={handleStop} />
       <Circle className="hover:fill-slate-300" />
       <Music3
-        fill={!metronomeActive ? "white" : "black"}
+        fill={metronomeActive ? "black" : "white"}
         className="hover:fill-slate-300"
         onClick={handleToggleMetronome}
       />
