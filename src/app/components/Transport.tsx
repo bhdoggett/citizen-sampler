@@ -3,27 +3,27 @@ import { useState, useEffect } from "react";
 import * as Tone from "tone";
 import { Circle, Play, Square, Music3 } from "lucide-react";
 
+const metronomeDownBeat = new Tone.Synth({
+  oscillator: { type: "square" },
+  envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
+}).toDestination();
+
+const metronomeOtherBeats = new Tone.Synth({
+  oscillator: { type: "square" },
+  envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
+}).toDestination();
+
 const Transport = () => {
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [numBars, setNumBars] = useState<number>(2);
   const [timeSignature, setTimeSignature] = useState([4, 4]);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [bpm, setBpm] = useState(120);
+  const [bpm, setBpm] = useState<number>(120);
 
   const transport = Tone.getTransport();
-  transport.bpm.value = bpm;
   transport.timeSignature = timeSignature[0];
 
   // Metronome synths
-  const metronomeDownBeat = new Tone.Synth({
-    oscillator: { type: "square" },
-    envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
-  }).toDestination();
-
-  const metronomeOtherBeats = new Tone.Synth({
-    oscillator: { type: "square" },
-    envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
-  }).toDestination();
 
   useEffect(() => {
     let beatCount = 0;
@@ -45,7 +45,11 @@ const Transport = () => {
     return () => {
       transport.clear(metronomeLoop);
     };
-  }, [isPlaying, metronomeActive, timeSignature, transport.bpm]);
+  }, [isPlaying, metronomeActive, timeSignature]);
+
+  useEffect(() => {
+    transport.bpm.value = bpm;
+  }, [bpm]);
 
   // Function to toggle metronome without restarting beat count
   const handleToggleMetronome = () => {
@@ -66,19 +70,75 @@ const Transport = () => {
   };
 
   return (
-    <div className="grid grid-cols-4 gap-3 border rounded-none border-black outline-4">
-      <Play
-        fill={isPlaying ? "black" : "white"}
-        className="hover:fill-slate-300"
-        onClick={handlePlay}
-      />
-      <Square className="hover:fill-slate-300" onClick={handleStop} />
-      <Circle className="hover:fill-slate-300" />
-      <Music3
-        fill={metronomeActive ? "black" : "white"}
-        className="hover:fill-slate-300"
-        onClick={handleToggleMetronome}
-      />
+    <div className="p-4 space-y-4">
+      {/* Transport Controls */}
+      <div className="grid grid-cols-4 gap-3 border border-black p-2 rounded-lg shadow-md">
+        <Play
+          fill={isPlaying ? "green" : "white"}
+          className="hover:fill-slate-300 cursor-pointer"
+          onClick={handlePlay}
+        />
+        <Square
+          className="hover:fill-slate-300 cursor-pointer"
+          onClick={handleStop}
+        />
+        <Circle className="hover:fill-slate-300 cursor-pointer" />
+        <Music3
+          fill={metronomeActive ? "black" : "white"}
+          className="hover:fill-slate-300 cursor-pointer"
+          onClick={handleToggleMetronome}
+        />
+      </div>
+
+      {/* BPM Controls */}
+      <div className="flex items-center gap-4">
+        <label htmlFor="bpm" className="text-lg font-semibold">
+          BPM:
+        </label>
+        <input
+          id="bpm"
+          type="number"
+          min="40"
+          max="240"
+          value={bpm}
+          onChange={(e) => setBpm(Number(e.target.value))}
+          className="w-16 p-1 border border-gray-400 rounded-md text-center"
+        />
+        <input
+          type="range"
+          min="40"
+          max="240"
+          value={bpm}
+          onChange={(e) => setBpm(Number(e.target.value))}
+          className="w-full cursor-pointer"
+        />
+      </div>
+
+      {/* Time Signature Controls */}
+      <div className="flex items-center gap-2">
+        <label htmlFor="time-signature" className="text-lg font-semibold">
+          Time Signature:
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={timeSignature[0]}
+            onChange={(e) =>
+              setTimeSignature([Number(e.target.value), timeSignature[1]])
+            }
+            className="w-12 p-1 border border-gray-400 rounded-md text-center"
+          />
+          <span className="text-lg font-bold">/</span>
+          <input
+            type="number"
+            value={timeSignature[1]}
+            onChange={(e) =>
+              setTimeSignature([timeSignature[0], Number(e.target.value)])
+            }
+            className="w-12 p-1 border border-gray-400 rounded-md text-center"
+          />
+        </div>
+      </div>
     </div>
   );
 };
