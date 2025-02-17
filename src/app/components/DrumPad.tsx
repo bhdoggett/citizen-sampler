@@ -12,6 +12,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   const { masterGain, isRecording } = useAudioContext();
   const playerRef = useRef<Tone.Player | null>(null);
   const [isLoaded, setIsLoaded] = useState(false); // Track whether the sample is loaded
+  const [sampleStartPositions, setSampleStartPositions] = useState<[]>([]);
+  const [sampleReleasePositions, setSampleReleasePositions] = useState<[]>([]);
 
   useEffect(() => {
     if (!sample.audioUrl) return;
@@ -40,12 +42,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     };
   }, [sample]);
 
-  const recordedSamples = [];
-
-  // const recordSample = () => {
-  //   recordedSamples.push(Tone.Transport.position);
-  // };
-
   const handlePressPad = () => {
     console.log(Tone.Transport.position);
 
@@ -60,10 +56,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     }
 
     if (isRecording) {
-      recordedSamples.push(Tone.Transport.position);
+      setSampleStartPositions([
+        ...sampleStartPositions,
+        Tone.Transport.position,
+      ]);
     }
 
-    console.log("recordedSamples:", recordedSamples);
+    console.log("sampleStartPositions:", sampleStartPositions);
   };
 
   const handleReleasePad = () => {
@@ -71,6 +70,15 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
       playerRef.current.stop();
       console.log("Player stopped");
     }
+
+    if (isRecording) {
+      setSampleReleasePositions([
+        ...sampleReleasePositions,
+        Tone.Transport.position,
+      ]);
+    }
+
+    console.log("sampleReleasePositions:", sampleReleasePositions);
   };
 
   return (
