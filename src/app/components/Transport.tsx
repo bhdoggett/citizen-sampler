@@ -2,25 +2,27 @@
 import { useState, useEffect } from "react";
 import * as Tone from "tone";
 import { Circle, Play, Square, Music3 } from "lucide-react";
+import { useAudioContext } from "../contexts/AudioContext";
 
-const metronomeDownBeat = new Tone.Synth({
+const metronomeSynth = new Tone.Synth({
   oscillator: { type: "square" },
   envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
 }).toDestination();
 
-const metronomeOtherBeats = new Tone.Synth({
-  oscillator: { type: "square" },
-  envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
-}).toDestination();
+// const metronomeOtherBeats = new Tone.Synth({
+//   oscillator: { type: "square" },
+//   envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
+// }).toDestination();
 
 const Transport = () => {
   const [metronomeActive, setMetronomeActive] = useState(false);
-  const [numBars, setNumBars] = useState<number>(2);
+  const [loopLength, setLoopLength] = useState<number>(2);
   const [timeSignature, setTimeSignature] = useState([4, 4]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [bpm, setBpm] = useState<number>(120);
+  const { isRecording, setIsRecording } = useAudioContext();
 
-  const transport = Tone.getTransport();
+  const transport = Tone.Transport;
   transport.timeSignature = timeSignature[0];
 
   // Metronome synths
@@ -36,9 +38,9 @@ const Transport = () => {
       beatCount = beats % timeSignature[0];
 
       if (beatCount === 0) {
-        metronomeDownBeat.triggerAttackRelease("C6", "8n", time); // Fire on every downbeat
+        metronomeSynth.triggerAttackRelease("C6", "8n", time); // Fire on every downbeat
       } else {
-        metronomeOtherBeats.triggerAttackRelease("G5", "8n", time);
+        metronomeSynth.triggerAttackRelease("G5", "8n", time);
       }
     }, `${timeSignature[1]}n`); // Fire on every beat except the downbeat
 
@@ -54,6 +56,17 @@ const Transport = () => {
   // Function to toggle metronome without restarting beat count
   const handleToggleMetronome = () => {
     setMetronomeActive((prev) => !prev);
+  };
+
+  useEffect(() => {
+    transport.loop = true;
+    transport.loopStart = "0:0:0"; // always start loop at 0
+    transport.loopEnd = `${loopLength}:0:0`;
+  }, [loopLength]);
+
+  // Funciton to toggle isRecording
+  const handleToggleRecord = () => {
+    setIsRecording((prev) => !prev);
   };
 
   const handlePlay = async () => {
@@ -82,7 +95,11 @@ const Transport = () => {
           className="hover:fill-slate-300 cursor-pointer"
           onClick={handleStop}
         />
-        <Circle className="hover:fill-slate-300 cursor-pointer" />
+        <Circle
+          fill={isRecording ? "red" : "white"}
+          className="hover:fill-slate-300 cursor-pointer"
+          onClick={handleToggleRecord}
+        />
         <Music3
           fill={metronomeActive ? "black" : "white"}
           className="hover:fill-slate-300 cursor-pointer"
@@ -135,6 +152,15 @@ const Transport = () => {
             onChange={(e) =>
               setTimeSignature([timeSignature[0], Number(e.target.value)])
             }
+            className="w-12 p-1 border border-gray-400 rounded-md text-center"
+          />
+          <label htmlFor="loop-length" className="text-lg font-semibold">
+            Loop Length:
+          </label>
+          <input
+            type="number"
+            value={loopLength}
+            onChange={(e) => setLoopLength(Number(e.target.value))}
             className="w-12 p-1 border border-gray-400 rounded-md text-center"
           />
         </div>

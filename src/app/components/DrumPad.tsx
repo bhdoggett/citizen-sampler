@@ -9,7 +9,7 @@ type DrumPadProps = {
 };
 
 const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
-  const { masterGain } = useAudioContext();
+  const { masterGain, isRecording } = useAudioContext();
   const playerRef = useRef<Tone.Player | null>(null);
   const [isLoaded, setIsLoaded] = useState(false); // Track whether the sample is loaded
 
@@ -40,7 +40,15 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     };
   }, [sample]);
 
+  const recordedSamples = [];
+
+  // const recordSample = () => {
+  //   recordedSamples.push(Tone.Transport.position);
+  // };
+
   const handlePressPad = () => {
+    console.log(Tone.Transport.position);
+
     if (!isLoaded) {
       console.warn("Sample not loaded yet!");
       return;
@@ -50,6 +58,12 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
       playerRef.current.start();
       console.log("Player started");
     }
+
+    if (isRecording) {
+      recordedSamples.push(Tone.Transport.position);
+    }
+
+    console.log("recordedSamples:", recordedSamples);
   };
 
   const handleReleasePad = () => {

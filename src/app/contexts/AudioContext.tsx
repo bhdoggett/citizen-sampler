@@ -1,6 +1,5 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
 import * as Tone from "tone";
 import { SampleType } from "../types/SampleType";
 
@@ -12,6 +11,7 @@ export const AudioProvider = ({ children }) => {
   // const [query, setQuery] = useState<string>("jazz");
   const [njbSamples, setNjbSamples] = useState(null);
   const [genre, setGenre] = useState<Genre | null>("jazz");
+  const [isRecording, setIsRecording] = useState<boolean>(false);
 
   // const url: string = `https://www.loc.gov/audio/?q=${query}&fa=partof:national+jukebox&fo=json`;
 
@@ -57,6 +57,8 @@ export const AudioProvider = ({ children }) => {
         njbSamples,
         setGenre,
         masterGain,
+        isRecording,
+        setIsRecording,
       }}
     >
       {children}
