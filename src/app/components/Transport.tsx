@@ -35,7 +35,6 @@ const Transport = () => {
   transport.timeSignature = timeSignature[0];
 
   // Metronome synths
-
   useEffect(() => {
     let beatCount = 0;
 

@@ -9,10 +9,13 @@ type DrumPadProps = {
   sample: SampleType;
 };
 
-type SampleStartPositions = {
-  raw: TransportTime;
-  quantized: Subdivision;
+type SamplePosition = {
+  id: string;
+  startTime: TransportTime;
+  releaseTime?: TransportTime;
+  duration?: Subdivision;
 };
+
 const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   const {
     masterGain,
@@ -21,148 +24,90 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     quantizeRecordActive,
     quantizeSetting,
   } = useAudioContext();
-  const playerRef = useRef<Tone.Player | null>(null);
-  const [sampleGainNode, setSampleGainNode] = useState<Tone.Gain | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false); // Track whether the sample is loaded
-  const [sampleStartPositions, setSampleStartPositions] = useState<
-    SampleStartPositions[]
-  >([]);
-  const [sampleReleasePositions, setSampleReleasePositions] = useState([]);
-  const [sortedSamples, setSortedSamples] = useState([]);
-  const [lastPositions, setLastPositions] = useState([]); // eventually use this to add "undo" functionality
+  const sampler = useRef<Tone.Sampler | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [samplePositions, setSamplePositions] = useState<SamplePosition[]>([]);
 
-  //Load sample
+  // Load the sample
   useEffect(() => {
     if (!sample.audioUrl) return;
 
-    // Create and load the sample
-    const player = new Tone.Player({
-      url: sample.audioUrl,
-      autostart: false,
-      onload: () => {
-        setIsLoaded(true); // Mark as loaded
-      },
+    sampler.current = new Tone.Sampler({
+      urls: { C4: sample.audioUrl },
+      onload: () => setIsLoaded(true),
       onerror: (error) => {
         console.error("Error loading sample:", error);
         setIsLoaded(false);
       },
     }).connect(masterGain);
 
-    playerRef.current = player;
-
     return () => {
-      if (playerRef.current) {
-        playerRef.current.stop();
-        playerRef.current.dispose();
-        console.log("Player disposed");
-      }
+      sampler.current?.dispose();
+      console.log("Sampler disposed");
     };
   }, [sample]);
 
-  useEffect(() => {
-    const samples = setSortedSamples(samples);
-  }, [sampleStartPositions, sampleReleasePositions]);
-  //Create sampleGainNode
-  useEffect(() => {
-    const gainNode = new Tone.Gain(1);
-    setSampleGainNode(gainNode);
-
-    if (gainNode && playerRef.current) {
-      // Connect player to the gain node, and then connect gain node to masterGain
-      playerRef.current.connect(gainNode);
-      gainNode.connect(masterGain);
-    }
-
-    // Clean up the gain node when the component is unmounted or sample changes
-    return () => {
-      if (gainNode) {
-        gainNode.disconnect();
-      }
-    };
-  }, [masterGain]);
-
+  // Handle pad press (START recording)
   const handlePressPad = () => {
-    console.log(`sample ${sample.id} start position:`, sampleStartPositions);
-    console.log("Quantize Setting:", quantizeSetting);
-
-    if (!isLoaded) {
+    if (!isLoaded || !sampler.current) {
       console.warn("Sample not loaded yet!");
       return;
     }
 
-    if (playerRef.current) {
-      playerRef.current.start();
-      console.log("Player started");
-    }
+    const startTime = Tone.Transport.position; // Store Transport position
+    console.log("Start Position:", startTime);
+
+    sampler.current.triggerAttack("C4");
 
     if (isRecording) {
-      const newSampleStartTime = {
-        raw: Tone.Transport.position, // Unquantized time
-        quantized: `${Tone.Transport.position}@${quantizeSetting}n`, // Quantized time
-      };
+      setSamplePositions((prevPositions) => [
+        ...prevPositions,
+        { id: sample.id, startTime },
+      ]);
+    }
+  };
 
-      setSampleStartPositions((prevPositions) => {
-        const sortedSampleStartPositions = [
-          ...prevPositions,
-          newSampleStartTime,
-        ].sort((a, b) => {
-          const timeA = Tone.Time(a.raw).toSeconds();
-          const timeB = Tone.Time(b.raw).toSeconds();
-          return timeA - timeB;
-        });
-        return sortedSampleStartPositions;
+  // Handle pad release (STOP recording)
+  const handleReleasePad = () => {
+    if (!isLoaded || !sampler.current) return;
+
+    const releaseTime = Tone.Transport.position;
+    console.log("Release Position:", releaseTime);
+
+    sampler.current.triggerRelease("C4");
+
+    if (isRecording) {
+      setSamplePositions((prevPositions) =>
+        prevPositions.map((pos) => {
+          if (pos.id === sample.id && !pos.duration) {
+            const duration = Tone.Time(releaseTime).toNotation();
+            return { ...pos, releaseTime, duration };
+          }
+          return pos;
+        })
+      );
+    }
+  };
+
+  // Schedule playback when transport is running
+  useEffect(() => {
+    if (isPlaying) {
+      samplePositions.forEach(({ startTime, duration }) => {
+        if (duration) {
+          Tone.Transport.schedule((time) => {
+            sampler.current?.triggerAttackRelease("C4", duration, time);
+          }, startTime);
+        }
       });
     }
-  };
+  }, [isPlaying, samplePositions]);
 
-  // const splitSamplePositions = () => {
-  //   return sampleStartPositions.map
-  // }
-
-  const handleReleasePad = () => {
-    if (playerRef.current) {
-      playerRef.current.stop();
-      console.log("Player stopped");
+  // Stop all sounds when playback stops
+  useEffect(() => {
+    if (!isPlaying && sampler.current) {
+      sampler.current.triggerRelease("C4");
     }
-
-    if (isRecording) {
-      const releaseTime = Tone.Transport.position;
-      if (releaseTime >= Tone.Transport.loopEnd) {
-        // Adjust release time slightly if we're near the loop boundary
-        setSampleReleasePositions([
-          ...sampleReleasePositions,
-          Tone.Transport.position + 0.05, // Add a small buffer
-        ]);
-      } else {
-        setSampleReleasePositions([...sampleReleasePositions, releaseTime]);
-      }
-    }
-
-    console.log("sampleReleasePositions:", sampleReleasePositions);
-  };
-
-  if (isPlaying) {
-    sampleStartPositions.forEach(({ raw, quantized }) => {
-      const startTime = quantizeRecordActive ? quantized : raw; // Choose time based on setting
-
-      Tone.Transport.schedule((time) => {
-        playerRef.current?.start(time);
-      }, startTime);
-    });
-
-    sampleReleasePositions.forEach((releaseTime) => {
-      Tone.Transport.schedule((time) => {
-        if (playerRef.current) {
-          playerRef.current.stop(time);
-        }
-      }, releaseTime);
-    });
-  }
-
-  //Ensure that regardlenss of the sample's start and release schedule, all playback will stop when isPlaying is set to false.
-  if (!isPlaying && playerRef.current) {
-    playerRef.current.stop(0);
-  }
+  }, [isPlaying]);
 
   return (
     <div>
@@ -172,7 +117,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         onMouseUp={handleReleasePad}
         onTouchEnd={handleReleasePad}
         className="bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-14 h-14 active:bg-slate-500"
-        disabled={!isLoaded} // Disable button until sample loads
+        disabled={!isLoaded}
       >
         {isLoaded ? sample.label : "Loading..."}
       </button>
