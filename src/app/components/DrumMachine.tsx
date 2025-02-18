@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 const DrumMachine = () => {
   const { njbSamples } = useAudioContext();
   const [contextVersion, setContextVersion] = useState(0);
+  const [selectedSample, setSelectedSample] = useState(null);
 
   console.log("njbSamples:", njbSamples);
 
@@ -21,6 +22,7 @@ const DrumMachine = () => {
     label: "Kick",
     type: "drumKit",
     audioUrl: "/samples/drums/kicks/Kick_Cobalt_2.wav",
+    id: "drum-1",
   };
 
   const snare: SampleType = {
@@ -28,6 +30,7 @@ const DrumMachine = () => {
     label: "Snare",
     type: "drumKit",
     audioUrl: "/samples/drums/snares/Snare_Astral_1.wav",
+    id: "drum-2",
   };
 
   const hat: SampleType = {
@@ -35,6 +38,7 @@ const DrumMachine = () => {
     type: "drumKit",
     label: "HiHat",
     audioUrl: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
+    id: "drum-3",
   };
 
   const perc: SampleType = {
@@ -42,6 +46,7 @@ const DrumMachine = () => {
     type: "drumKit",
     label: "Perc",
     audioUrl: "/samples/drums/perc/Perc_Spicy_7.wav",
+    id: "drum-4",
   };
 
   const kitSamples = [kick, snare, hat, perc];
@@ -49,15 +54,15 @@ const DrumMachine = () => {
   return (
     <div key={contextVersion}>
       <div className="grid grid-cols-4 gap-4 my-3">
-        {njbSamples.map((sample, index) => (
-          <DrumPad sample={sample} key={index} />
+        {njbSamples.map((sample) => (
+          <DrumPad sample={sample} key={sample.id} />
         ))}
       </div>
       <hr />
       <div className="grid grid-cols-4 gap-4 my-3">
         {" "}
-        {kitSamples.map((sample, index) => (
-          <DrumPad sample={sample} key={index} />
+        {kitSamples.map((sample) => (
+          <DrumPad key={sample.id} sample={sample} />
         ))}
       </div>
     </div>

@@ -4,6 +4,7 @@ import * as Tone from "tone";
 import { SampleType } from "../types/SampleType";
 
 const AudioContextContext = createContext(null);
+
 type Genre = "classical" | "folk-songs" | "jazz" | "popular";
 
 export const AudioProvider = ({ children }) => {
@@ -12,10 +13,17 @@ export const AudioProvider = ({ children }) => {
   const [njbSamples, setNjbSamples] = useState(null);
   const [genre, setGenre] = useState<Genre | null>("jazz");
   const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [quantizeRecordActive, setQuantizeRecordActive] =
+    useState<boolean>(false);
+  const [quantizeSetting, setQuantizeSetting] = useState<number>(4);
+  const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
+  const transport = Tone.getTransport();
+  const masterGain = new Tone.Gain(masterGainLevel).toDestination(); // Adjust volume here
 
-  // const url: string = `https://www.loc.gov/audio/?q=${query}&fa=partof:national+jukebox&fo=json`;
-
-  const masterGain = new Tone.Gain(1).toDestination(); // Adjust volume here
+  // useEffect(() => {
+  //   Tone.start();
+  // }, []);
 
   useEffect(() => {
     // Ensure the Tone.js context is started once
@@ -33,10 +41,14 @@ export const AudioProvider = ({ children }) => {
         const response = await fetch("/fileList.json");
         const result = await response.json();
         console.log(result);
-        const allSamples = Array.from(result[genre], (sample) => ({
-          type: njbSamples,
-          audioUrl: `/samples/national-jukebox/${genre}/excerpts/${sample}`,
-        }));
+        const allSamples: SampleType[] = Array.from(
+          result[genre],
+          (sample, index) => ({
+            type: `njb-${genre}`,
+            audioUrl: `/samples/national-jukebox/${genre}/excerpts/${sample}`,
+            id: `njb-${index + 1}`,
+          })
+        );
         console.log(allSamples);
 
         const sampleSet = allSamples.slice(0, 16);
@@ -53,12 +65,19 @@ export const AudioProvider = ({ children }) => {
   return (
     <AudioContextContext.Provider
       value={{
+        transport,
         audioContext,
         njbSamples,
         setGenre,
         masterGain,
+        isPlaying,
+        setIsPlaying,
         isRecording,
         setIsRecording,
+        quantizeRecordActive,
+        setQuantizeRecordActive,
+        quantizeSetting,
+        setQuantizeSetting,
       }}
     >
       {children}
