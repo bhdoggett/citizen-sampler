@@ -28,12 +28,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [samplePositions, setSamplePositions] = useState<SamplePosition[]>([]);
 
-  // Load the sample
   useEffect(() => {
     if (!sample.audioUrl) return;
 
     sampler.current = new Tone.Sampler({
       urls: { C4: sample.audioUrl },
+      attack: 0.1, // Adjust the attack time (default is 0.1)
+      release: 0.1, // Adjust the release time (default is 0.5)
       onload: () => setIsLoaded(true),
       onerror: (error) => {
         console.error("Error loading sample:", error);
@@ -47,14 +48,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     };
   }, [sample]);
 
-  // Handle pad press (START recording)
   const handlePressPad = () => {
     if (!isLoaded || !sampler.current) {
       console.warn("Sample not loaded yet!");
       return;
     }
 
-    const startTime = Tone.Transport.position; // Store Transport position
+    const startTime = Tone.Transport.position;
     console.log("Start Position:", startTime);
 
     sampler.current.triggerAttack("C4");
@@ -67,12 +67,27 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     }
   };
 
-  // Handle pad release (STOP recording)
   const handleReleasePad = () => {
     if (!isLoaded || !sampler.current) return;
 
-    const releaseTime = Tone.Transport.position;
-    console.log("Release Position:", releaseTime);
+    let releaseTime = Tone.Transport.position;
+    const loopEnd = Tone.Transport.loopEnd
+      ? Tone.Time(Tone.Transport.loopEnd).toSeconds()
+      : 0;
+    const startTimeInSeconds = Tone.Time(
+      samplePositions.at(-1)?.startTime || 0
+    ).toSeconds();
+    const releaseTimeInSeconds = Tone.Time(releaseTime).toSeconds();
+
+    // Adjust for loop boundary
+    if (releaseTimeInSeconds < startTimeInSeconds) {
+      releaseTime = Tone.Time(
+        releaseTimeInSeconds + loopEnd
+      ).toBarsBeatsSixteenths();
+      console.log("Adjusted Release Position (Looped):", releaseTime);
+    } else {
+      console.log("Release Position:", releaseTime);
+    }
 
     sampler.current.triggerRelease("C4");
 
@@ -89,7 +104,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     }
   };
 
-  // Schedule playback when transport is running
   useEffect(() => {
     if (isPlaying) {
       samplePositions.forEach(({ startTime, duration }) => {
@@ -102,7 +116,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     }
   }, [isPlaying, samplePositions]);
 
-  // Stop all sounds when playback stops
   useEffect(() => {
     if (!isPlaying && sampler.current) {
       sampler.current.triggerRelease("C4");
