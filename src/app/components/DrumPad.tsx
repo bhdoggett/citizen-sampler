@@ -67,6 +67,19 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     }
   }, [isPlaying]);
 
+  useEffect(() => {
+    setAllSampleData((prev: SampleData[]) => {
+      const existingIndex = prev.findIndex((item) => item.id === sampleData.id);
+      if (existingIndex !== -1) {
+        const updatedData = [...prev];
+        updatedData[existingIndex] = sampleData;
+        return updatedData;
+      } else {
+        return [...prev, sampleData];
+      }
+    });
+  }, [sampleData]);
+
   const handlePressPad = () => {
     if (!isLoaded || !sampler.current) return;
 
@@ -74,11 +87,18 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     sampler.current.triggerAttack("C4");
 
     if (isRecording) {
-      setSampleData((prevData) => ({
-        ...prevData,
-        times: [...prevData.times, { startTime, duration: 0 }], // Ensure times array exists
-      }));
+      setSampleData((prevData) => {
+        const newSampleData = {
+          ...prevData,
+          times: [...prevData.times, { startTime, duration: 0 }],
+        };
+
+        // updateSampleData(newSampleData); // Sync with context
+        return newSampleData;
+      });
     }
+
+    console.log("all Sample Data:", allSampleData);
   };
 
   const handleReleasePad = () => {
@@ -88,15 +108,21 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     sampler.current.triggerRelease("C4");
 
     if (isRecording) {
-      setSampleData((prevData) => ({
-        ...prevData,
-        times: prevData.times.map((t, idx, arr) =>
+      setSampleData((prevData) => {
+        const updatedTimes = prevData.times.map((t, idx, arr) =>
           idx === arr.length - 1 && t.duration === 0
             ? { ...t, duration: releaseTime - t.startTime }
             : t
-        ),
-      }));
+        );
+
+        const newSampleData = { ...prevData, times: updatedTimes };
+        // updateSampleData(newSampleData); // Sync updated durations
+        return newSampleData;
+      });
     }
+
+    console.log(`sample-${sample.id} data:`, sampleData);
+    console.log(`All Sample Data:`, allSampleData);
   };
 
   return (

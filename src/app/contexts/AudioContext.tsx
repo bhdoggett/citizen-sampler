@@ -95,7 +95,8 @@ export const AudioProvider = ({ children }) => {
         setQuantizeRecordActive,
         quantizeSetting,
         setQuantizeSetting,
-        updateSampleData,
+        allSampleData,
+        setAllSampleData,
       }}
     >
       {children}
