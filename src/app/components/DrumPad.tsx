@@ -107,7 +107,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     const releaseTime = Tone.Transport.seconds;
     sampler.current.triggerRelease("C4");
 
-    if (isRecording) {
+    if (isRecording && ) {
       setSampleData((prevData) => {
         const updatedTimes = prevData.times.map((t, idx, arr) =>
           idx === arr.length - 1 && t.duration === 0
