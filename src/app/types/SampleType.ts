@@ -5,5 +5,3 @@ export type SampleType = {
   audioUrl?: string;
   id: string;
 };
-
-// export type SampleType

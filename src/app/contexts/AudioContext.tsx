@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import * as Tone from "tone";
 import { SampleType } from "../types/SampleType";
+import type { SampleData } from "../types/SampleData";
 
 const AudioContextContext = createContext(null);
 
@@ -18,6 +19,7 @@ export const AudioProvider = ({ children }) => {
     useState<boolean>(false);
   const [quantizeSetting, setQuantizeSetting] = useState<number>(4);
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
+  const [allSampleData, setAllSampleData] = useState<SampleData[]>([]);
   const transport = Tone.getTransport();
   const masterGain = new Tone.Gain(masterGainLevel).toDestination(); // Adjust volume here
 
@@ -62,6 +64,21 @@ export const AudioProvider = ({ children }) => {
     fetchSamples();
   }, [genre]); // Dependency array ensures re-fetching when `genre` changes
 
+  const updateSampleData = (newSampleData: SampleData) => {
+    setAllSampleData((prev) => {
+      const existingIndex = prev.findIndex(
+        (item) => item.id === newSampleData.id
+      );
+      if (existingIndex !== -1) {
+        const updatedData = [...prev];
+        updatedData[existingIndex] = newSampleData;
+        return updatedData;
+      } else {
+        return [...prev, newSampleData];
+      }
+    });
+  };
+
   return (
     <AudioContextContext.Provider
       value={{
@@ -78,6 +95,7 @@ export const AudioProvider = ({ children }) => {
         setQuantizeRecordActive,
         quantizeSetting,
         setQuantizeSetting,
+        updateSampleData,
       }}
     >
       {children}

@@ -4,16 +4,10 @@ import { SampleType } from "../types/SampleType";
 import { useAudioContext } from "../contexts/AudioContext";
 import * as Tone from "tone";
 import { Subdivision, TransportTime } from "tone/build/esm/core/type/Units";
+import type { SampleData } from "../types/SampleData";
 
 type DrumPadProps = {
   sample: SampleType;
-};
-
-type SamplePosition = {
-  id: string;
-  startTime: TransportTime;
-  releaseTime?: TransportTime;
-  duration?: Subdivision;
 };
 
 const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
@@ -23,10 +17,17 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     isPlaying,
     quantizeRecordActive,
     quantizeSetting,
+    allSampleData,
+    setAllSampleData,
   } = useAudioContext();
+
   const sampler = useRef<Tone.Sampler | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [samplePositions, setSamplePositions] = useState<SamplePosition[]>([]);
+  const [sampleData, setSampleData] = useState<SampleData>({
+    id: sample.id,
+    url: sample.audioUrl || "",
+    times: [],
+  });
 
   useEffect(() => {
     if (!sample.audioUrl) return;
@@ -48,65 +49,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     };
   }, [sample]);
 
-  const handlePressPad = () => {
-    if (!isLoaded || !sampler.current) {
-      console.warn("Sample not loaded yet!");
-      return;
-    }
-
-    const startTime = Tone.Transport.position;
-    console.log("Start Position:", startTime);
-
-    sampler.current.triggerAttack("C4");
-
-    if (isRecording) {
-      setSamplePositions((prevPositions) => [
-        ...prevPositions,
-        { id: sample.id, startTime },
-      ]);
-    }
-  };
-
-  const handleReleasePad = () => {
-    if (!isLoaded || !sampler.current) return;
-
-    let releaseTime = Tone.Transport.position;
-    const loopEnd = Tone.Transport.loopEnd
-      ? Tone.Time(Tone.Transport.loopEnd).toSeconds()
-      : 0;
-    const startTimeInSeconds = Tone.Time(
-      samplePositions.at(-1)?.startTime || 0
-    ).toSeconds();
-    const releaseTimeInSeconds = Tone.Time(releaseTime).toSeconds();
-
-    // Adjust for loop boundary
-    if (releaseTimeInSeconds < startTimeInSeconds) {
-      releaseTime = Tone.Time(
-        releaseTimeInSeconds + loopEnd
-      ).toBarsBeatsSixteenths();
-      console.log("Adjusted Release Position (Looped):", releaseTime);
-    } else {
-      console.log("Release Position:", releaseTime);
-    }
-
-    sampler.current.triggerRelease("C4");
-
-    if (isRecording) {
-      setSamplePositions((prevPositions) =>
-        prevPositions.map((pos) => {
-          if (pos.id === sample.id && !pos.duration) {
-            const duration = Tone.Time(releaseTime).toNotation();
-            return { ...pos, releaseTime, duration };
-          }
-          return pos;
-        })
-      );
-    }
-  };
-
   useEffect(() => {
-    if (isPlaying) {
-      samplePositions.forEach(({ startTime, duration }) => {
+    if (isPlaying && sampleData.times.length > 0) {
+      sampleData.times.forEach(({ startTime, duration }) => {
         if (duration) {
           Tone.Transport.schedule((time) => {
             sampler.current?.triggerAttackRelease("C4", duration, time);
@@ -114,13 +59,45 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         }
       });
     }
-  }, [isPlaying, samplePositions]);
+  }, [isPlaying, sampleData]);
 
   useEffect(() => {
     if (!isPlaying && sampler.current) {
       sampler.current.triggerRelease("C4");
     }
   }, [isPlaying]);
+
+  const handlePressPad = () => {
+    if (!isLoaded || !sampler.current) return;
+
+    const startTime = Tone.Transport.seconds;
+    sampler.current.triggerAttack("C4");
+
+    if (isRecording) {
+      setSampleData((prevData) => ({
+        ...prevData,
+        times: [...prevData.times, { startTime, duration: 0 }], // Ensure times array exists
+      }));
+    }
+  };
+
+  const handleReleasePad = () => {
+    if (!isLoaded || !sampler.current) return;
+
+    const releaseTime = Tone.Transport.seconds;
+    sampler.current.triggerRelease("C4");
+
+    if (isRecording) {
+      setSampleData((prevData) => ({
+        ...prevData,
+        times: prevData.times.map((t, idx, arr) =>
+          idx === arr.length - 1 && t.duration === 0
+            ? { ...t, duration: releaseTime - t.startTime }
+            : t
+        ),
+      }));
+    }
+  };
 
   return (
     <div>

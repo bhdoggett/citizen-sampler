@@ -10,7 +10,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col justify-center items-center my-5">
-      <h1 className="text-xl font-bold block">Drum the National Jukebox</h1>
+      <h1 className="text-xl font-bold block">Citizens Sampler</h1>
       <GenreBar />
       <Transport />
       {njbSamples && <DrumMachine samples={njbSamples} />}

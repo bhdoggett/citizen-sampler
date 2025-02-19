@@ -3,16 +3,12 @@ import { useState, useEffect } from "react";
 import * as Tone from "tone";
 import { Circle, Play, Square, Music3 } from "lucide-react";
 import { useAudioContext } from "../contexts/AudioContext";
+import { exportWAV, audioBufferToWav } from "../functions/exportWAV";
 
 const metronomeSynth = new Tone.Synth({
   oscillator: { type: "square" },
   envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
 }).toDestination();
-
-// const metronomeOtherBeats = new Tone.Synth({
-//   oscillator: { type: "square" },
-//   envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
-// }).toDestination();
 
 const Transport = () => {
   const [metronomeActive, setMetronomeActive] = useState(false);
@@ -29,28 +25,26 @@ const Transport = () => {
     setQuantizeRecordActive,
     quantizeSetting,
     setQuantizeSetting,
+    allSampleData,
   } = useAudioContext();
 
-  // const transport = Tone.getTransport();
   transport.timeSignature = timeSignature[0];
 
-  // Metronome synths
   useEffect(() => {
     let beatCount = 0;
 
     const metronomeLoop = transport.scheduleRepeat((time) => {
       if (!isPlaying || !metronomeActive) return;
 
-      // Get the current beat position within the measure
       const [bars, beats] = transport.position.split(":").map(Number);
       beatCount = beats % timeSignature[0];
 
       if (beatCount === 0) {
-        metronomeSynth.triggerAttackRelease("C6", "8n", time); // Fire on every downbeat
+        metronomeSynth.triggerAttackRelease("C6", "8n", time);
       } else {
         metronomeSynth.triggerAttackRelease("G5", "8n", time);
       }
-    }, `${timeSignature[1]}n`); // Fire on every beat except the downbeat
+    }, `${timeSignature[1]}n`);
 
     return () => {
       transport.clear(metronomeLoop);
@@ -63,18 +57,17 @@ const Transport = () => {
 
   useEffect(() => {
     transport.loop = true;
-    transport.loopStart = "0:0:0"; // always start loop at 0
+    transport.loopStart = "0:0:0";
     transport.loopEnd = `${loopLength}:0:0`;
   }, [loopLength]);
 
-  // Funciton to toggle isRecording
   const handleToggleRecord = () => {
     setIsRecording((prev) => !prev);
   };
 
   const handlePlay = async () => {
     if (isPlaying) return;
-    await Tone.start(); // Ensure audio context is unlocked
+    await Tone.start();
     transport.start();
     setIsPlaying(true);
   };
@@ -85,9 +78,14 @@ const Transport = () => {
     setIsPlaying(false);
   };
 
-  // Function to toggle metronome without restarting beat count
   const handleToggleMetronome = () => {
     setMetronomeActive((prev) => !prev);
+  };
+  Tone.Transport.toSeconds();
+  const handleExportWav = async () => {
+    const loopSeconds = Tone.Transport.toSeconds(`${loopLength}m`);
+    // Pass `allSampleData` into the export function for offline rendering
+    await exportWAV(allSampleData, loopSeconds, 1);
   };
 
   return (
@@ -200,6 +198,9 @@ const Transport = () => {
             </option>
           ))}
         </select>
+        <button onClick={handleExportWav} className="border border-black">
+          Download
+        </button>
       </div>
     </div>
   );
