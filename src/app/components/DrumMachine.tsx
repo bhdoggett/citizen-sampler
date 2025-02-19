@@ -6,7 +6,7 @@ import { SampleType } from "../types/SampleType";
 import { useState, useEffect } from "react";
 
 const DrumMachine = () => {
-  const { njbSamples, kit } = useAudioContext();
+  const { njbSamples, kitSamples } = useAudioContext();
   const [contextVersion, setContextVersion] = useState(0);
   const [selectedSample, setSelectedSample] = useState(null);
 
@@ -60,7 +60,7 @@ const DrumMachine = () => {
       </div>
       <hr />
       <div className="grid grid-cols-4 gap-4 my-3">
-        {kit.map((sample) => (
+        {kitSamples.map((sample) => (
           <DrumPad key={sample.id} sample={sample} />
         ))}
       </div>

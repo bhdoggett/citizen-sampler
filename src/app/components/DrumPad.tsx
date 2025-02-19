@@ -19,7 +19,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     quantizeSetting,
     allSampleData,
     setAllSampleData,
-    updateSampleData,
   } = useAudioContext();
 
   const sampler = useRef<Tone.Sampler | null>(null);
@@ -61,12 +60,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
       });
     }
   }, [isPlaying, sampleData]);
-
-  useEffect(() => {
-    if (!isPlaying && sampler.current) {
-      sampler.current.triggerRelease("C4");
-    }
-  }, [isPlaying]);
 
   // useEffect(() => {
   //   updateSampleData(sampleData);

@@ -12,19 +12,7 @@ export const AudioProvider = ({ children }) => {
   const [audioContext, setAudioContext] = useState(Tone.getContext());
   // const [query, setQuery] = useState<string>("jazz");
   const [njbSamples, setNjbSamples] = useState(null);
-  const [genre, setGenre] = useState<Genre | null>("jazz");
-  const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [quantizeRecordActive, setQuantizeRecordActive] =
-    useState<boolean>(false);
-  const [quantizeSetting, setQuantizeSetting] = useState<number>(4);
-  const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
-  const [allSampleData, setAllSampleData] = useState<SampleData[]>([]);
-  const transport = Tone.getTransport();
-  const masterGain = new Tone.Gain(masterGainLevel).toDestination(); // Adjust volume here
-
-  //
-  const kit: SampleType[] = [
+  const [kitSamples, setKitSamples] = useState([
     {
       title: "Kick_Cobalt_2",
       label: "Kick",
@@ -53,10 +41,17 @@ export const AudioProvider = ({ children }) => {
       audioUrl: "/samples/drums/perc/Perc_Spicy_7.wav",
       id: "drum-4",
     },
-  ];
-  // useEffect(() => {
-  //   Tone.start();
-  // }, []);
+  ]);
+  const [genre, setGenre] = useState<Genre | null>("jazz");
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [quantizeRecordActive, setQuantizeRecordActive] =
+    useState<boolean>(false);
+  const [quantizeSetting, setQuantizeSetting] = useState<number>(4);
+  const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
+  const [allSampleData, setAllSampleData] = useState<SampleData[]>([]);
+  const transport = Tone.getTransport();
+  const masterGain = new Tone.Gain(masterGainLevel).toDestination(); //
 
   useEffect(() => {
     // Ensure the Tone.js context is started once
@@ -95,20 +90,20 @@ export const AudioProvider = ({ children }) => {
     fetchSamples();
   }, [genre]); // Dependency array ensures re-fetching when `genre` changes
 
-  const updateSampleData = (newSampleData: SampleData) => {
-    setAllSampleData((prev) => {
-      const existingIndex = prev.findIndex(
-        (item) => item.id === newSampleData.id
-      );
-      if (existingIndex !== -1) {
-        const updatedData = [...prev];
-        updatedData[existingIndex] = newSampleData;
-        return updatedData;
-      } else {
-        return [...prev, newSampleData];
-      }
-    });
-  };
+  // const updateSampleData = (newSampleData: SampleData) => {
+  //   setAllSampleData((prev) => {
+  //     const existingIndex = prev.findIndex(
+  //       (item) => item.id === newSampleData.id
+  //     );
+  //     if (existingIndex !== -1) {
+  //       const updatedData = [...prev];
+  //       updatedData[existingIndex] = newSampleData;
+  //       return updatedData;
+  //     } else {
+  //       return [...prev, newSampleData];
+  //     }
+  //   });
+  // };
 
   return (
     <AudioContextContext.Provider
@@ -116,7 +111,7 @@ export const AudioProvider = ({ children }) => {
         transport,
         audioContext,
         njbSamples,
-        kit,
+        kitSamples,
         setGenre,
         masterGain,
         isPlaying,
@@ -129,7 +124,6 @@ export const AudioProvider = ({ children }) => {
         setQuantizeSetting,
         allSampleData,
         setAllSampleData,
-        updateSampleData,
       }}
     >
       {children}
