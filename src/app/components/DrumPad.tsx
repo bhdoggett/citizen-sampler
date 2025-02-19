@@ -19,6 +19,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     quantizeSetting,
     allSampleData,
     setAllSampleData,
+    updateSampleData,
   } = useAudioContext();
 
   const sampler = useRef<Tone.Sampler | null>(null);
@@ -67,6 +68,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     }
   }, [isPlaying]);
 
+  // useEffect(() => {
+  //   updateSampleData(sampleData);
+  // }, [sampleData, updateSampleData]);
+  // for some reason when this useEffect funciton is running, the kit samples will not sound when pressing the pad if is playback is selected and record is selected. Something about updating the allSampleData state must be impacting ONLY the kit samples (not the njb samples for some reason)//
   useEffect(() => {
     setAllSampleData((prev: SampleData[]) => {
       const existingIndex = prev.findIndex((item) => item.id === sampleData.id);
@@ -83,10 +88,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   const handlePressPad = () => {
     if (!isLoaded || !sampler.current) return;
 
-    const startTime = Tone.Transport.seconds;
     sampler.current.triggerAttack("C4");
+    const startTime = Tone.Transport.seconds;
 
-    if (isRecording) {
+    if (isPlaying && isRecording) {
       setSampleData((prevData) => {
         const newSampleData = {
           ...prevData,
@@ -99,6 +104,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     }
 
     console.log("all Sample Data:", allSampleData);
+    console.log(`sampler-${sample.id}:`, sampler);
   };
 
   const handleReleasePad = () => {
@@ -107,7 +113,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     const releaseTime = Tone.Transport.seconds;
     sampler.current.triggerRelease("C4");
 
-    if (isRecording && ) {
+    if (isRecording && isPlaying) {
       setSampleData((prevData) => {
         const updatedTimes = prevData.times.map((t, idx, arr) =>
           idx === arr.length - 1 && t.duration === 0
