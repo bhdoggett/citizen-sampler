@@ -68,6 +68,10 @@ export const AudioProvider = ({ children }) => {
   // Create master gain node.
   useEffect(() => {
     masterGainNode.current = new Tone.Gain(masterGainLevel).toDestination(); //
+
+    return () => {
+      masterGainNode.current?.disconnect;
+    };
   }, [masterGainLevel]);
 
   useEffect(() => {

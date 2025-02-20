@@ -20,7 +20,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     allSampleData,
     setAllSampleData,
   } = useAudioContext();
-
   const sampler = useRef<Tone.Sampler | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [sampleData, setSampleData] = useState<SampleData>({
@@ -43,13 +42,11 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
       },
     }).connect(masterGainNode.current);
 
-    sampler.current.volume.value = 0;
-
     return () => {
       sampler.current?.dispose();
       console.log("Sampler disposed");
     };
-  }, [sample, masterGainNode]);
+  }, [sample, sampler, masterGainNode]);
 
   useEffect(() => {
     if (isPlaying && sampleData.times.length > 0) {
@@ -61,7 +58,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         }
       });
     }
-  }, [isPlaying, sampleData]);
+  }, [isPlaying, sampler, sampleData]);
+
+  //sampler data remains the same with each playback of the sample. But for some reason the volume decreases with each successive pad press
 
   useEffect(() => {
     setAllSampleData((prev: SampleData[]) => {
@@ -92,6 +91,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         // updateSampleData(newSampleData); // Sync with context
         return newSampleData;
       });
+      console.log(`sample-${sample.id} data:", sampleData`);
     }
 
     console.log("all Sample Data:", allSampleData);
