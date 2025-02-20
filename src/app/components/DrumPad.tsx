@@ -12,7 +12,7 @@ type DrumPadProps = {
 
 const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   const {
-    masterGain,
+    masterGainNode,
     isRecording,
     isPlaying,
     quantizeRecordActive,
@@ -41,30 +41,28 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         console.error("Error loading sample:", error);
         setIsLoaded(false);
       },
-    }).connect(masterGain);
+    }).connect(masterGainNode.current);
+
+    sampler.current.volume.value = 0;
 
     return () => {
       sampler.current?.dispose();
       console.log("Sampler disposed");
     };
-  }, [sample]);
+  }, [sample, masterGainNode]);
 
   useEffect(() => {
     if (isPlaying && sampleData.times.length > 0) {
       sampleData.times.forEach(({ startTime, duration }) => {
         if (duration) {
           Tone.Transport.schedule((time) => {
-            sampler.current?.triggerAttackRelease("C4", duration, time);
+            sampler.current?.triggerAttackRelease("C4", duration, time, 1);
           }, startTime);
         }
       });
     }
   }, [isPlaying, sampleData]);
 
-  // useEffect(() => {
-  //   updateSampleData(sampleData);
-  // }, [sampleData, updateSampleData]);
-  // for some reason when this useEffect funciton is running, the kit samples will not sound when pressing the pad if is playback is selected and record is selected. Something about updating the allSampleData state must be impacting ONLY the kit samples (not the njb samples for some reason)//
   useEffect(() => {
     setAllSampleData((prev: SampleData[]) => {
       const existingIndex = prev.findIndex((item) => item.id === sampleData.id);

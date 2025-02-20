@@ -1,8 +1,9 @@
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import * as Tone from "tone";
 import { SampleType } from "../types/SampleType";
 import type { SampleData } from "../types/SampleData";
+import { TransportClass } from "tone/build/esm/core/clock/Transport";
 
 const AudioContextContext = createContext(null);
 
@@ -14,10 +15,10 @@ export const AudioProvider = ({ children }) => {
   const [njbSamples, setNjbSamples] = useState(null);
   const [kitSamples, setKitSamples] = useState([
     {
-      title: "Kick_Cobalt_2",
+      title: "Kick_Bulldog_2",
       label: "Kick",
       type: "drumKit",
-      audioUrl: "/samples/drums/kicks/Kick_Cobalt_2.wav",
+      audioUrl: "/samples/drums/kicks/Kick_Bulldog_2.wav",
       id: "drum-1",
     },
     {
@@ -35,10 +36,10 @@ export const AudioProvider = ({ children }) => {
       id: "drum-3",
     },
     {
-      title: "Perc_Spicy_7",
+      title: "Clap_Graphite",
       type: "drumKit",
-      label: "Perc",
-      audioUrl: "/samples/drums/perc/Perc_Spicy_7.wav",
+      label: "Clap",
+      audioUrl: "/samples/drums/claps/Clap_Graphite.wav",
       id: "drum-4",
     },
   ]);
@@ -49,18 +50,28 @@ export const AudioProvider = ({ children }) => {
     useState<boolean>(false);
   const [quantizeSetting, setQuantizeSetting] = useState<number>(4);
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
+  const masterGainNode = useRef<GainNode | null>(null);
   const [allSampleData, setAllSampleData] = useState<SampleData[]>([]);
-  const transport = Tone.getTransport();
-  const masterGain = new Tone.Gain(masterGainLevel).toDestination(); //
+  // const [transport, setTransport] = useState<TransportClass | null>(null);
+  const transport = useRef<TransportClass | null>(null);
 
+  // Start Tone.js context once
   useEffect(() => {
-    // Ensure the Tone.js context is started once
     const init = async () => {
       await Tone.start();
       console.log("Tone.js started");
       setAudioContext(Tone.getContext());
     };
     init();
+  }, []);
+
+  // Create master gain node.
+  useEffect(() => {
+    masterGainNode.current = new Tone.Gain(masterGainLevel).toDestination(); //
+  }, [masterGainLevel]);
+
+  useEffect(() => {
+    transport.current = Tone.getTransport();
   }, []);
 
   useEffect(() => {
@@ -90,30 +101,15 @@ export const AudioProvider = ({ children }) => {
     fetchSamples();
   }, [genre]); // Dependency array ensures re-fetching when `genre` changes
 
-  // const updateSampleData = (newSampleData: SampleData) => {
-  //   setAllSampleData((prev) => {
-  //     const existingIndex = prev.findIndex(
-  //       (item) => item.id === newSampleData.id
-  //     );
-  //     if (existingIndex !== -1) {
-  //       const updatedData = [...prev];
-  //       updatedData[existingIndex] = newSampleData;
-  //       return updatedData;
-  //     } else {
-  //       return [...prev, newSampleData];
-  //     }
-  //   });
-  // };
-
   return (
     <AudioContextContext.Provider
       value={{
         transport,
         audioContext,
+        masterGainNode,
         njbSamples,
         kitSamples,
         setGenre,
-        masterGain,
         isPlaying,
         setIsPlaying,
         isRecording,
