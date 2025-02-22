@@ -167,6 +167,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         onMouseDown={handlePressPad}
         onTouchStart={handlePressPad}
         onMouseUp={handleReleasePad}
+        onMouseLeave={handleReleasePad}
         onTouchEnd={handleReleasePad}
         className="bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-14 h-14 active:bg-slate-500"
         disabled={!isLoaded}
