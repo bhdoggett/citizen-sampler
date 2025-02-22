@@ -46,16 +46,15 @@ export const AudioProvider = ({ children }) => {
   const [genre, setGenre] = useState<Genre | null>("jazz");
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [quantizeRecordActive, setQuantizeRecordActive] =
-    useState<boolean>(false);
-  const [quantizeSetting, setQuantizeSetting] = useState<number>(4);
+  const [quantizeActive, setQuantizeActive] = useState<boolean>(false);
+  const [quantizeValue, setQuantizeValue] = useState<number>(4);
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
   const masterGainNode = useRef<GainNode | null>(null);
   const [allSampleData, setAllSampleData] = useState<SampleData[]>([]);
   // const [transport, setTransport] = useState<TransportClass | null>(null);
   const transport = useRef<TransportClass | null>(null);
 
-  // Start Tone.js context once
+  // Start Tone.js context once and get transport
   useEffect(() => {
     const init = async () => {
       await Tone.start();
@@ -63,6 +62,8 @@ export const AudioProvider = ({ children }) => {
       setAudioContext(Tone.getContext());
     };
     init();
+
+    transport.current = Tone.getTransport();
   }, []);
 
   // Create master gain node.
@@ -73,10 +74,6 @@ export const AudioProvider = ({ children }) => {
       masterGainNode.current?.disconnect;
     };
   }, [masterGainLevel]);
-
-  useEffect(() => {
-    transport.current = Tone.getTransport();
-  }, []);
 
   useEffect(() => {
     const fetchSamples = async () => {
@@ -118,10 +115,10 @@ export const AudioProvider = ({ children }) => {
         setIsPlaying,
         isRecording,
         setIsRecording,
-        quantizeRecordActive,
-        setQuantizeRecordActive,
-        quantizeSetting,
-        setQuantizeSetting,
+        quantizeActive,
+        setQuantizeActive,
+        quantizeValue,
+        setQuantizeValue,
         allSampleData,
         setAllSampleData,
       }}

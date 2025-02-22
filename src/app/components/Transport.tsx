@@ -21,10 +21,10 @@ const Transport = () => {
     setIsPlaying,
     isRecording,
     setIsRecording,
-    quantizeRecordActive,
-    setQuantizeRecordActive,
-    quantizeSetting,
-    setQuantizeSetting,
+    quantizeActive,
+    setQuantizeActive,
+    quantizeValue,
+    setQuantizeValue,
     allSampleData,
   } = useAudioContext();
 
@@ -188,12 +188,12 @@ const Transport = () => {
           type="checkbox"
           name="quantize-active"
           id="quantize-active"
-          checked={quantizeRecordActive}
-          onChange={(e) => setQuantizeRecordActive(e.target.checked)}
+          checked={quantizeActive}
+          onChange={(e) => setQuantizeActive(e.target.checked)}
         />
         <select
-          value={quantizeSetting}
-          onChange={(e) => setQuantizeSetting(Number(e.target.value))}
+          value={quantizeValue}
+          onChange={(e) => setQuantizeValue(Number(e.target.value))}
           className="w-16 p-1 border border-gray-400 rounded-md text-center bg-white"
         >
           {[1, 4, 8, 16].map((option) => (

@@ -5,6 +5,7 @@ import { useAudioContext } from "../contexts/AudioContext";
 import * as Tone from "tone";
 import { Subdivision, TransportTime } from "tone/build/esm/core/type/Units";
 import type { SampleData } from "../types/SampleData";
+import quantize from "../functions/quantize";
 
 type DrumPadProps = {
   sample: SampleType;
@@ -15,8 +16,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     masterGainNode,
     isRecording,
     isPlaying,
-    quantizeRecordActive,
-    quantizeSetting,
+    quantizeValue,
+    quantizeActive,
     allSampleData,
     setAllSampleData,
   } = useAudioContext();
@@ -48,17 +49,48 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     };
   }, [sample, sampler, masterGainNode]);
 
+  // for some reason the volume of playback alters with the number of times played. the longer the 'times' array. the greater the distortion. one playback is at standard volume. two doubles the first and halves the second, etc.
+
   useEffect(() => {
     if (isPlaying && sampleData.times.length > 0) {
-      sampleData.times.forEach(({ startTime, duration }) => {
-        if (duration) {
-          Tone.Transport.schedule((time) => {
-            sampler.current?.triggerAttackRelease("C4", duration, time, 1);
-          }, startTime);
-        }
-      });
+      const bpm = Tone.getTransport().bpm.value;
+      switch (quantizeActive) {
+        case true:
+          sampleData.times.forEach(({ startTime, duration }) => {
+            if (duration) {
+              Tone.getTransport().schedule(
+                (time) => {
+                  sampler.current?.triggerAttackRelease(
+                    "C4",
+                    duration,
+                    time,
+                    1
+                  );
+                  // console.log("time:", time);
+                  // console.log(
+                  //   "quantized time:",
+                  //   quantize(time, bpm, quantizeValue)
+                  // );
+                },
+                quantize(startTime, bpm, quantizeValue)
+              );
+              // console.log("duration:", duration);
+            }
+          });
+          break;
+        default:
+          sampleData.times.forEach(({ startTime, duration }) => {
+            if (duration) {
+              Tone.getTransport().schedule((time) => {
+                sampler.current?.triggerAttackRelease("C4", duration, time, 1);
+                console.log("time:", time);
+              }, startTime);
+              console.log("duration:", duration);
+            }
+          });
+      }
     }
-  }, [isPlaying, sampler, sampleData]);
+  }, [isPlaying, sampler, sampleData, quantizeActive, quantizeValue]);
 
   //sampler data remains the same with each playback of the sample. But for some reason the volume decreases with each successive pad press
 
@@ -73,13 +105,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         return [...prev, sampleData];
       }
     });
-  }, [sampleData]);
+  }, [sampleData, setAllSampleData]);
 
   const handlePressPad = () => {
     if (!isLoaded || !sampler.current) return;
 
     sampler.current.triggerAttack("C4");
-    const startTime = Tone.Transport.seconds;
+    const startTime = Tone.getTransport().seconds;
 
     if (isPlaying && isRecording) {
       setSampleData((prevData) => {
@@ -101,23 +133,30 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   const handleReleasePad = () => {
     if (!isLoaded || !sampler.current) return;
 
-    const releaseTime = Tone.Transport.seconds;
+    const releaseTime = Tone.getTransport().seconds;
     sampler.current.triggerRelease("C4");
 
     if (isRecording && isPlaying) {
       setSampleData((prevData) => {
-        const updatedTimes = prevData.times.map((t, idx, arr) =>
-          idx === arr.length - 1 && t.duration === 0
-            ? { ...t, duration: releaseTime - t.startTime }
-            : t
-        );
+        const updatedTimes = prevData.times.map((t, i, arr) => {
+          switch (true) {
+            case i === arr.length - 1 &&
+              t.duration === 0 &&
+              releaseTime > t.startTime:
+              return { ...t, duration: releaseTime - t.startTime };
+            case i === arr.length - 1 &&
+              t.duration === 0 &&
+              releaseTime < t.startTime: // if sample start and release overlaps the end of the loop, the duration calculation needs to be swapped.
+              return { ...t, duration: t.startTime - releaseTime };
+            default:
+              return t;
+          }
+        });
 
         const newSampleData = { ...prevData, times: updatedTimes };
-        // updateSampleData(newSampleData); // Sync updated durations
         return newSampleData;
       });
     }
-
     console.log(`sample-${sample.id} data:`, sampleData);
     console.log(`All Sample Data:`, allSampleData);
   };
