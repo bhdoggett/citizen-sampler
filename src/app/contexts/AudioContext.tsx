@@ -49,7 +49,9 @@ export const AudioProvider = ({ children }) => {
   const [quantizeActive, setQuantizeActive] = useState<boolean>(false);
   const [quantizeValue, setQuantizeValue] = useState<number>(4);
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
-  const masterGainNode = useRef<GainNode | null>(null);
+  const masterGainNode = useRef<Tone.Gain>(
+    new Tone.Gain(masterGainLevel).toDestination()
+  );
   const [allSampleData, setAllSampleData] = useState<SampleData[]>([]);
   // const [transport, setTransport] = useState<TransportClass | null>(null);
   const transport = useRef<TransportClass | null>(null);
@@ -66,15 +68,6 @@ export const AudioProvider = ({ children }) => {
     transport.current = Tone.getTransport();
   }, []);
 
-  // Create master gain node.
-  useEffect(() => {
-    masterGainNode.current = new Tone.Gain(masterGainLevel).toDestination(); //
-
-    return () => {
-      masterGainNode.current?.disconnect;
-    };
-  }, [masterGainLevel]);
-
   useEffect(() => {
     const fetchSamples = async () => {
       try {
@@ -84,11 +77,44 @@ export const AudioProvider = ({ children }) => {
         const allSamples: SampleType[] = Array.from(
           result[genre],
           (sample, index) => ({
-            type: `njb-${genre}`,
+            id: `loc-${index + 1}`,
+            type: `loc-${genre}`,
+            title: sample,
             audioUrl: `/samples/national-jukebox/${genre}/excerpts/${sample}`,
-            id: `njb-${index + 1}`,
+            pitch: 0, // semitones that the sample has been pitch-shifted
+            finetune: 0,
+            times: [],
+            settings: {
+              main: { gain: 1, pan: 0 },
+              envelopes: {
+                amplitude: {
+                  attack: 0,
+                  decay: 0,
+                  sustain: 0,
+                  release: 0,
+                },
+                pitch: {
+                  attack: 0,
+                  decay: 0,
+                  sustain: 0,
+                  release: 0,
+                },
+              },
+              fx: {
+                eq3: {
+                  active: false,
+                  settings: [0, 0, 0],
+                  reverb: 0,
+                  distortion: 0,
+                  delay: { division: "8n.", amount: 0 },
+                  bitcrusher: 0,
+                },
+                attribution: "",
+              },
+            },
           })
         );
+
         console.log(allSamples);
 
         const sampleSet = allSamples.slice(0, 16);
