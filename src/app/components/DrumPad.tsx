@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { SampleType } from "../types/SampleType";
+import { SampleData } from "../types/SampleData";
 import { useAudioContext } from "../contexts/AudioContext";
 import * as Tone from "tone";
 import { Subdivision, TransportTime } from "tone/build/esm/core/type/Units";
@@ -8,7 +8,7 @@ import type { SampleData } from "../types/SampleData";
 import quantize from "../functions/quantize";
 
 type DrumPadProps = {
-  sample: SampleType;
+  sample: SampleData;
 };
 
 const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
@@ -21,27 +21,63 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     allSampleData,
     setAllSampleData,
   } = useAudioContext();
-  const sampler = useRef<Tone.Sampler | null>(null);
+
   const [isLoaded, setIsLoaded] = useState(false);
   const [sampleData, setSampleData] = useState<SampleData>({
-    id: sample.id,
-    url: sample.audioUrl || "",
+    ...sample,
     times: [],
   });
 
+  const sampler = useRef<Tone.Sampler | null>(null);
+  const ampEnv = useRef<Tone.AmplitudeEnvelope>(
+    new Tone.AmplitudeEnvelope({
+      attack: sample.settings.adsr.attack,
+      decay: sample.settings.adsr.decay,
+      sustain: sample.settings.adsr.sustain,
+      release: sample.settings.adsr.release,
+    })
+  );
+  const highpass = useRef<Tone.Filter>(new Tone.Filter(0, "highpass"));
+  const lowpass = useRef<Tone.Filter>(new Tone.Filter(20000, "lowpass"));
+  const reverb = useRef<Tone.JCReverb>(new Tone.JCReverb(0.5));
+  const delay = useRef<Tone.Delay>(new Tone.Delay("8n.", 0.01));
+  // const distortion = useRef<Tone.Distortion>(new Tone.Distortion(0));
+  // const bitcrusher = useRef<Tone.BitCrusher>(new Tone.BitCrusher(16));
+  // const pitch = useRef<number>(0); // do i need this?
+  // const finetune = useRef<number>(0); // do i need this?
+  const sampleGainNode = useRef<Tone.Gain>(
+    new Tone.Gain(1).connect(masterGainNode.current)
+  );
+
+  useEffect(() => {});
+
+  console.log("sample:", sample);
+
   useEffect(() => {
-    if (!sample.audioUrl) return;
+    if (!sample.url) return;
 
     sampler.current = new Tone.Sampler({
-      urls: { C4: sample.audioUrl },
-      attack: 0.1, // Adjust the attack time (default is 0.1)
-      release: 0.1, // Adjust the release time (default is 0.5)
+      urls: { C4: sample.url },
+      // attack: 0.1, // Adjust the attack time (default is 0.1)
+      // release: 0.1, // Adjust the release time (default is 0.5)
       onload: () => setIsLoaded(true),
       onerror: (error) => {
         console.error("Error loading sample:", error);
         setIsLoaded(false);
       },
-    }).connect(masterGainNode.current);
+    });
+
+    // sampler.current.connect(sampleGainNode.current);
+    sampler.current.chain(
+      // ampEnv.current, // Amplitude Envelope
+      lowpass.current,
+      highpass.current,
+      // reverb.current, // Reverb
+      // delay.current, // Delay
+      // distortion.current, // Distortion
+      // bitcrusher.current, // BitCrusher
+      sampleGainNode.current // Sample Gain (for controlling the sample volume)
+    );
 
     return () => {
       sampler.current?.dispose();
@@ -66,15 +102,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
                     time,
                     1
                   );
-                  // console.log("time:", time);
-                  // console.log(
-                  //   "quantized time:",
-                  //   quantize(time, bpm, quantizeValue)
-                  // );
                 },
                 quantize(startTime, bpm, quantizeValue)
               );
-              // console.log("duration:", duration);
             }
           });
           break;
@@ -91,8 +121,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
       }
     }
   }, [isPlaying, sampler, sampleData, quantizeActive, quantizeValue]);
-
-  //sampler data remains the same with each playback of the sample. But for some reason the volume decreases with each successive pad press
 
   useEffect(() => {
     setAllSampleData((prev: SampleData[]) => {

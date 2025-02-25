@@ -2,7 +2,7 @@
 import { useAudioContext } from "../contexts/AudioContext";
 import DrumPad from "./DrumPad";
 import Transport from "./Transport";
-import { SampleType } from "../types/SampleType";
+import { SampleData } from "../types/SampleData";
 import { useState, useEffect } from "react";
 
 const DrumMachine = () => {
@@ -20,13 +20,13 @@ const DrumMachine = () => {
   return (
     <div key={contextVersion}>
       <div className="grid grid-cols-4 gap-4 my-3">
-        {njbSamples.map((sample) => (
+        {njbSamples.map((sample: SampleData) => (
           <DrumPad key={sample.id} sample={sample} />
         ))}
       </div>
       <hr />
       <div className="grid grid-cols-4 gap-4 my-3">
-        {kitSamples.map((sample) => (
+        {kitSamples.map((sample: SampleData) => (
           <DrumPad key={sample.id} sample={sample} />
         ))}
       </div>

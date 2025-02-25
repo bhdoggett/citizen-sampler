@@ -2,23 +2,28 @@ import { Effect } from "tone/build/esm/effect/Effect";
 import type { SamplePositions } from "./SamplePositions";
 import * as Tone from "tone";
 
-export type oldSampleData = {
-  id: string;
-  url: string;
-  times: SamplePositions[];
-};
-
 type Main = {
   gain: number;
   pan: number;
 };
 
-type FX = {
-  active: boolean;
-  value: number | number[];
-};
+type FilterType =
+  | "lowpass"
+  | "highpass"
+  | "bandpass"
+  | "lowshelf"
+  | "highshelf"
+  | "notch"
+  | "allpass"
+  | "peaking";
+
+type Filter = [number, FilterType];
+
+type FX = number | number[];
 
 type FXSettings = {
+  highpass: Filter;
+  lowpass: Filter;
   eq3: FX;
   reverb: FX;
   distortion: FX;
@@ -61,6 +66,10 @@ type Pitch = // number represents the number of semitones that the sample has be
     | 11
     | 12;
 
+type SampleTime = {
+  startTime: number;
+  duration: number;
+};
 export type SampleData = {
   id: string;
   type: string;
@@ -68,13 +77,10 @@ export type SampleData = {
   url: string;
   pitch: Pitch; // semitones that the sample has been pitch-shifted
   finetune: number; // cents that the sample has been pitch-shifted
-  times: { startTime: number; duration: number };
+  times: SampleTime[];
   settings: {
     main: Main;
-    envelopes: {
-      amplitude: Envelope;
-      pitch: Envelope;
-    };
+    adsr: Envelope;
     fx: FXSettings;
   };
   attribution?: string;

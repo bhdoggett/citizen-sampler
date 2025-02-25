@@ -4,6 +4,7 @@ import * as Tone from "tone";
 import { SampleType } from "../types/SampleType";
 import type { SampleData } from "../types/SampleData";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
+import { FilterType } from "../types/SampleData";
 
 const AudioContextContext = createContext(null);
 
@@ -18,29 +19,113 @@ export const AudioProvider = ({ children }) => {
       title: "Kick_Bulldog_2",
       label: "Kick",
       type: "drumKit",
-      audioUrl: "/samples/drums/kicks/Kick_Bulldog_2.wav",
+      url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
       id: "drum-1",
+      pitch: 0, // semitones that the sample has been pitch-shifted
+      finetune: 0,
+      times: [],
+      settings: {
+        main: { gain: 1, pan: 0 },
+        adsr: {
+          attack: 0,
+          decay: 0,
+          sustain: 0,
+          release: 0,
+        },
+        fx: {
+          highpass: [0, "highpass"],
+          lowpass: [20000, "lowpass"],
+          eq3: [0, 0, 0],
+          reverb: 0,
+          distortion: 0,
+          delay: { division: "8n.", value: 0 },
+          bitcrusher: 0,
+        },
+      },
     },
     {
       title: "Snare_Astral_1",
       label: "Snare",
       type: "drumKit",
-      audioUrl: "/samples/drums/snares/Snare_Astral_1.wav",
+      url: "/samples/drums/snares/Snare_Astral_1.wav",
       id: "drum-2",
+      pitch: 0, // semitones that the sample has been pitch-shifted
+      finetune: 0,
+      times: [],
+      settings: {
+        main: { gain: 1, pan: 0 },
+        adsr: {
+          attack: 0,
+          decay: 0,
+          sustain: 0,
+          release: 0,
+        },
+        fx: {
+          highpass: [0, "highpass"],
+          lowpass: [20000, "lowpass"],
+          eq3: [0, 0, 0],
+          reverb: 0,
+          distortion: 0,
+          delay: { division: "8n.", value: 0 },
+          bitcrusher: 0,
+        },
+      },
     },
     {
       title: "ClosedHH_Alessya_DS",
       type: "drumKit",
       label: "HiHat",
-      audioUrl: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
+      url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
       id: "drum-3",
+      pitch: 0, // semitones that the sample has been pitch-shifted
+      finetune: 0,
+      times: [],
+      settings: {
+        main: { gain: 1, pan: 0 },
+        adsr: {
+          attack: 0,
+          decay: 0,
+          sustain: 0,
+          release: 0,
+        },
+        fx: {
+          highpass: [0, "highpass"],
+          lowpass: [20000, "lowpass"],
+          eq3: [0, 0, 0],
+          reverb: 0,
+          distortion: 0,
+          delay: { division: "8n.", value: 0 },
+          bitcrusher: 0,
+        },
+      },
     },
     {
       title: "Clap_Graphite",
       type: "drumKit",
       label: "Clap",
-      audioUrl: "/samples/drums/claps/Clap_Graphite.wav",
+      url: "/samples/drums/claps/Clap_Graphite.wav",
       id: "drum-4",
+      pitch: 0, // semitones that the sample has been pitch-shifted
+      finetune: 0,
+      times: [],
+      settings: {
+        main: { gain: 1, pan: 0 },
+        adsr: {
+          attack: 0,
+          decay: 0,
+          sustain: 0,
+          release: 0,
+        },
+        fx: {
+          highpass: [0, "highpass"],
+          lowpass: [20000, "lowpass"],
+          eq3: [0, 0, 0],
+          reverb: 0,
+          distortion: 0,
+          delay: { division: "8n.", value: 0 },
+          bitcrusher: 0,
+        },
+      },
     },
   ]);
   const [genre, setGenre] = useState<Genre | null>("jazz");
@@ -54,6 +139,7 @@ export const AudioProvider = ({ children }) => {
   );
   const [allSampleData, setAllSampleData] = useState<SampleData[]>([]);
   // const [transport, setTransport] = useState<TransportClass | null>(null);
+  const [selectedSample, setSelectedSample] = useState<SampleData | null>(null);
   const transport = useRef<TransportClass | null>(null);
 
   // Start Tone.js context once and get transport
@@ -80,38 +166,29 @@ export const AudioProvider = ({ children }) => {
             id: `loc-${index + 1}`,
             type: `loc-${genre}`,
             title: sample,
-            audioUrl: `/samples/national-jukebox/${genre}/excerpts/${sample}`,
+            url: `/samples/national-jukebox/${genre}/excerpts/${sample}`,
             pitch: 0, // semitones that the sample has been pitch-shifted
             finetune: 0,
             times: [],
             settings: {
               main: { gain: 1, pan: 0 },
-              envelopes: {
-                amplitude: {
-                  attack: 0,
-                  decay: 0,
-                  sustain: 0,
-                  release: 0,
-                },
-                pitch: {
-                  attack: 0,
-                  decay: 0,
-                  sustain: 0,
-                  release: 0,
-                },
+              adsr: {
+                attack: 0,
+                decay: 0,
+                sustain: 0,
+                release: 0,
               },
               fx: {
-                eq3: {
-                  active: false,
-                  settings: [0, 0, 0],
-                  reverb: 0,
-                  distortion: 0,
-                  delay: { division: "8n.", amount: 0 },
-                  bitcrusher: 0,
-                },
-                attribution: "",
+                highpass: [0, "highpass"],
+                lowpass: [20000, "lowpass"],
+                eq3: [0, 0, 0],
+                reverb: 0,
+                distortion: 0,
+                delay: { division: "8n.", value: 0 },
+                bitcrusher: 0,
               },
             },
+            attribution: "",
           })
         );
 
@@ -147,6 +224,8 @@ export const AudioProvider = ({ children }) => {
         setQuantizeValue,
         allSampleData,
         setAllSampleData,
+        selectedSample,
+        setSelectedSample,
       }}
     >
       {children}
