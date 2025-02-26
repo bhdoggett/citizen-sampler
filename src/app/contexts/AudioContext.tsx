@@ -25,13 +25,10 @@ export const AudioProvider = ({ children }) => {
       finetune: 0,
       times: [],
       settings: {
-        main: { gain: 1, pan: 0 },
-        adsr: {
-          attack: 0,
-          decay: 0,
-          sustain: 0,
-          release: 0,
-        },
+        gain: 1,
+        pan: 0,
+        attack: 0,
+        release: 0,
         fx: {
           highpass: [0, "highpass"],
           lowpass: [20000, "lowpass"],
@@ -53,13 +50,10 @@ export const AudioProvider = ({ children }) => {
       finetune: 0,
       times: [],
       settings: {
-        main: { gain: 1, pan: 0 },
-        adsr: {
-          attack: 0,
-          decay: 0,
-          sustain: 0,
-          release: 0,
-        },
+        gain: 1,
+        pan: 0,
+        attack: 0,
+        release: 0,
         fx: {
           highpass: [0, "highpass"],
           lowpass: [20000, "lowpass"],
@@ -81,13 +75,10 @@ export const AudioProvider = ({ children }) => {
       finetune: 0,
       times: [],
       settings: {
-        main: { gain: 1, pan: 0 },
-        adsr: {
-          attack: 0,
-          decay: 0,
-          sustain: 0,
-          release: 0,
-        },
+        gain: 1,
+        pan: 0,
+        attack: 0,
+        release: 0,
         fx: {
           highpass: [0, "highpass"],
           lowpass: [20000, "lowpass"],
@@ -109,13 +100,10 @@ export const AudioProvider = ({ children }) => {
       finetune: 0,
       times: [],
       settings: {
-        main: { gain: 1, pan: 0 },
-        adsr: {
-          attack: 0,
-          decay: 0,
-          sustain: 0,
-          release: 0,
-        },
+        gain: 1,
+        pan: 0,
+        attack: 0,
+        release: 0,
         fx: {
           highpass: [0, "highpass"],
           lowpass: [20000, "lowpass"],

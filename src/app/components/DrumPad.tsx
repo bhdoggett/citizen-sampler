@@ -51,6 +51,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
       },
     });
 
+    // sampler.current.toDestination();
     sampler.current.connect(sampleGainNode.current);
 
     return () => {
@@ -64,12 +65,18 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   useEffect(() => {
     if (isPlaying && sampleData.times.length > 0) {
       const bpm = Tone.getTransport().bpm.value;
+
+      sampleData.times.forEach(({ startTime, duration }) => {
+        sampler.current?.triggerAttackRelease("C4", duration, startTime);
+      });
+
       switch (quantizeActive) {
         case true:
           sampleData.times.forEach(({ startTime, duration }) => {
             if (duration) {
               Tone.getTransport().schedule(
                 (time) => {
+                  // sampler.current.volume.value = -12;
                   sampler.current?.triggerAttackRelease(
                     "C4",
                     duration,
@@ -86,7 +93,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
           sampleData.times.forEach(({ startTime, duration }) => {
             if (duration) {
               Tone.getTransport().schedule((time) => {
-                sampler.current?.triggerAttackRelease("C4", duration, time, 1);
+                sampler.current?.triggerAttackRelease("C4", duration, time);
+                console.log();
               }, startTime);
             }
           });
@@ -111,16 +119,15 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     if (!isLoaded || !sampler.current) return;
 
     sampler.current.triggerAttack("C4");
-    const startTime = Tone.getTransport().seconds;
 
     if (isPlaying && isRecording) {
+      const startTime = Tone.getTransport().seconds;
       setSampleData((prevData) => {
         const newSampleData = {
           ...prevData,
           times: [...prevData.times, { startTime, duration: 0 }],
         };
 
-        // updateSampleData(newSampleData); // Sync with context
         return newSampleData;
       });
       // console.log(`sample-${sample.id} data:", sampleData`);
