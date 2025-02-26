@@ -159,7 +159,6 @@ export const AudioProvider = ({ children }) => {
       try {
         const response = await fetch("/fileList.json");
         const result = await response.json();
-        console.log(result);
         const allSamples: SampleType[] = Array.from(
           result[genre],
           (sample, index) => ({
@@ -171,31 +170,17 @@ export const AudioProvider = ({ children }) => {
             finetune: 0,
             times: [],
             settings: {
-              main: { gain: 1, pan: 0 },
-              adsr: {
-                attack: 0,
-                decay: 0,
-                sustain: 0,
-                release: 0,
-              },
-              fx: {
-                highpass: [0, "highpass"],
-                lowpass: [20000, "lowpass"],
-                eq3: [0, 0, 0],
-                reverb: 0,
-                distortion: 0,
-                delay: { division: "8n.", value: 0 },
-                bitcrusher: 0,
-              },
+              gain: 1,
+              attack: 0.1,
+              release: 0.1,
+              highpass: [0, "highpass"],
+              lowpass: [20000, "lowpass"],
             },
             attribution: "",
           })
         );
 
-        console.log(allSamples);
-
-        const sampleSet = allSamples.slice(0, 16);
-        console.log("sampleSet:", sampleSet);
+        const sampleSet = allSamples.slice(0, 8);
         setNjbSamples(sampleSet);
       } catch (error) {
         console.error("Error fetching samples:", error);

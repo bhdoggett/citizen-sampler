@@ -2,10 +2,7 @@ import { Effect } from "tone/build/esm/effect/Effect";
 import type { SamplePositions } from "./SamplePositions";
 import * as Tone from "tone";
 
-type Main = {
-  gain: number;
-  pan: number;
-};
+type Main = {};
 
 type FilterType =
   | "lowpass"
@@ -21,22 +18,7 @@ type Filter = [number, FilterType];
 
 type FX = number | number[];
 
-type FXSettings = {
-  highpass: Filter;
-  lowpass: Filter;
-  eq3: FX;
-  reverb: FX;
-  distortion: FX;
-  delay: FX;
-  bitcrusher: FX;
-};
-
-type Envelope = {
-  attack: number;
-  decay: number;
-  sustain: number;
-  release: number;
-};
+type FXSettings = {};
 
 type Pitch = // number represents the number of semitones that the sample has been pitch-shifted
 
@@ -79,9 +61,12 @@ export type SampleData = {
   finetune: number; // cents that the sample has been pitch-shifted
   times: SampleTime[];
   settings: {
-    main: Main;
-    adsr: Envelope;
-    fx: FXSettings;
+    gain: number;
+    attack: number;
+    release: number;
+    pan: number;
+    highpass: Filter;
+    lowpass: Filter;
   };
   attribution?: string;
 };

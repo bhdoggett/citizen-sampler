@@ -29,37 +29,21 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   });
 
   const sampler = useRef<Tone.Sampler | null>(null);
-  const ampEnv = useRef<Tone.AmplitudeEnvelope>(
-    new Tone.AmplitudeEnvelope({
-      attack: sample.settings.adsr.attack,
-      decay: sample.settings.adsr.decay,
-      sustain: sample.settings.adsr.sustain,
-      release: sample.settings.adsr.release,
-    })
-  );
-  const highpass = useRef<Tone.Filter>(new Tone.Filter(0, "highpass"));
-  const lowpass = useRef<Tone.Filter>(new Tone.Filter(20000, "lowpass"));
-  const reverb = useRef<Tone.JCReverb>(new Tone.JCReverb(0.5));
-  const delay = useRef<Tone.Delay>(new Tone.Delay("8n.", 0.01));
-  // const distortion = useRef<Tone.Distortion>(new Tone.Distortion(0));
-  // const bitcrusher = useRef<Tone.BitCrusher>(new Tone.BitCrusher(16));
-  // const pitch = useRef<number>(0); // do i need this?
-  // const finetune = useRef<number>(0); // do i need this?
+  // const highpass = useRef<Tone.Filter>(new Tone.Filter(0, "highpass"));
+  // const lowpass = useRef<Tone.Filter>(new Tone.Filter(20000, "lowpass"));
+  const pitch = useRef<number>(0); // do i need this?
+  const finetune = useRef<number>(0); // do i need this?
   const sampleGainNode = useRef<Tone.Gain>(
     new Tone.Gain(1).connect(masterGainNode.current)
   );
-
-  useEffect(() => {});
-
-  console.log("sample:", sample);
 
   useEffect(() => {
     if (!sample.url) return;
 
     sampler.current = new Tone.Sampler({
       urls: { C4: sample.url },
-      // attack: 0.1, // Adjust the attack time (default is 0.1)
-      // release: 0.1, // Adjust the release time (default is 0.5)
+      attack: sample.settings.attack,
+      release: sample.settings.release,
       onload: () => setIsLoaded(true),
       onerror: (error) => {
         console.error("Error loading sample:", error);
@@ -67,17 +51,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
       },
     });
 
-    // sampler.current.connect(sampleGainNode.current);
-    sampler.current.chain(
-      // ampEnv.current, // Amplitude Envelope
-      lowpass.current,
-      highpass.current,
-      // reverb.current, // Reverb
-      // delay.current, // Delay
-      // distortion.current, // Distortion
-      // bitcrusher.current, // BitCrusher
-      sampleGainNode.current // Sample Gain (for controlling the sample volume)
-    );
+    sampler.current.connect(sampleGainNode.current);
 
     return () => {
       sampler.current?.dispose();
@@ -113,9 +87,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
             if (duration) {
               Tone.getTransport().schedule((time) => {
                 sampler.current?.triggerAttackRelease("C4", duration, time, 1);
-                console.log("time:", time);
               }, startTime);
-              console.log("duration:", duration);
             }
           });
       }
@@ -151,11 +123,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         // updateSampleData(newSampleData); // Sync with context
         return newSampleData;
       });
-      console.log(`sample-${sample.id} data:", sampleData`);
+      // console.log(`sample-${sample.id} data:", sampleData`);
     }
-
-    console.log("all Sample Data:", allSampleData);
-    console.log(`sampler-${sample.id}:`, sampler);
   };
 
   const handleReleasePad = () => {
