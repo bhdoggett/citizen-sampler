@@ -13,6 +13,7 @@ type DrumPadProps = {
 
 const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   const {
+    transport,
     masterGainNode,
     isRecording,
     isPlaying,
@@ -63,44 +64,58 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   // for some reason the volume of playback alters with the number of times played. the longer the 'times' array. the greater the distortion. one playback is at standard volume. two doubles the first and halves the second, etc.
 
   useEffect(() => {
-    if (isPlaying && sampleData.times.length > 0) {
-      const bpm = Tone.getTransport().bpm.value;
+    if (!isPlaying || sampleData.times.length === 0) return;
 
-      sampleData.times.forEach(({ startTime, duration }) => {
-        sampler.current?.triggerAttackRelease("C4", duration, startTime);
-      });
+    const bpm = transport.current.bpm.value;
+    let part;
 
-      switch (quantizeActive) {
-        case true:
-          sampleData.times.forEach(({ startTime, duration }) => {
-            if (duration) {
-              Tone.getTransport().schedule(
-                (time) => {
-                  // sampler.current.volume.value = -12;
-                  sampler.current?.triggerAttackRelease(
-                    "C4",
-                    duration,
-                    time,
-                    1
-                  );
-                },
-                quantize(startTime, bpm, quantizeValue)
-              );
-            }
-          });
-          break;
-        default:
-          sampleData.times.forEach(({ startTime, duration }) => {
-            if (duration) {
-              Tone.getTransport().schedule((time) => {
-                sampler.current?.triggerAttackRelease("C4", duration, time);
-                console.log();
-              }, startTime);
-            }
-          });
+    // Function to clean up the part when stopping playback or unmounting
+    const disposePart = () => {
+      if (part) {
+        part.stop();
+        part.dispose();
       }
-    }
-  }, [isPlaying, sampler, sampleData, quantizeActive, quantizeValue]);
+    };
+
+    // Prepare the events array
+    const events = sampleData.times.map((e) => {
+      const quantizedTime = quantizeActive
+        ? quantize(e.startTime, bpm, quantizeValue)
+        : e.startTime;
+
+      return [
+        quantizedTime,
+        {
+          startTime: quantizedTime,
+          duration: e.duration,
+          // velocity: e.velocity || 1, // Default velocity to 1 if not set
+        },
+      ];
+    });
+
+    // Create the Tone.Part with the mapped events
+    part = new Tone.Part((time, event) => {
+      // You can apply velocity scaling here if needed, e.g.:
+
+      console.log(`Triggering sample at: ${time}, duration: ${event.duration}`);
+
+      sampler.current?.triggerAttackRelease(
+        "C4", // or event.note if you have different notes!
+        event.duration,
+        time
+      );
+    }, events);
+
+    part.start(0);
+
+    // Optional: you do NOT need this if Transport handles looping.
+    // part.loop = true;
+    // part.loopEnd = Tone.Time(Tone.Transport.loopEnd).toSeconds();
+
+    return () => {
+      disposePart();
+    };
+  }, [isPlaying, sampleData, quantizeActive, quantizeValue]);
 
   useEffect(() => {
     setAllSampleData((prev: SampleData[]) => {
@@ -121,7 +136,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     sampler.current.triggerAttack("C4");
 
     if (isPlaying && isRecording) {
-      const startTime = Tone.getTransport().seconds;
+      const startTime = transport.current.seconds;
       setSampleData((prevData) => {
         const newSampleData = {
           ...prevData,
@@ -137,7 +152,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   const handleReleasePad = () => {
     if (!isLoaded || !sampler.current) return;
 
-    const releaseTime = Tone.getTransport().seconds;
+    const releaseTime = transport.current.seconds;
     sampler.current.triggerRelease("C4");
 
     if (isRecording && isPlaying) {

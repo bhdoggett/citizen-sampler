@@ -128,7 +128,7 @@ export const AudioProvider = ({ children }) => {
   const [allSampleData, setAllSampleData] = useState<SampleData[]>([]);
   // const [transport, setTransport] = useState<TransportClass | null>(null);
   const [selectedSample, setSelectedSample] = useState<SampleData | null>(null);
-  const transport = useRef<TransportClass | null>(null);
+  const transport = useRef<TransportClass>(Tone.getTransport());
 
   // Start Tone.js context once and get transport
   useEffect(() => {
@@ -139,7 +139,7 @@ export const AudioProvider = ({ children }) => {
     };
     init();
 
-    transport.current = Tone.getTransport();
+    // transport.current = Tone.getTransport();
   }, []);
 
   useEffect(() => {

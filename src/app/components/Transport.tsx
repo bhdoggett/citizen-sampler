@@ -29,16 +29,16 @@ const Transport = () => {
   } = useAudioContext();
 
   useEffect(() => {
-    Tone.getTransport().timeSignature = timeSignature[0];
+    transport.current.timeSignature = timeSignature[0];
   }, [timeSignature, transport]);
 
   useEffect(() => {
     let beatCount = 0;
 
-    const metronomeLoop = Tone.getTransport().scheduleRepeat((time) => {
+    const metronomeLoop = transport.current.scheduleRepeat((time) => {
       if (!isPlaying || !metronomeActive) return;
 
-      const [bars, beats] = Tone.getTransport().position.split(":").map(Number);
+      const [bars, beats] = transport.current.position.split(":").map(Number);
       beatCount = beats % timeSignature[0];
 
       if (beatCount === 0) {
@@ -48,7 +48,7 @@ const Transport = () => {
       }
     }, `${timeSignature[1]}n`);
 
-    const transportForCleanup = Tone.getTransport();
+    const transportForCleanup = transport.current;
 
     return () => {
       transportForCleanup.clear(metronomeLoop);
@@ -56,13 +56,13 @@ const Transport = () => {
   }, [isPlaying, metronomeActive, timeSignature, transport]);
 
   useEffect(() => {
-    Tone.getTransport().bpm.value = bpm;
+    transport.current.bpm.value = bpm;
   }, [bpm, transport]);
 
   useEffect(() => {
-    Tone.getTransport().loop = true;
-    Tone.getTransport().loopStart = "0:0:0";
-    Tone.getTransport().loopEnd = `${loopLength}:0:0`;
+    transport.current.loop = true;
+    transport.current.loopStart = "0:0:0";
+    transport.current.loopEnd = `${loopLength}:0:0`;
   }, [loopLength, transport]);
 
   const handleToggleRecord = () => {
@@ -72,13 +72,13 @@ const Transport = () => {
   const handlePlay = async () => {
     if (isPlaying) return;
     await Tone.start();
-    Tone.getTransport().start();
+    transport.current.start();
     setIsPlaying(true);
   };
 
   const handleStop = () => {
     if (!isPlaying) return;
-    Tone.getTransport().stop();
+    transport.current.stop();
     setIsPlaying(false);
   };
 
@@ -87,7 +87,7 @@ const Transport = () => {
   };
 
   const handleExportWav = async () => {
-    const loopSeconds = Tone.getTransport().toSeconds(`${loopLength}m`);
+    const loopSeconds = transport.current.toSeconds(`${loopLength}m`);
     // Pass `allSampleData` into the export function for offline rendering
     await exportWAV(allSampleData, loopSeconds, 1);
   };
