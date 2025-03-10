@@ -67,15 +67,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     if (!isPlaying || sampleData.times.length === 0) return;
 
     const bpm = transport.current.bpm.value;
-    let part;
-
-    // Function to clean up the part when stopping playback or unmounting
-    const disposePart = () => {
-      if (part) {
-        part.stop();
-        part.dispose();
-      }
-    };
 
     // Prepare the events array
     const events = sampleData.times.map((e) => {
@@ -94,7 +85,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     });
 
     // Create the Tone.Part with the mapped events
-    part = new Tone.Part((time, event) => {
+    const part = new Tone.Part((time, event) => {
       // You can apply velocity scaling here if needed, e.g.:
 
       console.log(`Triggering sample at: ${time}, duration: ${event.duration}`);
@@ -108,9 +99,19 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
 
     part.start(0);
 
-    // Optional: you do NOT need this if Transport handles looping.
-    // part.loop = true;
-    // part.loopEnd = Tone.Time(Tone.Transport.loopEnd).toSeconds();
+    // Function to clean up the part when stopping playback or unmounting
+    const disposePart = () => {
+      if (part) {
+        try {
+          if (part.state === "started") {
+            part.stop();
+          }
+          part.dispose();
+        } catch (error) {
+          console.warn("Error disposing part:", error);
+        }
+      }
+    };
 
     return () => {
       disposePart();
@@ -188,7 +189,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         onMouseUp={handleReleasePad}
         onMouseLeave={handleReleasePad}
         onTouchEnd={handleReleasePad}
-        className="bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-14 h-14 active:bg-slate-500"
+        className="bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-14 h-14 active:bg-slate-500 shadow-sm shadow-black"
         disabled={!isLoaded}
       >
         {isLoaded ? sample.label : "Loading..."}
