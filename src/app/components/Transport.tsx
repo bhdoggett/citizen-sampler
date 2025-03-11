@@ -3,7 +3,10 @@ import { useState, useEffect } from "react";
 import * as Tone from "tone";
 import { Circle, Play, Square, Music3 } from "lucide-react";
 import { useAudioContext } from "../contexts/AudioContext";
-import { exportWAV, audioBufferToWav } from "../functions/exportWAV";
+import {
+  exportWAV,
+  audioBufferToWav,
+} from "../functions/exportWAVFromRecorder";
 
 const metronomeSynth = new Tone.Synth({
   oscillator: { type: "square" },
