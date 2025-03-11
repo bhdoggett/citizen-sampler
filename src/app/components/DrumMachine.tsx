@@ -6,21 +6,21 @@ import { SampleData } from "../types/SampleData";
 import { useState, useEffect } from "react";
 
 const DrumMachine = () => {
-  const { njbSamples, kitSamples } = useAudioContext();
+  const { locSamples, kitSamples } = useAudioContext();
   const [contextVersion, setContextVersion] = useState(0);
   const [selectedSample, setSelectedSample] = useState(null);
 
-  console.log("njbSamples:", njbSamples);
+  console.log("locSamples:", locSamples);
 
   useEffect(() => {
     setContextVersion((prev) => prev + 1);
     console.log("Current Context Version:", contextVersion);
-  }, [njbSamples]);
+  }, [locSamples]);
 
   return (
     <div key={contextVersion}>
       <div className="grid grid-cols-4 gap-4 my-3">
-        {njbSamples.map((sample: SampleData) => (
+        {locSamples.map((sample: SampleData) => (
           <DrumPad key={sample.id} sample={sample} />
         ))}
       </div>

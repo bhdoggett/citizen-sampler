@@ -21,6 +21,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     quantizeActive,
     allSampleData,
     setAllSampleData,
+    getSampler,
   } = useAudioContext();
 
   const [isLoaded, setIsLoaded] = useState(false);
@@ -29,37 +30,14 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     times: [],
   });
 
-  const sampler = useRef<Tone.Sampler | null>(null);
-  // const highpass = useRef<Tone.Filter>(new Tone.Filter(0, "highpass"));
-  // const lowpass = useRef<Tone.Filter>(new Tone.Filter(20000, "lowpass"));
-  const pitch = useRef<number>(0); // do i need this?
-  const finetune = useRef<number>(0); // do i need this?
-  const sampleGainNode = useRef<Tone.Gain>(
-    new Tone.Gain(1).connect(masterGainNode.current)
-  );
-
   useEffect(() => {
     if (!sample.url) return;
 
-    sampler.current = new Tone.Sampler({
-      urls: { C4: sample.url },
-      attack: sample.settings.attack,
-      release: sample.settings.release,
-      onload: () => setIsLoaded(true),
-      onerror: (error) => {
-        console.error("Error loading sample:", error);
-        setIsLoaded(false);
-      },
-    });
+    const sampler = getSampler(sample.id, sample.url, sample.settings);
+    sampler.sampler.onload = () => setIsLoaded(true);
 
-    // sampler.current.toDestination();
-    sampler.current.connect(sampleGainNode.current);
-
-    return () => {
-      sampler.current?.dispose();
-      console.log("Sampler disposed");
-    };
-  }, [sample, sampler, masterGainNode]);
+    // No cleanup needed here as it's handled in AudioContext
+  }, [sample, getSampler]);
 
   // for some reason the volume of playback alters with the number of times played. the longer the 'times' array. the greater the distortion. one playback is at standard volume. two doubles the first and halves the second, etc.
 
@@ -90,11 +68,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
 
       console.log(`Triggering sample at: ${time}, duration: ${event.duration}`);
 
-      sampler.current?.triggerAttackRelease(
-        "C4", // or event.note if you have different notes!
-        event.duration,
-        time
-      );
+      const sampler = getSampler(sample.id, sample.url, sample.settings);
+      sampler.sampler.triggerAttackRelease("C4", event.duration, time);
     }, events);
 
     part.start(0);
@@ -132,9 +107,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   }, [sampleData, setAllSampleData]);
 
   const handlePressPad = () => {
-    if (!isLoaded || !sampler.current) return;
+    if (!isLoaded) return;
 
-    sampler.current.triggerAttack("C4");
+    const sampler = getSampler(sample.id, sample.url, sample.settings);
+    sampler.sampler.triggerAttack("C4");
 
     if (isPlaying && isRecording) {
       const startTime = transport.current.seconds;
@@ -151,10 +127,11 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   };
 
   const handleReleasePad = () => {
-    if (!isLoaded || !sampler.current) return;
+    if (!isLoaded) return;
 
     const releaseTime = transport.current.seconds;
-    sampler.current.triggerRelease("C4");
+    const sampler = getSampler(sample.id, sample.url, sample.settings);
+    sampler.sampler.triggerRelease("C4");
 
     if (isRecording && isPlaying) {
       setSampleData((prevData) => {

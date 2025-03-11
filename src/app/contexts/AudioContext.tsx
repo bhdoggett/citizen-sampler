@@ -10,10 +10,17 @@ const AudioContextContext = createContext(null);
 
 type Genre = "classical" | "folk-songs" | "jazz" | "popular";
 
+interface SamplerWithFX {
+  sampler: Tone.Sampler;
+  gain: Tone.Gain;
+  highpass: Tone.Filter;
+  lowpass: Tone.Filter;
+}
+
 export const AudioProvider = ({ children }) => {
   const [audioContext, setAudioContext] = useState(Tone.getContext());
   // const [query, setQuery] = useState<string>("jazz");
-  const [njbSamples, setNjbSamples] = useState(null);
+  const [locSamples, setLocSamples] = useState(null);
   const [kitSamples, setKitSamples] = useState([
     {
       title: "Kick_Bulldog_2",
@@ -130,6 +137,66 @@ export const AudioProvider = ({ children }) => {
   const [selectedSample, setSelectedSample] = useState<SampleData | null>(null);
   const transport = useRef<TransportClass>(Tone.getTransport());
 
+  // New ref to store all samplers and their FX chains
+  const samplersRef = useRef<Record<string, SamplerWithFX>>({});
+
+  // Function to create or get a sampler for a sample
+  const getSampler = (sampleId: string, sampleUrl: string, settings: any) => {
+    if (!samplersRef.current[sampleId]) {
+      // Create new sampler and FX chain
+      const sampler = new Tone.Sampler({
+        urls: { C4: sampleUrl },
+        attack: settings.attack,
+        release: settings.release,
+      });
+
+      const gain = new Tone.Gain(settings.gain);
+      const highpass = new Tone.Filter(settings.fx.highpass[0], "highpass");
+      const lowpass = new Tone.Filter(settings.fx.lowpass[0], "lowpass");
+
+      // Connect the FX chain
+      sampler.connect(highpass);
+      highpass.connect(lowpass);
+      lowpass.connect(gain);
+      gain.connect(masterGainNode.current);
+
+      samplersRef.current[sampleId] = {
+        sampler,
+        gain,
+        highpass,
+        lowpass,
+      };
+    }
+
+    return samplersRef.current[sampleId];
+  };
+
+  // Function to update sampler settings
+  const updateSamplerSettings = (sampleId: string, settings: any) => {
+    const samplerWithFX = samplersRef.current[sampleId];
+    if (samplerWithFX) {
+      const { sampler, gain, highpass, lowpass } = samplerWithFX;
+      gain.gain.value = settings.gain;
+      highpass.frequency.value = settings.fx.highpass[0];
+      lowpass.frequency.value = settings.fx.lowpass[0];
+      sampler.attack = settings.attack;
+      sampler.release = settings.release;
+    }
+  };
+
+  // Cleanup function for samplers
+  const cleanupSampler = (sampleId: string) => {
+    const samplerWithFX = samplersRef.current[sampleId];
+    if (samplerWithFX) {
+      const { sampler, gain, highpass, lowpass } = samplerWithFX;
+      sampler.dispose();
+      gain.dispose();
+      highpass.dispose();
+      lowpass.dispose();
+      delete samplersRef.current[sampleId];
+    }
+  };
+
   // Start Tone.js context once and get transport
   useEffect(() => {
     const init = async () => {
@@ -138,8 +205,13 @@ export const AudioProvider = ({ children }) => {
       setAudioContext(Tone.getContext());
     };
     init();
+  }, []);
 
-    // transport.current = Tone.getTransport();
+  // Cleanup effect for samplers when component unmounts
+  useEffect(() => {
+    return () => {
+      Object.keys(samplersRef.current).forEach(cleanupSampler);
+    };
   }, []);
 
   useEffect(() => {
@@ -153,7 +225,7 @@ export const AudioProvider = ({ children }) => {
             id: `loc-${index + 1}`,
             type: `loc-${genre}`,
             title: sample,
-            url: `/samples/national-jukebox/${genre}/excerpts/${sample}`,
+            url: `/samples/loc/${genre}/excerpts/${sample}`,
             pitch: 0, // semitones that the sample has been pitch-shifted
             finetune: 0,
             times: [],
@@ -169,7 +241,7 @@ export const AudioProvider = ({ children }) => {
         );
 
         const sampleSet = allSamples.slice(0, 8);
-        setNjbSamples(sampleSet);
+        setLocSamples(sampleSet);
       } catch (error) {
         console.error("Error fetching samples:", error);
       }
@@ -181,10 +253,11 @@ export const AudioProvider = ({ children }) => {
   return (
     <AudioContextContext.Provider
       value={{
+        setMasterGainLevel,
         transport,
         audioContext,
         masterGainNode,
-        njbSamples,
+        locSamples,
         kitSamples,
         setGenre,
         isPlaying,
@@ -199,6 +272,8 @@ export const AudioProvider = ({ children }) => {
         setAllSampleData,
         selectedSample,
         setSelectedSample,
+        getSampler,
+        updateSamplerSettings,
       }}
     >
       {children}
