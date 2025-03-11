@@ -31,15 +31,26 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   });
 
   useEffect(() => {
-    if (!sample.url) return;
+    if (!sample.url) {
+      console.error("No URL provided for sample:", sample);
+      return;
+    }
 
-    const sampler = getSampler(sample.id, sample.url, sample.settings);
-    sampler.sampler.onload = () => setIsLoaded(true);
+    try {
+      const sampler = getSampler(sample.id, sample.url, sample.settings);
+      sampler.sampler.onload = () => {
+        console.log("Sample loaded successfully:", sample.url);
+        setIsLoaded(true);
+      };
+      sampler.sampler.onerror = (error) => {
+        console.error("Error loading sample:", sample.url, error);
+      };
+    } catch (error) {
+      console.error("Error creating sampler:", error);
+    }
 
     // No cleanup needed here as it's handled in AudioContext
   }, [sample, getSampler]);
-
-  // for some reason the volume of playback alters with the number of times played. the longer the 'times' array. the greater the distortion. one playback is at standard volume. two doubles the first and halves the second, etc.
 
   useEffect(() => {
     if (!isPlaying || sampleData.times.length === 0) return;
@@ -169,7 +180,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         className="bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-14 h-14 active:bg-slate-500 shadow-sm shadow-black"
         disabled={!isLoaded}
       >
-        {isLoaded ? sample.label : "Loading..."}
+        {isLoaded ? sample.label || sample.title : "Loading..."}
       </button>
     </div>
   );

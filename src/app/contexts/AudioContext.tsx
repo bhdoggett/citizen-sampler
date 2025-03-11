@@ -20,7 +20,7 @@ interface SamplerWithFX {
 export const AudioProvider = ({ children }) => {
   const [audioContext, setAudioContext] = useState(Tone.getContext());
   // const [query, setQuery] = useState<string>("jazz");
-  const [locSamples, setLocSamples] = useState(null);
+  const [locSamples, setLocSamples] = useState([]);
   const [kitSamples, setKitSamples] = useState([
     {
       title: "Kick_Bulldog_2",
@@ -217,33 +217,52 @@ export const AudioProvider = ({ children }) => {
   useEffect(() => {
     const fetchSamples = async () => {
       try {
+        console.log('Fetching samples for genre:', genre);
         const response = await fetch("/fileList.json");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const result = await response.json();
+        console.log('FileList.json contents:', result);
+        
+        if (!result[genre]) {
+          console.error('Genre not found in fileList.json:', genre);
+          return;
+        }
+        
         const allSamples: SampleType[] = Array.from(
           result[genre],
-          (sample, index) => ({
-            id: `loc-${index + 1}`,
-            type: `loc-${genre}`,
-            title: sample,
-            url: `/samples/loc/${genre}/excerpts/${sample}`,
-            pitch: 0, // semitones that the sample has been pitch-shifted
-            finetune: 0,
-            times: [],
-            settings: {
-              gain: 1,
-              attack: 0.1,
-              release: 0.1,
-              highpass: [0, "highpass"],
-              lowpass: [20000, "lowpass"],
-            },
-            attribution: "",
-          })
+          (sample, index) => {
+            const sampleData = {
+              id: `loc-${index + 1}`,
+              type: `loc-${genre}`,
+              title: sample,
+              label: sample.split('.')[0],
+              url: `/samples/loc/${genre}/excerpts/${sample}`,
+              pitch: 0,
+              finetune: 0,
+              times: [],
+              settings: {
+                gain: 1,
+                attack: 0.1,
+                release: 0.1,
+                highpass: [0, "highpass"],
+                lowpass: [20000, "lowpass"],
+              },
+              attribution: "",
+            };
+            console.log('Created sample data:', sampleData);
+            return sampleData;
+          }
         );
 
         const sampleSet = allSamples.slice(0, 8);
+        console.log('Setting locSamples with:', sampleSet);
         setLocSamples(sampleSet);
       } catch (error) {
         console.error("Error fetching samples:", error);
+        // Set empty array on error to prevent null/undefined issues
+        setLocSamples([]);
       }
     };
 

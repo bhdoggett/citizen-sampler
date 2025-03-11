@@ -20,9 +20,13 @@ const DrumMachine = () => {
   return (
     <div key={contextVersion}>
       <div className="grid grid-cols-4 gap-4 my-3">
-        {locSamples.map((sample: SampleData) => (
-          <DrumPad key={sample.id} sample={sample} />
-        ))}
+        {locSamples?.length > 0 ? (
+          locSamples.map((sample: SampleData) => (
+            <DrumPad key={sample.id} sample={sample} />
+          ))
+        ) : (
+          <div>Loading local samples...</div>
+        )}
       </div>
       <hr />
       <div className="grid grid-cols-4 gap-4 my-3">
