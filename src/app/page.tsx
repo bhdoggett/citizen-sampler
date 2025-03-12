@@ -9,20 +9,19 @@ import SampleSettings from "./components/SampleSettings";
 type QuantizeValue = 4 | 8 | 16;
 
 export default function Home() {
-  const { audioContext, fetchSamples, njbSamples } = useAudioContext();
+  const { audioContext, fetchSamples, locSamples } = useAudioContext();
 
   return (
     <div className="flex flex-col justify-center items-center my-5">
       <h1 className="text-xl font-bold block">Citizens Sampler</h1>
       <GenreBar />
       <Transport />
-      {njbSamples && <DrumMachine samples={njbSamples} />}
-      <SampleSettings />
+      {locSamples && <DrumMachine samples={locSamples} />}
       <Link
         className="text-sm text-blue-700"
-        href="https://www.loc.gov/collections/national-jukebox/about-this-collection/"
+        href="https://citizen-dj.labs.loc.gov/"
       >
-        Learn About the National JukeBox
+        Learn About the Citzen DJ
       </Link>
     </div>
   );

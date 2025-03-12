@@ -1,6 +1,7 @@
 import {
   AudioRange,
   Cents,
+  Decibels,
   Frequency,
   GainFactor,
   NormalRange,
@@ -13,15 +14,16 @@ export type SampleType = {
   label?: string;
   title: string;
   url: string;
-  pitch: AudioRange;
-  finetune: Cents;
   times: number[];
   settings: {
-    gain: GainFactor;
+    pan: NormalRange;
+    volume: Decibels;
+    pitch: AudioRange;
+    finetune: Cents;
     attack: Time;
     release: Time;
     highpass: [Frequency?, string?, number?];
     lowpass: [Frequency?, string?, number?];
   };
-  attribution: "";
+  attribution?: string;
 };

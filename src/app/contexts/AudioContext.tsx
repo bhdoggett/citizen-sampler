@@ -10,41 +10,34 @@ const AudioContextContext = createContext(null);
 
 type Genre = "classical" | "folk-songs" | "jazz" | "popular";
 
-interface SamplerWithFX {
+type SamplerWithFX = {
   sampler: Tone.Sampler;
-  gain: Tone.Gain;
+  panVol: Tone.PanVol;
   highpass: Tone.Filter;
   lowpass: Tone.Filter;
-}
+};
 
 export const AudioProvider = ({ children }) => {
   const [audioContext, setAudioContext] = useState(Tone.getContext());
   // const [query, setQuery] = useState<string>("jazz");
-  const [locSamples, setLocSamples] = useState([]);
-  const [kitSamples, setKitSamples] = useState([
+  const [locSamples, setLocSamples] = useState<SampleType[] | []>([]);
+  const [kitSamples, setKitSamples] = useState<SampleType[] | []>([
     {
       title: "Kick_Bulldog_2",
       label: "Kick",
       type: "drumKit",
       url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
       id: "drum-1",
-      pitch: 0, // semitones that the sample has been pitch-shifted
-      finetune: 0,
       times: [],
       settings: {
-        gain: 1,
+        volume: 0,
         pan: 0,
+        pitch: 0,
+        finetune: 0,
         attack: 0,
         release: 0,
-        fx: {
-          highpass: [0, "highpass"],
-          lowpass: [20000, "lowpass"],
-          eq3: [0, 0, 0],
-          reverb: 0,
-          distortion: 0,
-          delay: { division: "8n.", value: 0 },
-          bitcrusher: 0,
-        },
+        highpass: [0, "highpass"],
+        lowpass: [20000, "lowpass"],
       },
     },
     {
@@ -53,23 +46,16 @@ export const AudioProvider = ({ children }) => {
       type: "drumKit",
       url: "/samples/drums/snares/Snare_Astral_1.wav",
       id: "drum-2",
-      pitch: 0, // semitones that the sample has been pitch-shifted
-      finetune: 0,
       times: [],
       settings: {
-        gain: 1,
+        volume: 0,
         pan: 0,
+        pitch: 0,
+        finetune: 0,
         attack: 0,
         release: 0,
-        fx: {
-          highpass: [0, "highpass"],
-          lowpass: [20000, "lowpass"],
-          eq3: [0, 0, 0],
-          reverb: 0,
-          distortion: 0,
-          delay: { division: "8n.", value: 0 },
-          bitcrusher: 0,
-        },
+        highpass: [0, "highpass"],
+        lowpass: [20000, "lowpass"],
       },
     },
     {
@@ -78,23 +64,16 @@ export const AudioProvider = ({ children }) => {
       label: "HiHat",
       url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
       id: "drum-3",
-      pitch: 0, // semitones that the sample has been pitch-shifted
-      finetune: 0,
       times: [],
       settings: {
-        gain: 1,
+        volume: 0,
         pan: 0,
+        pitch: 0,
+        finetune: 0,
         attack: 0,
         release: 0,
-        fx: {
-          highpass: [0, "highpass"],
-          lowpass: [20000, "lowpass"],
-          eq3: [0, 0, 0],
-          reverb: 0,
-          distortion: 0,
-          delay: { division: "8n.", value: 0 },
-          bitcrusher: 0,
-        },
+        highpass: [0, "highpass"],
+        lowpass: [20000, "lowpass"],
       },
     },
     {
@@ -103,23 +82,16 @@ export const AudioProvider = ({ children }) => {
       label: "Clap",
       url: "/samples/drums/claps/Clap_Graphite.wav",
       id: "drum-4",
-      pitch: 0, // semitones that the sample has been pitch-shifted
-      finetune: 0,
       times: [],
       settings: {
-        gain: 1,
+        volume: 0,
         pan: 0,
+        pitch: 0,
+        finetune: 0,
         attack: 0,
         release: 0,
-        fx: {
-          highpass: [0, "highpass"],
-          lowpass: [20000, "lowpass"],
-          eq3: [0, 0, 0],
-          reverb: 0,
-          distortion: 0,
-          delay: { division: "8n.", value: 0 },
-          bitcrusher: 0,
-        },
+        highpass: [0, "highpass"],
+        lowpass: [20000, "lowpass"],
       },
     },
   ]);
@@ -133,67 +105,113 @@ export const AudioProvider = ({ children }) => {
     new Tone.Gain(masterGainLevel).toDestination()
   );
   const [allSampleData, setAllSampleData] = useState<SampleData[]>([]);
-  // const [transport, setTransport] = useState<TransportClass | null>(null);
   const [selectedSample, setSelectedSample] = useState<SampleData | null>(null);
+
   const transport = useRef<TransportClass>(Tone.getTransport());
 
   // New ref to store all samplers and their FX chains
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
+  const kitRef = useRef<Record<string, SamplerWithFX>>({});
 
-  // Function to create or get a sampler for a sample
-  const getSampler = (sampleId: string, sampleUrl: string, settings: any) => {
-    if (!samplersRef.current[sampleId]) {
-      // Create new sampler and FX chain
-      const sampler = new Tone.Sampler({
-        urls: { C4: sampleUrl },
-        attack: settings.attack,
-        release: settings.release,
+  const makeSampler = (sampleId: string, sampleUrl: string) => {
+    const sampler = new Tone.Sampler({
+      urls: { C4: sampleUrl },
+    });
+
+    const panVol = new Tone.PanVol(0, 0);
+    const highpass = new Tone.Filter(0, "highpass");
+    const lowpass = new Tone.Filter(20000, "lowpass");
+
+    // Connect the FX chain
+    sampler.connect(highpass);
+    highpass.connect(lowpass);
+    lowpass.connect(panVol);
+    panVol.connect(masterGainNode.current).toDestination();
+
+    return {
+      sampler,
+      panVol,
+      highpass,
+      lowpass,
+    };
+  };
+
+  useEffect(() => {
+    if (locSamples.length > 0) {
+      locSamples.forEach(({ id, url }) => {
+        samplersRef.current[id] = makeSampler(id, url);
       });
-
-      const gain = new Tone.Gain(settings.gain);
-      const highpass = new Tone.Filter(settings.fx.highpass[0], "highpass");
-      const lowpass = new Tone.Filter(settings.fx.lowpass[0], "lowpass");
-
-      // Connect the FX chain
-      sampler.connect(highpass);
-      highpass.connect(lowpass);
-      lowpass.connect(gain);
-      gain.connect(masterGainNode.current);
-
-      samplersRef.current[sampleId] = {
-        sampler,
-        gain,
-        highpass,
-        lowpass,
-      };
+      console.log("samplersRef:", samplersRef.current);
     }
+  }, [locSamples]);
 
-    return samplersRef.current[sampleId];
-  };
-
-  // Function to update sampler settings
-  const updateSamplerSettings = (sampleId: string, settings: any) => {
-    const samplerWithFX = samplersRef.current[sampleId];
-    if (samplerWithFX) {
-      const { sampler, gain, highpass, lowpass } = samplerWithFX;
-      gain.gain.value = settings.gain;
-      highpass.frequency.value = settings.fx.highpass[0];
-      lowpass.frequency.value = settings.fx.lowpass[0];
-      sampler.attack = settings.attack;
-      sampler.release = settings.release;
+  useEffect(() => {
+    if (kitSamples.length > 0) {
+      kitSamples.forEach(({ id, url }) => {
+        kitRef.current[id] = makeSampler(id, url);
+      });
+      console.log("kitRef:", kitRef.current);
     }
-  };
+  });
 
-  // Cleanup function for samplers
-  const cleanupSampler = (sampleId: string) => {
-    const samplerWithFX = samplersRef.current[sampleId];
+  // // Function to create or get a sampler for a sample
+  // const getSampler = (sampleId: string, sampleUrl: string, settings: any) => {
+  //   if (!samplersRef.current[sampleId]) {
+  //     // Create new sampler and FX chain
+  //     const sampler = new Tone.Sampler({
+  //       urls: { C4: sampleUrl },
+  //       attack: settings.attack,
+  //       release: settings.release,
+  //     });
+
+  //     const panVol = new Tone.PanVol(settings.pan, settings.volume);
+  //     const highpass = new Tone.Filter(settings.highpass[0], "highpass");
+  //     const lowpass = new Tone.Filter(settings.lowpass[0], "lowpass");
+
+  //     // Connect the FX chain
+  //     sampler.connect(highpass);
+  //     highpass.connect(lowpass);
+  //     lowpass.connect(panVol);
+  //     panVol.connect(masterGainNode.current).toDestination();
+
+  //     samplersRef.current[sampleId] = {
+  //       sampler,
+  //       panVol,
+  //       highpass,
+  //       lowpass,
+  //     };
+  //   }
+
+  //   return samplersRef.current[sampleId];
+  // };
+
+  // // Function to update sampler settings
+  // const updateSamplerSettings = (sampleId: string, settings: any) => {
+  //   const samplerWithFX = samplersRef.current[sampleId];
+  //   if (samplerWithFX) {
+  //     const { sampler, gain, highpass, lowpass } = samplerWithFX;
+  //     gain.gain.value = settings.gain;
+  //     highpass.frequency.value = settings.fx.highpass[0];
+  //     lowpass.frequency.value = settings.fx.lowpass[0];
+  //     sampler.attack = settings.attack;
+  //     sampler.release = settings.release;
+  //   }
+  // };
+
+  // Universal cleanup function for samplers
+  const cleanupSampler = (sampleId, ref) => {
+    const samplerWithFX = ref.current[sampleId];
     if (samplerWithFX) {
-      const { sampler, gain, highpass, lowpass } = samplerWithFX;
+      const { sampler, panVol, highpass, lowpass } = samplerWithFX;
+
+      // Dispose of each Tone.js node
       sampler.dispose();
-      gain.dispose();
+      panVol.dispose();
       highpass.dispose();
       lowpass.dispose();
-      delete samplersRef.current[sampleId];
+
+      // Delete the reference
+      delete ref.current[sampleId];
     }
   };
 
@@ -210,54 +228,67 @@ export const AudioProvider = ({ children }) => {
   // Cleanup effect for samplers when component unmounts
   useEffect(() => {
     return () => {
-      Object.keys(samplersRef.current).forEach(cleanupSampler);
+      // Cleanup local samplers
+      Object.keys(samplersRef.current).forEach((sampleId) => {
+        cleanupSampler(sampleId, samplersRef);
+      });
+
+      // Cleanup kit samplers
+      Object.keys(kitRef.current).forEach((sampleId) => {
+        cleanupSampler(sampleId, kitRef);
+      });
     };
   }, []);
 
   useEffect(() => {
     const fetchSamples = async () => {
       try {
-        console.log('Fetching samples for genre:', genre);
+        console.log("Fetching samples for genre:", genre);
         const response = await fetch("/fileList.json");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const result = await response.json();
-        console.log('FileList.json contents:', result);
-        
+        console.log("FileList.json contents:", result);
+
         if (!result[genre]) {
-          console.error('Genre not found in fileList.json:', genre);
+          console.error("Genre not found in fileList.json:", genre);
           return;
         }
-        
-        const allSamples: SampleType[] = Array.from(
-          result[genre],
+        console.log("Fetched for the curreng genre", result[genre]);
+
+        const selectedSamples = await result[genre].slice(0, 8);
+        if (selectedSamples) {
+        }
+
+        const sampleSet: SampleType[] = Array.from(
+          selectedSamples,
           (sample, index) => {
             const sampleData = {
               id: `loc-${index + 1}`,
               type: `loc-${genre}`,
               title: sample,
-              label: sample.split('.')[0],
+              label: sample.split(".")[0],
               url: `/samples/loc/${genre}/excerpts/${sample}`,
-              pitch: 0,
-              finetune: 0,
               times: [],
               settings: {
-                gain: 1,
-                attack: 0.1,
-                release: 0.1,
+                volume: 0,
+                pan: 0,
+                pitch: 0,
+                finetune: 0,
+                attack: 0,
+                release: 0,
                 highpass: [0, "highpass"],
                 lowpass: [20000, "lowpass"],
               },
               attribution: "",
             };
-            console.log('Created sample data:', sampleData);
+            console.log("Created sample data:", sampleData);
             return sampleData;
           }
         );
 
-        const sampleSet = allSamples.slice(0, 8);
-        console.log('Setting locSamples with:', sampleSet);
+        console.log("Setting locSamples with:", sampleSet);
         setLocSamples(sampleSet);
       } catch (error) {
         console.error("Error fetching samples:", error);
@@ -291,8 +322,10 @@ export const AudioProvider = ({ children }) => {
         setAllSampleData,
         selectedSample,
         setSelectedSample,
-        getSampler,
-        updateSamplerSettings,
+        // getSampler,
+        // updateSamplerSettings,
+        samplersRef,
+        kitRef,
       }}
     >
       {children}

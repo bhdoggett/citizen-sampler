@@ -1,63 +1,33 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { SampleData } from "../types/SampleData";
+import { useEffect, useState } from "react";
 import { useAudioContext } from "../contexts/AudioContext";
 import * as Tone from "tone";
-import { Subdivision, TransportTime } from "tone/build/esm/core/type/Units";
-import type { SampleData } from "../types/SampleData";
-import quantize from "../functions/quantize";
 
 type DrumPadProps = {
-  sample: SampleData;
+  id?: string;
+  sampler: Tone.Sampler;
 };
 
-const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
+const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const {
     transport,
-    masterGainNode,
     isRecording,
     isPlaying,
     quantizeValue,
     quantizeActive,
-    allSampleData,
     setAllSampleData,
-    getSampler,
   } = useAudioContext();
 
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [sampleData, setSampleData] = useState<SampleData>({
-    ...sample,
+  const [sampleData, setSampleData] = useState({
+    id: id || "default",
     times: [],
   });
-
-  useEffect(() => {
-    if (!sample.url) {
-      console.error("No URL provided for sample:", sample);
-      return;
-    }
-
-    try {
-      const sampler = getSampler(sample.id, sample.url, sample.settings);
-      sampler.sampler.onload = () => {
-        console.log("Sample loaded successfully:", sample.url);
-        setIsLoaded(true);
-      };
-      sampler.sampler.onerror = (error) => {
-        console.error("Error loading sample:", sample.url, error);
-      };
-    } catch (error) {
-      console.error("Error creating sampler:", error);
-    }
-
-    // No cleanup needed here as it's handled in AudioContext
-  }, [sample, getSampler]);
 
   useEffect(() => {
     if (!isPlaying || sampleData.times.length === 0) return;
 
     const bpm = transport.current.bpm.value;
 
-    // Prepare the events array
     const events = sampleData.times.map((e) => {
       const quantizedTime = quantizeActive
         ? quantize(e.startTime, bpm, quantizeValue)
@@ -68,24 +38,16 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         {
           startTime: quantizedTime,
           duration: e.duration,
-          // velocity: e.velocity || 1, // Default velocity to 1 if not set
         },
       ];
     });
 
-    // Create the Tone.Part with the mapped events
     const part = new Tone.Part((time, event) => {
-      // You can apply velocity scaling here if needed, e.g.:
-
-      console.log(`Triggering sample at: ${time}, duration: ${event.duration}`);
-
-      const sampler = getSampler(sample.id, sample.url, sample.settings);
-      sampler.sampler.triggerAttackRelease("C4", event.duration, time);
+      sampler.triggerAttackRelease("C4", event.duration, time);
     }, events);
 
     part.start(0);
 
-    // Function to clean up the part when stopping playback or unmounting
     const disposePart = () => {
       if (part) {
         try {
@@ -102,10 +64,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
     return () => {
       disposePart();
     };
-  }, [isPlaying, sampleData, quantizeActive, quantizeValue]);
+  }, [isPlaying, sampleData, quantizeActive, quantizeValue, sampler]);
 
   useEffect(() => {
-    setAllSampleData((prev: SampleData[]) => {
+    setAllSampleData((prev) => {
       const existingIndex = prev.findIndex((item) => item.id === sampleData.id);
       if (existingIndex !== -1) {
         const updatedData = [...prev];
@@ -118,55 +80,38 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
   }, [sampleData, setAllSampleData]);
 
   const handlePressPad = () => {
-    if (!isLoaded) return;
-
-    const sampler = getSampler(sample.id, sample.url, sample.settings);
-    sampler.sampler.triggerAttack("C4");
+    sampler.triggerAttack("C4");
+    console.log("pressing pad for", id, "here's the sampler:", sampler);
 
     if (isPlaying && isRecording) {
       const startTime = transport.current.seconds;
-      setSampleData((prevData) => {
-        const newSampleData = {
-          ...prevData,
-          times: [...prevData.times, { startTime, duration: 0 }],
-        };
-
-        return newSampleData;
-      });
-      // console.log(`sample-${sample.id} data:", sampleData`);
+      setSampleData((prevData) => ({
+        ...prevData,
+        times: [...prevData.times, { startTime, duration: 0 }],
+      }));
     }
   };
 
   const handleReleasePad = () => {
-    if (!isLoaded) return;
-
     const releaseTime = transport.current.seconds;
-    const sampler = getSampler(sample.id, sample.url, sample.settings);
-    sampler.sampler.triggerRelease("C4");
+    sampler.triggerRelease("C4");
 
     if (isRecording && isPlaying) {
       setSampleData((prevData) => {
         const updatedTimes = prevData.times.map((t, i, arr) => {
-          switch (true) {
-            case i === arr.length - 1 &&
-              t.duration === 0 &&
-              releaseTime > t.startTime:
-              return { ...t, duration: releaseTime - t.startTime };
-            case i === arr.length - 1 &&
-              t.duration === 0 &&
-              releaseTime < t.startTime: // if sample start and release overlaps the end of the loop, the duration calculation needs to be swapped.
-              return { ...t, duration: t.startTime - releaseTime };
-            default:
-              return t;
+          if (
+            i === arr.length - 1 &&
+            t.duration === 0 &&
+            releaseTime > t.startTime
+          ) {
+            return { ...t, duration: releaseTime - t.startTime };
           }
+          return t;
         });
 
-        const newSampleData = { ...prevData, times: updatedTimes };
-        return newSampleData;
+        return { ...prevData, times: updatedTimes };
       });
     }
-    console.log(`sample-${sample.id} data:`, sampleData);
-    console.log(`All Sample Data:`, allSampleData);
   };
 
   return (
@@ -178,9 +123,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ sample }) => {
         onMouseLeave={handleReleasePad}
         onTouchEnd={handleReleasePad}
         className="bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-14 h-14 active:bg-slate-500 shadow-sm shadow-black"
-        disabled={!isLoaded}
       >
-        {isLoaded ? sample.label || sample.title : "Loading..."}
+        {id}
       </button>
     </div>
   );
