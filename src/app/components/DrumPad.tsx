@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useAudioContext } from "../contexts/AudioContext";
 import * as Tone from "tone";
+import quantize from "../functions/quantize";
 
 type DrumPadProps = {
   id?: string;
