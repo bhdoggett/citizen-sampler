@@ -6,7 +6,6 @@ const GenreButton = ({ genre }) => {
     console.log("Changing query to:", query);
   };
 
-  const handleBlur = () => {};
   return (
     <>
       <button

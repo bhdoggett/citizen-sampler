@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
+    "@next/bundle-analyzer": "^15.2.2",
     "axios": "^1.7.9",
     "fs": "^0.0.1-security",
     "lucide-react": "^0.475.0",

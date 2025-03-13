@@ -3,7 +3,6 @@ import {
   Cents,
   Decibels,
   Frequency,
-  GainFactor,
   NormalRange,
   Time,
 } from "tone/build/esm/core/type/Units";

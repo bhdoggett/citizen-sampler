@@ -24,7 +24,7 @@ const DrumMachine = () => {
     const intervalId = setInterval(checkSamplers, 10);
 
     return () => clearInterval(intervalId);
-  }, []); // Empty dependency array since we're using refs inside
+  }, [kitRef, samplersRef]); // Empty dependency array since we're using refs inside
 
   // Set loaded state based on counts
   useEffect(() => {

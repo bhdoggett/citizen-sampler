@@ -65,7 +65,14 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     return () => {
       disposePart();
     };
-  }, [isPlaying, sampleData, quantizeActive, quantizeValue, sampler]);
+  }, [
+    isPlaying,
+    sampleData,
+    quantizeActive,
+    quantizeValue,
+    sampler,
+    transport,
+  ]);
 
   useEffect(() => {
     setAllSampleData((prev) => {

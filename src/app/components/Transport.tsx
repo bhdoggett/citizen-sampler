@@ -3,10 +3,6 @@ import { useState, useEffect } from "react";
 import * as Tone from "tone";
 import { Circle, Play, Square, Music3 } from "lucide-react";
 import { useAudioContext } from "../contexts/AudioContext";
-import {
-  exportWAV,
-  audioBufferToWav,
-} from "../functions/exportWAVFromRecorder";
 
 const metronomeSynth = new Tone.Synth({
   oscillator: { type: "square" },
@@ -41,7 +37,7 @@ const Transport = () => {
     const metronomeLoop = transport.current.scheduleRepeat((time) => {
       if (!isPlaying || !metronomeActive) return;
 
-      const [bars, beats] = transport.current.position.split(":").map(Number);
+      const [, beats] = transport.current.position.split(":").map(Number);
       beatCount = beats % timeSignature[0];
 
       if (beatCount === 0) {
@@ -96,7 +92,7 @@ const Transport = () => {
   };
 
   return (
-    <div className="p-4 flex flex-col items-center space-y-4">
+    <div className="border rounded-sm border-slate-300 shadow-md shadow-zinc-400 p-4 flex flex-col items-center space-y-4">
       {/* Transport Controls - Narrower Width */}
       <div className="w-fit mx-auto grid grid-cols-4 gap-3 border border-black p-2 rounded-lg shadow-md">
         <Play

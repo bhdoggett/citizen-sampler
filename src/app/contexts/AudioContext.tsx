@@ -2,13 +2,9 @@
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import * as Tone from "tone";
 import { SampleType } from "../types/SampleType";
-import type { SampleData } from "../types/SampleData";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
-import { FilterType } from "../types/SampleData";
 
-const AudioContextContext = createContext(null);
-
-type Genre = "classical" | "folk-songs" | "jazz" | "popular";
+type Genre = "classical" | "folk-songs" | "jazz" | "popular" | null;
 
 type SamplerWithFX = {
   sampler: Tone.Sampler;
@@ -17,11 +13,40 @@ type SamplerWithFX = {
   lowpass: Tone.Filter;
 };
 
-export const AudioProvider = ({ children }) => {
-  const [audioContext, setAudioContext] = useState(Tone.getContext());
+type AudioContextType = {
+  masterGainNode: Tone.Gain;
+  setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
+  transport: React.RefObject<TransportClass>;
+  audioContext: Tone.BaseContext | null;
+  samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
+  kitRef: React.RefObject<Record<string, SamplerWithFX>>;
+  locSamples: SampleType[];
+  kitSamples: SampleType[];
+  setGenre: React.Dispatch<React.SetStateAction<Genre>>;
+  genre: Genre;
+  isPlaying: boolean;
+  setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
+  isRecording: boolean;
+  setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
+  quantizeActive: boolean;
+  setQuantizeActive: React.Dispatch<React.SetStateAction<boolean>>;
+  quantizeValue: number;
+  setQuantizeValue: React.Dispatch<React.SetStateAction<number>>;
+  allSampleData: SampleType[];
+  setAllSampleData: React.Dispatch<React.SetStateAction<SampleType[]>>;
+  selectedSample: SampleType | null;
+  setSelectedSample: React.Dispatch<React.SetStateAction<SampleType | null>>;
+  // getSampler,
+  // updateSamplerSettings,
+};
+
+const AudioContextContext = createContext<AudioContextType | null>(null);
+
+export const AudioProvider = ({ children }: React.PropsWithChildren) => {
+  const [audioContext, setAudioContext] = useState<Tone.Context | null>(null);
   // const [query, setQuery] = useState<string>("jazz");
   const [locSamples, setLocSamples] = useState<SampleType[] | []>([]);
-  const [kitSamples, setKitSamples] = useState<SampleType[] | []>([
+  const [kitSamples] = useState<SampleType[] | []>([
     {
       title: "Kick_Bulldog_2",
       label: "Kick",
@@ -104,8 +129,8 @@ export const AudioProvider = ({ children }) => {
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
   );
-  const [allSampleData, setAllSampleData] = useState<SampleData[]>([]);
-  const [selectedSample, setSelectedSample] = useState<SampleData | null>(null);
+  const [allSampleData, setAllSampleData] = useState<SampleType[]>([]);
+  const [selectedSample, setSelectedSample] = useState<SampleType | null>(null);
 
   const transport = useRef<TransportClass>(Tone.getTransport());
 
@@ -136,6 +161,7 @@ export const AudioProvider = ({ children }) => {
     };
   };
 
+  //create samplers for library of congress samples
   useEffect(() => {
     if (locSamples.length > 0) {
       locSamples.forEach(({ id, url }) => {
@@ -145,6 +171,7 @@ export const AudioProvider = ({ children }) => {
     }
   }, [locSamples]);
 
+  //create samplers for drum kit samples
   useEffect(() => {
     if (kitSamples.length > 0) {
       kitSamples.forEach(({ id, url }) => {
@@ -152,7 +179,7 @@ export const AudioProvider = ({ children }) => {
       });
       console.log("kitRef:", kitRef.current);
     }
-  });
+  }, [kitSamples]);
 
   // // Function to create or get a sampler for a sample
   // const getSampler = (sampleId: string, sampleUrl: string, settings: any) => {
@@ -199,7 +226,10 @@ export const AudioProvider = ({ children }) => {
   // };
 
   // Universal cleanup function for samplers
-  const cleanupSampler = (sampleId, ref) => {
+  const cleanupSampler = (
+    sampleId: string,
+    ref: React.RefObject<SamplerWithFX>
+  ) => {
     const samplerWithFX = ref.current[sampleId];
     if (samplerWithFX) {
       const { sampler, panVol, highpass, lowpass } = samplerWithFX;
@@ -227,19 +257,23 @@ export const AudioProvider = ({ children }) => {
 
   // Cleanup effect for samplers when component unmounts
   useEffect(() => {
+    const samplersForCleanup = samplersRef.current;
+    const kitSamplersForCleanup = kitRef.current;
+
     return () => {
-      // Cleanup local samplers
-      Object.keys(samplersRef.current).forEach((sampleId) => {
+      // Cleanup library of congress samplers
+      Object.keys(samplersForCleanup).forEach((sampleId) => {
         cleanupSampler(sampleId, samplersRef);
       });
 
       // Cleanup kit samplers
-      Object.keys(kitRef.current).forEach((sampleId) => {
+      Object.keys(kitSamplersForCleanup).forEach((sampleId) => {
         cleanupSampler(sampleId, kitRef);
       });
     };
   }, []);
 
+  //fetch library of congress samples
   useEffect(() => {
     const fetchSamples = async () => {
       try {
@@ -303,10 +337,10 @@ export const AudioProvider = ({ children }) => {
   return (
     <AudioContextContext.Provider
       value={{
+        masterGainNode,
         setMasterGainLevel,
         transport,
         audioContext,
-        masterGainNode,
         locSamples,
         kitSamples,
         setGenre,
@@ -322,10 +356,11 @@ export const AudioProvider = ({ children }) => {
         setAllSampleData,
         selectedSample,
         setSelectedSample,
-        // getSampler,
-        // updateSamplerSettings,
         samplersRef,
         kitRef,
+        genre,
+        // getSampler,
+        // updateSamplerSettings,
       }}
     >
       {children}
