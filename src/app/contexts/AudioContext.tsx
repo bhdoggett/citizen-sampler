@@ -1,12 +1,13 @@
 "use client";
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import * as Tone from "tone";
-import { SampleType } from "../types/SampleType";
+import { SampleType, SampleSettings } from "../types/SampleType";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
 
 type Genre = "classical" | "folk-songs" | "jazz" | "popular" | null;
 
 type SamplerWithFX = {
+  id: string;
   sampler: Tone.Sampler;
   panVol: Tone.PanVol;
   highpass: Tone.Filter;
@@ -33,6 +34,8 @@ type AudioContextType = {
   quantizeValue: number;
   setQuantizeValue: React.Dispatch<React.SetStateAction<number>>;
   allSampleData: SampleType[];
+  getSampleData: (id: string) => SampleType;
+  updateSampleSettings: (id: string, data: Partial<SampleType>) => void;
   setAllSampleData: React.Dispatch<React.SetStateAction<SampleType[]>>;
   selectedSample: SampleType | null;
   setSelectedSample: React.Dispatch<React.SetStateAction<SampleType | null>>;
@@ -154,11 +157,51 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     panVol.connect(masterGainNode.current).toDestination();
 
     return {
+      id: sampleId,
       sampler,
       panVol,
       highpass,
       lowpass,
     };
+  };
+
+  const getSampleData = (id: string): SampleType => {
+    return (
+      allSampleData.find((sample) => sample.id === id) || {
+        title: "",
+        label: "",
+        type: "",
+        url: "",
+        id: "",
+        times: [],
+        settings: {
+          volume: 0,
+          pan: 0,
+          pitch: 0,
+          finetune: 0,
+          attack: 0,
+          release: 0,
+          highpass: [0, "highpass"],
+          lowpass: [20000, "lowpass"],
+        },
+      }
+    );
+  };
+
+  const updateSampleSettings = (id: string, key: string, value: number) => {
+    setAllSampleData((prev) =>
+      prev.map((sample) =>
+        sample.id === id
+          ? {
+              ...sample,
+              settings: {
+                ...sample.settings,
+                [key]: value,
+              },
+            }
+          : sample
+      )
+    );
   };
 
   //create samplers for library of congress samples
@@ -353,6 +396,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         quantizeValue,
         setQuantizeValue,
         allSampleData,
+        getSampleData,
+        updateSampleSettings,
         setAllSampleData,
         selectedSample,
         setSelectedSample,

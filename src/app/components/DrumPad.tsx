@@ -16,13 +16,17 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     isPlaying,
     quantizeValue,
     quantizeActive,
+    allSampleData,
+    getSampleData,
     setAllSampleData,
-  } = useAudioContext();
+    setSelectedSample,
+  } = useAudioContext() || {};
 
   const [sampleData, setSampleData] = useState({
     id: id || "default",
     times: [],
   });
+  const [isSelected, setIsSelected] = useState(false);
 
   useEffect(() => {
     if (!isPlaying || sampleData.times.length === 0) return;
@@ -74,6 +78,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     transport,
   ]);
 
+
+
   useEffect(() => {
     setAllSampleData((prev) => {
       const existingIndex = prev.findIndex((item) => item.id === sampleData.id);
@@ -89,6 +95,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   const handlePressPad = () => {
     sampler.triggerAttack("C4");
+
+    setSelectedSample(getSampleData(id));
+    setIsSelected(true);
+
     console.log("pressing pad for", id, "here's the sampler:", sampler);
 
     if (isPlaying && isRecording) {
@@ -98,6 +108,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         times: [...prevData.times, { startTime, duration: 0 }],
       }));
     }
+  };
+
+  const handleBlur = () => {
+    setIsSelected(false);
   };
 
   const handleReleasePad = () => {
@@ -123,14 +137,17 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   };
 
   return (
-    <div>
+    <div
+      className={`${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"} rounded-sm`}
+    >
       <button
         onMouseDown={handlePressPad}
         onTouchStart={handlePressPad}
         onMouseUp={handleReleasePad}
         onMouseLeave={handleReleasePad}
         onTouchEnd={handleReleasePad}
-        className="bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-14 h-14 active:bg-slate-500 shadow-sm shadow-black"
+        onBlur={handleBlur}
+        className="m-1 bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-20 h-20 active:bg-slate-500 shadow-md shadow-slate-700"
       >
         {id}
       </button>

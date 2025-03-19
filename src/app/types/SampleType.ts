@@ -7,6 +7,17 @@ import {
   Time,
 } from "tone/build/esm/core/type/Units";
 
+export type SampleSettings = {
+  volume: number;
+  pan: number;
+  pitch: number;
+  finetune: number;
+  attack: number;
+  release: number;
+  highpass: [Frequency, "highpass", number?];
+  lowpass: [Frequency, "lowpass", number?];
+};
+
 export type SampleType = {
   id: string;
   type: string;
@@ -14,15 +25,6 @@ export type SampleType = {
   title: string;
   url: string;
   times: number[];
-  settings: {
-    pan: NormalRange;
-    volume: Decibels;
-    pitch: AudioRange;
-    finetune: Cents;
-    attack: Time;
-    release: Time;
-    highpass: [Frequency?, string?, number?];
-    lowpass: [Frequency?, string?, number?];
-  };
+  settings: SampleSettings;
   attribution?: string;
 };
