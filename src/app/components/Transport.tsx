@@ -92,9 +92,9 @@ const Transport = () => {
   };
 
   return (
-    <div className="border rounded-sm border-slate-300 shadow-md shadow-zinc-400 p-4 flex flex-col items-center space-y-4">
+    <div className="border rounded-md border-slate-300 shadow-md shadow-zinc-400 p-4 flex flex-col items-center space-y-4">
       {/* Transport Controls - Narrower Width */}
-      <div className="w-fit mx-auto grid grid-cols-4 gap-3 border border-black p-2 rounded-lg shadow-md">
+      <div className="w-fit mx-auto grid grid-cols-4 gap-3 border border-black p-2 rounded-sm shadow-inner-lg">
         <Play
           fill={isPlaying ? "green" : "white"}
           className="hover:fill-slate-300 cursor-pointer"

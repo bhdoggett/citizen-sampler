@@ -10,11 +10,13 @@ const SampleSettings = () => {
     allSampleData,
     samplersRef,
     getSampleData,
-    updateSampleSettings,
+    updateSamplerStateSettings,
+    updateSamplerRefSettings,
   } = useAudioContext();
-  const [settings, setSettings] = useState(
+  const [settings, setSettings] = useState<SampleSettings>(
     selectedSample ? selectedSample.settings : {}
   );
+
   // Keep sampler settings in sync with UI
   useEffect(() => {
     if (selectedSample && settings) {
@@ -31,42 +33,34 @@ const SampleSettings = () => {
     }
   }, [settings, selectedSample, samplersRef]);
 
-  // useEffect(() => {
-  //   if (selectedSample) {
-  //     const updatedSample = getSampleData(selectedSample.id);
-  //     if (updatedSample) {
-  //       setSettings(updatedSample.settings);
-  //     }
-  //   }
-  // }, [selectedSample, allSampleData, getSampleData]);
-
+  // get settings from selected sample upon component mount
   useEffect(() => {
     if (selectedSample) {
       setSettings(selectedSample.settings);
     }
   }, [selectedSample]);
 
-  const updateSettingForRender = (key: string, value: number) => {
+  // update allSampleData after a slight delay when settings change
+  useEffect(() => {
+    if (!selectedSample) return;
+
+    const handler = setTimeout(() => {
+      updateSamplerStateSettings(selectedSample.id, settings);
+      console.log("all sample data", allSampleData);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler); // cancel if settings change before debounceDelay
+    };
+  }, [settings, selectedSample, updateSamplerStateSettings]);
+
+  // update settings in this component's state
+  const updateCurrentSampleSettings = (key: string, value: any) => {
     setSettings((prev) => ({
       ...prev,
       [key]: value,
     }));
   };
-
-  // const updateFilterSetting = (filter: string, value: number) => {
-  //   setSettings((prev) => ({
-  //     ...prev,
-  //     [filter]: [value, filter],
-  //   }));
-  // };
-
-  // const saveSettings = () => {
-  //   setAllSampleData((prevSamples) =>
-  //     prevSamples.map((s) =>
-  //       s.id === selectedSample.id ? { ...s, settings } : s
-  //     )
-  //   );
-  // };
 
   if (!selectedSample) {
     return (
@@ -92,11 +86,9 @@ const SampleSettings = () => {
             max="6"
             step="0.1"
             value={settings.volume || 0}
-            onChange={(e) => {
-              const newValue = parseFloat(e.target.value);
-              updateSettingForRender("volume", newValue);
-              updateSampleSettings(selectedSample.id, "volume", newValue);
-            }}
+            onChange={(e) =>
+              updateCurrentSampleSettings("volume", parseFloat(e.target.value))
+            }
             className="w-full"
           />
 

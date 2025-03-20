@@ -18,7 +18,7 @@ type AudioContextType = {
   masterGainNode: Tone.Gain;
   setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
   transport: React.RefObject<TransportClass>;
-  audioContext: Tone.BaseContext | null;
+  audioContext: Tone.Context | null;
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
   kitRef: React.RefObject<Record<string, SamplerWithFX>>;
   locSamples: SampleType[];
@@ -35,7 +35,8 @@ type AudioContextType = {
   setQuantizeValue: React.Dispatch<React.SetStateAction<number>>;
   allSampleData: SampleType[];
   getSampleData: (id: string) => SampleType;
-  updateSampleSettings: (id: string, data: Partial<SampleType>) => void;
+  updateSamplerStateSettings: (id: string, data: Partial<SampleType>) => void;
+  updateSamplerRefSettings: (id: string, key: string, value: number) => void;
   setAllSampleData: React.Dispatch<React.SetStateAction<SampleType[]>>;
   selectedSample: SampleType | null;
   setSelectedSample: React.Dispatch<React.SetStateAction<SampleType | null>>;
@@ -123,7 +124,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
   ]);
-  const [genre, setGenre] = useState<Genre | null>("jazz");
+  const [genre, setGenre] = useState<Genre>("jazz");
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [quantizeActive, setQuantizeActive] = useState<boolean>(false);
@@ -141,6 +142,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
   const kitRef = useRef<Record<string, SamplerWithFX>>({});
 
+  // Function to create a sampler with FX chain
   const makeSampler = (sampleId: string, sampleUrl: string) => {
     const sampler = new Tone.Sampler({
       urls: { C4: sampleUrl },
@@ -188,22 +190,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     );
   };
 
-  const updateSampleSettings = (id: string, key: string, value: number) => {
-    setAllSampleData((prev) =>
-      prev.map((sample) =>
-        sample.id === id
-          ? {
-              ...sample,
-              settings: {
-                ...sample.settings,
-                [key]: value,
-              },
-            }
-          : sample
-      )
-    );
-  };
-
   //create samplers for library of congress samples
   useEffect(() => {
     if (locSamples.length > 0) {
@@ -223,70 +209,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       console.log("kitRef:", kitRef.current);
     }
   }, [kitSamples]);
-
-  // // Function to create or get a sampler for a sample
-  // const getSampler = (sampleId: string, sampleUrl: string, settings: any) => {
-  //   if (!samplersRef.current[sampleId]) {
-  //     // Create new sampler and FX chain
-  //     const sampler = new Tone.Sampler({
-  //       urls: { C4: sampleUrl },
-  //       attack: settings.attack,
-  //       release: settings.release,
-  //     });
-
-  //     const panVol = new Tone.PanVol(settings.pan, settings.volume);
-  //     const highpass = new Tone.Filter(settings.highpass[0], "highpass");
-  //     const lowpass = new Tone.Filter(settings.lowpass[0], "lowpass");
-
-  //     // Connect the FX chain
-  //     sampler.connect(highpass);
-  //     highpass.connect(lowpass);
-  //     lowpass.connect(panVol);
-  //     panVol.connect(masterGainNode.current).toDestination();
-
-  //     samplersRef.current[sampleId] = {
-  //       sampler,
-  //       panVol,
-  //       highpass,
-  //       lowpass,
-  //     };
-  //   }
-
-  //   return samplersRef.current[sampleId];
-  // };
-
-  // // Function to update sampler settings
-  // const updateSamplerSettings = (sampleId: string, settings: any) => {
-  //   const samplerWithFX = samplersRef.current[sampleId];
-  //   if (samplerWithFX) {
-  //     const { sampler, gain, highpass, lowpass } = samplerWithFX;
-  //     gain.gain.value = settings.gain;
-  //     highpass.frequency.value = settings.fx.highpass[0];
-  //     lowpass.frequency.value = settings.fx.lowpass[0];
-  //     sampler.attack = settings.attack;
-  //     sampler.release = settings.release;
-  //   }
-  // };
-
-  // Universal cleanup function for samplers
-  const cleanupSampler = (
-    sampleId: string,
-    ref: React.RefObject<SamplerWithFX>
-  ) => {
-    const samplerWithFX = ref.current[sampleId];
-    if (samplerWithFX) {
-      const { sampler, panVol, highpass, lowpass } = samplerWithFX;
-
-      // Dispose of each Tone.js node
-      sampler.dispose();
-      panVol.dispose();
-      highpass.dispose();
-      lowpass.dispose();
-
-      // Delete the reference
-      delete ref.current[sampleId];
-    }
-  };
 
   // Start Tone.js context once and get transport
   useEffect(() => {
@@ -377,6 +299,77 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     fetchSamples();
   }, [genre]); // Dependency array ensures re-fetching when `genre` changes
 
+  // initialize the allSampleData state with the locSamples and kitSamples
+  useEffect(() => {
+    setAllSampleData([...locSamples, ...kitSamples]);
+  }, [locSamples, kitSamples]);
+
+  // Universal cleanup function for samplers
+  const cleanupSampler = (
+    sampleId: string,
+    ref: React.RefObject<SamplerWithFX>
+  ) => {
+    const samplerWithFX = ref.current[sampleId];
+    if (samplerWithFX) {
+      const { sampler, panVol, highpass, lowpass } = samplerWithFX;
+
+      // Dispose of each Tone.js node
+      sampler.dispose();
+      panVol.dispose();
+      highpass.dispose();
+      lowpass.dispose();
+
+      // Delete the reference
+      delete ref.current[sampleId];
+    }
+  };
+
+  const updateSamplerStateSettings = (id: string, settings: SampleSettings) => {
+    setAllSampleData((prev) =>
+      prev.map((sample) => {
+        if (sample.id === id) {
+          return {
+            ...sample,
+            settings: {
+              ...sample.settings,
+              ...settings,
+            },
+          };
+        }
+        return sample;
+      })
+    );
+  };
+
+  const updateSamplerRefSettings = (id: string, key: string, value: number) => {
+    const samplerWithFX = samplersRef.current[id];
+    if (samplerWithFX) {
+      const { sampler, panVol, highpass, lowpass } = samplerWithFX;
+      switch (key) {
+        case "volume":
+          panVol.volume.value = value;
+          break;
+        case "pan":
+          panVol.pan.value = value;
+          break;
+        case "highpass":
+          highpass.frequency.value = value;
+          break;
+        case "lowpass":
+          lowpass.frequency.value = value;
+          break;
+        case "attack":
+          sampler.attack = value;
+          break;
+        case "release":
+          sampler.release = value;
+          break;
+        default:
+          break;
+      }
+    }
+  };
+
   return (
     <AudioContextContext.Provider
       value={{
@@ -397,7 +390,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setQuantizeValue,
         allSampleData,
         getSampleData,
-        updateSampleSettings,
+        updateSamplerStateSettings,
+        updateSamplerRefSettings,
         setAllSampleData,
         selectedSample,
         setSelectedSample,
