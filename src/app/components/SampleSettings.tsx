@@ -40,19 +40,35 @@ const SampleSettings = () => {
     }
   }, [selectedSample]);
 
-  // update allSampleData after a slight delay when settings change
+  // update allSampleData and samplerRef settings when settings change
   useEffect(() => {
     if (!selectedSample) return;
 
     const handler = setTimeout(() => {
+      // Update global state
       updateSamplerStateSettings(selectedSample.id, settings);
+
+      // Update sampler instance for real-time feedback
+      Object.entries(settings).forEach(([key, value]) => {
+        if (key === "highpass" || key === "lowpass") {
+          updateSamplerRefSettings(selectedSample.id, key, value[0]);
+        } else {
+          updateSamplerRefSettings(selectedSample.id, key, value);
+        }
+      });
+      console.log("selectedSample", selectedSample);
       console.log("all sample data", allSampleData);
     }, 500);
 
     return () => {
       clearTimeout(handler); // cancel if settings change before debounceDelay
     };
-  }, [settings, selectedSample, updateSamplerStateSettings]);
+  }, [
+    settings,
+    selectedSample,
+    updateSamplerStateSettings,
+    updateSamplerRefSettings,
+  ]);
 
   // update settings in this component's state
   const updateCurrentSampleSettings = (key: string, value: any) => {
@@ -71,7 +87,7 @@ const SampleSettings = () => {
   return (
     <div className="p-4 bg-gray-100 rounded-lg max-w-md mx-auto my-4">
       <h3 className="text-lg font-semibold mb-4">
-        Settings: {selectedSample.title}
+        Settings: {selectedSample.id}
       </h3>
 
       <div className="space-y-4">
@@ -102,7 +118,9 @@ const SampleSettings = () => {
             max="1"
             step="0.1"
             value={settings.pan || 0}
-            onChange={(e) => updateSetting("pan", parseFloat(e.target.value))}
+            onChange={(e) =>
+              updateCurrentSampleSettings("pan", parseFloat(e.target.value))
+            }
             className="w-full"
           />
 
@@ -117,7 +135,7 @@ const SampleSettings = () => {
             step="0.01"
             value={settings.attack || 0}
             onChange={(e) =>
-              updateSetting("attack", parseFloat(e.target.value))
+              updateCurrentSampleSettings("attack", parseFloat(e.target.value))
             }
             className="w-full"
           />
@@ -133,7 +151,7 @@ const SampleSettings = () => {
             step="0.01"
             value={settings.release || 0}
             onChange={(e) =>
-              updateSetting("release", parseFloat(e.target.value))
+              updateCurrentSampleSettings("release", parseFloat(e.target.value))
             }
             className="w-full"
           />
@@ -149,7 +167,10 @@ const SampleSettings = () => {
             step="1"
             value={settings.highpass?.[0] || 0}
             onChange={(e) =>
-              updateFilterSetting("highpass", parseFloat(e.target.value))
+              updateCurrentSampleSettings("highpass", [
+                parseFloat(e.target.value),
+                "highpass",
+              ])
             }
             className="w-full"
           />
@@ -165,7 +186,10 @@ const SampleSettings = () => {
             step="1"
             value={settings.lowpass?.[0] || 20000}
             onChange={(e) =>
-              updateFilterSetting("lowpass", parseFloat(e.target.value))
+              updateCurrentSampleSettings("lowpass", [
+                parseFloat(e.target.value),
+                "lowpass",
+              ])
             }
             className="w-full"
           />

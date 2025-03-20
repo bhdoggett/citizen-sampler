@@ -16,16 +16,33 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     isPlaying,
     quantizeValue,
     quantizeActive,
-    allSampleData,
     getSampleData,
+    allSampleData,
     setAllSampleData,
     setSelectedSample,
+    selectedSample,
   } = useAudioContext() || {};
 
-  const [sampleData, setSampleData] = useState({
-    id: id || "default",
-    times: [],
-  });
+  const [sampleData, setSampleData] = useState(
+    allSampleData.find((sample) => sample.id === id) || {
+      title: "",
+      label: "",
+      type: "",
+      url: "",
+      id: "",
+      times: [],
+      settings: {
+        volume: 0,
+        pan: 0,
+        pitch: 0,
+        finetune: 0,
+        attack: 0,
+        release: 0,
+        highpass: [0, "highpass"],
+        lowpass: [20000, "lowpass"],
+      },
+    }
+  );
   const [isSelected, setIsSelected] = useState(false);
 
   useEffect(() => {
@@ -78,8 +95,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     transport,
   ]);
 
-
-
   useEffect(() => {
     setAllSampleData((prev) => {
       const existingIndex = prev.findIndex((item) => item.id === sampleData.id);
@@ -96,10 +111,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const handlePressPad = () => {
     sampler.triggerAttack("C4");
 
-    setSelectedSample(getSampleData(id));
+    setSelectedSample(sampleData);
     setIsSelected(true);
-
-    console.log("pressing pad for", id, "here's the sampler:", sampler);
+    console.log("selectedSample", selectedSample);
 
     if (isPlaying && isRecording) {
       const startTime = transport.current.seconds;

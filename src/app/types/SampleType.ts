@@ -14,8 +14,8 @@ export type SampleSettings = {
   finetune: number;
   attack: number;
   release: number;
-  highpass: [Frequency, "highpass", number?];
-  lowpass: [Frequency, "lowpass", number?];
+  highpass: [number, "highpass", number?];
+  lowpass: [number, "lowpass", number?];
 };
 
 export type SampleType = {
