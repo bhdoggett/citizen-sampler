@@ -1,10 +1,17 @@
 "use client";
-import { createContext, useContext, useEffect, useState, useRef } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  use,
+} from "react";
 import * as Tone from "tone";
 import { SampleType, SampleSettings } from "../types/SampleType";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
 
-type Genre = "classical" | "folk-songs" | "jazz" | "popular" | null;
+type Genre = "classical" | "folk-songs" | "jazz" | "popular";
 
 type SamplerWithFX = {
   id: string;
@@ -35,28 +42,34 @@ type AudioContextType = {
   setQuantizeValue: React.Dispatch<React.SetStateAction<number>>;
   allSampleData: SampleType[];
   getSampleData: (id: string) => SampleType;
-  updateSamplerStateSettings: (id: string, data: Partial<SampleType>) => void;
+  updateSamplerStateSettings: (
+    id: string,
+    settings: Partial<SampleSettings>
+  ) => void;
   updateSamplerRefSettings: (id: string, key: string, value: number) => void;
   setAllSampleData: React.Dispatch<React.SetStateAction<SampleType[]>>;
-  selectedSample: SampleType | null;
-  setSelectedSample: React.Dispatch<React.SetStateAction<SampleType | null>>;
+  selectedSampleId: string | null;
+  setSelectedSampleId: React.Dispatch<React.SetStateAction<string | null>>;
   // getSampler,
   // updateSamplerSettings,
 };
 
 const AudioContextContext = createContext<AudioContextType | null>(null);
 
+const getRandomNumberForId = () => {
+  return Math.floor(Math.random() * 1000000);
+};
+
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [audioContext, setAudioContext] = useState<Tone.Context | null>(null);
-  // const [query, setQuery] = useState<string>("jazz");
   const [locSamples, setLocSamples] = useState<SampleType[] | []>([]);
   const [kitSamples] = useState<SampleType[] | []>([
     {
+      id: `drum-1-${getRandomNumberForId()}`,
+      type: "drumKit",
       title: "Kick_Bulldog_2",
       label: "Kick",
-      type: "drumKit",
       url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
-      id: "drum-1",
       times: [],
       settings: {
         volume: 0,
@@ -70,11 +83,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
+      id: `drum-2-${getRandomNumberForId()}`,
+      type: "drumKit",
       title: "Snare_Astral_1",
       label: "Snare",
-      type: "drumKit",
       url: "/samples/drums/snares/Snare_Astral_1.wav",
-      id: "drum-2",
       times: [],
       settings: {
         volume: 0,
@@ -88,11 +101,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
-      title: "ClosedHH_Alessya_DS",
+      id: `drum-3-${getRandomNumberForId()}`,
       type: "drumKit",
+      title: "ClosedHH_Alessya_DS",
       label: "HiHat",
       url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
-      id: "drum-3",
       times: [],
       settings: {
         volume: 0,
@@ -106,11 +119,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
-      title: "Clap_Graphite",
+      id: `drum-4-${getRandomNumberForId()}`,
       type: "drumKit",
+      title: "Clap_Graphite",
       label: "Clap",
       url: "/samples/drums/claps/Clap_Graphite.wav",
-      id: "drum-4",
       times: [],
       settings: {
         volume: 0,
@@ -134,7 +147,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     new Tone.Gain(masterGainLevel).toDestination()
   );
   const [allSampleData, setAllSampleData] = useState<SampleType[]>([]);
-  const [selectedSample, setSelectedSample] = useState<SampleType | null>(null);
+  const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null);
 
   const transport = useRef<TransportClass>(Tone.getTransport());
 
@@ -168,13 +181,14 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   };
 
   const getSampleData = (id: string): SampleType => {
+    console.log("Getting sample data for id:", id);
     return (
       allSampleData.find((sample) => sample.id === id) || {
+        id: "",
         title: "",
         label: "",
         type: "",
         url: "",
-        id: "",
         times: [],
         settings: {
           volume: 0,
@@ -190,6 +204,10 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     );
   };
 
+  //testing things
+  useEffect(() => {
+    console.log("selectedSampleId:", selectedSampleId);
+  }, [selectedSampleId]);
   //create samplers for library of congress samples
   useEffect(() => {
     if (locSamples.length > 0) {
@@ -247,8 +265,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        console.log("response:", response);
+
         const result = await response.json();
-        console.log("FileList.json contents:", result);
+        console.log("result", result);
 
         if (!result[genre]) {
           console.error("Genre not found in fileList.json:", genre);
@@ -264,7 +285,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           selectedSamples,
           (sample, index) => {
             const sampleData = {
-              id: `loc-${index + 1}`,
+              id: `loc-${index + 1}-${getRandomNumberForId()}`,
               type: `loc-${genre}`,
               title: sample,
               label: sample.split(".")[0],
@@ -324,7 +345,10 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
   };
 
-  const updateSamplerStateSettings = (id: string, settings: SampleSettings) => {
+  const updateSamplerStateSettings = (
+    id: string,
+    settings: Partial<SampleSettings>
+  ): void => {
     setAllSampleData((prev) =>
       prev.map((sample) => {
         if (sample.id === id) {
@@ -341,7 +365,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     );
   };
 
-  const updateSamplerRefSettings = (id: string, key: string, value: number) => {
+  const updateSamplerRefSettings = (
+    id: string,
+    key: string,
+    value: number
+  ): void => {
     const samplerWithFX = samplersRef.current[id];
     if (samplerWithFX) {
       const { sampler, panVol, highpass, lowpass } = samplerWithFX;
@@ -393,8 +421,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         updateSamplerStateSettings,
         updateSamplerRefSettings,
         setAllSampleData,
-        selectedSample,
-        setSelectedSample,
+        selectedSampleId,
+        setSelectedSampleId,
         samplersRef,
         kitRef,
         genre,

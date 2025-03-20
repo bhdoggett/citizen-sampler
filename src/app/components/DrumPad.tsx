@@ -1,15 +1,19 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useAudioContext } from "../contexts/AudioContext";
 import * as Tone from "tone";
 import quantize from "../functions/quantize";
+import { SampleType } from "../types/SampleType";
 
 type DrumPadProps = {
-  id?: string;
+  id: string;
   sampler: Tone.Sampler;
 };
 
 const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
+  // const audioCtx = useAudioContext();
+  // if (!audioCtx) return null;
+
   const {
     transport,
     isRecording,
@@ -19,46 +23,28 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     getSampleData,
     allSampleData,
     setAllSampleData,
-    setSelectedSample,
-    selectedSample,
-  } = useAudioContext() || {};
+    setSelectedSampleId,
+    selectedSampleId,
+  } = useAudioContext();
 
-  const [sampleData, setSampleData] = useState(
-    allSampleData.find((sample) => sample.id === id) || {
-      title: "",
-      label: "",
-      type: "",
-      url: "",
-      id: "",
-      times: [],
-      settings: {
-        volume: 0,
-        pan: 0,
-        pitch: 0,
-        finetune: 0,
-        attack: 0,
-        release: 0,
-        highpass: [0, "highpass"],
-        lowpass: [20000, "lowpass"],
-      },
-    }
-  );
+  const [sampleData, setSampleData] = useState<SampleType | null>(null);
   const [isSelected, setIsSelected] = useState(false);
 
+  // Schedule playback of sampleData
   useEffect(() => {
     if (!isPlaying || sampleData.times.length === 0) return;
 
     const bpm = transport.current.bpm.value;
 
     const events = sampleData.times.map((e) => {
-      const quantizedTime = quantizeActive
+      const eventTime = quantizeActive
         ? quantize(e.startTime, bpm, quantizeValue)
         : e.startTime;
 
       return [
-        quantizedTime,
+        eventTime,
         {
-          startTime: quantizedTime,
+          startTime: eventTime,
           duration: e.duration,
         },
       ];
@@ -95,7 +81,15 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     transport,
   ]);
 
+  // Sync isSelected state with selectedSampleId
   useEffect(() => {
+    setIsSelected(selectedSampleId === id);
+  }, [selectedSampleId, id]);
+
+  // Update allSampleData with sampleData
+  useEffect(() => {
+    if (!selectedSampleId) return;
+
     setAllSampleData((prev) => {
       const existingIndex = prev.findIndex((item) => item.id === sampleData.id);
       if (existingIndex !== -1) {
@@ -111,9 +105,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const handlePressPad = () => {
     sampler.triggerAttack("C4");
 
-    setSelectedSample(sampleData);
+    setSelectedSampleId(id);
     setIsSelected(true);
-    console.log("selectedSample", selectedSample);
+    console.log("selectedSample", selectedSampleId);
 
     if (isPlaying && isRecording) {
       const startTime = transport.current.seconds;
@@ -124,9 +118,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     }
   };
 
-  const handleBlur = () => {
-    setIsSelected(false);
-  };
+  // const handleBlur = () => {
+  //   setIsSelected(false);
+  // };
 
   const handleReleasePad = () => {
     const releaseTime = transport.current.seconds;
@@ -160,7 +154,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onMouseUp={handleReleasePad}
         onMouseLeave={handleReleasePad}
         onTouchEnd={handleReleasePad}
-        onBlur={handleBlur}
         className="m-1 bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-20 h-20 active:bg-slate-500 shadow-md shadow-slate-700"
       >
         {id}

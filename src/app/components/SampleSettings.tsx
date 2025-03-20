@@ -1,11 +1,15 @@
 "use client";
 import { useAudioContext } from "../contexts/AudioContext";
 import { useState, useEffect, use } from "react";
-import type { SampleSettings } from "../types/SampleType";
+import type { SampleSettings, SampleType } from "../types/SampleType";
 
 const SampleSettings = () => {
+  // const audioCtx = useAudioContext();
+
+  // if (!audioCtx) return null;
+
   const {
-    selectedSample,
+    selectedSampleId,
     setAllSampleData,
     allSampleData,
     samplersRef,
@@ -13,16 +17,38 @@ const SampleSettings = () => {
     updateSamplerStateSettings,
     updateSamplerRefSettings,
   } = useAudioContext();
-  const [settings, setSettings] = useState<SampleSettings>(
-    selectedSample ? selectedSample.settings : {}
-  );
+
+  // const [selectedSample, setSelectedSample] = useState<SampleType | null>(null);
+  const [settings, setSettings] = useState<SampleSettings | null>(null);
+
+  //test some things
+  useEffect(() => {
+    console.log("selectedSampleId", selectedSampleId);
+    console.log("allSampleData", allSampleData);
+  }, [selectedSampleId, allSampleData]);
+
+  // useEffect(() => {
+  //   if (selectedSampleId) {
+  //     setSelectedSample(getSampleData(selectedSampleId));
+  //     console.log("selectedSample", selectedSample);
+  //   }
+  // }, [selectedSampleId, getSampleData, selectedSample]);
+
+  // initialize settings with selected sample's settings
+  useEffect(() => {
+    if (selectedSampleId) {
+      setSettings(getSampleData(selectedSampleId).settings);
+    }
+  }, [selectedSampleId, getSampleData]);
 
   // Keep sampler settings in sync with UI
   useEffect(() => {
-    if (selectedSample && settings) {
-      const samplerWithFX = samplersRef.current[selectedSample.id];
+    if (settings) {
+      const samplerWithFX = samplersRef.current[selectedSampleId];
+      console.log("samplerWithFX", samplerWithFX);
       if (samplerWithFX) {
         const { sampler, panVol, highpass, lowpass } = samplerWithFX;
+
         panVol.volume.value = settings.volume || 0;
         panVol.pan.value = settings.pan || 0;
         highpass.frequency.value = settings.highpass[0] || 0;
@@ -31,44 +57,32 @@ const SampleSettings = () => {
         sampler.release = settings.release || 0;
       }
     }
-  }, [settings, selectedSample, samplersRef]);
-
-  // get settings from selected sample upon component mount
-  useEffect(() => {
-    if (selectedSample) {
-      setSettings(selectedSample.settings);
-    }
-  }, [selectedSample]);
+  }, [samplersRef, selectedSampleId, settings]);
 
   // update allSampleData and samplerRef settings when settings change
   useEffect(() => {
-    if (!selectedSample) return;
+    if (!selectedSampleId) return;
 
     const handler = setTimeout(() => {
       // Update global state
-      updateSamplerStateSettings(selectedSample.id, settings);
+      updateSamplerStateSettings(selectedSampleId, settings);
 
       // Update sampler instance for real-time feedback
       Object.entries(settings).forEach(([key, value]) => {
-        if (key === "highpass" || key === "lowpass") {
-          updateSamplerRefSettings(selectedSample.id, key, value[0]);
+        if (Array.isArray(value)) {
+          updateSamplerRefSettings(selectedSampleId, key, value[0]);
         } else {
-          updateSamplerRefSettings(selectedSample.id, key, value);
+          updateSamplerRefSettings(selectedSampleId, key, value);
         }
       });
-      console.log("selectedSample", selectedSample);
+      console.log("settings", settings);
       console.log("all sample data", allSampleData);
     }, 500);
 
     return () => {
       clearTimeout(handler); // cancel if settings change before debounceDelay
     };
-  }, [
-    settings,
-    selectedSample,
-    updateSamplerStateSettings,
-    updateSamplerRefSettings,
-  ]);
+  }, [settings, updateSamplerStateSettings, updateSamplerRefSettings]);
 
   // update settings in this component's state
   const updateCurrentSampleSettings = (key: string, value: any) => {
@@ -78,16 +92,20 @@ const SampleSettings = () => {
     }));
   };
 
-  if (!selectedSample) {
+  if (!selectedSampleId) {
     return (
       <p className="text-center p-4">Select a sample to modify its settings</p>
     );
   }
 
+  if (!settings) {
+    return <p>Loading...</p>;
+  }
+
   return (
     <div className="p-4 bg-gray-100 rounded-lg max-w-md mx-auto my-4">
       <h3 className="text-lg font-semibold mb-4">
-        Settings: {selectedSample.id}
+        Settings: {selectedSampleId}
       </h3>
 
       <div className="space-y-4">

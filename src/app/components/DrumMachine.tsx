@@ -41,7 +41,7 @@ const DrumMachine = () => {
     <div>
       <div className="grid grid-cols-4 gap-4 my-3">
         {Object.entries(samplersRef.current).map(([id, samplerNodes]) => (
-          <DrumPad key={id} sampler={samplerNodes.sampler} />
+          <DrumPad key={id} id={id} sampler={samplerNodes.sampler} />
         ))}
       </div>
 
@@ -49,7 +49,7 @@ const DrumMachine = () => {
 
       <div className="grid grid-cols-4 gap-4 my-3">
         {Object.entries(kitRef.current).map(([id, samplerNodes]) => (
-          <DrumPad key={id} sampler={samplerNodes.sampler} />
+          <DrumPad key={id} id={id} sampler={samplerNodes.sampler} />
         ))}
       </div>
     </div>
