@@ -65,7 +65,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [locSamples, setLocSamples] = useState<SampleType[] | []>([]);
   const [kitSamples] = useState<SampleType[] | []>([
     {
-      id: `drum-1-${getRandomNumberForId()}`,
+      id: `kit-1-${getRandomNumberForId()}`,
       type: "drumKit",
       title: "Kick_Bulldog_2",
       label: "Kick",
@@ -83,7 +83,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
-      id: `drum-2-${getRandomNumberForId()}`,
+      id: `kit-2-${getRandomNumberForId()}`,
       type: "drumKit",
       title: "Snare_Astral_1",
       label: "Snare",
@@ -101,7 +101,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
-      id: `drum-3-${getRandomNumberForId()}`,
+      id: `kit-3-${getRandomNumberForId()}`,
       type: "drumKit",
       title: "ClosedHH_Alessya_DS",
       label: "HiHat",
@@ -119,7 +119,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
-      id: `drum-4-${getRandomNumberForId()}`,
+      id: `kit-4-${getRandomNumberForId()}`,
       type: "drumKit",
       title: "Clap_Graphite",
       label: "Clap",
@@ -222,9 +222,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     if (kitSamples.length > 0) {
       kitSamples.forEach(({ id, url }) => {
-        kitRef.current[id] = makeSampler(id, url);
+        samplersRef.current[id] = makeSampler(id, url);
       });
-      console.log("kitRef:", kitRef.current);
+      console.log("samplersRef:", kitRef.current);
     }
   }, [kitSamples]);
 

@@ -8,13 +8,13 @@ const DrumMachine = () => {
 
   // Monitor changes to samplersRef and check if it has 8 samplers
   const [samplerCount, setSamplerCount] = useState(0);
-  const [kitCount, setKitCount] = useState(0);
+  // const [kitCount, setKitCount] = useState(0);
 
   // Update counts when refs change
   useEffect(() => {
     const checkSamplers = () => {
       setSamplerCount(Object.keys(samplersRef.current).length);
-      setKitCount(Object.keys(kitRef.current).length);
+      // setKitCount(Object.keys(kitRef.current).length);
     };
 
     // Check immediately
@@ -24,14 +24,14 @@ const DrumMachine = () => {
     const intervalId = setInterval(checkSamplers, 10);
 
     return () => clearInterval(intervalId);
-  }, [kitRef, samplersRef]); // Empty dependency array since we're using refs inside
+  }, [samplersRef]);
 
   // Set loaded state based on counts
   useEffect(() => {
-    if (samplerCount === 8 && kitCount === 4) {
+    if (samplerCount === 12) {
       setSamplersLoaded(true);
     }
-  }, [samplerCount, kitCount]);
+  }, [samplerCount]);
 
   if (!samplersLoaded) {
     return <div>Loading samplers...</div>; // Display loading message while samplers are not loaded
@@ -40,17 +40,25 @@ const DrumMachine = () => {
   return (
     <div>
       <div className="grid grid-cols-4 gap-4 my-3">
-        {Object.entries(samplersRef.current).map(([id, samplerNodes]) => (
-          <DrumPad key={id} id={id} sampler={samplerNodes.sampler} />
-        ))}
+        {Object.entries(samplersRef.current)
+          .filter((entry) => {
+            return entry[0].includes("loc");
+          })
+          .map(([id, samplerNodes]) => (
+            <DrumPad key={id} id={id} sampler={samplerNodes.sampler} />
+          ))}
       </div>
 
       <hr />
 
       <div className="grid grid-cols-4 gap-4 my-3">
-        {Object.entries(kitRef.current).map(([id, samplerNodes]) => (
-          <DrumPad key={id} id={id} sampler={samplerNodes.sampler} />
-        ))}
+        {Object.entries(samplersRef.current)
+          .filter((entry) => {
+            return entry[0].includes("kit");
+          })
+          .map(([id, samplerNodes]) => (
+            <DrumPad key={id} id={id} sampler={samplerNodes.sampler} />
+          ))}
       </div>
     </div>
   );
