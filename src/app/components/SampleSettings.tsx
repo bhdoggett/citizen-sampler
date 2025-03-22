@@ -61,7 +61,12 @@ const SampleSettings = () => {
 
   // update allSampleData and samplerRef settings when settings change
   useEffect(() => {
-    if (!selectedSampleId) return;
+    if (
+      !selectedSampleId ||
+      settings ===
+        allSampleData.find((sample) => sample.id === selectedSampleId).settings
+    )
+      return;
 
     const handler = setTimeout(() => {
       // Update global state

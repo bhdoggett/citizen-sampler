@@ -4,9 +4,9 @@ import * as Tone from "tone";
 import { Circle, Play, Square, Music3 } from "lucide-react";
 import { useAudioContext } from "../contexts/AudioContext";
 
-const metronomeSynth = new Tone.Synth({
-  oscillator: { type: "square" },
-  envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
+const metronome = new Tone.Sampler({
+  urls: { C6: "hi-block.wav", G5: "lo-block.wav" },
+  baseUrl: "/samples/metronome/",
 }).toDestination();
 
 const Transport = () => {
@@ -41,9 +41,9 @@ const Transport = () => {
       beatCount = beats % timeSignature[0];
 
       if (beatCount === 0) {
-        metronomeSynth.triggerAttackRelease("C6", "8n", time);
+        metronome.triggerAttackRelease("C6", "8n", time);
       } else {
-        metronomeSynth.triggerAttackRelease("G5", "8n", time);
+        metronome.triggerAttackRelease("G5", "8n", time);
       }
     }, `${timeSignature[1]}n`);
 
