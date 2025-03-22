@@ -32,7 +32,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   // Schedule playback of sampleData
   useEffect(() => {
-    if (!isPlaying || sampleData.times.length === 0) return;
+    if (!isPlaying || !sampleData || sampleData.times.length === 0) return;
 
     const bpm = transport.current.bpm.value;
 
