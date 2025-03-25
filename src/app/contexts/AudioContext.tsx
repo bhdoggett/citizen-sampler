@@ -22,7 +22,7 @@ type SamplerWithFX = {
 };
 
 type AudioContextType = {
-  masterGainNode: Tone.Gain;
+  masterGainNode: RefObject<Tone.Gain<"gain">>;
   setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
   transport: React.RefObject<TransportClass>;
   audioContext: Tone.Context | null;
@@ -40,7 +40,7 @@ type AudioContextType = {
   setQuantizeActive: React.Dispatch<React.SetStateAction<boolean>>;
   quantizeValue: number;
   setQuantizeValue: React.Dispatch<React.SetStateAction<number>>;
-  allSampleData: SampleType[];
+  allSampleData: Record<string, SampleType>;
   setAllSampleData: React.Dispatch<
     React.SetStateAction<Record<string, SampleType>>
   >;
@@ -424,7 +424,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         quantizeValue,
         setQuantizeValue,
         allSampleData,
-        getSampleData,
+        // getSampleData,
         updateSamplerStateSettings,
         updateSamplerRefSettings,
         setAllSampleData,

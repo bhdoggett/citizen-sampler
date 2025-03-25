@@ -13,7 +13,7 @@ const SampleSettings = () => {
     setAllSampleData,
     allSampleData,
     samplersRef,
-    getSampleData,
+    // getSampleData,
     updateSamplerStateSettings,
     updateSamplerRefSettings,
   } = useAudioContext();
@@ -27,19 +27,12 @@ const SampleSettings = () => {
     console.log("allSampleData", allSampleData);
   }, [selectedSampleId, allSampleData]);
 
-  // useEffect(() => {
-  //   if (selectedSampleId) {
-  //     setSelectedSample(getSampleData(selectedSampleId));
-  //     console.log("selectedSample", selectedSample);
-  //   }
-  // }, [selectedSampleId, getSampleData, selectedSample]);
-
   // initialize settings with selected sample's settings
   useEffect(() => {
-    if (selectedSampleId) {
-      setSettings(getSampleData(selectedSampleId).settings);
+    if (selectedSampleId && allSampleData[selectedSampleId]) {
+      setSettings(allSampleData[selectedSampleId].settings);
     }
-  }, [selectedSampleId, getSampleData]);
+  }, [selectedSampleId, allSampleData]);
 
   // Keep sampler settings in sync with UI
   useEffect(() => {
@@ -63,6 +56,7 @@ const SampleSettings = () => {
   useEffect(() => {
     if (
       !selectedSampleId ||
+      !allSampleData[selectedSampleId] ||
       settings === allSampleData[selectedSampleId].settings
     )
       return;
@@ -71,14 +65,14 @@ const SampleSettings = () => {
       // Update global state
       updateSamplerStateSettings(selectedSampleId, settings);
 
-      // Update sampler instance for real-time feedback
-      Object.entries(settings).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          updateSamplerRefSettings(selectedSampleId, key, value[0]);
-        } else {
-          updateSamplerRefSettings(selectedSampleId, key, value);
-        }
-      });
+      // // Update sampler instance for real-time feedback
+      // Object.entries(settings).forEach(([key, value]) => {
+      //   if (Array.isArray(value)) {
+      //     updateSamplerRefSettings(selectedSampleId, key, value[0]);
+      //   } else {
+      //     updateSamplerRefSettings(selectedSampleId, key, value);
+      //   }
+      // });
       console.log("settings", settings);
       console.log("all sample data", allSampleData);
     }, 500);
@@ -86,7 +80,13 @@ const SampleSettings = () => {
     return () => {
       clearTimeout(handler); // cancel if settings change before debounceDelay
     };
-  }, [settings, updateSamplerStateSettings, updateSamplerRefSettings]);
+  }, [
+    selectedSampleId,
+    allSampleData,
+    settings,
+    updateSamplerStateSettings,
+    updateSamplerRefSettings,
+  ]);
 
   // update settings in this component's state
   const updateCurrentSampleSettings = (key: string, value: any) => {
@@ -124,9 +124,11 @@ const SampleSettings = () => {
             max="6"
             step="0.1"
             value={settings.volume || 0}
-            onChange={(e) =>
-              updateCurrentSampleSettings("volume", parseFloat(e.target.value))
-            }
+            onChange={(e) => {
+              updateCurrentSampleSettings("volume", parseFloat(e.target.value));
+              samplersRef.current[selectedSampleId].panVol.volume.value =
+                e.target.value;
+            }}
             className="w-full"
           />
 

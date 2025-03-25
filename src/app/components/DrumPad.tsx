@@ -86,21 +86,31 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setIsSelected(selectedSampleId === id);
   }, [selectedSampleId, id]);
 
+  // // Update allSampleData with sampleData
+  // useEffect(() => {
+  //   if (!selectedSampleId) return;
+
+  //   setAllSampleData((prev) => {
+  //     const existingIndex = prev.findIndex((item) => item.id === sampleData.id);
+  //     if (existingIndex !== -1) {
+  //       const updatedData = [...prev];
+  //       updatedData[existingIndex] = sampleData;
+  //       return updatedData;
+  //     } else {
+  //       return [...prev, sampleData];
+  //     }
+  //   });
+  // }, [sampleData, setAllSampleData]);
+
   // Update allSampleData with sampleData
   useEffect(() => {
     if (!selectedSampleId) return;
 
-    setAllSampleData((prev) => {
-      const existingIndex = prev.findIndex((item) => item.id === sampleData.id);
-      if (existingIndex !== -1) {
-        const updatedData = [...prev];
-        updatedData[existingIndex] = sampleData;
-        return updatedData;
-      } else {
-        return [...prev, sampleData];
-      }
-    });
-  }, [sampleData, setAllSampleData]);
+    setAllSampleData((prev) => ({
+      ...prev,
+      [selectedSampleId]: { ...prev[selectedSampleId], sampleData },
+    }));
+  }, [selectedSampleId, sampleData, setAllSampleData]);
 
   const handlePressPad = () => {
     sampler.triggerAttack("C4");
