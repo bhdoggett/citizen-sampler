@@ -63,8 +63,7 @@ const SampleSettings = () => {
   useEffect(() => {
     if (
       !selectedSampleId ||
-      settings ===
-        allSampleData.find((sample) => sample.id === selectedSampleId).settings
+      settings === allSampleData[selectedSampleId].settings
     )
       return;
 

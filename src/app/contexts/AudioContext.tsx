@@ -41,13 +41,16 @@ type AudioContextType = {
   quantizeValue: number;
   setQuantizeValue: React.Dispatch<React.SetStateAction<number>>;
   allSampleData: SampleType[];
+  setAllSampleData: React.Dispatch<
+    React.SetStateAction<Record<string, SampleType>>
+  >;
   getSampleData: (id: string) => SampleType;
   updateSamplerStateSettings: (
     id: string,
     settings: Partial<SampleSettings>
   ) => void;
   updateSamplerRefSettings: (id: string, key: string, value: number) => void;
-  setAllSampleData: React.Dispatch<React.SetStateAction<SampleType[]>>;
+
   selectedSampleId: string | null;
   setSelectedSampleId: React.Dispatch<React.SetStateAction<string | null>>;
   // getSampler,
@@ -146,7 +149,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
   );
-  const [allSampleData, setAllSampleData] = useState<SampleType[]>([]);
+  const [allSampleData, setAllSampleData] = useState<
+    Record<string, SampleType>
+  >({});
   const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null);
 
   const transport = useRef<TransportClass>(Tone.getTransport());
@@ -181,9 +186,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   };
 
   const getSampleData = (id: string): SampleType => {
-    console.log("Getting sample data for id:", id);
     return (
-      allSampleData.find((sample) => sample.id === id) || {
+      allSampleData[id] || {
         id: "",
         title: "",
         label: "",
@@ -208,6 +212,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     console.log("selectedSampleId:", selectedSampleId);
   }, [selectedSampleId]);
+
   //create samplers for library of congress samples
   useEffect(() => {
     if (locSamples.length > 0) {
@@ -322,7 +327,13 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // initialize the allSampleData state with the locSamples and kitSamples
   useEffect(() => {
-    setAllSampleData([...locSamples, ...kitSamples]);
+    setAllSampleData(() => {
+      const sampleDataObj: Record<string, SampleType> = {};
+      [...locSamples, ...kitSamples].forEach((sample) => {
+        sampleDataObj[sample.id] = sample;
+      });
+      return sampleDataObj;
+    });
   }, [locSamples, kitSamples]);
 
   // Universal cleanup function for samplers
@@ -349,20 +360,16 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     id: string,
     settings: Partial<SampleSettings>
   ): void => {
-    setAllSampleData((prev) =>
-      prev.map((sample) => {
-        if (sample.id === id) {
-          return {
-            ...sample,
-            settings: {
-              ...sample.settings,
-              ...settings,
-            },
-          };
-        }
-        return sample;
-      })
-    );
+    setAllSampleData((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        settings: {
+          ...prev[id].settings,
+          ...settings,
+        },
+      },
+    }));
   };
 
   const updateSamplerRefSettings = (
