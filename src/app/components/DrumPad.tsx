@@ -20,15 +20,30 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     isPlaying,
     quantizeValue,
     quantizeActive,
-    getSampleData,
+    // getSampleData,
     allSampleData,
     setAllSampleData,
     setSelectedSampleId,
     selectedSampleId,
   } = useAudioContext();
 
-  const [sampleData, setSampleData] = useState<SampleType | null>(null);
+  const [sampleData, setSampleData] = useState<SampleType | null>(
+    allSampleData[selectedSampleId]?.sampleData
+  );
   const [isSelected, setIsSelected] = useState(false);
+
+  //test some things
+  useEffect(() => {
+    console.log("sample data", sampleData);
+    console.log("all sample data at id", allSampleData[selectedSampleId]);
+  }, [sampleData, allSampleData, selectedSampleId]);
+
+  // // Load sample data
+  // useEffect(() => {
+  //   if (!selectedSampleId) return;
+
+  //   setSampleData(allSampleData[selectedSampleId]?.sampleData || null);
+  // });
 
   // Schedule playback of sampleData
   useEffect(() => {
@@ -36,16 +51,16 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
     const bpm = transport.current.bpm.value;
 
-    const events = sampleData.times.map((e) => {
+    const events = sampleData?.times.map((event) => {
       const eventTime = quantizeActive
-        ? quantize(e.startTime, bpm, quantizeValue)
-        : e.startTime;
+        ? quantize(event.startTime, bpm, quantizeValue)
+        : event.startTime;
 
       return [
         eventTime,
         {
           startTime: eventTime,
-          duration: e.duration,
+          duration: event.duration,
         },
       ];
     });
@@ -112,44 +127,64 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     }));
   }, [selectedSampleId, sampleData, setAllSampleData]);
 
+  // useEffect(() => {
+  //   if (
+  //     !allSampleData[selectedSampleId] ||
+  //     allSampleData[selectedSampleId] === sampleData
+  //   )
+  //     return;
+
+  //   const handler = setTimeout(() => {
+  //     // Update global state
+  //     setAllSampleData((prev) => ({
+  //       ...prev,
+  //       [selectedSampleId]: { ...prev[selectedSampleId], sampleData },
+  //     }));
+
+  //     console.log("all sample data", allSampleData);
+  //   }, 500);
+
+  //   return () => {
+  //     clearTimeout(handler); // cancel if settings change before debounceDelay
+  //   };
+  // }, [allSampleData, sampleData, setAllSampleData]);
+
   const handlePressPad = () => {
     sampler.triggerAttack("C4");
-
     setSelectedSampleId(id);
     setIsSelected(true);
-    console.log("selectedSample", selectedSampleId);
 
     if (isPlaying && isRecording) {
       const startTime = transport.current.seconds;
+
       setSampleData((prevData) => ({
         ...prevData,
-        times: [...prevData.times, { startTime, duration: 0 }],
+        times: [...(prevData?.times || []), { startTime, duration: 0 }],
       }));
     }
   };
-
-  // const handleBlur = () => {
-  //   setIsSelected(false);
-  // };
 
   const handleReleasePad = () => {
     const releaseTime = transport.current.seconds;
     sampler.triggerRelease("C4");
 
-    if (isRecording && isPlaying) {
+    if (isRecording && isPlaying && sampleData) {
       setSampleData((prevData) => {
-        const updatedTimes = prevData.times.map((t, i, arr) => {
+        const updatedTimes = prevData?.times.map((time, idx, arr) => {
           if (
-            i === arr.length - 1 &&
-            t.duration === 0 &&
-            releaseTime > t.startTime
+            idx === arr.length - 1 &&
+            time.duration === 0 &&
+            releaseTime > time.startTime
           ) {
-            return { ...t, duration: releaseTime - t.startTime };
+            return { ...time, duration: releaseTime - time.startTime };
           }
-          return t;
+          return time;
         });
 
-        return { ...prevData, times: updatedTimes };
+        return {
+          ...prevData,
+          times: updatedTimes,
+        };
       });
     }
   };
