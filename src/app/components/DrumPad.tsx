@@ -25,6 +25,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setAllSampleData,
     setSelectedSampleId,
     selectedSampleId,
+    q,
   } = useAudioContext();
 
   const [sampleData, setSampleData] = useState<SampleType | null>(
@@ -47,7 +48,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   // Schedule playback of sampleData
   useEffect(() => {
-    if (!isPlaying || !sampleData || sampleData.times.length === 0) return;
+    if (
+      !isPlaying ||
+      !sampleData ||
+      sampleData.times.length === 0 ||
+      !sampleData.times[sampleData.times.length - 1].duration
+    )
+      return;
 
     const bpm = transport.current.bpm.value;
 
