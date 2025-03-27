@@ -17,7 +17,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const {
     transport,
     isRecording,
-    isPlaying,
+    loopIsPlaying,
     quantizeValue,
     quantizeActive,
     // getSampleData,
@@ -32,12 +32,17 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     allSampleData[selectedSampleId]?.sampleData
   );
   const [isSelected, setIsSelected] = useState(false);
+  const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
 
   //test some things
   useEffect(() => {
     console.log("sample data", sampleData);
     console.log("all sample data at id", allSampleData[selectedSampleId]);
   }, [sampleData, allSampleData, selectedSampleId]);
+
+  useEffect(() => {
+    console.log("sampleIsPlaying:", sampleIsPlaying);
+  }, [sampleIsPlaying]);
 
   // // Load sample data
   // useEffect(() => {
@@ -49,7 +54,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   // Schedule playback of sampleData
   useEffect(() => {
     if (
-      !isPlaying ||
+      !loopIsPlaying ||
       !sampleData ||
       sampleData.times.length === 0 ||
       !sampleData.times[sampleData.times.length - 1].duration
@@ -74,6 +79,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
     const part = new Tone.Part((time, event) => {
       sampler.triggerAttackRelease("C4", event.duration, time);
+      setSampleIsPlaying(true);
+      setTimeout(() => {
+        setSampleIsPlaying(false);
+      }, event.duration * 1000);
     }, events);
 
     part.start(0);
@@ -95,7 +104,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       disposePart();
     };
   }, [
-    isPlaying,
+    loopIsPlaying,
     sampleData,
     quantizeActive,
     quantizeValue,
@@ -160,8 +169,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     sampler.triggerAttack("C4");
     setSelectedSampleId(id);
     setIsSelected(true);
+    setSampleIsPlaying(true);
 
-    if (isPlaying && isRecording) {
+    if (loopIsPlaying && isRecording) {
       const startTime = transport.current.seconds;
 
       setSampleData((prevData) => ({
@@ -172,10 +182,11 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   };
 
   const handleReleasePad = () => {
-    const releaseTime = transport.current.seconds;
+    setSampleIsPlaying(false);
     sampler.triggerRelease("C4");
+    const releaseTime = transport.current.seconds;
 
-    if (isRecording && isPlaying && sampleData) {
+    if (loopIsPlaying && isRecording && sampleData) {
       setSampleData((prevData) => {
         const updatedTimes = prevData?.times.map((time, idx, arr) => {
           if (
@@ -206,7 +217,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onMouseUp={handleReleasePad}
         onMouseLeave={handleReleasePad}
         onTouchEnd={handleReleasePad}
-        className="m-1 bg-slate-400 border border-slate-800 rounded-sm focus:border-double w-20 h-20 active:bg-slate-500 shadow-md shadow-slate-700"
+        className={`${sampleIsPlaying ? "bg-slate-500" : "bg-slate-400"} m-1 border border-slate-800 rounded-sm focus:border-double w-20 h-20 shadow-md shadow-slate-700  `}
       >
         {id}
       </button>

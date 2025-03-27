@@ -16,8 +16,8 @@ const Transport = () => {
   const [bpm, setBpm] = useState<number>(120);
   const {
     transport,
-    isPlaying,
-    setIsPlaying,
+    loopIsPlaying,
+    setLoopIsPlaying,
     isRecording,
     setIsRecording,
     quantizeActive,
@@ -35,7 +35,7 @@ const Transport = () => {
     let beatCount = 0;
 
     const metronomeLoop = transport.current.scheduleRepeat((time) => {
-      if (!isPlaying || !metronomeActive) return;
+      if (!loopIsPlaying || !metronomeActive) return;
 
       const [, beats] = transport.current.position.split(":").map(Number);
       beatCount = beats % timeSignature[0];
@@ -52,7 +52,7 @@ const Transport = () => {
     return () => {
       transportForCleanup.clear(metronomeLoop);
     };
-  }, [isPlaying, metronomeActive, timeSignature, transport]);
+  }, [loopIsPlaying, metronomeActive, timeSignature, transport]);
 
   useEffect(() => {
     transport.current.bpm.value = bpm;
@@ -69,16 +69,16 @@ const Transport = () => {
   };
 
   const handlePlay = async () => {
-    if (isPlaying) return;
+    if (loopIsPlaying) return;
     await Tone.start();
     transport.current.start();
-    setIsPlaying(true);
+    setLoopIsPlaying(true);
   };
 
   const handleStop = () => {
-    if (!isPlaying) return;
+    if (!loopIsPlaying) return;
     transport.current.stop();
-    setIsPlaying(false);
+    setLoopIsPlaying(false);
   };
 
   const handleToggleMetronome = () => {
@@ -96,7 +96,7 @@ const Transport = () => {
       {/* Transport Controls - Narrower Width */}
       <div className="w-fit mx-auto grid grid-cols-4 gap-3 border border-black p-2 rounded-sm shadow-inner-lg">
         <Play
-          fill={isPlaying ? "green" : "white"}
+          fill={loopIsPlaying ? "green" : "white"}
           className="hover:fill-slate-300 cursor-pointer"
           onClick={handlePlay}
         />

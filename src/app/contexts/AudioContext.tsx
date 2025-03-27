@@ -32,8 +32,8 @@ type AudioContextType = {
   kitSamples: SampleType[];
   setGenre: React.Dispatch<React.SetStateAction<Genre>>;
   genre: Genre;
-  isPlaying: boolean;
-  setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
+  loopIsPlaying: boolean;
+  setLoopIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   isRecording: boolean;
   setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
   quantizeActive: boolean;
@@ -142,7 +142,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   ]);
   const [genre, setGenre] = useState<Genre>("jazz");
   const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [loopIsPlaying, setLoopIsPlaying] = useState(false);
   const [quantizeActive, setQuantizeActive] = useState<boolean>(false);
   const [quantizeValue, setQuantizeValue] = useState<number>(4);
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
@@ -415,8 +415,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         locSamples,
         kitSamples,
         setGenre,
-        isPlaying,
-        setIsPlaying,
+        loopIsPlaying,
+        setLoopIsPlaying,
         isRecording,
         setIsRecording,
         quantizeActive,
