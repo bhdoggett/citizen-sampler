@@ -29,20 +29,20 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   } = useAudioContext();
 
   const [sampleData, setSampleData] = useState<SampleType | null>(
-    allSampleData[selectedSampleId]?.sampleData
+    allSampleData[id]
   );
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
 
-  //test some things
-  useEffect(() => {
-    console.log("sample data", sampleData);
-    console.log("all sample data at id", allSampleData[selectedSampleId]);
-  }, [sampleData, allSampleData, selectedSampleId]);
+  // //test some things
+  // useEffect(() => {
+  //   console.log("sample data", sampleData);
+  //   console.log("all sample data at id", allSampleData[id]);
+  // }, [sampleData, allSampleData, selectedSampleId]);
 
-  useEffect(() => {
-    console.log("sampleIsPlaying:", sampleIsPlaying);
-  }, [sampleIsPlaying]);
+  // useEffect(() => {
+  //   console.log("sampleIsPlaying:", sampleIsPlaying);
+  // }, [sampleIsPlaying]);
 
   // // Load sample data
   // useEffect(() => {
@@ -135,13 +135,11 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   // Update allSampleData with sampleData
   useEffect(() => {
-    if (!selectedSampleId) return;
-
     setAllSampleData((prev) => ({
       ...prev,
-      [selectedSampleId]: { ...prev[selectedSampleId], sampleData },
+      [id]: sampleData,
     }));
-  }, [selectedSampleId, sampleData, setAllSampleData]);
+  }, [sampleData, setAllSampleData]);
 
   // useEffect(() => {
   //   if (
@@ -205,6 +203,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         };
       });
     }
+
+    console.log(`sample ${id} data`, sampleData);
   };
 
   return (
