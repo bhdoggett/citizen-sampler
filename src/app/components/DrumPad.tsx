@@ -56,14 +56,14 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     if (
       !loopIsPlaying ||
       !sampleData ||
-      sampleData.times.length === 0 ||
-      !sampleData.times[sampleData.times.length - 1].duration
+      sampleData.events.length === 0 ||
+      !sampleData.events[sampleData.events.length - 1].duration
     )
       return;
 
     const bpm = transport.current.bpm.value;
 
-    const events = sampleData?.times.map((event) => {
+    const events = sampleData?.events.map((event) => {
       const eventTime = quantizeActive
         ? quantize(event.startTime, bpm, quantizeValue)
         : event.startTime;
@@ -174,7 +174,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
       setSampleData((prevData) => ({
         ...prevData,
-        times: [...(prevData?.times || []), { startTime, duration: 0 }],
+        events: [...(prevData?.events || []), { startTime, duration: 0 }],
       }));
     }
   };
@@ -186,7 +186,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
     if (loopIsPlaying && isRecording && sampleData) {
       setSampleData((prevData) => {
-        const updatedTimes = prevData?.times.map((time, idx, arr) => {
+        const updatedTimes = prevData?.events.map((time, idx, arr) => {
           if (
             idx === arr.length - 1 &&
             time.duration === 0 &&
@@ -199,7 +199,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
         return {
           ...prevData,
-          times: updatedTimes,
+          events: updatedTimes,
         };
       });
     }

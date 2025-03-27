@@ -73,7 +73,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       title: "Kick_Bulldog_2",
       label: "Kick",
       url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
-      times: [],
+      events: [],
       settings: {
         volume: 0,
         pan: 0,
@@ -91,7 +91,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       title: "Snare_Astral_1",
       label: "Snare",
       url: "/samples/drums/snares/Snare_Astral_1.wav",
-      times: [],
+      events: [],
       settings: {
         volume: 0,
         pan: 0,
@@ -109,7 +109,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       title: "ClosedHH_Alessya_DS",
       label: "HiHat",
       url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
-      times: [],
+      events: [],
       settings: {
         volume: 0,
         pan: 0,
@@ -127,7 +127,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       title: "Clap_Graphite",
       label: "Clap",
       url: "/samples/drums/claps/Clap_Graphite.wav",
-      times: [],
+      events: [],
       settings: {
         volume: 0,
         pan: 0,
@@ -193,7 +193,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         label: "",
         type: "",
         url: "",
-        times: [],
+        events: [],
         settings: {
           volume: 0,
           pan: 0,
@@ -295,7 +295,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
               title: sample,
               label: sample.split(".")[0],
               url: `/samples/loc/${genre}/excerpts/${sample}`,
-              times: [],
+              events: [],
               settings: {
                 volume: 0,
                 pan: 0,
