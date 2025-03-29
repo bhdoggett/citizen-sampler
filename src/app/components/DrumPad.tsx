@@ -3,7 +3,7 @@ import { use, useEffect, useState } from "react";
 import { useAudioContext } from "../contexts/AudioContext";
 import * as Tone from "tone";
 import quantize from "../functions/quantize";
-import { SampleType } from "../types/SampleType";
+import { SampleType, SampleEvent } from "../types/SampleType";
 
 type DrumPadProps = {
   id: string;
@@ -186,16 +186,18 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
     if (loopIsPlaying && isRecording && sampleData) {
       setSampleData((prevData) => {
-        const updatedTimes = prevData?.events.map((time, idx, arr) => {
-          if (
-            idx === arr.length - 1 &&
-            time.duration === 0 &&
-            releaseTime > time.startTime
-          ) {
-            return { ...time, duration: releaseTime - time.startTime };
+        const updatedTimes = prevData?.events.map(
+          (time: SampleEvent, idx, arr) => {
+            if (
+              idx === arr.length - 1 &&
+              time.duration === 0 &&
+              releaseTime > time.startTime
+            ) {
+              return { ...time, duration: releaseTime - time.startTime };
+            }
+            return time;
           }
-          return time;
-        });
+        );
 
         return {
           ...prevData,

@@ -7,6 +7,11 @@ import {
   Time,
 } from "tone/build/esm/core/type/Units";
 
+export type SampleEvent = {
+  startTime: number;
+  duration: number;
+  // velocity: number;
+};
 export type SampleSettings = {
   volume: number;
   pan: number;
@@ -14,6 +19,8 @@ export type SampleSettings = {
   finetune: number;
   attack: number;
   release: number;
+  quantize: boolean;
+  quantVal: number;
   highpass: [number, "highpass", number?];
   lowpass: [number, "lowpass", number?];
 };
@@ -24,7 +31,7 @@ export type SampleType = {
   label?: string;
   title: string;
   url: string;
-  times: number[];
+  events: SampleEvent[];
   settings: SampleSettings;
   attribution?: string;
 };
