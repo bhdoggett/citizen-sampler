@@ -36,15 +36,10 @@ type AudioContextType = {
   setLoopIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   isRecording: boolean;
   setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
-  quantizeActive: boolean;
-  setQuantizeActive: React.Dispatch<React.SetStateAction<boolean>>;
-  quantizeValue: number;
-  setQuantizeValue: React.Dispatch<React.SetStateAction<number>>;
   allSampleData: Record<string, SampleType>;
   setAllSampleData: React.Dispatch<
     React.SetStateAction<Record<string, SampleType>>
   >;
-  getSampleData: (id: string) => SampleType;
   updateSamplerStateSettings: (
     id: string,
     settings: Partial<SampleSettings>
@@ -53,8 +48,6 @@ type AudioContextType = {
 
   selectedSampleId: string | null;
   setSelectedSampleId: React.Dispatch<React.SetStateAction<string | null>>;
-  // getSampler,
-  // updateSamplerSettings,
 };
 
 const AudioContextContext = createContext<AudioContextType | null>(null);
@@ -151,8 +144,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [genre, setGenre] = useState<Genre>("jazz");
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
-  const [quantizeActive, setQuantizeActive] = useState<boolean>(false);
-  const [quantizeValue, setQuantizeValue] = useState<number>(4);
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
@@ -191,31 +182,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       highpass,
       lowpass,
     };
-  };
-
-  const getSampleData = (id: string): SampleType => {
-    return (
-      allSampleData[id] || {
-        id: "",
-        title: "",
-        label: "",
-        type: "",
-        url: "",
-        events: [],
-        settings: {
-          volume: 0,
-          pan: 0,
-          pitch: 0,
-          finetune: 0,
-          attack: 0,
-          release: 0,
-          quantize: false,
-          quantVal: 4,
-          highpass: [0, "highpass"],
-          lowpass: [20000, "lowpass"],
-        },
-      }
-    );
   };
 
   //testing things
@@ -431,12 +397,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setLoopIsPlaying,
         isRecording,
         setIsRecording,
-        quantizeActive,
-        setQuantizeActive,
-        quantizeValue,
-        setQuantizeValue,
         allSampleData,
-        // getSampleData,
         updateSamplerStateSettings,
         updateSamplerRefSettings,
         setAllSampleData,
@@ -445,8 +406,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         samplersRef,
         kitRef,
         genre,
-        // getSampler,
-        // updateSamplerSettings,
       }}
     >
       {children}

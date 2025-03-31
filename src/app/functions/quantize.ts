@@ -1,22 +1,11 @@
 import type { QuantizeValue } from "../types/SampleType";
+import * as Tone from "tone";
 
-const quantize = (
-  time: number,
-  bpm: number,
-  quantizeValue: QuantizeValue
-): number => {
+const quantize = (time: number, quantVal: QuantizeValue): number => {
+  const bpm = Tone.getTransport().bpm.value;
   const secondsPerQuarterNote = 60 / bpm;
-
-  const quantizeSeconds = (secondsPerQuarterNote / quantizeValue) * 4;
-
+  const quantizeSeconds = (secondsPerQuarterNote / quantVal) * 4;
   const quantizedTime = Math.round(time / quantizeSeconds) * quantizeSeconds;
-
-  console.log("seconds per quarter note:", secondsPerQuarterNote);
-  console.log(
-    `quantize seconds for quantize value of ${quantizeValue} at ${bpm}`,
-    quantizeSeconds
-  );
-
   return quantizedTime;
 };
 

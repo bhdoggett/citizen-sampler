@@ -11,9 +11,6 @@ type DrumPadProps = {
 };
 
 const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
-  // const audioCtx = useAudioContext();
-  // if (!audioCtx) return null;
-
   const {
     transport,
     isRecording,
@@ -47,11 +44,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     )
       return;
 
-    const bpm = transport.current.bpm.value;
-
     const events = sampleData.events.map((event) => {
       const eventTime = sampleData.settings.quantize
-        ? quantize(event.startTime, bpm, sampleData.settings.quantVal)
+        ? quantize(event.startTime, sampleData.settings.quantVal)
         : event.startTime;
       console.log("sampleData.settings.quantize", sampleData.settings.quantize);
       console.log(event);
@@ -98,46 +93,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setIsSelected(selectedSampleId === id);
   }, [selectedSampleId, id]);
 
-  // // Update allSampleData with sampleData
-  // useEffect(() => {
-  //   if (!selectedSampleId) return;
-
-  //   setAllSampleData((prev) => {
-  //     const existingIndex = prev.findIndex((item) => item.id === sampleData.id);
-  //     if (existingIndex !== -1) {
-  //       const updatedData = [...prev];
-  //       updatedData[existingIndex] = sampleData;
-  //       return updatedData;
-  //     } else {
-  //       return [...prev, sampleData];
-  //     }
-  //   });
-  // }, [sampleData, setAllSampleData]);
-
-  // Update allSampleData with sampleData
-
-  // useEffect(() => {
-  //   if (
-  //     !allSampleData[selectedSampleId] ||
-  //     allSampleData[selectedSampleId] === sampleData
-  //   )
-  //     return;
-
-  //   const handler = setTimeout(() => {
-  //     // Update global state
-  //     setAllSampleData((prev) => ({
-  //       ...prev,
-  //       [selectedSampleId]: { ...prev[selectedSampleId], sampleData },
-  //     }));
-
-  //     console.log("all sample data", allSampleData);
-  //   }, 500);
-
-  //   return () => {
-  //     clearTimeout(handler); // cancel if settings change before debounceDelay
-  //   };
-  // }, [allSampleData, sampleData, setAllSampleData]);
-
   const handlePressPad = () => {
     sampler.triggerAttack("C4");
     setSelectedSampleId(id);
@@ -159,16 +114,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     const releaseTime = transport.current.seconds;
 
     if (loopIsPlaying && isRecording && eventRef.current.duration === 0) {
-      // calculate duration, accomodating for events that overlap the transport loop ending
+      // Calculate duration. Accomodate for events that overlap the transport loop boundary.
       eventRef.current.duration =
         releaseTime > eventRef.current.startTime
           ? releaseTime - eventRef.current.startTime
           : transport.current.loopend -
             eventRef.current.startTime +
             releaseTime;
-
-      console.log("eventRef", eventRef.current);
-      console.log("sampleDataRef", sampleDataRef.current);
       sampleDataRef.current.events.push({ ...eventRef.current });
       setAllSampleData((prev) => ({ ...prev, [id]: sampleDataRef.current }));
     }
