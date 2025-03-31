@@ -15,16 +15,6 @@ const SampleSettings = () => {
 
   const [settings, setSettings] = useState<SampleSettings | null>(null);
 
-  //test some things
-  useEffect(() => {
-    // console.log("selectedSampleId", selectedSampleId);
-    console.log(
-      "allSampleData quantize at this id",
-      allSampleData[selectedSampleId]?.settings.quantize
-    );
-    console.log("settings:", settings?.quantize);
-  }, [selectedSampleId, allSampleData, settings]);
-
   // initialize settings with selected sample's settings
   useEffect(() => {
     if (selectedSampleId && allSampleData[selectedSampleId]) {

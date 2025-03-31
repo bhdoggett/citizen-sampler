@@ -61,7 +61,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [locSamples, setLocSamples] = useState<SampleType[] | []>([]);
   const [kitSamples] = useState<SampleType[] | []>([
     {
-      id: `kit-1-${getRandomNumberForId()}`,
+      id: `kit-1_${getRandomNumberForId()}`,
       type: "drumKit",
       title: "Kick_Bulldog_2",
       label: "Kick",
@@ -81,7 +81,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
-      id: `kit-2-${getRandomNumberForId()}`,
+      id: `kit-2_${getRandomNumberForId()}`,
       type: "drumKit",
       title: "Snare_Astral_1",
       label: "Snare",
@@ -101,7 +101,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
-      id: `kit-3-${getRandomNumberForId()}`,
+      id: `kit-3_${getRandomNumberForId()}`,
       type: "drumKit",
       title: "ClosedHH_Alessya_DS",
       label: "HiHat",
@@ -121,7 +121,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
-      id: `kit-4-${getRandomNumberForId()}`,
+      id: `kit-4_${getRandomNumberForId()}`,
       type: "drumKit",
       title: "Clap_Graphite",
       label: "Clap",
@@ -184,18 +184,18 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   };
 
-  //testing things
-  useEffect(() => {
-    console.log("selectedSampleId:", selectedSampleId);
-  }, [selectedSampleId]);
+  // //testing things
+  // useEffect(() => {
+  //   console.log("selectedSampleId:", selectedSampleId);
+  // }, [selectedSampleId]);
 
   //create samplers for library of congress samples
   useEffect(() => {
     if (locSamples.length > 0) {
       locSamples.forEach(({ id, url }) => {
-        samplersRef.current[id] = makeSampler(id, url);
+        const name = id.split("_")[0];
+        samplersRef.current[name] = makeSampler(id, url);
       });
-      console.log("samplersRef:", samplersRef.current);
     }
   }, [locSamples]);
 
@@ -203,9 +203,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     if (kitSamples.length > 0) {
       kitSamples.forEach(({ id, url }) => {
-        samplersRef.current[id] = makeSampler(id, url);
+        const name = id.split("_")[0];
+        samplersRef.current[name] = makeSampler(id, url);
       });
-      console.log("samplersRef:", kitRef.current);
     }
   }, [kitSamples]);
 
@@ -241,22 +241,16 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     const fetchSamples = async () => {
       try {
-        console.log("Fetching samples for genre:", genre);
         const response = await fetch("/fileList.json");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        console.log("response:", response);
-
         const result = await response.json();
-        console.log("result", result);
 
         if (!result[genre]) {
           console.error("Genre not found in fileList.json:", genre);
           return;
         }
-        console.log("Fetched for the curreng genre", result[genre]);
 
         const selectedSamples = await result[genre].slice(0, 8);
         if (selectedSamples) {
@@ -266,7 +260,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           selectedSamples,
           (sample, index) => {
             const sampleData = {
-              id: `loc-${index + 1}-${getRandomNumberForId()}`,
+              id: `loc-${index + 1}_${getRandomNumberForId()}`,
               type: `loc-${genre}`,
               title: sample,
               label: sample.split(".")[0],
@@ -286,12 +280,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
               },
               attribution: "",
             };
-            console.log("Created sample data:", sampleData);
             return sampleData;
           }
         );
-
-        console.log("Setting locSamples with:", sampleSet);
         setLocSamples(sampleSet);
       } catch (error) {
         console.error("Error fetching samples:", error);
@@ -308,7 +299,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     setAllSampleData(() => {
       const sampleDataObj: Record<string, SampleType> = {};
       [...locSamples, ...kitSamples].forEach((sample) => {
-        sampleDataObj[sample.id] = sample;
+        const name = sample.id.split("_")[0];
+        sampleDataObj[name] = sample;
       });
       return sampleDataObj;
     });

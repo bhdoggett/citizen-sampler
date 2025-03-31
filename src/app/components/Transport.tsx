@@ -180,27 +180,7 @@ const Transport = () => {
           onChange={(e) => setLoopLength(Number(e.target.value))}
           className="w-12 p-1 border border-gray-400 rounded-md text-center"
         />
-        <label htmlFor="quantize-active" className="text-lg font-semibold">
-          Quantization:
-        </label>
-        <input
-          type="checkbox"
-          name="quantize-active"
-          id="quantize-active"
-          checked={quantizeActive}
-          onChange={(e) => setQuantizeActive(e.target.checked)}
-        />
-        <select
-          value={quantizeValue}
-          onChange={(e) => setQuantizeValue(Number(e.target.value))}
-          className="w-16 p-1 border border-gray-400 rounded-md text-center bg-white"
-        >
-          {[1, 4, 8, 16].map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+
         <button onClick={handleExportWav} className="border border-black">
           Download
         </button>
