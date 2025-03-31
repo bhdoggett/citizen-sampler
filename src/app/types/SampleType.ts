@@ -7,6 +7,8 @@ import {
   Time,
 } from "tone/build/esm/core/type/Units";
 
+export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
+
 export type SampleEvent = {
   startTime: number;
   duration: number;
@@ -20,7 +22,7 @@ export type SampleSettings = {
   attack: number;
   release: number;
   quantize: boolean;
-  quantVal: number;
+  quantVal: QuantizeValue;
   highpass: [number, "highpass", number?];
   lowpass: [number, "lowpass", number?];
 };

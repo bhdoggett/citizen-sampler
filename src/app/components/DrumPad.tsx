@@ -1,5 +1,5 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useAudioContext } from "../contexts/AudioContext";
 import * as Tone from "tone";
 import quantize from "../functions/quantize";
@@ -18,56 +18,43 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     transport,
     isRecording,
     loopIsPlaying,
-    quantizeValue,
-    quantizeActive,
-    // getSampleData,
     allSampleData,
     setAllSampleData,
     setSelectedSampleId,
     selectedSampleId,
-    q,
   } = useAudioContext();
 
-  const [sampleData, setSampleData] = useState<SampleType | null>(
-    allSampleData[id]
-  );
+  const sampleDataRef = useRef(allSampleData[id]);
+
+  // keep track of sample play events one at a time
+  const eventRef = useRef<SampleEvent | null>(null);
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
 
-  // //test some things
-  // useEffect(() => {
-  //   console.log("sample data", sampleData);
-  //   console.log("all sample data at id", allSampleData[id]);
-  // }, [sampleData, allSampleData, selectedSampleId]);
-
-  // useEffect(() => {
-  //   console.log("sampleIsPlaying:", sampleIsPlaying);
-  // }, [sampleIsPlaying]);
-
-  // // Load sample data
-  // useEffect(() => {
-  //   if (!selectedSampleId) return;
-
-  //   setSampleData(allSampleData[selectedSampleId]?.sampleData || null);
-  // });
+  // update
+  useEffect(() => {
+    sampleDataRef.current = allSampleData[id];
+  }, [allSampleData, id]);
 
   // Schedule playback of sampleData
   useEffect(() => {
+    const sampleData = allSampleData[id];
+
     if (
       !loopIsPlaying ||
-      !sampleData ||
-      sampleData.events.length === 0 ||
-      !sampleData.events[sampleData.events.length - 1].duration
+      allSampleData[id].events.length === 0
+      // !sampleData.events[sampleData.events.length - 1].duration
     )
       return;
 
     const bpm = transport.current.bpm.value;
 
-    const events = sampleData?.events.map((event) => {
-      const eventTime = quantizeActive
-        ? quantize(event.startTime, bpm, quantizeValue)
+    const events = sampleData.events.map((event) => {
+      const eventTime = sampleData.settings.quantize
+        ? quantize(event.startTime, bpm, sampleData.settings.quantVal)
         : event.startTime;
-
+      console.log("sampleData.settings.quantize", sampleData.settings.quantize);
+      console.log(event);
       return [
         eventTime,
         {
@@ -83,6 +70,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       setTimeout(() => {
         setSampleIsPlaying(false);
       }, event.duration * 1000);
+      console.log(event);
     }, events);
 
     part.start(0);
@@ -103,14 +91,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     return () => {
       disposePart();
     };
-  }, [
-    loopIsPlaying,
-    sampleData,
-    quantizeActive,
-    quantizeValue,
-    sampler,
-    transport,
-  ]);
+  }, [loopIsPlaying, sampler, transport, allSampleData, id]);
 
   // Sync isSelected state with selectedSampleId
   useEffect(() => {
@@ -134,12 +115,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   // }, [sampleData, setAllSampleData]);
 
   // Update allSampleData with sampleData
-  useEffect(() => {
-    setAllSampleData((prev) => ({
-      ...prev,
-      [id]: sampleData,
-    }));
-  }, [sampleData, setAllSampleData]);
 
   // useEffect(() => {
   //   if (
@@ -170,43 +145,33 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setSampleIsPlaying(true);
 
     if (loopIsPlaying && isRecording) {
-      const startTime = transport.current.seconds;
-
-      setSampleData((prevData) => ({
-        ...prevData,
-        events: [...(prevData?.events || []), { startTime, duration: 0 }],
-      }));
+      // const startTime = transport.current.seconds;
+      eventRef.current = { startTime: transport.current.seconds, duration: 0 };
     }
   };
 
   const handleReleasePad = () => {
     setSampleIsPlaying(false);
     sampler.triggerRelease("C4");
+
+    if (!eventRef.current) return;
+
     const releaseTime = transport.current.seconds;
 
-    if (loopIsPlaying && isRecording && sampleData) {
-      setSampleData((prevData) => {
-        const updatedTimes = prevData?.events.map(
-          (time: SampleEvent, idx, arr) => {
-            if (
-              idx === arr.length - 1 &&
-              time.duration === 0 &&
-              releaseTime > time.startTime
-            ) {
-              return { ...time, duration: releaseTime - time.startTime };
-            }
-            return time;
-          }
-        );
+    if (loopIsPlaying && isRecording && eventRef.current.duration === 0) {
+      // calculate duration, accomodating for events that overlap the transport loop ending
+      eventRef.current.duration =
+        releaseTime > eventRef.current.startTime
+          ? releaseTime - eventRef.current.startTime
+          : transport.current.loopend -
+            eventRef.current.startTime +
+            releaseTime;
 
-        return {
-          ...prevData,
-          events: updatedTimes,
-        };
-      });
+      console.log("eventRef", eventRef.current);
+      console.log("sampleDataRef", sampleDataRef.current);
+      sampleDataRef.current.events.push({ ...eventRef.current });
+      setAllSampleData((prev) => ({ ...prev, [id]: sampleDataRef.current }));
     }
-
-    console.log(`sample ${id} data`, sampleData);
   };
 
   return (

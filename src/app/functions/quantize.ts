@@ -1,4 +1,4 @@
-type QuantizeValue = 1 | 2 | 4 | 8 | 16;
+import type { QuantizeValue } from "../types/SampleType";
 
 const quantize = (
   time: number,

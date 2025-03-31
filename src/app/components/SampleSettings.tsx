@@ -4,28 +4,26 @@ import { useState, useEffect, use } from "react";
 import type { SampleSettings, SampleType } from "../types/SampleType";
 
 const SampleSettings = () => {
-  // const audioCtx = useAudioContext();
-
-  // if (!audioCtx) return null;
-
   const {
     selectedSampleId,
     setAllSampleData,
     allSampleData,
     samplersRef,
-    // getSampleData,
     updateSamplerStateSettings,
     updateSamplerRefSettings,
   } = useAudioContext();
 
-  // const [selectedSample, setSelectedSample] = useState<SampleType | null>(null);
   const [settings, setSettings] = useState<SampleSettings | null>(null);
 
   //test some things
   useEffect(() => {
-    console.log("selectedSampleId", selectedSampleId);
-    console.log("allSampleData", allSampleData);
-  }, [selectedSampleId, allSampleData]);
+    // console.log("selectedSampleId", selectedSampleId);
+    console.log(
+      "allSampleData quantize at this id",
+      allSampleData[selectedSampleId]?.settings.quantize
+    );
+    console.log("settings:", settings?.quantize);
+  }, [selectedSampleId, allSampleData, settings]);
 
   // initialize settings with selected sample's settings
   useEffect(() => {
@@ -34,14 +32,12 @@ const SampleSettings = () => {
     }
   }, [selectedSampleId, allSampleData]);
 
-  // Keep sampler settings in sync with UI
+  // Keep samplersRef settings in sync with UI
   useEffect(() => {
     if (settings) {
       const samplerWithFX = samplersRef.current[selectedSampleId];
-      console.log("samplerWithFX", samplerWithFX);
       if (samplerWithFX) {
         const { sampler, panVol, highpass, lowpass } = samplerWithFX;
-
         panVol.volume.value = settings.volume || 0;
         panVol.pan.value = settings.pan || 0;
         highpass.frequency.value = settings.highpass[0] || 0;
@@ -52,7 +48,7 @@ const SampleSettings = () => {
     }
   }, [samplersRef, selectedSampleId, settings]);
 
-  // update allSampleData and samplerRef settings when settings change
+  // update allSampleData when settings change
   useEffect(() => {
     if (
       !selectedSampleId ||
@@ -62,20 +58,8 @@ const SampleSettings = () => {
       return;
 
     const handler = setTimeout(() => {
-      // Update global state
       updateSamplerStateSettings(selectedSampleId, settings);
-
-      // // Update sampler instance for real-time feedback
-      // Object.entries(settings).forEach(([key, value]) => {
-      //   if (Array.isArray(value)) {
-      //     updateSamplerRefSettings(selectedSampleId, key, value[0]);
-      //   } else {
-      //     updateSamplerRefSettings(selectedSampleId, key, value);
-      //   }
-      // });
-      console.log("settings", settings);
-      console.log("all sample data", allSampleData);
-    }, 500);
+    }, 50);
 
     return () => {
       clearTimeout(handler); // cancel if settings change before debounceDelay
@@ -88,8 +72,11 @@ const SampleSettings = () => {
     updateSamplerRefSettings,
   ]);
 
-  // update settings in this component's state
-  const updateCurrentSampleSettings = (key: string, value: any) => {
+  // update settings in this component's state by setting type
+  const updateCurrentSampleSettings = <K extends keyof SampleSettings>(
+    key: K,
+    value: SampleSettings[K]
+  ) => {
     setSettings((prev) => ({
       ...prev,
       [key]: value,
@@ -126,8 +113,6 @@ const SampleSettings = () => {
             value={settings.volume || 0}
             onChange={(e) => {
               updateCurrentSampleSettings("volume", parseFloat(e.target.value));
-              samplersRef.current[selectedSampleId].panVol.volume.value =
-                e.target.value;
             }}
             className="w-full"
           />
@@ -229,6 +214,10 @@ const SampleSettings = () => {
               checked={settings.quantize}
               onChange={(e) => {
                 updateCurrentSampleSettings("quantize", e.target.checked);
+                console.log(
+                  `allSampleData[${selectedSampleId}]`,
+                  allSampleData[selectedSampleId]
+                );
 
                 // setQuantizeActive(e.target.checked)
               }}
