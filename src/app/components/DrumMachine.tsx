@@ -3,7 +3,7 @@ import { useAudioContext } from "../contexts/AudioContext";
 import DrumPad from "./DrumPad";
 
 const DrumMachine = () => {
-  const { samplersRef, kitRef } = useAudioContext();
+  const { samplersRef } = useAudioContext();
   const [samplersLoaded, setSamplersLoaded] = useState(false); // Track if samplers are loaded
 
   // Monitor changes to samplersRef and check if it has 8 samplers
@@ -14,7 +14,6 @@ const DrumMachine = () => {
   useEffect(() => {
     const checkSamplers = () => {
       setSamplerCount(Object.keys(samplersRef.current).length);
-      // setKitCount(Object.keys(kitRef.current).length);
     };
 
     // Check immediately

@@ -3,42 +3,8 @@ import { createContext, useContext, useEffect, useState, useRef } from "react";
 import * as Tone from "tone";
 import { SampleType, SampleSettings, QuantizeValue } from "../types/SampleType";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
-import {
-  inventingEntertainment,
-  VD_inventingEntertainment,
-  varietyStageSoundRecordingsAndMotionPictures,
-  VD_varietyStageSoundRecordingsAndMotionPictures,
-  theJoeSmithCollection,
-  VD_theJoeSmithCollection,
-  freeMusicArchive,
-  VD_freeMusicArchive,
-  musicBoxProject,
-  VD_musicBoxProject,
-  tonySchwartzCollection,
-  VD_tonySchwartzCollection,
-  americanEnglishDialectRecordings,
-  VD_americanEnglishDialectRecordings,
-  theNationalScreeningRoom,
-  VD_theNationalScreeningRoom,
-  njbBlues,
-  VD_njbBlues,
-  njbJazz,
-  VD_njbJazz,
-  njbFolkMusic,
-  VD_njbFolkMusic,
-  njbOpera,
-  VD_njbOpera,
-  njbMusicalTheater,
-  VD_njbMusicalTheater,
-  njbClassicalMusic,
-  VD_njbClassicalMusic,
-  njbPopularMusic,
-  VD_njbPopularMusic,
-} from "../../lib/sampleSources";
 import { getCollectionArray } from "@/lib/collections";
 import { getTitle, getLabel } from "../functions/getTitle";
-
-type Genre = "classical" | "folk-songs" | "jazz" | "popular";
 
 type SamplerWithFX = {
   id: string;
@@ -49,12 +15,11 @@ type SamplerWithFX = {
 };
 
 type AudioContextType = {
-  masterGainNode: RefObject<Tone.Gain<"gain">>;
+  masterGainNode: React.RefObject<Tone.Gain<"gain">>;
   setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
   transport: React.RefObject<TransportClass>;
   audioContext: Tone.Context | null;
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
-  kitRef: React.RefObject<Record<string, SamplerWithFX>>;
   locSamples: SampleType[];
   kitSamples: SampleType[];
   collectionName: string;
@@ -186,7 +151,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // New ref to store all samplers and their FX chains
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
-  const kitRef = useRef<Record<string, SamplerWithFX>>({});
 
   // Function to create a sampler with FX chain
   const makeSampler = (sampleId: string, sampleUrl: string) => {
@@ -252,17 +216,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // Cleanup effect for samplers when component unmounts
   useEffect(() => {
     const samplersForCleanup = samplersRef.current;
-    const kitSamplersForCleanup = kitRef.current;
 
     return () => {
       // Cleanup library of congress samplers
       Object.keys(samplersForCleanup).forEach((sampleId) => {
         cleanupSampler(sampleId, samplersRef);
-      });
-
-      // Cleanup kit samplers
-      Object.keys(kitSamplersForCleanup).forEach((sampleId) => {
-        cleanupSampler(sampleId, kitRef);
       });
     };
   }, []);
@@ -286,7 +244,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           (sample, index) => {
             const sampleData = {
               id: `loc-${index + 1}_${getRandomNumberForId()}`,
-              type: `loc-${collection}`,
+              type: `loc-${collectionName.replace(" ", "-")}`,
               title: getTitle(sample),
               label: getLabel(sample),
               url: sample,
@@ -422,7 +380,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         selectedSampleId,
         setSelectedSampleId,
         samplersRef,
-        kitRef,
       }}
     >
       {children}
