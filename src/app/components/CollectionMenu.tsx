@@ -1,18 +1,22 @@
 "use client";
 import { useAudioContext } from "../contexts/AudioContext";
-import { collections } from "../../lib/collections";
+import { collectionNames } from "../../lib/collections";
 const CollectionMenu = () => {
-  const { collection, setCollection } = useAudioContext();
+  const { collectionName, setCollectionName } = useAudioContext();
 
-  const handleSelect = (collection) => {
-    setCollection(collection);
+  const handleSelect = (collection: string) => {
+    setCollectionName(collection);
   };
 
   return (
     <div>
-      <label htmlFor="collection">Select Collection</label>
-      <select name="collection" id="collection" onChange={handleSelect}>
-        {collections.map((collection) => (
+      <label htmlFor="collection">Select a Collection: </label>
+      <select
+        name="collection"
+        id="collection"
+        onChange={(e) => handleSelect(e.target.value)}
+      >
+        {collectionNames.map((collection) => (
           <option key={collection} value={collection}>
             {collection}
           </option>

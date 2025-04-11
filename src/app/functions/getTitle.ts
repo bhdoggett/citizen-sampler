@@ -9,4 +9,4 @@ export const getTitle = (url: string) => {
 };
 
 export const getLabel = (url: string) =>
-  url.split("/").pop()?.split("_").slice(0, 3);
+  url.split("/").pop()?.split("_").slice(0, 3).join("_");

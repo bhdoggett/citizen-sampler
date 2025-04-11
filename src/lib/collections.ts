@@ -31,7 +31,7 @@ import {
   VD_njbPopularMusic,
 } from "./sampleSources";
 
-export const collections = [
+export const collectionNames = [
   "Inventing Entertainment",
   "Variety State Sound Recordngs and Motion Pictures",
   "The Joe Smith Collection",
@@ -54,7 +54,7 @@ export const getCollectionArray = (collection: string) => {
     case "Inventing Entertainment":
       return inventingEntertainment;
     case "Variety State Sound Recordngs and Motion Pictures":
-      return VD_inventingEntertainment;
+      return varietyStageSoundRecordingsAndMotionPictures;
     case "The Joe Smith Collection":
       return theJoeSmithCollection;
     case "Free Music Archive":
