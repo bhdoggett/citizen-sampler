@@ -3,7 +3,40 @@ import { createContext, useContext, useEffect, useState, useRef } from "react";
 import * as Tone from "tone";
 import { SampleType, SampleSettings } from "../types/SampleType";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
-import {} from "../../lib/sampleSources";
+import {
+  inventingEntertainment,
+  VD_inventingEntertainment,
+  varietyStageSoundRecordingsAndMotionPictures,
+  VD_varietyStageSoundRecordingsAndMotionPictures,
+  theJoeSmithCollection,
+  VD_theJoeSmithCollection,
+  freeMusicArchive,
+  VD_freeMusicArchive,
+  musicBoxProject,
+  VD_musicBoxProject,
+  tonySchwartzCollection,
+  VD_tonySchwartzCollection,
+  americanEnglishDialectRecordings,
+  VD_americanEnglishDialectRecordings,
+  theNationalScreeningRoom,
+  VD_theNationalScreeningRoom,
+  njbBlues,
+  VD_njbBlues,
+  njbJazz,
+  VD_njbJazz,
+  njbFolkMusic,
+  VD_njbFolkMusic,
+  njbOpera,
+  VD_njbOpera,
+  njbMusicalTheater,
+  VD_njbMusicalTheater,
+  njbClassicalMusic,
+  VD_njbClassicalMusic,
+  njbPopularMusic,
+  VD_njbPopularMusic,
+} from "../../lib/sampleSources";
+import { getCollectionArray } from "@/lib/collections";
+import { getTitle, getLabel } from "../functions/getTitle";
 
 type Genre = "classical" | "folk-songs" | "jazz" | "popular";
 
@@ -26,6 +59,8 @@ type AudioContextType = {
   kitSamples: SampleType[];
   setGenre: React.Dispatch<React.SetStateAction<Genre>>;
   genre: Genre;
+  collection: string;
+  setCollection: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
   setLoopIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   isRecording: boolean;
@@ -136,6 +171,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     },
   ]);
   const [genre, setGenre] = useState<Genre>("jazz");
+  const [collection, setCollection] = useState<string>(
+    "Inventing Entertainment"
+  );
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
@@ -231,34 +269,26 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   }, []);
 
-  //fetch library of congress samples
+  // fetch samples using the collection
   useEffect(() => {
     const fetchSamples = async () => {
       try {
-        const response = await fetch("/fileList.json");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
+        const collectionArray = getCollectionArray(collection);
+        if (!collectionArray) return;
 
-        if (!result[genre]) {
-          console.error("Genre not found in fileList.json:", genre);
-          return;
-        }
-
-        const selectedSamples = await result[genre].slice(0, 8);
-        if (selectedSamples) {
-        }
-
+        const selectedSamples = Array.from({ length: 8 }, () => {
+          const index = Math.floor(Math.random() * collectionArray.length);
+          return collectionArray[index];
+        });
         const sampleSet: SampleType[] = Array.from(
           selectedSamples,
           (sample, index) => {
             const sampleData = {
               id: `loc-${index + 1}_${getRandomNumberForId()}`,
-              type: `loc-${genre}`,
-              title: sample,
-              label: sample.split(".")[0],
-              url: `/samples/loc/${genre}/excerpts/${sample}`,
+              type: `loc-${collection}`,
+              title: getTitle(sample),
+              label: getLabel(sample),
+              url: sample,
               events: [],
               settings: {
                 volume: 0,
@@ -286,7 +316,64 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
 
     fetchSamples();
-  }, [genre]); // Dependency array ensures re-fetching when `genre` changes
+  }, [collection]);
+
+  // //fetch library of congress samples
+  // useEffect(() => {
+  //   const fetchSamples = async () => {
+  //     try {
+  //       const response = await fetch("/fileList.json");
+  //       if (!response.ok) {
+  //         throw new Error(`HTTP error! status: ${response.status}`);
+  //       }
+  //       const result = await response.json();
+
+  //       if (!result[genre]) {
+  //         console.error("Genre not found in fileList.json:", genre);
+  //         return;
+  //       }
+
+  //       const selectedSamples = await result[genre].slice(0, 8);
+  //       if (selectedSamples) {
+  //       }
+
+  //       const sampleSet: SampleType[] = Array.from(
+  //         selectedSamples,
+  //         (sample, index) => {
+  //           const sampleData = {
+  //             id: `loc-${index + 1}_${getRandomNumberForId()}`,
+  //             type: `loc-${genre}`,
+  //             title: sample,
+  //             label: sample.split(".")[0],
+  //             url: `/samples/loc/${genre}/excerpts/${sample}`,
+  //             events: [],
+  //             settings: {
+  //               volume: 0,
+  //               pan: 0,
+  //               pitch: 0,
+  //               finetune: 0,
+  //               attack: 0,
+  //               release: 0,
+  //               quantize: false,
+  //               quantVal: 4,
+  //               highpass: [0, "highpass"],
+  //               lowpass: [20000, "lowpass"],
+  //             },
+  //             attribution: "",
+  //           };
+  //           return sampleData;
+  //         }
+  //       );
+  //       setLocSamples(sampleSet);
+  //     } catch (error) {
+  //       console.error("Error fetching samples:", error);
+  //       // Set empty array on error to prevent null/undefined issues
+  //       setLocSamples([]);
+  //     }
+  //   };
+
+  //   fetchSamples();
+  // }, [genre]); // Dependency array ensures re-fetching when `genre` changes
 
   // initialize the allSampleData state with the locSamples and kitSamples
   useEffect(() => {
@@ -392,6 +479,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         samplersRef,
         kitRef,
         genre,
+        collection,
+        setCollection,
       }}
     >
       {children}
