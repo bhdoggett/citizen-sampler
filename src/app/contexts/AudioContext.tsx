@@ -1,15 +1,9 @@
 "use client";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useRef,
-  use,
-} from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import * as Tone from "tone";
 import { SampleType, SampleSettings } from "../types/SampleType";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
+import {} from "../../lib/sampleSources";
 
 type Genre = "classical" | "folk-songs" | "jazz" | "popular";
 
