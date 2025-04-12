@@ -86,7 +86,7 @@ const SampleSettings = () => {
   return (
     <div className="p-4 bg-gray-100 rounded-lg max-w-md mx-auto my-4">
       <h3 className="text-lg font-semibold mb-4">
-        Settings: {selectedSampleId}
+        Settings: {allSampleData[selectedSampleId].title}
       </h3>
 
       <div className="space-y-4">

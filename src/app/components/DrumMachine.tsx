@@ -38,7 +38,7 @@ const DrumMachine = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-4 gap-4 my-3">
+      <div className="grid grid-cols-4 gap-2 my-3">
         {Object.entries(samplersRef.current)
           .filter((entry) => {
             return entry[0].includes("loc");

@@ -9,7 +9,7 @@ const CollectionMenu = () => {
   };
 
   return (
-    <div className="border border-black rounded-md bg-slate-800  m-3 p-1 shadow-md shadow-slate-800">
+    <div className="border-2 border-black bg-slate-800  m-3 p-1 shadow-md shadow-slate-800">
       <label htmlFor="collection" className="text-white">
         Choose a Collection:{" "}
       </label>

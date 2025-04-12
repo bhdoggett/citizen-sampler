@@ -92,9 +92,9 @@ const Transport = () => {
   };
 
   return (
-    <div className="border rounded-md border-slate-300 shadow-md shadow-zinc-400 p-4 flex flex-col items-center space-y-4">
+    <div className="border-2  border-slate-300 shadow-md shadow-zinc-400 p-4 flex flex-col items-center space-y-4">
       {/* Transport Controls - Narrower Width */}
-      <div className="w-fit mx-auto grid grid-cols-4 gap-3 border border-black p-2 rounded-sm shadow-inner-lg">
+      <div className="w-fit mx-auto grid grid-cols-4 gap-3 border border-black p-2 shadow-inner shadow-slate-600">
         <Play
           fill={loopIsPlaying ? "green" : "white"}
           className="hover:fill-slate-300 cursor-pointer"
@@ -130,7 +130,7 @@ const Transport = () => {
             max="240"
             value={bpm}
             onChange={(e) => setBpm(Number(e.target.value))}
-            className="w-16 p-1 border border-gray-400 rounded-md text-center"
+            className="w-16 p-1 border border-gray-400 text-center"
           />
           <input
             type="range"
@@ -154,7 +154,7 @@ const Transport = () => {
               onChange={(e) =>
                 setTimeSignature([Number(e.target.value), timeSignature[1]])
               }
-              className="w-12 p-1 border border-gray-400 rounded-md text-center"
+              className="w-12 p-1 border border-gray-400 text-center"
             />
             <span className="text-lg font-bold">/</span>
             <input
@@ -163,7 +163,7 @@ const Transport = () => {
               onChange={(e) =>
                 setTimeSignature([timeSignature[0], Number(e.target.value)])
               }
-              className="w-12 p-1 border border-gray-400 rounded-md text-center"
+              className="w-12 p-1 border border-gray-400 text-center"
             />
           </div>
         </div>
@@ -178,7 +178,7 @@ const Transport = () => {
           type="number"
           value={loopLength}
           onChange={(e) => setLoopLength(Number(e.target.value))}
-          className="w-12 p-1 border border-gray-400 rounded-md text-center"
+          className="w-12 p-1 border border-gray-400 text-center"
         />
 
         <button onClick={handleExportWav} className="border border-black">

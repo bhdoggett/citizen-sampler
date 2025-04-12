@@ -136,7 +136,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onMouseUp={handleReleasePad}
         onMouseLeave={handleReleasePad}
         onTouchEnd={handleReleasePad}
-        className={`${sampleIsPlaying ? "bg-slate-500" : "bg-slate-400"} m-1 border border-slate-800 rounded-sm focus:border-double w-20 h-20 shadow-md shadow-slate-700  `}
+        className={`${sampleIsPlaying ? "bg-slate-500" : "bg-slate-400"} m-1 border-4 border-slate-800  focus:border-double w-32 h-32 shadow-md shadow-slate-700  `}
       >
         {id}
       </button>

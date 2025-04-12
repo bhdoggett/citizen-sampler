@@ -1,0 +1,6 @@
+- loop length is 8 beats when time signature is 3/4. Should be 6.
+- download WAV master
+- download WAV stems
+- pitch shift functionality
+- loading per row and per sample
+
