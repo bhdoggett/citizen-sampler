@@ -138,7 +138,7 @@ const Transport = () => {
             max="240"
             value={bpm}
             onChange={(e) => setBpm(Number(e.target.value))}
-            className="w-full cursor-pointer"
+            className="w-full cursor-pointer slider"
           />
         </div>
 

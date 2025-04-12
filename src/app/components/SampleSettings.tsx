@@ -84,7 +84,7 @@ const SampleSettings = () => {
   }
 
   return (
-    <div className="p-4 bg-gray-100 rounded-lg max-w-md mx-auto my-4">
+    <div className="p-4 bg-gray-100 border-2 border-black  max-w-md mx-auto my-4 shadow-inner shadow-slate-800">
       <h3 className="text-lg font-semibold mb-4">
         Settings: {allSampleData[selectedSampleId].title}
       </h3>
@@ -104,7 +104,7 @@ const SampleSettings = () => {
             onChange={(e) => {
               updateCurrentSampleSettings("volume", parseFloat(e.target.value));
             }}
-            className="w-full"
+            className="w-full slider slider"
           />
 
           <label className="mb-2 mt-4 flex justify-between">
@@ -120,7 +120,7 @@ const SampleSettings = () => {
             onChange={(e) =>
               updateCurrentSampleSettings("pan", parseFloat(e.target.value))
             }
-            className="w-full"
+            className="w-full slider"
           />
 
           <label className="mb-2 mt-4 flex justify-between">
@@ -136,7 +136,7 @@ const SampleSettings = () => {
             onChange={(e) =>
               updateCurrentSampleSettings("attack", parseFloat(e.target.value))
             }
-            className="w-full"
+            className="w-full slider"
           />
 
           <label className="mb-2 mt-4 flex justify-between">
@@ -152,7 +152,7 @@ const SampleSettings = () => {
             onChange={(e) =>
               updateCurrentSampleSettings("release", parseFloat(e.target.value))
             }
-            className="w-full"
+            className="w-full slider"
           />
 
           <label className="mb-2 mt-4 flex justify-between">
@@ -171,7 +171,7 @@ const SampleSettings = () => {
                 "highpass",
               ])
             }
-            className="w-full"
+            className="w-full slider"
           />
 
           <label className="mb-2 mt-4 flex justify-between">
@@ -190,12 +190,15 @@ const SampleSettings = () => {
                 "lowpass",
               ])
             }
-            className="w-full"
+            className="w-full slider"
           />
 
           <div className="w-full max-w-2xl flex items-center gap-4">
-            <label htmlFor="quantize-active" className="text-lg font-semibold">
-              Quantization:
+            <label
+              htmlFor="quantize-active"
+              className="mb-2 mt-4 flex justify-between"
+            >
+              Quantize:
             </label>
             <input
               type="checkbox"
@@ -219,7 +222,7 @@ const SampleSettings = () => {
 
                 // setQuantizeValue(Number(e.target.value))
               }}
-              className="w-16 p-1 border border-gray-400 rounded-md text-center bg-white"
+              className="w-16 p-1 border border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
             >
               {[1, 4, 8, 16].map((option) => (
                 <option key={option} value={option}>

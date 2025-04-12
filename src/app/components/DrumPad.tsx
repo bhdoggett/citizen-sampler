@@ -105,6 +105,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     }
   };
 
+  const handleFocus = () => {
+    setSelectedSampleId(id);
+  };
+
   const handleReleasePad = () => {
     setSampleIsPlaying(false);
     sampler.triggerRelease("C4");
@@ -129,6 +133,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   return (
     <div
       className={`${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"} rounded-sm`}
+      onFocus={handleFocus}
     >
       <button
         onMouseDown={handlePressPad}

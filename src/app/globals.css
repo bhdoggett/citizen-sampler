@@ -21,3 +21,48 @@ body {
   background: white;
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background-color: #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+}
+
+/* WebKit (Chrome, Safari, Edge) */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 25px;
+  background-color: rgb(98, 98, 98);
+  border: 3px solid black;
+  border-radius: 0;
+  cursor: pointer;
+  /* margin-top: 0px; If track is 6px high and thumb is 30px, this centers it */
+  position: relative;
+  z-index: 2;
+}
+
+/* Firefox */
+.slider::-moz-range-thumb {
+  width: 12px;
+  height: 30px;
+  background-color: rgb(98, 98, 98);
+  border: 3px solid black;
+  border-radius: 0;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
+/* Firefox track (optional, just in case it’s overriding background) */
+.slider::-moz-range-track {
+  background-color: #d1d5db;
+  height: 6px;
+  border-radius: 4px;
+}
