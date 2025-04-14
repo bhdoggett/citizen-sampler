@@ -37,9 +37,7 @@ type AudioContextType = {
     settings: Partial<SampleSettings>
   ) => void;
   updateSamplerRefSettings: (id: string, key: string, value: number) => void;
-
   selectedSampleId: string | null;
-  setSelectedSampleId: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
 const AudioContextContext = createContext<AudioContextType | null>(null);
@@ -146,13 +144,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     Record<string, SampleType>
   >({});
   const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null);
-
   const transport = useRef<TransportClass>(Tone.getTransport());
-
   // New ref to store all samplers and their FX chains
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
-
   // Function to create a sampler with FX chain
+  const [settingsWindow, setSettingsWindow] = useState<string>("sample");
+
   const makeSampler = (sampleId: string, sampleUrl: string) => {
     const sampler = new Tone.Sampler({
       urls: { C4: sampleUrl },

@@ -92,7 +92,7 @@ const Transport = () => {
   };
 
   return (
-    <div className="border-2  border-slate-300 shadow-md shadow-zinc-400 p-4 flex flex-col items-center space-y-4">
+    <div className="p-4 flex flex-col items-center space-y-4">
       {/* Transport Controls - Narrower Width */}
       <div className="w-fit mx-auto grid grid-cols-4 gap-3 border border-black p-2 shadow-inner shadow-slate-600">
         <Play
