@@ -30,6 +30,7 @@ export type SampleSettings = {
 export type SampleType = {
   id: string;
   type: string;
+  pad: number;
   label?: string;
   title: string;
   url: string;

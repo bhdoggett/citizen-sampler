@@ -4,55 +4,50 @@ import * as Tone from "tone";
 import { Circle, Play, Square, Music3 } from "lucide-react";
 import { useAudioContext } from "../contexts/AudioContext";
 
-const metronome = new Tone.Sampler({
-  urls: { C6: "hi-block.wav", G5: "lo-block.wav" },
-  baseUrl: "/samples/metronome/",
-}).toDestination();
-
 const Transport = () => {
-  const [metronomeActive, setMetronomeActive] = useState(false);
-  const [loopLength, setLoopLength] = useState<number>(2);
-  const [timeSignature, setTimeSignature] = useState([4, 4]);
-  const [bpm, setBpm] = useState<number>(120);
   const {
     transport,
+    metronomeActive,
+    setMetronomeActive,
+    metronome,
+    loopLength,
+    setLoopLength,
+    timeSignature,
+    setTimeSignature,
+    bpm,
+    setBpm,
     loopIsPlaying,
     setLoopIsPlaying,
     isRecording,
     setIsRecording,
-    quantizeActive,
-    setQuantizeActive,
-    quantizeValue,
-    setQuantizeValue,
-    allSampleData,
   } = useAudioContext();
 
   useEffect(() => {
     transport.current.timeSignature = timeSignature[0];
   }, [timeSignature, transport]);
 
-  useEffect(() => {
-    let beatCount = 0;
+  // useEffect(() => {
+  //   let beatCount = 0;
 
-    const metronomeLoop = transport.current.scheduleRepeat((time) => {
-      if (!loopIsPlaying || !metronomeActive) return;
+  //   const metronomeLoop = transport.current.scheduleRepeat((time) => {
+  //     if (!loopIsPlaying || !metronomeActive) return;
 
-      const [, beats] = transport.current.position.split(":").map(Number);
-      beatCount = beats % timeSignature[0];
+  //     const [, beats] = transport.current.position.split(":").map(Number);
+  //     beatCount = beats % timeSignature[0];
 
-      if (beatCount === 0) {
-        metronome.triggerAttackRelease("C6", "8n", time);
-      } else {
-        metronome.triggerAttackRelease("G5", "8n", time);
-      }
-    }, `${timeSignature[1]}n`);
+  //     if (beatCount === 0) {
+  //       metronome.triggerAttackRelease("C6", "8n", time);
+  //     } else {
+  //       metronome.triggerAttackRelease("G5", "8n", time);
+  //     }
+  //   }, `${timeSignature[1]}n`);
 
-    const transportForCleanup = transport.current;
+  //   const transportForCleanup = transport.current;
 
-    return () => {
-      transportForCleanup.clear(metronomeLoop);
-    };
-  }, [loopIsPlaying, metronomeActive, timeSignature, transport]);
+  //   return () => {
+  //     transportForCleanup.clear(metronomeLoop);
+  //   };
+  // }, [loopIsPlaying, metronomeActive, timeSignature, transport]);
 
   useEffect(() => {
     transport.current.bpm.value = bpm;
@@ -85,16 +80,10 @@ const Transport = () => {
     setMetronomeActive((prev) => !prev);
   };
 
-  const handleExportWav = async () => {
-    const loopSeconds = transport.current.toSeconds(`${loopLength}m`);
-    // Pass `allSampleData` into the export function for offline rendering
-    await exportWAV(allSampleData, loopSeconds, 1);
-  };
-
   return (
-    <div className="p-4 flex flex-col items-center space-y-4">
+    <div className="px-2 pb-2 flex flex-col items-center space-y-4">
       {/* Transport Controls - Narrower Width */}
-      <div className="w-fit mx-auto grid grid-cols-4 gap-3 border border-black p-2 shadow-inner shadow-slate-600">
+      <div className="w-fit mx-auto grid grid-cols-4 gap-3 border border-black p-2 shadow-inner shadow-slate-500">
         <Play
           fill={loopIsPlaying ? "green" : "white"}
           className="hover:fill-slate-300 cursor-pointer"
@@ -115,10 +104,7 @@ const Transport = () => {
           onClick={handleToggleMetronome}
         />
       </div>
-
-      {/* BPM & Time Signature - Wider & Centered */}
       <div className="w-full max-w-2xl flex justify-between gap-8">
-        {/* BPM Controls */}
         <div className="flex items-center gap-4">
           <label htmlFor="bpm" className="text-lg font-semibold">
             BPM:
@@ -130,7 +116,7 @@ const Transport = () => {
             max="240"
             value={bpm}
             onChange={(e) => setBpm(Number(e.target.value))}
-            className="w-16 p-1 border border-gray-400 text-center"
+            className="w-16 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
           />
           <input
             type="range"
@@ -154,7 +140,7 @@ const Transport = () => {
               onChange={(e) =>
                 setTimeSignature([Number(e.target.value), timeSignature[1]])
               }
-              className="w-12 p-1 border border-gray-400 text-center"
+              className="w-12 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
             />
             <span className="text-lg font-bold">/</span>
             <input
@@ -163,7 +149,7 @@ const Transport = () => {
               onChange={(e) =>
                 setTimeSignature([timeSignature[0], Number(e.target.value)])
               }
-              className="w-12 p-1 border border-gray-400 text-center"
+              className="w-12 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
             />
           </div>
         </div>
@@ -178,12 +164,8 @@ const Transport = () => {
           type="number"
           value={loopLength}
           onChange={(e) => setLoopLength(Number(e.target.value))}
-          className="w-12 p-1 border border-gray-400 text-center"
+          className="w-12 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
         />
-
-        <button onClick={handleExportWav} className="border border-black">
-          Download
-        </button>
       </div>
     </div>
   );

@@ -19,6 +19,15 @@ type AudioContextType = {
   setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
   transport: React.RefObject<TransportClass>;
   audioContext: Tone.Context | null;
+  metronomeActive: boolean;
+  setMetronomeActive: React.Dispatch<React.SetStateAction<boolean>>;
+  metronome: Tone.Synth;
+  loopLength: number;
+  setLoopLength: React.Dispatch<React.SetStateAction<number>>;
+  timeSignature: [number, number];
+  setTimeSignature: React.Dispatch<React.SetStateAction<[number, number]>>;
+  bpm: number;
+  setBpm: React.Dispatch<React.SetStateAction<number>>;
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
   locSamples: SampleType[];
   kitSamples: SampleType[];
@@ -38,6 +47,7 @@ type AudioContextType = {
   ) => void;
   updateSamplerRefSettings: (id: string, key: string, value: number) => void;
   selectedSampleId: string | null;
+  setSelectedSampleId: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
 const AudioContextContext = createContext<AudioContextType | null>(null);
@@ -48,12 +58,17 @@ const getRandomNumberForId = () => {
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [audioContext, setAudioContext] = useState<Tone.Context | null>(null);
+  const [metronomeActive, setMetronomeActive] = useState(false);
+  const [loopLength, setLoopLength] = useState<number>(2);
+  const [timeSignature, setTimeSignature] = useState<[number, number]>([4, 4]);
+  const [bpm, setBpm] = useState<number>(120);
   const [locSamples, setLocSamples] = useState<SampleType[] | []>([]);
   const [kitSamples] = useState<SampleType[] | []>([
     {
       id: `kit-1_${getRandomNumberForId()}`,
       type: "drumKit",
       title: "Kick_Bulldog_2",
+      pad: 9,
       label: "Kick",
       url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
       events: [],
@@ -74,6 +89,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       id: `kit-2_${getRandomNumberForId()}`,
       type: "drumKit",
       title: "Snare_Astral_1",
+      pad: 10,
       label: "Snare",
       url: "/samples/drums/snares/Snare_Astral_1.wav",
       events: [],
@@ -95,6 +111,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       type: "drumKit",
       title: "ClosedHH_Alessya_DS",
       label: "HiHat",
+      pad: 11,
       url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
       events: [],
       settings: {
@@ -115,6 +132,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       type: "drumKit",
       title: "Clap_Graphite",
       label: "Clap",
+      pad: 12,
       url: "/samples/drums/claps/Clap_Graphite.wav",
       events: [],
       settings: {
@@ -149,6 +167,34 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
   // Function to create a sampler with FX chain
   const [settingsWindow, setSettingsWindow] = useState<string>("sample");
+
+  const metronome = new Tone.Sampler({
+    urls: { C6: "hi-block.wav", G5: "lo-block.wav" },
+    baseUrl: "/samples/metronome/",
+  }).toDestination();
+
+  useEffect(() => {
+    let beatCount = 0;
+
+    const metronomeLoop = transport.current.scheduleRepeat((time) => {
+      if (!loopIsPlaying || !metronomeActive) return;
+
+      const [, beats] = transport.current.position.split(":").map(Number);
+      beatCount = beats % timeSignature[0];
+
+      if (beatCount === 0) {
+        metronome.triggerAttackRelease("C6", "8n", time);
+      } else {
+        metronome.triggerAttackRelease("G5", "8n", time);
+      }
+    }, `${timeSignature[1]}n`);
+
+    const transportForCleanup = transport.current;
+
+    return () => {
+      transportForCleanup.clear(metronomeLoop);
+    };
+  }, [loopIsPlaying, metronomeActive, timeSignature, transport]);
 
   const makeSampler = (sampleId: string, sampleUrl: string) => {
     const sampler = new Tone.Sampler({
@@ -244,6 +290,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
               type: `loc-${collectionName.replace(" ", "-")}`,
               title: getTitle(sample),
               label: getLabel(sample),
+              pad: index + 1,
               url: sample,
               events: [],
               settings: {
@@ -274,7 +321,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     fetchSamples();
   }, [collectionName]);
 
-  // initialize the allSampleData state with the locSamples and kitSamples
+  // initialize allSampleData state with the locSamples and kitSamples
   useEffect(() => {
     setAllSampleData(() => {
       const sampleDataObj: Record<string, SampleType> = {};
@@ -362,6 +409,15 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setMasterGainLevel,
         transport,
         audioContext,
+        metronomeActive,
+        setMetronomeActive,
+        metronome,
+        loopLength,
+        setLoopLength,
+        timeSignature,
+        setTimeSignature,
+        bpm,
+        setBpm,
         locSamples,
         kitSamples,
         collectionName,

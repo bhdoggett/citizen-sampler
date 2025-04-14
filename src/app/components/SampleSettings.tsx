@@ -84,14 +84,13 @@ const SampleSettings = () => {
   }
 
   return (
-    <div className="p-4 bg-gray-100 max-w-md mx-auto my-4 shadow-inner shadow-slate-800">
-      <h3 className="text-lg font-semibold mb-4">
+    <div className="p-2 mx-auto mb-3">
+      {/* <h3 className="text-lg font-semibold mb-4">
         Settings: {allSampleData[selectedSampleId].title}
-      </h3>
-
-      <div className="space-y-4">
+      </h3> */}
+      <div className="flex gap-x-4 md:gap-x-6">
         <div className="flex flex-col">
-          <label className="mb-2 flex justify-between">
+          <label className="my-2 flex justify-between">
             <span>Volume</span>
             <span>{settings.volume?.toFixed(1) || "0.0"} dB</span>
           </label>
@@ -107,7 +106,7 @@ const SampleSettings = () => {
             className="w-full slider slider"
           />
 
-          <label className="mb-2 mt-4 flex justify-between">
+          <label className="my-2 flex justify-between">
             <span>Pan</span>
             <span>{settings.pan?.toFixed(1) || "0.0"}</span>
           </label>
@@ -122,8 +121,9 @@ const SampleSettings = () => {
             }
             className="w-full slider"
           />
-
-          <label className="mb-2 mt-4 flex justify-between">
+        </div>
+        <div className="flex flex-col">
+          <label className="my-2 flex justify-between">
             <span>Attack</span>
             <span>{settings.attack?.toFixed(2) || "0.00"} s</span>
           </label>
@@ -139,7 +139,7 @@ const SampleSettings = () => {
             className="w-full slider"
           />
 
-          <label className="mb-2 mt-4 flex justify-between">
+          <label className="my-2 flex justify-between">
             <span>Release</span>
             <span>{settings.release?.toFixed(2) || "0.00"} s</span>
           </label>
@@ -154,8 +154,9 @@ const SampleSettings = () => {
             }
             className="w-full slider"
           />
-
-          <label className="mb-2 mt-4 flex justify-between">
+        </div>
+        <div className="flex flex-col">
+          <label className="my-2 flex justify-between">
             <span>Highpass</span>
             <span>{settings.highpass?.[0] || "0"} Hz</span>
           </label>
@@ -174,7 +175,7 @@ const SampleSettings = () => {
             className="w-full slider"
           />
 
-          <label className="mb-2 mt-4 flex justify-between">
+          <label className="my-2 flex justify-between">
             <span>Lowpass</span>
             <span>{settings.lowpass?.[0] || "20000"} Hz</span>
           </label>
@@ -192,12 +193,10 @@ const SampleSettings = () => {
             }
             className="w-full slider"
           />
-
+        </div>
+        <div className="flex flex-col">
           <div className="w-full max-w-2xl flex items-center gap-4">
-            <label
-              htmlFor="quantize-active"
-              className="mb-2 mt-4 flex justify-between"
-            >
+            <label htmlFor="quantize-active" className="my-2">
               Quantize:
             </label>
             <input
@@ -215,30 +214,23 @@ const SampleSettings = () => {
                 // setQuantizeActive(e.target.checked)
               }}
             />
-            <select
-              value={settings.quantVal}
-              onChange={(e) => {
-                updateCurrentSampleSettings("quantVal", Number(e.target.value));
-
-                // setQuantizeValue(Number(e.target.value))
-              }}
-              className="w-16 p-1 border border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
-            >
-              {[1, 4, 8, 16].map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
           </div>
-        </div>
+          <select
+            value={settings.quantVal}
+            onChange={(e) => {
+              updateCurrentSampleSettings("quantVal", Number(e.target.value));
 
-        {/* <button
-          onClick={saveSettings}
-          className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-6"
-        >
-          Save Settings
-        </button> */}
+              // setQuantizeValue(Number(e.target.value))
+            }}
+            className="w-16 p-1 border border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
+          >
+            {[1, 4, 8, 16].map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );
