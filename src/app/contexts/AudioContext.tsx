@@ -21,11 +21,11 @@ type AudioContextType = {
   audioContext: Tone.Context | null;
   metronomeActive: boolean;
   setMetronomeActive: React.Dispatch<React.SetStateAction<boolean>>;
-  metronome: Tone.Synth;
+  metronome: Tone.Sampler;
   loopLength: number;
   setLoopLength: React.Dispatch<React.SetStateAction<number>>;
-  timeSignature: [number, number];
-  setTimeSignature: React.Dispatch<React.SetStateAction<[number, number]>>;
+  beatsPerBar: number;
+  setBeatsPerBar: React.Dispatch<React.SetStateAction<number>>;
   bpm: number;
   setBpm: React.Dispatch<React.SetStateAction<number>>;
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
@@ -60,7 +60,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [audioContext, setAudioContext] = useState<Tone.Context | null>(null);
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [loopLength, setLoopLength] = useState<number>(2);
-  const [timeSignature, setTimeSignature] = useState<[number, number]>([4, 4]);
+  const [beatsPerBar, setBeatsPerBar] = useState<number>(4);
   const [bpm, setBpm] = useState<number>(120);
   const [locSamples, setLocSamples] = useState<SampleType[] | []>([]);
   const [kitSamples] = useState<SampleType[] | []>([
@@ -173,29 +173,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     baseUrl: "/samples/metronome/",
   }).toDestination();
 
-  useEffect(() => {
-    let beatCount = 0;
-
-    const metronomeLoop = transport.current.scheduleRepeat((time) => {
-      if (!loopIsPlaying || !metronomeActive) return;
-
-      const [, beats] = transport.current.position.split(":").map(Number);
-      beatCount = beats % timeSignature[0];
-
-      if (beatCount === 0) {
-        metronome.triggerAttackRelease("C6", "8n", time);
-      } else {
-        metronome.triggerAttackRelease("G5", "8n", time);
-      }
-    }, `${timeSignature[1]}n`);
-
-    const transportForCleanup = transport.current;
-
-    return () => {
-      transportForCleanup.clear(metronomeLoop);
-    };
-  }, [loopIsPlaying, metronomeActive, timeSignature, transport]);
-
   const makeSampler = (sampleId: string, sampleUrl: string) => {
     const sampler = new Tone.Sampler({
       urls: { C4: sampleUrl },
@@ -226,6 +203,72 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     console.log("collectionName", collectionName);
   }, [allSampleData, collectionName]);
 
+  // Start Tone.js context once
+  useEffect(() => {
+    const init = async () => {
+      await Tone.start();
+      console.log("Tone.js started");
+      setAudioContext(Tone.getContext());
+    };
+    init();
+  }, []);
+
+  // Update ToneJS loopEnd when loopLength or beatsPerBar changes
+  useEffect(() => {
+    const loopEnd = `${loopLength}:0:0`;
+    console.log("Setting loopEnd to:", loopEnd);
+    transport.current.loop = true;
+    transport.current.loopStart = "0:0:0";
+    transport.current.loopEnd = loopEnd;
+    console.log("transport time signature:", transport.current.timeSignature);
+  }, [loopLength, transport, beatsPerBar]);
+  ///////////
+
+  // Schedule metronome playback based on time signature
+  useEffect(() => {
+    // beatsCount will increment to keep track of when down-beat or off-beat should play
+    let beatCount = 0;
+
+    const metronomeLoop = transport.current.scheduleRepeat((time) => {
+      if (!loopIsPlaying || !metronomeActive) return;
+
+      const [, beats] = transport.current.position.split(":").map(Number);
+      console.log("time signagutre", transport.current.timeSignature);
+      console.log(transport.current.position.split(":"));
+      console.log("loopEnd", transport.current.loopEnd);
+      beatCount = beats % beatsPerBar;
+
+      if (beatCount === 0) {
+        metronome.triggerAttackRelease("C6", "8n", time);
+      } else {
+        metronome.triggerAttackRelease("G5", "8n", time);
+      }
+    }, "4n");
+
+    const transportForCleanup = transport.current;
+
+    return () => {
+      transportForCleanup.clear(metronomeLoop);
+    };
+  }, [loopIsPlaying, metronomeActive, beatsPerBar, transport, metronome]);
+
+  // Update ToneJS Transport bpm setting
+  useEffect(() => {
+    transport.current.bpm.value = bpm;
+  }, [bpm, transport]);
+
+  // Update Tone.js timeSignature when beatsPerBar changes;
+  useEffect(() => {
+    transport.current.timeSignature = beatsPerBar;
+  }, [transport, beatsPerBar]);
+
+  // Update ToneJS Transport loop length
+  useEffect(() => {
+    transport.current.loop = true;
+    transport.current.loopStart = "0:0:0";
+    transport.current.loopEnd = `${loopLength}:0:0`;
+  }, [loopLength, transport]);
+
   //create samplers for library of congress samples
   useEffect(() => {
     if (locSamples.length > 0) {
@@ -245,16 +288,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       });
     }
   }, [kitSamples]);
-
-  // Start Tone.js context once and get transport
-  useEffect(() => {
-    const init = async () => {
-      await Tone.start();
-      console.log("Tone.js started");
-      setAudioContext(Tone.getContext());
-    };
-    init();
-  }, []);
 
   // Cleanup effect for samplers when component unmounts
   useEffect(() => {
@@ -414,8 +447,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         metronome,
         loopLength,
         setLoopLength,
-        timeSignature,
-        setTimeSignature,
+        beatsPerBar,
+        setBeatsPerBar,
         bpm,
         setBpm,
         locSamples,

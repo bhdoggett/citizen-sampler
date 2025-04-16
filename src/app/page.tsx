@@ -14,7 +14,7 @@ export default function Home() {
       <SettingsWrapper />
       <DrumMachine />
       <p className="text-sm">
-        Inspired by
+        Inspired by and built on
         <Link
           className="m-1 text-sm text-blue-700"
           href="https://citizen-dj.labs.loc.gov/"

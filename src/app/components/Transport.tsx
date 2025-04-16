@@ -12,8 +12,8 @@ const Transport = () => {
     metronome,
     loopLength,
     setLoopLength,
-    timeSignature,
-    setTimeSignature,
+    beatsPerBar,
+    setBeatsPerBar,
     bpm,
     setBpm,
     loopIsPlaying,
@@ -22,37 +22,22 @@ const Transport = () => {
     setIsRecording,
   } = useAudioContext();
 
+  // test some things
   useEffect(() => {
-    transport.current.timeSignature = timeSignature[0];
-  }, [timeSignature, transport]);
+    console.log("loop length", loopLength);
+  }, [loopLength]);
 
-  // useEffect(() => {
-  //   let beatCount = 0;
-
-  //   const metronomeLoop = transport.current.scheduleRepeat((time) => {
-  //     if (!loopIsPlaying || !metronomeActive) return;
-
-  //     const [, beats] = transport.current.position.split(":").map(Number);
-  //     beatCount = beats % timeSignature[0];
-
-  //     if (beatCount === 0) {
-  //       metronome.triggerAttackRelease("C6", "8n", time);
-  //     } else {
-  //       metronome.triggerAttackRelease("G5", "8n", time);
-  //     }
-  //   }, `${timeSignature[1]}n`);
-
-  //   const transportForCleanup = transport.current;
-
-  //   return () => {
-  //     transportForCleanup.clear(metronomeLoop);
-  //   };
-  // }, [loopIsPlaying, metronomeActive, timeSignature, transport]);
-
+  // Update ToneJS Transport bpm setting
   useEffect(() => {
     transport.current.bpm.value = bpm;
   }, [bpm, transport]);
 
+  // Update Tone.js timeSignature when beatsPerBar changes;
+  useEffect(() => {
+    transport.current.timeSignature = beatsPerBar;
+  }, [transport, beatsPerBar]);
+
+  // Update ToneJS Transport loop length
   useEffect(() => {
     transport.current.loop = true;
     transport.current.loopStart = "0:0:0";
@@ -131,24 +116,13 @@ const Transport = () => {
         {/* Time Signature Controls */}
         <div className="flex items-center gap-2">
           <label htmlFor="time-signature" className="text-lg font-semibold">
-            Time Signature:
+            Beats per measure:
           </label>
           <div className="flex gap-2">
             <input
               type="number"
-              value={timeSignature[0]}
-              onChange={(e) =>
-                setTimeSignature([Number(e.target.value), timeSignature[1]])
-              }
-              className="w-12 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
-            />
-            <span className="text-lg font-bold">/</span>
-            <input
-              type="number"
-              value={timeSignature[1]}
-              onChange={(e) =>
-                setTimeSignature([timeSignature[0], Number(e.target.value)])
-              }
+              value={beatsPerBar}
+              onChange={(e) => setBeatsPerBar(Number(e.target.value))}
               className="w-12 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
             />
           </div>
