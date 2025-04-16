@@ -1,10 +1,16 @@
 "use client";
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import * as Tone from "tone";
-import { SampleType, SampleSettings, QuantizeValue } from "../types/SampleType";
+import {
+  SampleType,
+  SampleSettings,
+  SampleEvent,
+  QuantizeValue,
+} from "../types/SampleType";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
 import { getCollectionArray } from "@/lib/collections";
 import { getTitle, getLabel } from "../functions/getTitle";
+import metronome from "../metronome";
 
 type SamplerWithFX = {
   id: string;
@@ -12,6 +18,7 @@ type SamplerWithFX = {
   panVol: Tone.PanVol;
   highpass: Tone.Filter;
   lowpass: Tone.Filter;
+  currentEvent: SampleEvent | null;
 };
 
 type AudioContextType = {
@@ -57,6 +64,8 @@ const getRandomNumberForId = () => {
 };
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
+  console.log("something in state just changed");
+
   const [audioContext, setAudioContext] = useState<Tone.Context | null>(null);
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [loopLength, setLoopLength] = useState<number>(2);
@@ -166,14 +175,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // New ref to store all samplers and their FX chains
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
   // Function to create a sampler with FX chain
-  const [settingsWindow, setSettingsWindow] = useState<string>("sample");
-
-  const metronome = new Tone.Sampler({
-    urls: { C6: "hi-block.wav", G5: "lo-block.wav" },
-    baseUrl: "/samples/metronome/",
-  }).toDestination();
-
-  const makeSampler = (sampleId: string, sampleUrl: string) => {
+  const makeSampler = (sampleId: string, sampleUrl: string): SamplerWithFX => {
     const sampler = new Tone.Sampler({
       urls: { C4: sampleUrl },
     });
@@ -194,6 +196,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       panVol,
       highpass,
       lowpass,
+      currentEvent: null,
     };
   };
 
@@ -216,11 +219,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // Update ToneJS loopEnd when loopLength or beatsPerBar changes
   useEffect(() => {
     const loopEnd = `${loopLength}:0:0`;
-    console.log("Setting loopEnd to:", loopEnd);
     transport.current.loop = true;
     transport.current.loopStart = "0:0:0";
     transport.current.loopEnd = loopEnd;
-    console.log("transport time signature:", transport.current.timeSignature);
   }, [loopLength, transport, beatsPerBar]);
   ///////////
 
@@ -233,9 +234,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       if (!loopIsPlaying || !metronomeActive) return;
 
       const [, beats] = transport.current.position.split(":").map(Number);
-      console.log("time signagutre", transport.current.timeSignature);
-      console.log(transport.current.position.split(":"));
-      console.log("loopEnd", transport.current.loopEnd);
       beatCount = beats % beatsPerBar;
 
       if (beatCount === 0) {
@@ -250,7 +248,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     return () => {
       transportForCleanup.clear(metronomeLoop);
     };
-  }, [loopIsPlaying, metronomeActive, beatsPerBar, transport, metronome]);
+  }, [loopIsPlaying, metronomeActive, beatsPerBar, transport]);
 
   // Update ToneJS Transport bpm setting
   useEffect(() => {
@@ -273,8 +271,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     if (locSamples.length > 0) {
       locSamples.forEach(({ id, url }) => {
-        const name = id.split("_")[0];
-        samplersRef.current[name] = makeSampler(id, url);
+        // const name = id.split("_")[0];
+        samplersRef.current[id] = makeSampler(id, url);
       });
     }
   }, [locSamples]);
@@ -284,7 +282,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     if (kitSamples.length > 0) {
       kitSamples.forEach(({ id, url }) => {
         const name = id.split("_")[0];
-        samplersRef.current[name] = makeSampler(id, url);
+        samplersRef.current[id] = makeSampler(id, url);
       });
     }
   }, [kitSamples]);
@@ -360,7 +358,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       const sampleDataObj: Record<string, SampleType> = {};
       [...locSamples, ...kitSamples].forEach((sample) => {
         const name = sample.id.split("_")[0];
-        sampleDataObj[name] = sample;
+        sampleDataObj[sample.id] = sample;
       });
       return sampleDataObj;
     });

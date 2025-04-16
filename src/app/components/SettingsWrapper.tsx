@@ -12,13 +12,13 @@ const SettingsWrapper = () => {
     <div className="flex flex-col items-center border border-black shadow-md shadow-slate-500">
       <div className="flex shadow-inner shadow-slate-500 border border-black overflow-hidden mx-auto">
         <button
-          className={`px-2 border border-black ${settingsShown === "sample" ? "bg-black text-white" : ""}`}
+          className={`px-2 border-black ${settingsShown === "sample" ? "bg-black text-white" : ""}`}
           onClick={() => setSettingShown("sample")}
         >
           Sample
         </button>
         <button
-          className={`px-4 border border-black ${settingsShown === "loop" ? "bg-black text-white" : ""}`}
+          className={`px-4 border-black ${settingsShown === "loop" ? "bg-black text-white" : ""}`}
           onClick={() => setSettingShown("loop")}
         >
           Loop

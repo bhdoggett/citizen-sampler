@@ -8,7 +8,6 @@ const DrumMachine = () => {
 
   // Monitor changes to samplersRef and check if it has 8 samplers
   const [samplerCount, setSamplerCount] = useState(0);
-  // const [kitCount, setKitCount] = useState(0);
 
   // Update counts when refs change
   useEffect(() => {
@@ -30,6 +29,7 @@ const DrumMachine = () => {
     if (samplerCount === 12) {
       setSamplersLoaded(true);
     }
+    console.log("samplersRef", samplersRef.current);
   }, [samplerCount]);
 
   if (!samplersLoaded) {
