@@ -6,7 +6,7 @@ import {
   SampleSettings,
   SampleEvent,
   QuantizeValue,
-} from "../types/SampleType";
+} from "../types/SampleTypes";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
 import { getCollectionArray } from "@/lib/collections";
 import { getTitle, getLabel } from "../functions/getTitle";
@@ -15,6 +15,7 @@ import metronome from "../metronome";
 type SamplerWithFX = {
   id: string;
   sampler: Tone.Sampler;
+  gain: Tone.Gain;
   panVol: Tone.PanVol;
   highpass: Tone.Filter;
   lowpass: Tone.Filter;
@@ -22,7 +23,7 @@ type SamplerWithFX = {
 };
 
 type AudioContextType = {
-  masterGainNode: React.RefObject<Tone.Gain<"gain">>;
+  masterGainNode: React.RefObject<Tone.Gain>;
   setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
   transport: React.RefObject<TransportClass>;
   audioContext: Tone.Context | null;
@@ -64,8 +65,6 @@ const getRandomNumberForId = () => {
 };
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
-  console.log("something in state just changed");
-
   const [audioContext, setAudioContext] = useState<Tone.Context | null>(null);
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [loopLength, setLoopLength] = useState<number>(2);
@@ -74,7 +73,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [locSamples, setLocSamples] = useState<SampleType[] | []>([]);
   const [kitSamples] = useState<SampleType[] | []>([
     {
-      id: `kit-1_${getRandomNumberForId()}`,
+      id: "kit-1",
       type: "drumKit",
       title: "Kick_Bulldog_2",
       pad: 9,
@@ -82,6 +81,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
       events: [],
       settings: {
+        mute: false,
+        solo: false,
         volume: 0,
         pan: 0,
         pitch: 0,
@@ -95,7 +96,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
-      id: `kit-2_${getRandomNumberForId()}`,
+      id: "kit-2",
       type: "drumKit",
       title: "Snare_Astral_1",
       pad: 10,
@@ -103,6 +104,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       url: "/samples/drums/snares/Snare_Astral_1.wav",
       events: [],
       settings: {
+        mute: false,
+        solo: false,
         volume: 0,
         pan: 0,
         pitch: 0,
@@ -116,7 +119,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
-      id: `kit-3_${getRandomNumberForId()}`,
+      id: "kit-3",
       type: "drumKit",
       title: "ClosedHH_Alessya_DS",
       label: "HiHat",
@@ -124,6 +127,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
       events: [],
       settings: {
+        mute: false,
+        solo: false,
         volume: 0,
         pan: 0,
         pitch: 0,
@@ -137,7 +142,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
     {
-      id: `kit-4_${getRandomNumberForId()}`,
+      id: "kit-4",
       type: "drumKit",
       title: "Clap_Graphite",
       label: "Clap",
@@ -145,6 +150,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       url: "/samples/drums/claps/Clap_Graphite.wav",
       events: [],
       settings: {
+        mute: false,
+        solo: false,
         volume: 0,
         pan: 0,
         pitch: 0,
@@ -180,12 +187,14 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       urls: { C4: sampleUrl },
     });
 
+    const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
     const panVol = new Tone.PanVol(0, 0);
     const highpass = new Tone.Filter(0, "highpass");
     const lowpass = new Tone.Filter(20000, "lowpass");
 
     // Connect the FX chain
-    sampler.connect(highpass);
+    sampler.connect(gain);
+    gain.connect(highpass);
     highpass.connect(lowpass);
     lowpass.connect(panVol);
     panVol.connect(masterGainNode.current).toDestination();
@@ -193,6 +202,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     return {
       id: sampleId,
       sampler,
+      gain,
       panVol,
       highpass,
       lowpass,
@@ -200,11 +210,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   };
 
-  //testing things
-  useEffect(() => {
-    console.log("all collected samples:", allSampleData);
-    console.log("collectionName", collectionName);
-  }, [allSampleData, collectionName]);
+  // //testing things
+  // useEffect(() => {
+  //   console.log("all collected samples:", allSampleData);
+  //   console.log("collectionName", collectionName);
+  // }, [allSampleData, collectionName]);
 
   // Start Tone.js context once
   useEffect(() => {
@@ -317,7 +327,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           selectedSamples,
           (sample, index) => {
             const sampleData = {
-              id: `loc-${index + 1}_${getRandomNumberForId()}`,
+              id: `loc-${index + 1}`,
               type: `loc-${collectionName.replace(" ", "-")}`,
               title: getTitle(sample),
               label: getLabel(sample),
@@ -325,6 +335,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
               url: sample,
               events: [],
               settings: {
+                mute: false,
+                solo: false,
                 volume: 0,
                 pan: 0,
                 pitch: 0,

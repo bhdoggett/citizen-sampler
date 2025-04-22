@@ -29,7 +29,6 @@ const DrumMachine = () => {
     if (samplerCount === 12) {
       setSamplersLoaded(true);
     }
-    console.log("samplersRef", samplersRef.current);
   }, [samplerCount]);
 
   if (!samplersLoaded) {

@@ -3,12 +3,11 @@ import { useRef, useEffect, useState } from "react";
 import { useAudioContext } from "../contexts/AudioContext";
 import * as Tone from "tone";
 import quantize from "../functions/quantize";
-import { SampleType, SampleEvent } from "../types/SampleType";
+import { SampleType, SampleEvent } from "../types/SampleTypes";
 
 type DrumPadProps = {
   id: string;
   sampler: Tone.Sampler;
-  currentEvent: SampleEvent | null;
 };
 
 const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
@@ -100,19 +99,18 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setSelectedSampleId(id);
     setIsSelected(true);
     setSampleIsPlaying(true);
+    console.log("samplers ref", samplersRef.current);
 
     if (loopIsPlaying && isRecording) {
       // const startTime = transport.current.seconds;
       currentEvent.startTime = transport.current.seconds;
       currentEvent.duration = 0;
-      console.log("seconds at press", transport.current.seconds);
     }
   };
 
   const handleReleasePad = () => {
     setSampleIsPlaying(false);
     sampler.triggerRelease("C4");
-    console.log("seconds at release", transport.current.seconds);
     if (!currentEvent) return;
 
     const releaseTime = transport.current.seconds;

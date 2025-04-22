@@ -1,6 +1,9 @@
 - loop length is 8 beats when time signature is 3/4. Should be 6.
+- attack setting fader doesn't do anything
+- add reverse setting
 - download WAV master
 - download WAV stems
 - pitch shift functionality
 - loading per row and per sample
 - add links to "view details" for samples
+- "error disposing part" when stop is pressed mid sampler playback

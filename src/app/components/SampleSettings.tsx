@@ -1,7 +1,13 @@
 "use client";
 import { useAudioContext } from "../contexts/AudioContext";
 import { useState, useEffect, use } from "react";
-import type { SampleSettings, SampleType } from "../types/SampleType";
+import type { SampleSettings, SampleType } from "../types/SampleTypes";
+import {
+  soloSampler,
+  unSoloSampler,
+  muteSampler,
+  unMuteSampler,
+} from "../hooks/useMutesAndSolos";
 
 const SampleSettings = () => {
   const {
@@ -14,6 +20,8 @@ const SampleSettings = () => {
   } = useAudioContext();
 
   const [settings, setSettings] = useState<SampleSettings | null>(null);
+  const [isSoloed, setisSoloed] = useState<boolean>(false);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
 
   // initialize settings with selected sample's settings
   useEffect(() => {

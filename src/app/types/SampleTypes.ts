@@ -1,11 +1,13 @@
-import {
-  AudioRange,
-  Cents,
-  Decibels,
-  Frequency,
-  NormalRange,
-  Time,
-} from "tone/build/esm/core/type/Units";
+import * as Tone from "tone";
+
+// import {
+//   AudioRange,
+//   Cents,
+//   Decibels,
+//   Frequency,
+//   NormalRange,
+//   Time,
+// } from "tone/build/esm/core/type/Units";
 
 export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
 
@@ -15,6 +17,8 @@ export type SampleEvent = {
   // velocity: number;
 };
 export type SampleSettings = {
+  mute: boolean;
+  solo: boolean;
   volume: number;
   pan: number;
   pitch: number;
@@ -37,4 +41,14 @@ export type SampleType = {
   events: SampleEvent[];
   settings: SampleSettings;
   attribution?: string;
+};
+
+export type SamplerWithFX = {
+  id: string;
+  sampler: Tone.Sampler;
+  gain: Tone.Gain;
+  panVol: Tone.PanVol;
+  highpass: Tone.Filter;
+  lowpass: Tone.Filter;
+  currentEvent: SampleEvent | null;
 };
