@@ -12,8 +12,8 @@ import * as Tone from "tone";
 export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
 
 export type SampleEvent = {
-  startTime: number;
-  duration: number;
+  startTime: number | null;
+  duration: number | null;
   // velocity: number;
 };
 export type SampleSettings = {
@@ -50,5 +50,5 @@ export type SamplerWithFX = {
   panVol: Tone.PanVol;
   highpass: Tone.Filter;
   lowpass: Tone.Filter;
-  currentEvent: SampleEvent | null;
+  currentEvent: SampleEvent;
 };

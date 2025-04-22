@@ -4,23 +4,13 @@ import * as Tone from "tone";
 import {
   SampleType,
   SampleSettings,
-  SampleEvent,
   QuantizeValue,
+  SamplerWithFX,
 } from "../types/SampleTypes";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
 import { getCollectionArray } from "@/lib/collections";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
-
-type SamplerWithFX = {
-  id: string;
-  sampler: Tone.Sampler;
-  gain: Tone.Gain;
-  panVol: Tone.PanVol;
-  highpass: Tone.Filter;
-  lowpass: Tone.Filter;
-  currentEvent: SampleEvent | null;
-};
 
 type AudioContextType = {
   masterGainNode: React.RefObject<Tone.Gain>;
@@ -206,7 +196,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       panVol,
       highpass,
       lowpass,
-      currentEvent: null,
+      currentEvent: { startTime: null, duration: null },
     };
   };
 
@@ -291,7 +281,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     if (kitSamples.length > 0) {
       kitSamples.forEach(({ id, url }) => {
-        const name = id.split("_")[0];
         samplersRef.current[id] = makeSampler(id, url);
       });
     }
@@ -365,11 +354,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   }, [collectionName]);
 
   // initialize allSampleData state with the locSamples and kitSamples
+  ///  I NEED TO UPDATE THIS SO THAT ONLY THE LOC SAMPLER DATA GETS SWAPPED WHEN THOSE CHANGE. DON'T WANT TO REINITIALIZE THE KIT SAMPLES
   useEffect(() => {
     setAllSampleData(() => {
       const sampleDataObj: Record<string, SampleType> = {};
       [...locSamples, ...kitSamples].forEach((sample) => {
-        const name = sample.id.split("_")[0];
         sampleDataObj[sample.id] = sample;
       });
       return sampleDataObj;
@@ -396,6 +385,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
   };
 
+  // WHERE DO I USE THIS???
   const updateSamplerStateSettings = (
     id: string,
     settings: Partial<SampleSettings>
@@ -412,6 +402,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }));
   };
 
+  // WHERE DO I USE THIS???
   const updateSamplerRefSettings = (
     id: string,
     key: string,
@@ -444,6 +435,38 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       }
     }
   };
+
+  // // update gains based on mutes and solos:
+  useEffect(() => {
+    // if (Object.keys(allSampleData).length === 0) return;
+
+    // // function to find if ANY of the samplers are soloed?
+    const soloedExist = Object.values(allSampleData).some(
+      (sample) => sample.settings.solo
+    );
+
+    if (soloedExist) {
+      Object.keys(allSampleData).forEach((id) => {
+        samplersRef.current[id].gain.gain.value = allSampleData[id].settings
+          .mute
+          ? 0
+          : allSampleData[id].settings.solo
+            ? 1
+            : 0;
+      });
+    }
+
+    if (!soloedExist) {
+      Object.keys(allSampleData).forEach((id) => {
+        samplersRef.current[id].gain.gain.value = allSampleData[id].settings
+          .mute
+          ? 0
+          : 1;
+      });
+    }
+
+    console.log("allsampleData", allSampleData);
+  }, [allSampleData]);
 
   return (
     <AudioContextContext.Provider

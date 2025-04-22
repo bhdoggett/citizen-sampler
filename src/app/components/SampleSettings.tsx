@@ -2,12 +2,7 @@
 import { useAudioContext } from "../contexts/AudioContext";
 import { useState, useEffect, use } from "react";
 import type { SampleSettings, SampleType } from "../types/SampleTypes";
-import {
-  soloSampler,
-  unSoloSampler,
-  muteSampler,
-  unMuteSampler,
-} from "../hooks/useMutesAndSolos";
+import useMutesAndSolos from "../hooks/useMutesAndSolos";
 
 const SampleSettings = () => {
   const {
@@ -19,9 +14,32 @@ const SampleSettings = () => {
     updateSamplerRefSettings,
   } = useAudioContext();
 
+  const { setSampleMute, setSampleSolo } = useMutesAndSolos();
+
   const [settings, setSettings] = useState<SampleSettings | null>(null);
-  const [isSoloed, setisSoloed] = useState<boolean>(false);
+  const [isSoloed, setIsSoloed] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
+
+  // combine local and global state updates into one function for event listener
+  const toggleSolo = () => {
+    if (isSoloed) {
+      setSampleSolo(selectedSampleId, false);
+      setIsSoloed(false);
+    } else {
+      setSampleSolo(selectedSampleId, true);
+      setIsSoloed(true);
+    }
+  };
+
+  const toggleMute = () => {
+    if (isMuted) {
+      setSampleMute(selectedSampleId, false);
+      setIsMuted(false);
+    } else {
+      setSampleMute(selectedSampleId, true);
+      setIsMuted(true);
+    }
+  };
 
   // initialize settings with selected sample's settings
   useEffect(() => {
@@ -45,6 +63,14 @@ const SampleSettings = () => {
       }
     }
   }, [samplersRef, selectedSampleId, settings]);
+
+  // Keep mute and solo rendering in sync with global state
+  useEffect(() => {
+    if (selectedSampleId && allSampleData[selectedSampleId]) {
+      setIsMuted(allSampleData[selectedSampleId].settings.mute);
+      setIsSoloed(allSampleData[selectedSampleId].settings.solo);
+    }
+  }, [selectedSampleId, allSampleData]);
 
   // update allSampleData when settings change
   useEffect(() => {
@@ -238,6 +264,20 @@ const SampleSettings = () => {
               </option>
             ))}
           </select>
+          <div className="flex m-1">
+            <button
+              className={`border rounded-sm border-black mx-1 p-1 ${isMuted ? "bg-red-600" : "bg-slate-400"}`}
+              onClick={toggleMute}
+            >
+              M
+            </button>
+            <button
+              className={`border rounded-sm border-black mx-1 p-1 ${isSoloed ? "bg-yellow-300" : "bg-slate-400"}`}
+              onClick={toggleSolo}
+            >
+              S
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -23,7 +23,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   } = useAudioContext();
 
   const sampleDataRef = useRef(allSampleData[id]);
-  const currentEvent = samplersRef.current[id];
+  const { currentEvent } = samplersRef.current[id];
 
   // keep track of sample play events one at a time
   const eventRef = useRef<SampleEvent | null>(null);
@@ -99,7 +99,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setSelectedSampleId(id);
     setIsSelected(true);
     setSampleIsPlaying(true);
-    console.log("samplers ref", samplersRef.current);
+    console.log("allSampleData", allSampleData);
+    console.log("samplerRef", samplersRef.current);
 
     if (loopIsPlaying && isRecording) {
       // const startTime = transport.current.seconds;
@@ -136,6 +137,18 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setSelectedSampleId(id);
   };
 
+  const getPadColor = () => {
+    if (allSampleData[id].settings.mute) return "bg-red-400";
+    if (allSampleData[id].settings.solo) return "bg-yellow-200";
+    return "bg-slate-400";
+  };
+
+  const getActiveStyle = () => {
+    return sampleIsPlaying
+      ? "brightness-75 saturate-150 transition-all duration-100"
+      : "brightness-100 saturate-100 transition-all duration-300";
+  };
+
   return (
     <div
       className={`${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"} rounded-sm`}
@@ -147,7 +160,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onMouseUp={handleReleasePad}
         onMouseLeave={handleReleasePad}
         onTouchEnd={handleReleasePad}
-        className={`${sampleIsPlaying ? "bg-slate-500" : "bg-slate-400"} m-1 border-4 border-slate-800  focus:border-double w-32 h-32 shadow-md shadow-slate-700  `}
+        className={`${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800  focus:border-double w-32 h-32 shadow-md shadow-slate-700  `}
       >
         {id}
       </button>
