@@ -1,4 +1,3 @@
-- add mute and solo functionality
 - loop length is 8 beats when time signature is 3/4. Should be 6.
 - attack setting fader doesn't do anything
 - add reverse setting

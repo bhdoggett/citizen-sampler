@@ -50,10 +50,6 @@ type AudioContextType = {
 
 const AudioContextContext = createContext<AudioContextType | null>(null);
 
-const getRandomNumberForId = () => {
-  return Math.floor(Math.random() * 1000000);
-};
-
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [audioContext, setAudioContext] = useState<Tone.Context | null>(null);
   const [metronomeActive, setMetronomeActive] = useState(false);
@@ -168,6 +164,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     Record<string, SampleType>
   >({});
   const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null);
+  const [solosExist, setSolosExist] = useState<boolean>(false);
   const transport = useRef<TransportClass>(Tone.getTransport());
   // New ref to store all samplers and their FX chains
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
@@ -436,16 +433,14 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
   };
 
-  // // update gains based on mutes and solos:
+  // updates solosExist based on sample state
+
+  // const solosExist = Object.values(allSampleData).some(
+  //   (sample) => sample.settings.solo
+  // );
+  // Sampler audio output based on mutes and solos:
   useEffect(() => {
-    // if (Object.keys(allSampleData).length === 0) return;
-
-    // // function to find if ANY of the samplers are soloed?
-    const soloedExist = Object.values(allSampleData).some(
-      (sample) => sample.settings.solo
-    );
-
-    if (soloedExist) {
+    if (solosExist) {
       Object.keys(allSampleData).forEach((id) => {
         samplersRef.current[id].gain.gain.value = allSampleData[id].settings
           .mute
@@ -456,7 +451,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       });
     }
 
-    if (!soloedExist) {
+    if (!solosExist) {
       Object.keys(allSampleData).forEach((id) => {
         samplersRef.current[id].gain.gain.value = allSampleData[id].settings
           .mute
