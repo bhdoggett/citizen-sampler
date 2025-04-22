@@ -4,8 +4,8 @@ import { useAudioContext } from "../contexts/AudioContext";
 import type { SamplerWithFX, SampleType } from "../types/SampleTypes";
 
 const useMutesAndSolos = () => {
-  const { samplersRef, allSampleData, setAllSampleData } = useAudioContext();
-  const [solosExist, setSolosExist] = useState<boolean>(false);
+  const { samplersRef, allSampleData, setAllSampleData, solosExist } =
+    useAudioContext();
 
   // simplify gain adjustments in mute and solo functions below
 
@@ -46,13 +46,6 @@ const useMutesAndSolos = () => {
       setSampleSolo(id, false);
     });
   };
-
-  useEffect(() => {
-    const solosExist = Object.values(allSampleData).some(
-      (sample) => sample.settings.solo
-    );
-    setSolosExist(solosExist);
-  }, [allSampleData]);
 
   return {
     setSampleMute,

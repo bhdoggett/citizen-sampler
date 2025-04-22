@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useAudioContext } from "../contexts/AudioContext";
 import useMutesAndSolos from "../hooks/useMutesAndSolos";
 import SampleSettings from "./SampleSettings";
 import Transport from "./Transport";
@@ -8,7 +9,8 @@ type settingsWindow = "sample" | "loop" | "master";
 
 const SettingsWrapper = () => {
   const [settingsShown, setSettingShown] = useState<settingsWindow>("loop");
-  const { clearSolos, solosExist } = useMutesAndSolos();
+  const { clearSolos } = useMutesAndSolos();
+  const { solosExist } = useAudioContext();
 
   return (
     <>

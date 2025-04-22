@@ -46,6 +46,7 @@ type AudioContextType = {
   updateSamplerRefSettings: (id: string, key: string, value: number) => void;
   selectedSampleId: string | null;
   setSelectedSampleId: React.Dispatch<React.SetStateAction<string | null>>;
+  solosExist: boolean;
 };
 
 const AudioContextContext = createContext<AudioContextType | null>(null);
@@ -433,13 +434,21 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
   };
 
-  // updates solosExist based on sample state
+  // updates solosExist when samplers' solo state changes
+  useEffect(() => {
+    const solosExistNow = Object.values(allSampleData).some(
+      (sample) => sample.settings.solo
+    );
+    setSolosExist(solosExistNow);
+    console.log("solosExist", solosExist);
+  }, [allSampleData, solosExist]);
 
-  // const solosExist = Object.values(allSampleData).some(
-  //   (sample) => sample.settings.solo
-  // );
   // Sampler audio output based on mutes and solos:
   useEffect(() => {
+    // const solosExist = Object.values(allSampleData).some(
+    //   (sample) => sample.settings.solo
+    // );
+
     if (solosExist) {
       Object.keys(allSampleData).forEach((id) => {
         samplersRef.current[id].gain.gain.value = allSampleData[id].settings
@@ -461,7 +470,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
 
     console.log("allsampleData", allSampleData);
-  }, [allSampleData]);
+  }, [allSampleData, solosExist]);
 
   return (
     <AudioContextContext.Provider
@@ -494,6 +503,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         selectedSampleId,
         setSelectedSampleId,
         samplersRef,
+        solosExist,
       }}
     >
       {children}

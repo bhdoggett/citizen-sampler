@@ -9,3 +9,4 @@
 - "error disposing part" when stop is pressed mid sampler playback
 - record button should automatically start the play button as well
 - stop button should stop record button as well
+- display "is recording" somehow on the main settings wrapper when record is enabled
