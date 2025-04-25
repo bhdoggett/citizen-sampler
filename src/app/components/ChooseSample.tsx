@@ -1,6 +1,6 @@
 "use client";
 import * as Tone from "tone";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAudioContext } from "../contexts/AudioContext";
 import { getCollectionArray, collectionNames } from "@/lib/collections";
 
@@ -16,6 +16,7 @@ const ChooseSample = () => {
   const [samplesArray, setSamplesArray] = useState<string[] | []>([]);
   const [sampleNames, setSampleNames] = useState<string[] | null>(null);
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
+  const currentPlayer = useRef<Tone.Player | null>(null);
 
   //test some things
   useEffect(() => {
@@ -70,16 +71,31 @@ const ChooseSample = () => {
     setCollectionName(collection);
   };
 
-  // const handleSelectSample = (sample: string) => {
-  //   setSelectedSample(sample);
-  // };
+  const handleSelectSample = (e) => {
+    setSelectedSample(e.target.value);
+    console.log("selectedSample", e.target.value);
+  };
 
   // const hansleLoadSample = () => {
   //   const sampler = makeSampler(selectedSampleId, selectedSample);
   // };
 
+  const playSample = (url: string) => {
+    if (currentPlayer.current) currentPlayer.current.dispose();
+    currentPlayer.current = new Tone.Player(url).toDestination();
+    currentPlayer.current.autostart = true;
+  };
+
+  const stopSamplePlayback = () => {
+    if (currentPlayer.current) {
+      currentPlayer.current.stop();
+      currentPlayer.current.dispose();
+      currentPlayer.current = null;
+    }
+  };
+
   return (
-    <div className="border-2 border-black bg-slate-800  m-3 p-1 shadow-md shadow-slate-800">
+    <div className="flex flex-col border-2 border-black bg-slate-800  m-3 p-1 shadow-md shadow-slate-800">
       <label htmlFor="collection" className="text-white">
         Collection:{" "}
       </label>
@@ -102,12 +118,20 @@ const ChooseSample = () => {
       <select
         name="sample"
         id="sample"
-        onChange={(e) => setSelectedSample(e.target.value)}
+        onChange={handleSelectSample}
         className="shadow-inner shadow-slate-700 shadoow-"
       >
         {samplesArray &&
           samplesArray.map((sample) => (
-            <option key={sample} value={sample}>
+            <option
+              key={sample}
+              value={sample}
+              onFocus={() => {
+                console.log("I'm focusing on sample:", sample);
+                playSample(sample);
+              }}
+              onBlur={stopSamplePlayback}
+            >
               {getSampleName(sample)}
             </option>
           ))}
