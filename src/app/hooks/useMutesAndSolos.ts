@@ -1,15 +1,12 @@
 "useClient";
-import { useEffect, useState } from "react";
 import { useAudioContext } from "../contexts/AudioContext";
-import type { SamplerWithFX, SampleType } from "../types/SampleTypes";
+import type { SampleType } from "../types/SampleTypes";
 
 const useMutesAndSolos = () => {
   const { samplersRef, allSampleData, setAllSampleData, solosExist } =
     useAudioContext();
 
-  // simplify gain adjustments in mute and solo functions below
-
-  // simplify state updates in solo functions below
+  // simplify soloed samples state updates
   const setSampleSolo = (id: string, value: boolean) => {
     setAllSampleData((prev: Record<string, SampleType>) => {
       return {
@@ -25,7 +22,7 @@ const useMutesAndSolos = () => {
     });
   };
 
-  // simplify state updates in mute functions below
+  // simplify muted samples state updates
   const setSampleMute = (id: string, value: boolean) => {
     setAllSampleData((prev: Record<string, SampleType>) => {
       return {
@@ -41,6 +38,7 @@ const useMutesAndSolos = () => {
     });
   };
 
+  // remove solo from all samples
   const clearSolos = () => {
     Object.keys(allSampleData).forEach((id) => {
       setSampleSolo(id, false);

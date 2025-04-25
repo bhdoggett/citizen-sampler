@@ -29,8 +29,9 @@ type AudioContextType = {
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
   locSamples: SampleType[];
   kitSamples: SampleType[];
-  collectionName: string;
-  setCollectionName: React.Dispatch<React.SetStateAction<string>>;
+  makeSampler: (sampleId: string, sampleUrl: string) => SamplerWithFX;
+  globalCollectionName: string;
+  setGlobalCollectionName: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
   setLoopIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   isRecording: boolean;
@@ -152,7 +153,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     },
   ]);
-  const [collectionName, setCollectionName] = useState<string>(
+  const [globalCollectionName, setGlobalCollectionName] = useState<string>(
     "Inventing Entertainment"
   );
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -201,8 +202,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // //testing things
   // useEffect(() => {
   //   console.log("all collected samples:", allSampleData);
-  //   console.log("collectionName", collectionName);
-  // }, [allSampleData, collectionName]);
+  //   console.log("globalCollectionName", globalCollectionName);
+  // }, [allSampleData, globalCollectionName]);
 
   // Start Tone.js context once
   useEffect(() => {
@@ -296,11 +297,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   }, []);
 
-  // fetch samples using the collectionName
+  // fetch samples using the globalCollectionName
   useEffect(() => {
     const fetchSamples = async () => {
       try {
-        const collectionArray = getCollectionArray(collectionName);
+        const collectionArray = getCollectionArray(globalCollectionName);
         if (!collectionArray) return;
 
         // Select 8 samples from the colletion randomly
@@ -315,7 +316,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           (sample, index) => {
             const sampleData = {
               id: `loc-${index + 1}`,
-              type: `loc-${collectionName.replace(" ", "-")}`,
+              type: `loc-${globalCollectionName.replace(" ", "-")}`,
               title: getTitle(sample),
               label: getLabel(sample),
               pad: index + 1,
@@ -349,7 +350,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
 
     fetchSamples();
-  }, [collectionName]);
+  }, [globalCollectionName]);
 
   // initialize allSampleData state with the locSamples and kitSamples
   ///  I NEED TO UPDATE THIS SO THAT ONLY THE LOC SAMPLER DATA GETS SWAPPED WHEN THOSE CHANGE. DON'T WANT TO REINITIALIZE THE KIT SAMPLES
@@ -475,10 +476,10 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   return (
     <AudioContextContext.Provider
       value={{
+        audioContext,
         masterGainNode,
         setMasterGainLevel,
         transport,
-        audioContext,
         metronomeActive,
         setMetronomeActive,
         metronome,
@@ -488,14 +489,15 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setBeatsPerBar,
         bpm,
         setBpm,
-        locSamples,
-        kitSamples,
-        collectionName,
-        setCollectionName,
         loopIsPlaying,
         setLoopIsPlaying,
         isRecording,
         setIsRecording,
+        locSamples,
+        kitSamples,
+        makeSampler,
+        globalCollectionName,
+        setGlobalCollectionName,
         allSampleData,
         updateSamplerStateSettings,
         updateSamplerRefSettings,
@@ -511,4 +513,14 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   );
 };
 
-export const useAudioContext = () => useContext(AudioContextContext);
+// export const useAudioContext = () => useContext(AudioContextContext);
+
+export const useAudioContext = () => {
+  const context = useContext(AudioContextContext);
+  if (!context) {
+    throw new Error(
+      "useAudioContext must be used within an AudioContextProvider"
+    );
+  }
+  return context;
+};

@@ -3,6 +3,7 @@ import { useAudioContext } from "../contexts/AudioContext";
 import { useState, useEffect, use } from "react";
 import type { SampleSettings, SampleType } from "../types/SampleTypes";
 import useMutesAndSolos from "../hooks/useMutesAndSolos";
+import ChooseSample from "./ChooseSample";
 
 const SampleSettings = () => {
   const {
@@ -118,169 +119,181 @@ const SampleSettings = () => {
   }
 
   return (
-    <div className="p-2 mx-auto mb-3">
-      {/* <h3 className="text-lg font-semibold mb-4">
-        Settings: {allSampleData[selectedSampleId].title}
-      </h3> */}
-      <div className="flex gap-x-4 md:gap-x-6">
-        <div className="flex flex-col">
-          <label className="my-2 flex justify-between">
-            <span>Volume</span>
-            <span>{settings.volume?.toFixed(1) || "0.0"} dB</span>
-          </label>
-          <input
-            type="range"
-            min="-24"
-            max="6"
-            step="0.1"
-            value={settings.volume || 0}
-            onChange={(e) => {
-              updateCurrentSampleSettings("volume", parseFloat(e.target.value));
-            }}
-            className="w-full slider slider"
-          />
-
-          <label className="my-2 flex justify-between">
-            <span>Pan</span>
-            <span>{settings.pan?.toFixed(1) || "0.0"}</span>
-          </label>
-          <input
-            type="range"
-            min="-1"
-            max="1"
-            step="0.1"
-            value={settings.pan || 0}
-            onChange={(e) =>
-              updateCurrentSampleSettings("pan", parseFloat(e.target.value))
-            }
-            className="w-full slider"
-          />
-        </div>
-        <div className="flex flex-col">
-          <label className="my-2 flex justify-between">
-            <span>Attack</span>
-            <span>{settings.attack?.toFixed(2) || "0.00"} s</span>
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="2"
-            step="0.01"
-            value={settings.attack || 0}
-            onChange={(e) =>
-              updateCurrentSampleSettings("attack", parseFloat(e.target.value))
-            }
-            className="w-full slider"
-          />
-
-          <label className="my-2 flex justify-between">
-            <span>Release</span>
-            <span>{settings.release?.toFixed(2) || "0.00"} s</span>
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="2"
-            step="0.01"
-            value={settings.release || 0}
-            onChange={(e) =>
-              updateCurrentSampleSettings("release", parseFloat(e.target.value))
-            }
-            className="w-full slider"
-          />
-        </div>
-        <div className="flex flex-col">
-          <label className="my-2 flex justify-between">
-            <span>Highpass</span>
-            <span>{settings.highpass?.[0] || "0"} Hz</span>
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="2000"
-            step="1"
-            value={settings.highpass?.[0] || 0}
-            onChange={(e) =>
-              updateCurrentSampleSettings("highpass", [
-                parseFloat(e.target.value),
-                "highpass",
-              ])
-            }
-            className="w-full slider"
-          />
-
-          <label className="my-2 flex justify-between">
-            <span>Lowpass</span>
-            <span>{settings.lowpass?.[0] || "20000"} Hz</span>
-          </label>
-          <input
-            type="range"
-            min="200"
-            max="20000"
-            step="1"
-            value={settings.lowpass?.[0] || 20000}
-            onChange={(e) =>
-              updateCurrentSampleSettings("lowpass", [
-                parseFloat(e.target.value),
-                "lowpass",
-              ])
-            }
-            className="w-full slider"
-          />
-        </div>
-        <div className="flex flex-col">
-          <div className="w-full max-w-2xl flex items-center gap-4">
-            <label htmlFor="quantize-active" className="my-2">
-              Quantize:
+    <>
+      <ChooseSample />
+      <div className="p-2 mx-auto mb-3">
+        {/* <h3 className="text-lg font-semibold mb-4">
+      Settings: {allSampleData[selectedSampleId].title}
+    </h3> */}
+        <div className="flex gap-x-4 md:gap-x-6">
+          <div className="flex flex-col">
+            <label className="my-2 flex justify-between">
+              <span>Volume</span>
+              <span>{settings.volume?.toFixed(1) || "0.0"} dB</span>
             </label>
             <input
-              type="checkbox"
-              name="quantize-active"
-              id="quantize-active"
-              checked={settings.quantize}
+              type="range"
+              min="-24"
+              max="6"
+              step="0.1"
+              value={settings.volume || 0}
               onChange={(e) => {
-                updateCurrentSampleSettings("quantize", e.target.checked);
-                console.log(
-                  `allSampleData[${selectedSampleId}]`,
-                  allSampleData[selectedSampleId]
+                updateCurrentSampleSettings(
+                  "volume",
+                  parseFloat(e.target.value)
                 );
-
-                // setQuantizeActive(e.target.checked)
               }}
+              className="w-full slider slider"
+            />
+
+            <label className="my-2 flex justify-between">
+              <span>Pan</span>
+              <span>{settings.pan?.toFixed(1) || "0.0"}</span>
+            </label>
+            <input
+              type="range"
+              min="-1"
+              max="1"
+              step="0.1"
+              value={settings.pan || 0}
+              onChange={(e) =>
+                updateCurrentSampleSettings("pan", parseFloat(e.target.value))
+              }
+              className="w-full slider"
             />
           </div>
-          <select
-            value={settings.quantVal}
-            onChange={(e) => {
-              updateCurrentSampleSettings("quantVal", Number(e.target.value));
+          <div className="flex flex-col">
+            <label className="my-2 flex justify-between">
+              <span>Attack</span>
+              <span>{settings.attack?.toFixed(2) || "0.00"} s</span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="2"
+              step="0.01"
+              value={settings.attack || 0}
+              onChange={(e) =>
+                updateCurrentSampleSettings(
+                  "attack",
+                  parseFloat(e.target.value)
+                )
+              }
+              className="w-full slider"
+            />
 
-              // setQuantizeValue(Number(e.target.value))
-            }}
-            className="w-16 p-1 border border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
-          >
-            {[1, 4, 8, 16].map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-          <div className="flex m-1">
-            <button
-              className={`border rounded-sm border-black mx-1 p-1 ${isMuted ? "bg-red-600" : "bg-slate-400"}`}
-              onClick={toggleMute}
+            <label className="my-2 flex justify-between">
+              <span>Release</span>
+              <span>{settings.release?.toFixed(2) || "0.00"} s</span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="2"
+              step="0.01"
+              value={settings.release || 0}
+              onChange={(e) =>
+                updateCurrentSampleSettings(
+                  "release",
+                  parseFloat(e.target.value)
+                )
+              }
+              className="w-full slider"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="my-2 flex justify-between">
+              <span>Highpass</span>
+              <span>{settings.highpass?.[0] || "0"} Hz</span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="2000"
+              step="1"
+              value={settings.highpass?.[0] || 0}
+              onChange={(e) =>
+                updateCurrentSampleSettings("highpass", [
+                  parseFloat(e.target.value),
+                  "highpass",
+                ])
+              }
+              className="w-full slider"
+            />
+
+            <label className="my-2 flex justify-between">
+              <span>Lowpass</span>
+              <span>{settings.lowpass?.[0] || "20000"} Hz</span>
+            </label>
+            <input
+              type="range"
+              min="200"
+              max="20000"
+              step="1"
+              value={settings.lowpass?.[0] || 20000}
+              onChange={(e) =>
+                updateCurrentSampleSettings("lowpass", [
+                  parseFloat(e.target.value),
+                  "lowpass",
+                ])
+              }
+              className="w-full slider"
+            />
+          </div>
+          <div className="flex flex-col">
+            <div className="w-full max-w-2xl flex items-center gap-4">
+              <label htmlFor="quantize-active" className="my-2">
+                Quantize:
+              </label>
+              <input
+                type="checkbox"
+                name="quantize-active"
+                id="quantize-active"
+                checked={settings.quantize}
+                onChange={(e) => {
+                  updateCurrentSampleSettings("quantize", e.target.checked);
+                  console.log(
+                    `allSampleData[${selectedSampleId}]`,
+                    allSampleData[selectedSampleId]
+                  );
+
+                  // setQuantizeActive(e.target.checked)
+                }}
+              />
+            </div>
+            <select
+              value={settings.quantVal}
+              onChange={(e) => {
+                updateCurrentSampleSettings("quantVal", Number(e.target.value));
+
+                // setQuantizeValue(Number(e.target.value))
+              }}
+              className="w-16 p-1 border border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
             >
-              M
-            </button>
-            <button
-              className={`border rounded-sm border-black mx-1 p-1 ${isSoloed ? "bg-yellow-300" : "bg-slate-400"}`}
-              onClick={toggleSolo}
-            >
-              S
-            </button>
+              {[1, 4, 8, 16].map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <div className="flex m-1">
+              <button
+                className={`border rounded-sm border-black mx-1 p-1 ${isMuted ? "bg-red-600" : "bg-slate-400"}`}
+                onClick={toggleMute}
+              >
+                M
+              </button>
+              <button
+                className={`border rounded-sm border-black mx-1 p-1 ${isSoloed ? "bg-yellow-300" : "bg-slate-400"}`}
+                onClick={toggleSolo}
+              >
+                S
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

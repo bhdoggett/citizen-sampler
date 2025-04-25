@@ -1,11 +1,12 @@
 "use client";
 import { useAudioContext } from "../contexts/AudioContext";
 import { collectionNames } from "../../lib/collections";
+
 const CollectionMenu = () => {
-  const { collectionName, setCollectionName } = useAudioContext();
+  const { globalCollectionName, setGlobalCollectionName } = useAudioContext();
 
   const handleSelect = (collection: string) => {
-    setCollectionName(collection);
+    setGlobalCollectionName(collection);
   };
 
   return (

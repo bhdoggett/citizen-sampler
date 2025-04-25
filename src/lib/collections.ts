@@ -1,3 +1,5 @@
+"use client";
+import { useState, useEffect } from "react";
 import {
   inventingEntertainment,
   VD_inventingEntertainment,
@@ -30,6 +32,7 @@ import {
   njbPopularMusic,
   VD_njbPopularMusic,
 } from "./sampleSources";
+import * as Tone from "tone";
 
 export const collectionNames = [
   "Inventing Entertainment",
@@ -48,6 +51,28 @@ export const collectionNames = [
   "The National Jukebox: Classical Music",
   "The National Jukebox: Popular Music",
 ];
+
+export const useSampleCollection = () => {
+  const [collectionName, setCollectionName] = useState(
+    "Inventing Entertainment"
+  );
+  const [sampleUrls, setSamplesUrls] = useState(inventingEntertainment);
+  const [selectedSample, setSelectedSample] = useState<string | null>(null);
+
+  useEffect(() => {
+    const array = getCollectionArray(collectionName);
+    setSamplesUrls(array);
+  }, [collectionName]);
+
+  useEffect(() => {
+    if (selectedSample) {
+      const player = new Tone.Player(selectedSample).toDestination();
+      player.autostart = true;
+    }
+  }, [selectedSample]);
+
+  return { collection };
+};
 
 export const getCollectionArray = (collection: string) => {
   switch (collection) {
