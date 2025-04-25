@@ -24,23 +24,12 @@ const ChooseSample = () => {
     console.log("samplesArray", samplesArray);
     console.log("samplesArray[0]", samplesArray[0]);
     // console.log("sampleNames", sampleNames);
-    console.log("getSampleName", getSampleName(samplesArray[0])); // console log the getSampleName function working on selectedSample
+    console.log("formatSampleName", formatSampleName(samplesArray[0])); // console log the formatSampleName function working on selectedSample
   }, [samplesArray, sampleNames, globalCollectionName]);
-
-  const getSampleName = (url?: string) => {
-    if (!url) return "";
-
-    const filename = url.split("/").pop();
-    if (!filename) return "";
-
-    const rawTitle = filename.split("_")[0];
-    const title = rawTitle.replace(/-/g, " ");
-    return title.replace(/\b\w/g, (c) => c.toUpperCase());
-  };
 
   useEffect(() => {
     if (samplesArray.length > 0) {
-      const names = samplesArray.map((url) => getSampleName(url));
+      const names = samplesArray.map((url) => formatSampleName(url));
       setSampleNames(names);
     }
   }, [samplesArray]);
@@ -66,6 +55,21 @@ const ChooseSample = () => {
       player.autostart = true;
     }
   }, [selectedSample]);
+
+  const formatSampleName = (url?: string) => {
+    if (!url) return "";
+
+    const filename = url.split("/").pop();
+    if (!filename) return "";
+
+    const titleParts = filename.split("_");
+    const gatheredParts = [
+      titleParts[0],
+      Number(titleParts[2]).toString(),
+    ].join(" ");
+    const title = gatheredParts.replace(/-/g, " ");
+    return title.replace(/\b\w/g, (c) => c.toUpperCase());
+  };
 
   const handleSelectCollection = (collection: string) => {
     setCollectionName(collection);
@@ -132,7 +136,7 @@ const ChooseSample = () => {
               }}
               onBlur={stopSamplePlayback}
             >
-              {getSampleName(sample)}
+              {formatSampleName(sample)}
             </option>
           ))}
       </select>
