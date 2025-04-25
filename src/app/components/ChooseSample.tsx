@@ -12,56 +12,36 @@ const ChooseSample = () => {
     samplersRef,
     setAllSampleData,
   } = useAudioContext();
+
   const [collectionName, setCollectionName] = useState(globalCollectionName);
-  const [samplesArray, setSamplesArray] = useState<string[] | []>([]);
-  const [sampleNames, setSampleNames] = useState<string[] | null>(null);
+  const [samplesArray, setSamplesArray] = useState<string[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const currentPlayer = useRef<Tone.Player | null>(null);
-
-  //test some things
-  useEffect(() => {
-    console.log("globalCollectionName", globalCollectionName);
-    console.log("samplesArray", samplesArray);
-    console.log("samplesArray[0]", samplesArray[0]);
-    // console.log("sampleNames", sampleNames);
-    console.log("formatSampleName", formatSampleName(samplesArray[0])); // console log the formatSampleName function working on selectedSample
-  }, [samplesArray, sampleNames, globalCollectionName]);
-
-  useEffect(() => {
-    if (samplesArray.length > 0) {
-      const names = samplesArray.map((url) => formatSampleName(url));
-      setSampleNames(names);
-    }
-  }, [samplesArray]);
-
-  //function to format sample names based on sample urls
-
-  // i need the global context function to update the sampler ref at that id
-  // i need to globcal context allSampleData state to update that at the right id
-  // i need a UI to update the name of the selected sample
-  // i need a UI to udpate the name of the selected collection
-  // when tha collection name changes the select element for the sample names needs to update accordingly
-  // when a user tabs through teh sample names a Tone.plyer needs to start for that sample. sample names shouldn't look like the file name with al the -'s and _'s, so i need a funciton for format the title, but tabbing through thte titles needs to trigger the player at the appropriate corresponding url
 
   useEffect(() => {
     const array = getCollectionArray(collectionName);
     setSamplesArray(array);
   }, [collectionName]);
 
-  // Play audio for selected sample
-  useEffect(() => {
-    if (selectedSample) {
-      const player = new Tone.Player(selectedSample).toDestination();
-      player.autostart = true;
+  const stopAndDisposePlayer = () => {
+    if (currentPlayer.current) {
+      currentPlayer.current.stop();
+      currentPlayer.current.dispose();
+      currentPlayer.current = null;
     }
-  }, [selectedSample]);
+  };
+
+  const playSample = (url: string) => {
+    stopAndDisposePlayer();
+    currentPlayer.current = new Tone.Player(url).toDestination();
+    currentPlayer.current.autostart = true;
+  };
 
   const formatSampleName = (url?: string) => {
     if (!url) return "";
-
     const filename = url.split("/").pop();
     if (!filename) return "";
-
     const titleParts = filename.split("_");
     const gatheredParts = [
       titleParts[0],
@@ -73,41 +53,32 @@ const ChooseSample = () => {
 
   const handleSelectCollection = (collection: string) => {
     setCollectionName(collection);
+    setSelectedIndex(null);
+    setSelectedSample(null);
   };
 
-  const handleSelectSample = (e) => {
-    setSelectedSample(e.target.value);
-    console.log("selectedSample", e.target.value);
-  };
-
-  // const hansleLoadSample = () => {
-  //   const sampler = makeSampler(selectedSampleId, selectedSample);
-  // };
-
-  const playSample = (url: string) => {
-    if (currentPlayer.current) currentPlayer.current.dispose();
-    currentPlayer.current = new Tone.Player(url).toDestination();
-    currentPlayer.current.autostart = true;
-  };
-
-  const stopSamplePlayback = () => {
-    if (currentPlayer.current) {
-      currentPlayer.current.stop();
-      currentPlayer.current.dispose();
-      currentPlayer.current = null;
-    }
+  const handleChooseSample = () => {
+    if (selectedIndex === null || !samplesArray[selectedIndex]) return;
+    const url = samplesArray[selectedIndex];
+    setSelectedSample(url);
+    const newSampler = makeSampler(selectedSampleId, url);
+    samplersRef.current[selectedSampleId] = newSampler;
+    setAllSampleData((prev) => ({
+      ...prev,
+      [selectedSampleId]: { url },
+    }));
   };
 
   return (
-    <div className="flex flex-col border-2 border-black bg-slate-800  m-3 p-1 shadow-md shadow-slate-800">
-      <label htmlFor="collection" className="text-white">
-        Collection:{" "}
+    <div className="flex flex-col border-2 border-black bg-slate-800 m-3 p-4 shadow-md shadow-slate-800 text-white">
+      <label htmlFor="collection" className="mb-1">
+        Collection:
       </label>
       <select
         name="collection"
         id="collection"
         onChange={(e) => handleSelectCollection(e.target.value)}
-        className="shadow-inner shadow-slate-700 shadoow-"
+        className="mb-4 text-black"
       >
         {collectionNames.map((collection) => (
           <option key={collection} value={collection}>
@@ -116,30 +87,36 @@ const ChooseSample = () => {
         ))}
       </select>
 
-      <label htmlFor="sample" className="text-white">
-        Sample:{" "}
-      </label>
-      <select
-        name="sample"
-        id="sample"
-        onChange={handleSelectSample}
-        className="shadow-inner shadow-slate-700 shadoow-"
+      <label className="mb-2">Samples:</label>
+      <ul className="bg-slate-700 rounded p-2 max-h-60 overflow-y-auto space-y-1 focus:outline-none">
+        {samplesArray.map((sample, index) => (
+          <li
+            key={sample}
+            tabIndex={0}
+            onFocus={() => {
+              setSelectedIndex(index);
+              playSample(sample);
+            }}
+            onBlur={() => {
+              stopAndDisposePlayer();
+            }}
+            className={`cursor-pointer ${
+              selectedIndex === index
+                ? "bg-slate-700 text-white"
+                : "bg-white text-black"
+            }`}
+          >
+            {formatSampleName(sample)}
+          </li>
+        ))}
+      </ul>
+
+      <button
+        onClick={handleChooseSample}
+        className="mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-7/12"
       >
-        {samplesArray &&
-          samplesArray.map((sample) => (
-            <option
-              key={sample}
-              value={sample}
-              onFocus={() => {
-                console.log("I'm focusing on sample:", sample);
-                playSample(sample);
-              }}
-              onBlur={stopSamplePlayback}
-            >
-              {formatSampleName(sample)}
-            </option>
-          ))}
-      </select>
+        Choose Sample
+      </button>
     </div>
   );
 };
