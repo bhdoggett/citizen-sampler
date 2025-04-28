@@ -30,6 +30,12 @@ type AudioContextType = {
   locSamples: SampleType[];
   kitSamples: SampleType[];
   makeSampler: (sampleId: string, sampleUrl: string) => SamplerWithFX;
+  initializeSamplerData: (
+    id: string,
+    url: string,
+    collection: string
+  ) => SampleType;
+  updateSamplerData: (id: string, data: Partial<SampleType>) => void;
   globalCollectionName: string;
   setGlobalCollectionName: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
@@ -62,15 +68,15 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [kitSamples] = useState<SampleType[] | []>([
     {
       id: "kit-1",
-      type: "drumKit",
       title: "Kick_Bulldog_2",
-      pad: 9,
+      collection: "Kit",
       label: "Kick",
       url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
       events: [],
       settings: {
         mute: false,
         solo: false,
+        reverse: false,
         volume: 0,
         pan: 0,
         pitch: 0,
@@ -85,15 +91,14 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     },
     {
       id: "kit-2",
-      type: "drumKit",
       title: "Snare_Astral_1",
-      pad: 10,
-      label: "Snare",
+      collection: "Kit",
       url: "/samples/drums/snares/Snare_Astral_1.wav",
       events: [],
       settings: {
         mute: false,
         solo: false,
+        reverse: false,
         volume: 0,
         pan: 0,
         pitch: 0,
@@ -108,15 +113,14 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     },
     {
       id: "kit-3",
-      type: "drumKit",
       title: "ClosedHH_Alessya_DS",
-      label: "HiHat",
-      pad: 11,
+      collection: "Kit",
       url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
       events: [],
       settings: {
         mute: false,
         solo: false,
+        reverse: false,
         volume: 0,
         pan: 0,
         pitch: 0,
@@ -131,15 +135,14 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     },
     {
       id: "kit-4",
-      type: "drumKit",
       title: "Clap_Graphite",
-      label: "Clap",
-      pad: 12,
+      collection: "Kit",
       url: "/samples/drums/claps/Clap_Graphite.wav",
       events: [],
       settings: {
         mute: false,
         solo: false,
+        reverse: false,
         volume: 0,
         pan: 0,
         pitch: 0,
@@ -199,11 +202,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   };
 
-  // //testing things
-  // useEffect(() => {
-  //   console.log("all collected samples:", allSampleData);
-  //   console.log("globalCollectionName", globalCollectionName);
-  // }, [allSampleData, globalCollectionName]);
+  //testing things
+  useEffect(() => {
+    console.log("all collected samples:", allSampleData);
+    // console.log("globalCollectionName", globalCollectionName);
+  }, [allSampleData, globalCollectionName]);
 
   // Start Tone.js context once
   useEffect(() => {
@@ -297,6 +300,32 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   }, []);
 
+  const initializeSamplerData = (id, url, collection): SampleType => {
+    return {
+      id: id,
+      title: getTitle(url),
+      collection: collection,
+      label: getLabel(url),
+      url: url,
+      events: [],
+      settings: {
+        mute: false,
+        solo: false,
+        reverse: false,
+        volume: 0,
+        pan: 0,
+        pitch: 0,
+        finetune: 0,
+        attack: 0,
+        release: 0,
+        quantize: false,
+        quantVal: 4 as QuantizeValue,
+        highpass: [0, "highpass"] as [number, "highpass"],
+        lowpass: [20000, "lowpass"] as [number, "lowpass"],
+      },
+      attribution: "",
+    };
+  };
   // fetch samples using the globalCollectionName
   useEffect(() => {
     const fetchSamples = async () => {
@@ -313,32 +342,34 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         // Create data structutre for the selected samples
         const formattedSamples: SampleType[] = Array.from(
           selectedSamples,
-          (sample, index) => {
-            const sampleData = {
-              id: `loc-${index + 1}`,
-              type: `loc-${globalCollectionName.replace(" ", "-")}`,
-              title: getTitle(sample),
-              label: getLabel(sample),
-              pad: index + 1,
-              url: sample,
-              events: [],
-              settings: {
-                mute: false,
-                solo: false,
-                volume: 0,
-                pan: 0,
-                pitch: 0,
-                finetune: 0,
-                attack: 0,
-                release: 0,
-                quantize: false,
-                quantVal: 4 as QuantizeValue,
-                highpass: [0, "highpass"] as [number, "highpass"],
-                lowpass: [20000, "lowpass"] as [number, "lowpass"],
-              },
-              attribution: "",
-            };
-            return sampleData;
+          (url, index) => {
+            const sampleId = `loc-${index + 1}`;
+
+            return initializeSamplerData(sampleId, url, globalCollectionName);
+
+            // {
+            //   id: sampleId,
+            //   title: getTitle(url),
+            //   label: getLabel(url),
+            //   url: url,
+            //   events: [],
+            //   settings: {
+            //     mute: false,
+            //     solo: false,
+            //     volume: 0,
+            //     pan: 0,
+            //     pitch: 0,
+            //     finetune: 0,
+            //     attack: 0,
+            //     release: 0,
+            //     quantize: false,
+            //     quantVal: 4 as QuantizeValue,
+            //     highpass: [0, "highpass"] as [number, "highpass"],
+            //     lowpass: [20000, "lowpass"] as [number, "lowpass"],
+            //   },
+            //   attribution: "",
+            // };
+            // return sampleData;
           }
         );
         setLocSamples(formattedSamples);
@@ -351,6 +382,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
     fetchSamples();
   }, [globalCollectionName]);
+
+  // const loadNewSampler = (sampler, id) => {};
 
   // initialize allSampleData state with the locSamples and kitSamples
   ///  I NEED TO UPDATE THIS SO THAT ONLY THE LOC SAMPLER DATA GETS SWAPPED WHEN THOSE CHANGE. DON'T WANT TO REINITIALIZE THE KIT SAMPLES
@@ -385,6 +418,16 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   };
 
   // WHERE DO I USE THIS???
+
+  // funciton to update one sampler's data (entire) whenever anythign inside that sampler's data changes
+  const updateSamplerData = (id, data): void => {
+    setAllSampleData((prev) => ({
+      ...prev,
+      [id]: data,
+    }));
+    //
+  };
+
   const updateSamplerStateSettings = (
     id: string,
     settings: Partial<SampleSettings>
@@ -496,6 +539,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         locSamples,
         kitSamples,
         makeSampler,
+        initializeSamplerData,
+        updateSamplerData,
         globalCollectionName,
         setGlobalCollectionName,
         allSampleData,

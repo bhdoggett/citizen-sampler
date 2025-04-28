@@ -19,6 +19,7 @@ export type SampleEvent = {
 export type SampleSettings = {
   mute: boolean;
   solo: boolean;
+  reverse: boolean;
   volume: number;
   pan: number;
   pitch: number;
@@ -33,8 +34,7 @@ export type SampleSettings = {
 
 export type SampleType = {
   id: string;
-  type: string;
-  pad: number;
+  collection: string;
   label?: string;
   title: string;
   url: string;

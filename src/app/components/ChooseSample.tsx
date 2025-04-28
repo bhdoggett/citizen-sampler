@@ -8,16 +8,24 @@ const ChooseSample = () => {
   const {
     globalCollectionName,
     selectedSampleId,
+    initializeSamplerData,
+    updateSamplerData,
     makeSampler,
     samplersRef,
-    setAllSampleData,
   } = useAudioContext();
 
   const [collectionName, setCollectionName] = useState(globalCollectionName);
   const [samplesArray, setSamplesArray] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const currentPlayer = useRef<Tone.Player | null>(null);
+
+  //test some things
+  useEffect(() => {
+    console.log("globalCollectionName", globalCollectionName);
+    console.log("collectionName", collectionName);
+    console.log("samplesArray", samplesArray);
+    console.log("selectedIndex", selectedIndex);
+  }, [globalCollectionName, collectionName, samplesArray, selectedIndex]);
 
   useEffect(() => {
     const array = getCollectionArray(collectionName);
@@ -54,19 +62,26 @@ const ChooseSample = () => {
   const handleSelectCollection = (collection: string) => {
     setCollectionName(collection);
     setSelectedIndex(null);
-    setSelectedSample(null);
   };
 
   const handleChooseSample = () => {
-    if (selectedIndex === null || !samplesArray[selectedIndex]) return;
+    if (
+      selectedIndex === null ||
+      !samplesArray[selectedIndex] ||
+      !selectedSampleId
+    )
+      return;
+
     const url = samplesArray[selectedIndex];
-    setSelectedSample(url);
-    const newSampler = makeSampler(selectedSampleId, url);
-    samplersRef.current[selectedSampleId] = newSampler;
-    setAllSampleData((prev) => ({
-      ...prev,
-      [selectedSampleId]: { url },
-    }));
+
+    const sampleData = initializeSamplerData(
+      selectedSampleId,
+      url,
+      collectionName
+    );
+
+    updateSamplerData(selectedSampleId, sampleData);
+    samplersRef.current[selectedSampleId] = makeSampler(selectedSampleId, url);
   };
 
   return (
@@ -88,7 +103,7 @@ const ChooseSample = () => {
       </select>
 
       <label className="mb-2">Samples:</label>
-      <ul className="bg-slate-700 rounded p-2 max-h-60 overflow-y-auto space-y-1 focus:outline-none">
+      <ul className="bg-slate-700 p-1 max-h-60 overflow-y-auto space-y-1 focus:outline-none">
         {samplesArray.map((sample, index) => (
           <li
             key={sample}
@@ -100,7 +115,7 @@ const ChooseSample = () => {
             onBlur={() => {
               stopAndDisposePlayer();
             }}
-            className={`cursor-pointer ${
+            className={`cursor-pointer pl-1 ${
               selectedIndex === index
                 ? "bg-slate-700 text-white"
                 : "bg-white text-black"
@@ -113,7 +128,7 @@ const ChooseSample = () => {
 
       <button
         onClick={handleChooseSample}
-        className="mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-7/12"
+        className="flex mx-auto text-center mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-1/4"
       >
         Choose Sample
       </button>
