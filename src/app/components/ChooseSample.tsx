@@ -4,7 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { useAudioContext } from "../contexts/AudioContext";
 import { getCollectionArray, collectionNames } from "@/lib/collections";
 
-const ChooseSample = () => {
+type ChooseSampleProps = {
+  setSampleMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const ChooseSample: React.FC<ChooseSampleProps> = ({ setSampleMenuOpen }) => {
   const {
     globalCollectionName,
     selectedSampleId,
@@ -19,19 +23,12 @@ const ChooseSample = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const currentPlayer = useRef<Tone.Player | null>(null);
 
-  // //test some things
-  // useEffect(() => {
-  //   console.log("globalCollectionName", globalCollectionName);
-  //   console.log("collectionName", collectionName);
-  //   console.log("samplesArray", samplesArray);
-  //   console.log("selectedIndex", selectedIndex);
-  // }, [globalCollectionName, collectionName, samplesArray, selectedIndex]);
-
   useEffect(() => {
     const array = getCollectionArray(collectionName);
     setSamplesArray(array);
   }, [collectionName]);
 
+  // Stop demo sample playback
   const stopAndDisposePlayer = () => {
     if (currentPlayer.current) {
       currentPlayer.current.stop();
@@ -40,12 +37,14 @@ const ChooseSample = () => {
     }
   };
 
+  // Play sample demo audio
   const playSample = (url: string) => {
     stopAndDisposePlayer();
     currentPlayer.current = new Tone.Player(url).toDestination();
     currentPlayer.current.autostart = true;
   };
 
+  // For populating the samples menu
   const formatSampleName = (url?: string) => {
     if (!url) return "";
     const filename = url.split("/").pop();
@@ -64,6 +63,7 @@ const ChooseSample = () => {
     setSelectedIndex(null);
   };
 
+  // Update allSampleData and samplersRef when a new sample is chosen
   const handleChooseSample = () => {
     if (
       selectedIndex === null ||
@@ -82,10 +82,18 @@ const ChooseSample = () => {
 
     updateSamplerData(selectedSampleId, sampleData);
     samplersRef.current[selectedSampleId] = makeSampler(selectedSampleId, url);
+
+    setSampleMenuOpen(false);
   };
 
   return (
     <div className="flex flex-col border-2 border-black bg-slate-800 m-3 p-4 shadow-md shadow-slate-800 text-white">
+      <button
+        onClick={() => setSampleMenuOpen(false)}
+        className="absolute top-5 right-6 text-white hover:text-black"
+      >
+        ✖
+      </button>
       <label htmlFor="collection" className="mb-1">
         Collection:
       </label>
@@ -103,7 +111,7 @@ const ChooseSample = () => {
       </select>
 
       <label className="mb-2">Samples:</label>
-      <div className="position:fixed flex flex-col bg-slate-700 p-1 max-h-60 overflow-y-auto space-y-1 focus:outline-none">
+      <div className="position:fixed flex flex-col bg-slate-700 p-1 max-h-36 overflow-y-auto space-y-1 focus:outline-none">
         {samplesArray.map((sample, index) => (
           <label
             key={index}
@@ -131,32 +139,9 @@ const ChooseSample = () => {
         ))}
       </div>
 
-      {/* <ul className="bg-slate-700 p-1 max-h-60 overflow-y-auto space-y-1 focus:outline-none">
-        {samplesArray.map((sample, index) => (
-          <li
-            key={sample}
-            tabIndex={0}
-            onFocus={() => {
-              setSelectedIndex(index);
-              playSample(sample);
-            }}
-            onBlur={() => {
-              stopAndDisposePlayer();
-            }}
-            className={`cursor-pointer pl-1 ${
-              selectedIndex === index
-                ? "bg-slate-700 text-white"
-                : "bg-white text-black"
-            }`}
-          >
-            {formatSampleName(sample)}
-          </li>
-        ))}
-      </ul> */}
-
       <button
         onClick={handleChooseSample}
-        className="flex mx-auto text-center mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-1/4"
+        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-1/4"
       >
         Choose Sample
       </button>

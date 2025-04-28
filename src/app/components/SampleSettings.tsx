@@ -20,6 +20,7 @@ const SampleSettings = () => {
   const [settings, setSettings] = useState<SampleSettings | null>(null);
   const [isSoloed, setIsSoloed] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [sampleMenuOpen, setSampleMenuOpen] = useState<boolean>(false);
 
   // combine local and global state updates into one function for event listener
   const toggleSolo = () => {
@@ -134,11 +135,14 @@ const SampleSettings = () => {
 
   return (
     <>
-      <ChooseSample />
       <div className="p-2 mx-auto mb-3">
-        {/* <h3 className="text-lg font-semibold mb-4">
-      Settings: {allSampleData[selectedSampleId].title}
-    </h3> */}
+        {sampleMenuOpen && (
+          <div className="fixed z-10 mt-2 w-max rounded-sm shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+            <div className="p-1">
+              <ChooseSample setSampleMenuOpen={setSampleMenuOpen} />
+            </div>
+          </div>
+        )}
         <div className="flex gap-x-4 md:gap-x-6">
           <div className="flex flex-col">
             <label className="my-2 flex justify-between">
@@ -304,6 +308,12 @@ const SampleSettings = () => {
                 onClick={toggleSolo}
               >
                 S
+              </button>
+              <button
+                onClick={() => setSampleMenuOpen((prev) => !prev)}
+                className="border rounded-sm border-black mx-1 p-1"
+              >
+                📂
               </button>
             </div>
           </div>
