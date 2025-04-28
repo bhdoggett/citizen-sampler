@@ -118,6 +118,20 @@ const SampleSettings = () => {
     return <p>Loading...</p>;
   }
 
+  // Need Frequency Params for translating frequency filters from exponential to linear inputs
+  const minFreq = 20;
+  const maxFreq = 20000;
+
+  // Convert from frequency (Hz) to a 0-1 linear slider value
+  const linearizeFrequency = (frequency: number): number => {
+    return Math.log(frequency / minFreq) / Math.log(maxFreq / minFreq);
+  };
+
+  // Convert from slider (0-1) back to frequency (Hz)
+  const exponentiateFrequency = (sliderValue: number): number => {
+    return minFreq * Math.pow(maxFreq / minFreq, sliderValue);
+  };
+
   return (
     <>
       <ChooseSample />
@@ -170,7 +184,7 @@ const SampleSettings = () => {
             <input
               type="range"
               min="0"
-              max="2"
+              max="5"
               step="0.01"
               value={settings.attack || 0}
               onChange={(e) =>
@@ -189,7 +203,7 @@ const SampleSettings = () => {
             <input
               type="range"
               min="0"
-              max="2"
+              max="5"
               step="0.01"
               value={settings.release || 0}
               onChange={(e) =>
@@ -204,17 +218,19 @@ const SampleSettings = () => {
           <div className="flex flex-col">
             <label className="my-2 flex justify-between">
               <span>Highpass</span>
-              <span>{settings.highpass?.[0] || "0"} Hz</span>
+              <span>{settings.highpass?.[0].toFixed(0) || "0"} Hz</span>
             </label>
             <input
               type="range"
               min="0"
-              max="2000"
-              step="1"
-              value={settings.highpass?.[0] || 0}
+              max="1"
+              step="0.001"
+              value={linearizeFrequency(settings.highpass?.[0] || 20).toFixed(
+                2
+              )}
               onChange={(e) =>
                 updateCurrentSampleSettings("highpass", [
-                  parseFloat(e.target.value),
+                  exponentiateFrequency(parseFloat(e.target.value)),
                   "highpass",
                 ])
               }
@@ -223,17 +239,17 @@ const SampleSettings = () => {
 
             <label className="my-2 flex justify-between">
               <span>Lowpass</span>
-              <span>{settings.lowpass?.[0] || "20000"} Hz</span>
+              <span>{settings.lowpass?.[0].toFixed(0) || "20000"} Hz</span>
             </label>
             <input
               type="range"
-              min="200"
-              max="20000"
-              step="1"
-              value={settings.lowpass?.[0] || 20000}
+              min="0"
+              max="1"
+              step="0.01"
+              value={linearizeFrequency(settings.lowpass?.[0] || 20)}
               onChange={(e) =>
                 updateCurrentSampleSettings("lowpass", [
-                  parseFloat(e.target.value),
+                  exponentiateFrequency(parseFloat(e.target.value)),
                   "lowpass",
                 ])
               }

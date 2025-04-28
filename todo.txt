@@ -1,5 +1,6 @@
-- loop length is 8 beats when time signature is 3/4. Should be 6.
 - attack setting fader doesn't do anything
+- change ChooseSample component to be contained a popover
+- add swing to loop settings
 - add reverse setting
 - download WAV master
 - download WAV stems
@@ -10,3 +11,5 @@
 - record button should automatically start the play button as well
 - stop button should stop record button as well
 - display "is recording" somehow on the main settings wrapper when record is enabled
+- add to master settings: compression, reverb, delay, compression, eq.
+- make high pass and lowpass filters exponential
