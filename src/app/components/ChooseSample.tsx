@@ -19,13 +19,13 @@ const ChooseSample = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const currentPlayer = useRef<Tone.Player | null>(null);
 
-  //test some things
-  useEffect(() => {
-    console.log("globalCollectionName", globalCollectionName);
-    console.log("collectionName", collectionName);
-    console.log("samplesArray", samplesArray);
-    console.log("selectedIndex", selectedIndex);
-  }, [globalCollectionName, collectionName, samplesArray, selectedIndex]);
+  // //test some things
+  // useEffect(() => {
+  //   console.log("globalCollectionName", globalCollectionName);
+  //   console.log("collectionName", collectionName);
+  //   console.log("samplesArray", samplesArray);
+  //   console.log("selectedIndex", selectedIndex);
+  // }, [globalCollectionName, collectionName, samplesArray, selectedIndex]);
 
   useEffect(() => {
     const array = getCollectionArray(collectionName);
@@ -103,7 +103,35 @@ const ChooseSample = () => {
       </select>
 
       <label className="mb-2">Samples:</label>
-      <ul className="bg-slate-700 p-1 max-h-60 overflow-y-auto space-y-1 focus:outline-none">
+      <div className="position:fixed flex flex-col bg-slate-700 p-1 max-h-60 overflow-y-auto space-y-1 focus:outline-none">
+        {samplesArray.map((sample, index) => (
+          <label
+            key={index}
+            className={`cursor-pointer pl-1 ${
+              selectedIndex === index
+                ? "bg-slate-700 text-white"
+                : "bg-white text-black"
+            }`}
+          >
+            <input
+              name="samples"
+              className="opacity-0 absolute"
+              type="radio"
+              value={sample}
+              onChange={(e) => {
+                setSelectedIndex(index);
+                playSample(e.target.value);
+              }}
+              onBlur={() => {
+                stopAndDisposePlayer();
+              }}
+            />
+            {formatSampleName(sample)}
+          </label>
+        ))}
+      </div>
+
+      {/* <ul className="bg-slate-700 p-1 max-h-60 overflow-y-auto space-y-1 focus:outline-none">
         {samplesArray.map((sample, index) => (
           <li
             key={sample}
@@ -124,7 +152,7 @@ const ChooseSample = () => {
             {formatSampleName(sample)}
           </li>
         ))}
-      </ul>
+      </ul> */}
 
       <button
         onClick={handleChooseSample}
