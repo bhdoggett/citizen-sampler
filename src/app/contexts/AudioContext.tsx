@@ -55,7 +55,7 @@ type AudioContextType = {
     settings: Partial<SampleSettings>
   ) => void;
   updateSamplerRefSettings: (id: string, key: string, value: number) => void;
-  selectedSampleId: string | null;
+  selectedSampleId: string;
   setSelectedSampleId: React.Dispatch<React.SetStateAction<string | null>>;
   solosExist: boolean;
 };
@@ -172,7 +172,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [allSampleData, setAllSampleData] = useState<
     Record<string, SampleType>
   >({});
-  const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null);
+  const [selectedSampleId, setSelectedSampleId] = useState<string>("loc-1");
   const [solosExist, setSolosExist] = useState<boolean>(false);
   const transport = useRef<TransportClass>(Tone.getTransport());
   // New ref to store all samplers and their FX chains

@@ -1,5 +1,9 @@
-// Sampler source urls listed first. "VD" stands for "View Details", where information about corresponding sample audio can be found at the Library of Congress Website.
-export const inventingEntertainment = [
+// Sampler source urls listed first.
+// "VD" stands for "View Details", where information
+// about corresponding sample audio can be found at
+// the Library of Congress Website.
+
+export const inventingEntertainment: string[] = [
   "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-edison/Till-the-boys-come-home_00694067_001_00-00-03.wav",
   "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-edison/Till-the-boys-come-home_00694067_002_00-01-29.wav",
   "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-edison/Till-the-boys-come-home_00694067_003_00-02-23.wav",

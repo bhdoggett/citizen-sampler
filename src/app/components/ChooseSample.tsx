@@ -81,7 +81,11 @@ const ChooseSample: React.FC<ChooseSampleProps> = ({ setSampleMenuOpen }) => {
     );
 
     updateSamplerData(selectedSampleId, sampleData);
-    samplersRef.current[selectedSampleId] = makeSampler(selectedSampleId, url);
+    samplersRef.current[selectedSampleId] = makeSampler(
+      selectedSampleId,
+      url,
+      false
+    );
 
     setSampleMenuOpen(false);
   };

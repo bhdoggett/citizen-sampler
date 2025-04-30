@@ -43,6 +43,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       return;
 
     const events = sampleData.events.map((event, idx) => {
+      if (!event.startTime) return;
       const eventTime = sampleData.settings.quantize
         ? quantize(event.startTime, sampleData.settings.quantVal)
         : event.startTime;
@@ -57,12 +58,19 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     });
 
     const part = new Tone.Part((time, event) => {
-      sampler.triggerAttackRelease("C4", event.duration, time);
-      setSampleIsPlaying(true);
-      setTimeout(() => {
-        setSampleIsPlaying(false);
-      }, event.duration * 1000);
-      console.log(event);
+      if (
+        typeof event === "object" &&
+        event !== null &&
+        "duration" in event &&
+        event.duration !== null
+      ) {
+        sampler.triggerAttackRelease("C4", event.duration, time);
+        setSampleIsPlaying(true);
+        setTimeout(() => {
+          setSampleIsPlaying(false);
+        }, event.duration * 1000);
+        console.log(event);
+      }
     }, events);
 
     part.start(0);
@@ -108,25 +116,30 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const handleReleasePad = () => {
     setSampleIsPlaying(false);
     sampler.triggerRelease("C4");
-    if (!currentEvent) return;
+
+    if (
+      // !currentEvent ||
+      !currentEvent.startTime ||
+      !loopIsPlaying ||
+      !isRecording
+    )
+      return;
 
     const releaseTime = transport.current.seconds;
 
-    if (loopIsPlaying && isRecording && currentEvent.duration === 0) {
-      // Calculate duration, accomodating for events that overlap the transport loop boundary.
+    currentEvent.duration =
+      releaseTime > currentEvent.startTime
+        ? releaseTime - currentEvent.startTime
+        : Tone.Time(transport.current.loopEnd).toSeconds() -
+          currentEvent.startTime +
+          releaseTime;
+    console.log("currentEvent.duration", currentEvent.duration);
+    sampleDataRef.current.events.push({ ...currentEvent });
+    setAllSampleData((prev) => ({ ...prev, [id]: sampleDataRef.current }));
 
-      console.log("releaseTime", releaseTime);
-      console.log("currentEvent.starttime", currentEvent.startTime);
-      console.log("transport.current.loopend", transport.current.loopEnd);
-
-      currentEvent.duration =
-        releaseTime > currentEvent.startTime
-          ? releaseTime - currentEvent.startTime
-          : transport.current.loopEnd - currentEvent.startTime + releaseTime;
-      console.log("currentEvent.duration", currentEvent.duration);
-      sampleDataRef.current.events.push({ ...currentEvent });
-      setAllSampleData((prev) => ({ ...prev, [id]: sampleDataRef.current }));
-    }
+    // if (loopIsPlaying && isRecording && currentEvent.duration === 0) {
+    //   // Calculate duration, accomodating for events that overlap the transport loop boundary.
+    // }
   };
 
   const handleFocus = () => {
