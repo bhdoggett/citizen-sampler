@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import * as Tone from "tone";
 import { Circle, Play, Square, Music3 } from "lucide-react";
 import { useAudioContext } from "../contexts/AudioContext";
@@ -9,7 +9,6 @@ const Transport = () => {
     transport,
     metronomeActive,
     setMetronomeActive,
-    metronome,
     loopLength,
     setLoopLength,
     beatsPerBar,

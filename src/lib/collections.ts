@@ -1,36 +1,34 @@
-"use client";
-import { useState, useEffect } from "react";
 import {
   inventingEntertainment,
-  VD_inventingEntertainment,
+  // VD_inventingEntertainment,
   varietyStageSoundRecordingsAndMotionPictures,
-  VD_varietyStageSoundRecordingsAndMotionPictures,
+  // VD_varietyStageSoundRecordingsAndMotionPictures,
   theJoeSmithCollection,
-  VD_theJoeSmithCollection,
+  // VD_theJoeSmithCollection,
   freeMusicArchive,
-  VD_freeMusicArchive,
+  // VD_freeMusicArchive,
   musicBoxProject,
-  VD_musicBoxProject,
+  // VD_musicBoxProject,
   tonySchwartzCollection,
-  VD_tonySchwartzCollection,
+  // VD_tonySchwartzCollection,
   americanEnglishDialectRecordings,
-  VD_americanEnglishDialectRecordings,
+  // VD_americanEnglishDialectRecordings,
   theNationalScreeningRoom,
-  VD_theNationalScreeningRoom,
+  // VD_theNationalScreeningRoom,
   njbBlues,
-  VD_njbBlues,
+  // VD_njbBlues,
   njbJazz,
-  VD_njbJazz,
+  // VD_njbJazz,
   njbFolkMusic,
-  VD_njbFolkMusic,
+  // VD_njbFolkMusic,
   njbOpera,
-  VD_njbOpera,
+  // VD_njbOpera,
   njbMusicalTheater,
-  VD_njbMusicalTheater,
+  // VD_njbMusicalTheater,
   njbClassicalMusic,
-  VD_njbClassicalMusic,
+  // VD_njbClassicalMusic,
   njbPopularMusic,
-  VD_njbPopularMusic,
+  // VD_njbPopularMusic,
 } from "./sampleSources";
 import * as Tone from "tone";
 
@@ -51,28 +49,6 @@ export const collectionNames = [
   "The National Jukebox: Classical Music",
   "The National Jukebox: Popular Music",
 ];
-
-export const useSampleCollection = () => {
-  const [collectionName, setCollectionName] = useState(
-    "Inventing Entertainment"
-  );
-  const [sampleUrls, setSamplesUrls] = useState(inventingEntertainment);
-  const [selectedSample, setSelectedSample] = useState<string | null>(null);
-
-  useEffect(() => {
-    const array = getCollectionArray(collectionName);
-    setSamplesUrls(array);
-  }, [collectionName]);
-
-  useEffect(() => {
-    if (selectedSample) {
-      const player = new Tone.Player(selectedSample).toDestination();
-      player.autostart = true;
-    }
-  }, [selectedSample]);
-
-  return { collection };
-};
 
 export const getCollectionArray = (collection: string) => {
   switch (collection) {

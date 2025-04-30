@@ -6,7 +6,7 @@ import {
   SampleSettings,
   QuantizeValue,
   SamplerWithFX,
-} from "../types/SampleTypes";
+} from "../../types/SampleTypes";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
 import { getCollectionArray } from "@/lib/collections";
 import { getTitle, getLabel } from "../functions/getTitle";
@@ -29,7 +29,11 @@ type AudioContextType = {
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
   locSamples: SampleType[];
   kitSamples: SampleType[];
-  makeSampler: (sampleId: string, sampleUrl: string) => SamplerWithFX;
+  makeSampler: (
+    sampleId: string,
+    sampleUrl: string,
+    offline: boolean
+  ) => SamplerWithFX;
   initializeSamplerData: (
     id: string,
     url: string,
@@ -173,8 +177,13 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const transport = useRef<TransportClass>(Tone.getTransport());
   // New ref to store all samplers and their FX chains
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
-  // Function to create a sampler with FX chain
-  const makeSampler = (sampleId: string, sampleUrl: string): SamplerWithFX => {
+
+  // Function to create a sampler with FX chain. If using to with Tone.Offline to download wav files, the third argument should be "true".
+  const makeSampler = (
+    sampleId: string,
+    sampleUrl: string,
+    offline: boolean = false
+  ): SamplerWithFX => {
     const sampler = new Tone.Sampler({
       urls: { C4: sampleUrl },
     });
@@ -189,7 +198,10 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     gain.connect(highpass);
     highpass.connect(lowpass);
     lowpass.connect(panVol);
-    panVol.connect(masterGainNode.current).toDestination();
+
+    if (!offline) {
+      panVol.connect(masterGainNode.current).toDestination();
+    }
 
     return {
       id: sampleId,
@@ -275,6 +287,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       locSamples.forEach(({ id, url }) => {
         // const name = id.split("_")[0];
         samplersRef.current[id] = makeSampler(id, url);
+        samplersRef.current[id].panVol
+          .connect(masterGainNode.current)
+          .toDestination();
       });
     }
   }, [locSamples]);
@@ -283,7 +298,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     if (kitSamples.length > 0) {
       kitSamples.forEach(({ id, url }) => {
-        samplersRef.current[id] = makeSampler(id, url);
+        samplersRef.current[id] = makeSampler(id, url, false);
       });
     }
   }, [kitSamples]);

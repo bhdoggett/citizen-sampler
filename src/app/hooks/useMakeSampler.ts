@@ -1,6 +1,6 @@
 import * as Tone from "tone";
 import { useAudioContext } from "../contexts/AudioContext";
-import type { SamplerWithFX } from "../types/SampleTypes";
+import type { SamplerWithFX } from "../../types/SampleTypes";
 
 const useMakeSampler = () => {
   const context = useAudioContext();

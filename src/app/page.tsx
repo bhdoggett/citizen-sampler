@@ -2,8 +2,6 @@
 import DrumMachine from "./components/DrumMachine";
 import Link from "next/link";
 import CollectionMenu from "./components/CollectionMenu";
-import Transport from "./components/Transport";
-import SampleSettings from "./components/SampleSettings";
 import SettingsWrapper from "./components/SettingsWrapper";
 
 export default function Home() {

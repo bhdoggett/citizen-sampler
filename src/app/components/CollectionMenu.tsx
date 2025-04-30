@@ -3,7 +3,7 @@ import { useAudioContext } from "../contexts/AudioContext";
 import { collectionNames } from "../../lib/collections";
 
 const CollectionMenu = () => {
-  const { globalCollectionName, setGlobalCollectionName } = useAudioContext();
+  const { setGlobalCollectionName } = useAudioContext();
 
   const handleSelect = (collection: string) => {
     setGlobalCollectionName(collection);

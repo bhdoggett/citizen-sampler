@@ -3,7 +3,6 @@ import { useRef, useEffect, useState } from "react";
 import { useAudioContext } from "../contexts/AudioContext";
 import * as Tone from "tone";
 import quantize from "../functions/quantize";
-import { SampleType, SampleEvent } from "../types/SampleTypes";
 
 type DrumPadProps = {
   id: string;
@@ -24,9 +23,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   const sampleDataRef = useRef(allSampleData[id]);
   const { currentEvent } = samplersRef.current[id];
-
-  // keep track of sample play events one at a time
-  const eventRef = useRef<SampleEvent | null>(null);
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
 

@@ -1,11 +1,9 @@
-- attack setting fader doesn't do anything
-- change ChooseSample component to be contained a popover
-- add swing to loop settings
-- add reverse setting
 - download WAV master
 - download WAV stems
+- Remove Tone.context info from AudioContext. Just get directly from Tone.context wherever you need it.
+- add swing to loop settings
+- add reverse setting
 - pitch shift functionality
-- loading per row and per sample
 - add links to "view details" for samples
 - "error disposing part" when stop is pressed mid sampler playback
 - record button should automatically start the play button as well
@@ -13,3 +11,5 @@
 - display "is recording" somehow on the main settings wrapper when record is enabled
 - add to master settings: compression, reverb, delay, compression, eq.
 - make high pass and lowpass filters exponential
+- piano roll to play samples at different pitches
+- record should also enable play. stop should also disable record.

@@ -4,6 +4,7 @@ import { useAudioContext } from "../contexts/AudioContext";
 import useMutesAndSolos from "../hooks/useMutesAndSolos";
 import SampleSettings from "./SampleSettings";
 import Transport from "./Transport";
+import MasterSettings from "./MasterSettings";
 
 type settingsWindow = "sample" | "loop" | "master";
 
@@ -45,7 +46,7 @@ const SettingsWrapper = () => {
         <div className="mt-4 w-full">
           {settingsShown === "sample" && <SampleSettings />}
           {settingsShown === "loop" && <Transport />}
-          {/* {settingsShown === "master" && <MasterSettings />} */}
+          {settingsShown === "master" && <MasterSettings />}
         </div>
       </div>
     </>

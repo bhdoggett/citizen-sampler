@@ -1,10 +1,9 @@
 "useClient";
 import { useAudioContext } from "../contexts/AudioContext";
-import type { SampleType } from "../types/SampleTypes";
+import type { SampleType } from "../../types/SampleTypes";
 
 const useMutesAndSolos = () => {
-  const { samplersRef, allSampleData, setAllSampleData, solosExist } =
-    useAudioContext();
+  const { allSampleData, setAllSampleData, solosExist } = useAudioContext();
 
   // simplify soloed samples state updates
   const setSampleSolo = (id: string, value: boolean) => {
