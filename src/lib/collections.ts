@@ -30,7 +30,6 @@ import {
   njbPopularMusic,
   // VD_njbPopularMusic,
 } from "./sampleSources";
-import * as Tone from "tone";
 
 export const collectionNames = [
   "Inventing Entertainment",
