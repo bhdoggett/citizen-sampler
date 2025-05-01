@@ -4,8 +4,8 @@ import * as Tone from "tone";
 import {
   SampleType,
   SampleSettings,
-  QuantizeValue,
   SamplerWithFX,
+  SamplersRefType,
 } from "../../types/SampleTypes";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
 import { getCollectionArray } from "@/lib/collections";
@@ -39,7 +39,7 @@ type AudioContextType = {
     url: string,
     collection: string
   ) => SampleType;
-  updateSamplerData: (id: string, data: Partial<SampleType>) => void;
+  updateSamplerData: (id: string, data: SampleType) => void;
   globalCollectionName: string;
   setGlobalCollectionName: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
@@ -56,7 +56,7 @@ type AudioContextType = {
   ) => void;
   updateSamplerRefSettings: (id: string, key: string, value: number) => void;
   selectedSampleId: string;
-  setSelectedSampleId: React.Dispatch<React.SetStateAction<string | null>>;
+  setSelectedSampleId: React.Dispatch<React.SetStateAction<string>>;
   solosExist: boolean;
 };
 
@@ -66,10 +66,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [audioContext, setAudioContext] = useState<Tone.BaseContext | null>(
     null
   );
-  const [metronomeActive, setMetronomeActive] = useState(false);
-  const [loopLength, setLoopLength] = useState<number>(2);
-  const [beatsPerBar, setBeatsPerBar] = useState<number>(4);
-  const [bpm, setBpm] = useState<number>(120);
+  const [allSampleData, setAllSampleData] = useState<
+    Record<string, SampleType>
+  >({});
+  const samplersRef = useRef<Record<string, SamplerWithFX>>({});
+
   const [locSamples, setLocSamples] = useState<SampleType[] | []>([]);
   const [kitSamples] = useState<SampleType[] | []>([
     {
@@ -165,20 +166,21 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [globalCollectionName, setGlobalCollectionName] = useState<string>(
     "Inventing Entertainment"
   );
-  const [isRecording, setIsRecording] = useState<boolean>(false);
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [metronomeActive, setMetronomeActive] = useState(false);
+  const [loopLength, setLoopLength] = useState<number>(2);
+  const [beatsPerBar, setBeatsPerBar] = useState<number>(4);
+  const [bpm, setBpm] = useState<number>(120);
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
   );
-  const [allSampleData, setAllSampleData] = useState<
-    Record<string, SampleType>
-  >({});
+
   const [selectedSampleId, setSelectedSampleId] = useState<string>("loc-1");
   const [solosExist, setSolosExist] = useState<boolean>(false);
   const transport = useRef<TransportClass>(Tone.getTransport());
   // New ref to store all samplers and their FX chains
-  const samplersRef = useRef<Record<string, SamplerWithFX>>({});
 
   // Function to create a sampler with FX chain. If using to with Tone.Offline to download wav files, the third argument should be "true".
   const makeSampler = (
@@ -249,7 +251,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     const metronomeLoop = transport.current.scheduleRepeat((time) => {
       if (!loopIsPlaying || !metronomeActive) return;
 
-      const [, beats] = transport.current.position.split(":").map(Number);
+      const [, beats] = (Tone.getTransport().position as string)
+        .split(":")
+        .map(Number);
       beatCount = beats % beatsPerBar;
 
       if (beatCount === 0) {
@@ -317,7 +321,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   }, []);
 
-  const initializeSamplerData = (id, url, collection): SampleType => {
+  const initializeSamplerData = (
+    id: string,
+    url: string,
+    collection: string
+  ): SampleType => {
     return {
       id: id,
       title: getTitle(url),
@@ -393,7 +401,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // Universal cleanup function for samplers
   const cleanupSampler = (
     sampleId: string,
-    ref: React.RefObject<SamplerWithFX>
+    ref: React.RefObject<Record<string, SamplerWithFX>>
   ) => {
     const samplerWithFX = ref.current[sampleId];
     if (samplerWithFX) {
@@ -413,7 +421,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // WHERE DO I USE THIS???
 
   // funciton to update one sampler's data (entire) whenever anythign inside that sampler's data changes
-  const updateSamplerData = (id, data): void => {
+  const updateSamplerData = (id: string, data: SampleType): void => {
     setAllSampleData((prev) => ({
       ...prev,
       [id]: data,

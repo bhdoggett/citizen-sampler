@@ -27,24 +27,33 @@ const useDownloadWavStems = () => {
 
       offlineSamplerWithFx.panVol.toDestination();
 
-      const toneEvents = events.map((event, idx) => {
-        const eventTime = settings.quantize
-          ? quantize(event.startTime, settings.quantVal)
-          : event.startTime;
-        console.log(`event at index: ${idx}`, event);
-        return [
-          eventTime,
-          {
-            startTime: eventTime,
-            duration: event.duration,
-          },
-        ];
-      });
+      const toneEvents = events
+        .filter((event) => event.startTime !== null)
+        .map((event, idx) => {
+          const eventTime = settings.quantize
+            ? quantize(event.startTime as number, settings.quantVal)
+            : event.startTime;
+          console.log(`event at index: ${idx}`, event);
+          return [
+            eventTime,
+            {
+              startTime: eventTime,
+              duration: event.duration,
+            },
+          ];
+        });
 
       const part = new Tone.Part((time, event) => {
+        if (
+          typeof event !== "object" ||
+          event === null ||
+          !("duration" in event)
+        )
+          return;
+
         offlineSamplerWithFx.sampler.triggerAttackRelease(
           "C4",
-          event.duration,
+          event.duration ?? 0,
           time
         );
       }, toneEvents);
@@ -64,9 +73,9 @@ const useDownloadWavStems = () => {
 
   const downloadWav = async (id: string) => {
     const toneBuffer = await getAudioBuffer(id);
-    const wavUrl = translateBufferToWavUrl(toneBuffer);
+    const wavUrl = translateBufferToWavUrl(toneBuffer as Tone.ToneAudioBuffer);
     const link = document.createElement("a");
-    link.href = wavUrl;
+    link.href = await wavUrl;
     link.download = `${id}.wav`;
     document.body.appendChild(link);
     link.click();

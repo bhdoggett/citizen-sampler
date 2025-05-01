@@ -53,17 +53,17 @@ const SampleSettings = () => {
 
   // Keep samplersRef settings in sync with UI
   useEffect(() => {
-    if (settings) {
-      const samplerWithFX = samplersRef.current[selectedSampleId];
-      if (samplerWithFX) {
-        const { sampler, panVol, highpass, lowpass } = samplerWithFX;
-        panVol.volume.value = settings.volume || 0;
-        panVol.pan.value = settings.pan || 0;
-        highpass.frequency.value = settings.highpass[0] || 0;
-        lowpass.frequency.value = settings.lowpass[0] || 20000;
-        sampler.attack = settings.attack || 0;
-        sampler.release = settings.release || 0;
-      }
+    if (!settings) return;
+
+    const samplerWithFX = samplersRef.current[selectedSampleId];
+    if (samplerWithFX) {
+      const { sampler, panVol, highpass, lowpass } = samplerWithFX;
+      panVol.volume.value = settings.volume || 0;
+      panVol.pan.value = settings.pan || 0;
+      highpass.frequency.value = settings.highpass?.[0] || 0;
+      lowpass.frequency.value = settings.lowpass?.[0] || 20000;
+      sampler.attack = settings.attack || 0;
+      sampler.release = settings.release || 0;
     }
   }, [samplersRef, selectedSampleId, settings]);
 
