@@ -5,7 +5,6 @@ import {
   SampleType,
   SampleSettings,
   SamplerWithFX,
-  SamplersRefType,
 } from "../../types/SampleTypes";
 import { TransportClass } from "tone/build/esm/core/clock/Transport";
 import { getCollectionArray } from "@/lib/collections";

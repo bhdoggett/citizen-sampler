@@ -1,4 +1,3 @@
-import type { QuantizeValue } from "../../types/SampleTypes";
 import * as Tone from "tone";
 
 const quantize = (time: number, quantVal: number): number => {

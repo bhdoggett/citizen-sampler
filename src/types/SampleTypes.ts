@@ -52,5 +52,3 @@ export type SamplerWithFX = {
   lowpass: Tone.Filter;
   currentEvent: SampleEvent;
 };
-
-export type SamplersRefType = Record<string, SamplerWithFX>;
