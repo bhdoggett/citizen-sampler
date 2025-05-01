@@ -1,8 +1,21 @@
 "use client";
-import DrumMachine from "./components/DrumMachine";
+import dynamic from "next/dynamic";
+// import DrumMachine from "./components/DrumMachine";
 import Link from "next/link";
-import CollectionMenu from "./components/CollectionMenu";
-import SettingsWrapper from "./components/SettingsWrapper";
+// import CollectionMenu from "./components/CollectionMenu";
+// import SettingsWrapper from "./components/SettingsWrapper";
+
+const DrumMachine = dynamic(() => import("./components/DrumMachine"), {
+  ssr: false,
+});
+
+const SettingsWrapper = dynamic(() => import("./components/SettingsWrapper"), {
+  ssr: false,
+});
+
+const CollectionMenu = dynamic(() => import("./components/CollectionMenu"), {
+  ssr: false,
+});
 
 export default function Home() {
   return (
