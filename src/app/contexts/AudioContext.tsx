@@ -16,7 +16,7 @@ type AudioContextType = {
   masterGainNode: React.RefObject<Tone.Gain>;
   setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
   transport: React.RefObject<TransportClass>;
-  audioContext: Tone.Context | null;
+  audioContext: Tone.BaseContext | null;
   metronomeActive: boolean;
   setMetronomeActive: React.Dispatch<React.SetStateAction<boolean>>;
   metronome: Tone.Sampler;
@@ -63,7 +63,9 @@ type AudioContextType = {
 const AudioContextContext = createContext<AudioContextType | null>(null);
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
-  const [audioContext, setAudioContext] = useState<Tone.Context | null>(null);
+  const [audioContext, setAudioContext] = useState<Tone.BaseContext | null>(
+    null
+  );
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [loopLength, setLoopLength] = useState<number>(2);
   const [beatsPerBar, setBeatsPerBar] = useState<number>(4);
@@ -334,7 +336,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         attack: 0,
         release: 0,
         quantize: false,
-        quantVal: 4 as QuantizeValue,
+        quantVal: 4,
         highpass: [10, "highpass"] as [number, "highpass"],
         lowpass: [20000, "lowpass"] as [number, "lowpass"],
       },
@@ -361,30 +363,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
             const sampleId = `loc-${index + 1}`;
 
             return initializeSamplerData(sampleId, url, globalCollectionName);
-
-            // {
-            //   id: sampleId,
-            //   title: getTitle(url),
-            //   label: getLabel(url),
-            //   url: url,
-            //   events: [],
-            //   settings: {
-            //     mute: false,
-            //     solo: false,
-            //     volume: 0,
-            //     pan: 0,
-            //     pitch: 0,
-            //     finetune: 0,
-            //     attack: 0,
-            //     release: 0,
-            //     quantize: false,
-            //     quantVal: 4 as QuantizeValue,
-            //     highpass: [0, "highpass"] as [number, "highpass"],
-            //     lowpass: [20000, "lowpass"] as [number, "lowpass"],
-            //   },
-            //   attribution: "",
-            // };
-            // return sampleData;
           }
         );
         setLocSamples(formattedSamples);

@@ -27,7 +27,7 @@ export type SampleSettings = {
   attack: number;
   release: number;
   quantize: boolean;
-  quantVal: QuantizeValue;
+  quantVal: number;
   highpass: [number, "highpass", number?];
   lowpass: [number, "lowpass", number?];
 };

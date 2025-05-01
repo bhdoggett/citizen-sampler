@@ -1,3 +1,4 @@
+"use client";
 import * as Tone from "tone";
 
 const metronome = new Tone.Sampler({

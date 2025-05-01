@@ -16,7 +16,9 @@ const SampleSettings = () => {
 
   const { setSampleMute, setSampleSolo } = useMutesAndSolos();
 
-  const [settings, setSettings] = useState<SampleSettings | null>(null);
+  const [settings, setSettings] = useState<Partial<SampleSettings> | null>(
+    null
+  );
   const [isSoloed, setIsSoloed] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [sampleMenuOpen, setSampleMenuOpen] = useState<boolean>(false);
@@ -78,7 +80,8 @@ const SampleSettings = () => {
     if (
       !selectedSampleId ||
       !allSampleData[selectedSampleId] ||
-      settings === allSampleData[selectedSampleId].settings
+      settings === allSampleData[selectedSampleId].settings ||
+      settings === null
     )
       return;
 
@@ -271,12 +274,6 @@ const SampleSettings = () => {
                 checked={settings.quantize}
                 onChange={(e) => {
                   updateCurrentSampleSettings("quantize", e.target.checked);
-                  console.log(
-                    `allSampleData[${selectedSampleId}]`,
-                    allSampleData[selectedSampleId]
-                  );
-
-                  // setQuantizeActive(e.target.checked)
                 }}
               />
             </div>
