@@ -8,7 +8,6 @@ const Transport = () => {
   const {
     transport,
     metronomeActive,
-    setMetronomeActive,
     loopLength,
     setLoopLength,
     beatsPerBar,
@@ -16,9 +15,7 @@ const Transport = () => {
     bpm,
     setBpm,
     loopIsPlaying,
-    setLoopIsPlaying,
     isRecording,
-    setIsRecording,
   } = useAudioContext();
 
   const { handlePlay, handleStop, handleRecord, handleToggleMetronome } =
@@ -44,46 +41,6 @@ const Transport = () => {
     transport.current.loopStart = "0:0:0";
     transport.current.loopEnd = `${loopLength}:0:0`;
   }, [loopLength, transport]);
-
-  // Add event listeners for "hot keys"
-  // spacebar = play/stop
-  // "command r" =  toggle record
-  // "m" = toggle metronome
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === " ") {
-        e.preventDefault();
-        if (loopIsPlaying) {
-          handleStop();
-        } else {
-          handlePlay();
-        }
-      }
-      if (e.key === "r" && e.metaKey) {
-        e.preventDefault();
-        handleRecord();
-      }
-      if (e.key === "m") {
-        handleToggleMetronome();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [
-    loopIsPlaying,
-    setLoopIsPlaying,
-    isRecording,
-    setIsRecording,
-    handlePlay,
-    handleStop,
-    handleRecord,
-    setMetronomeActive,
-    handleToggleMetronome,
-  ]);
 
   return (
     <div className="px-2 pb-2 flex flex-col items-center space-y-4">

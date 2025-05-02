@@ -4,13 +4,7 @@ import useTransportControls from "./useTransportControls";
 import { useAudioContext } from "../contexts/AudioContext";
 
 const useHotKeys = () => {
-  const {
-    loopIsPlaying,
-    setLoopIsPlaying,
-    isRecording,
-    setIsRecording,
-    setMetronomeActive,
-  } = useAudioContext();
+  const { loopIsPlaying } = useAudioContext();
 
   const { handlePlay, handleStop, handleRecord, handleToggleMetronome } =
     useTransportControls();
@@ -35,7 +29,6 @@ const useHotKeys = () => {
       }
       if (e.key === "m") {
         handleToggleMetronome();
-        console.log("i'm pressing m now");
       }
     };
 
@@ -45,15 +38,11 @@ const useHotKeys = () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [
-    loopIsPlaying,
-    setLoopIsPlaying,
-    isRecording,
-    setIsRecording,
     handlePlay,
-    handleStop,
     handleRecord,
-    setMetronomeActive,
+    handleStop,
     handleToggleMetronome,
+    loopIsPlaying,
   ]);
 };
 
