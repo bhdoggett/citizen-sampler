@@ -1,9 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
-// import DrumMachine from "./components/DrumMachine";
 import Link from "next/link";
-// import CollectionMenu from "./components/CollectionMenu";
-// import SettingsWrapper from "./components/SettingsWrapper";
+import useHotKeys from "./hooks/useHotKeys";
 
 const DrumMachine = dynamic(() => import("./components/DrumMachine"), {
   ssr: false,
@@ -18,6 +16,7 @@ const CollectionMenu = dynamic(() => import("./components/CollectionMenu"), {
 });
 
 export default function Home() {
+  useHotKeys();
   return (
     <div className="flex flex-col justify-center items-center my-5">
       <h1 className="text-6xl font-bold block">Citizen Sampler</h1>
