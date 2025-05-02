@@ -35,6 +35,7 @@ const useHotKeys = () => {
       }
       if (e.key === "m") {
         handleToggleMetronome();
+        console.log("i'm pressing m now");
       }
     };
 

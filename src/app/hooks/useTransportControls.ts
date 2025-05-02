@@ -8,7 +8,6 @@ const useTransportControls = () => {
   const {
     loopIsPlaying,
     setLoopIsPlaying,
-    isRecording,
     setIsRecording,
     setMetronomeActive,
   } = useAudioContext();
@@ -21,10 +20,9 @@ const useTransportControls = () => {
   }, [loopIsPlaying, setLoopIsPlaying]);
 
   const handleRecord = useCallback(() => {
-    if (!isRecording) setIsRecording(true);
+    setIsRecording((prev) => !prev);
     if (!loopIsPlaying) handlePlay();
-    if (isRecording) setIsRecording(false);
-  }, [isRecording, loopIsPlaying, handlePlay, setIsRecording]);
+  }, [loopIsPlaying, handlePlay, setIsRecording]);
 
   const handleStop = useCallback(() => {
     if (!loopIsPlaying) return;
