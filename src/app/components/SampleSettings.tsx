@@ -147,7 +147,7 @@ const SampleSettings = () => {
         )}
         <div className="flex gap-x-4 md:gap-x-6">
           <div className="flex flex-col">
-            <label className="my-2 flex justify-between">
+            <label className="mb-2 flex justify-between">
               <span>Volume</span>
               <span>{settings.volume?.toFixed(1) || "0.0"} dB</span>
             </label>
@@ -166,7 +166,7 @@ const SampleSettings = () => {
               className="w-full slider slider"
             />
 
-            <label className="my-2 flex justify-between">
+            <label className="mt-3 mb-2 flex justify-between">
               <span>Pan</span>
               <span>{settings.pan?.toFixed(1) || "0.0"}</span>
             </label>
@@ -183,7 +183,7 @@ const SampleSettings = () => {
             />
           </div>
           <div className="flex flex-col">
-            <label className="my-2 flex justify-between">
+            <label className="mb-2 flex justify-between">
               <span>Attack</span>
               <span>{settings.attack?.toFixed(2) || "0.00"} s</span>
             </label>
@@ -202,7 +202,7 @@ const SampleSettings = () => {
               className="w-full slider"
             />
 
-            <label className="my-2 flex justify-between">
+            <label className="mt-3 mb-2 flex justify-between">
               <span>Release</span>
               <span>{settings.release?.toFixed(2) || "0.00"} s</span>
             </label>
@@ -222,7 +222,7 @@ const SampleSettings = () => {
             />
           </div>
           <div className="flex flex-col">
-            <label className="my-2 flex justify-between">
+            <label className="mb-2 flex justify-between">
               <span>Highpass</span>
               <span>{settings.highpass?.[0].toFixed(0) || "0"} Hz</span>
             </label>
@@ -243,7 +243,7 @@ const SampleSettings = () => {
               className="w-full slider"
             />
 
-            <label className="my-2 flex justify-between">
+            <label className="mt-3 mb-2 flex justify-between">
               <span>Lowpass</span>
               <span>{settings.lowpass?.[0].toFixed(0) || "20000"} Hz</span>
             </label>
@@ -263,9 +263,9 @@ const SampleSettings = () => {
             />
           </div>
           <div className="flex flex-col">
-            <div className="w-full max-w-2xl flex items-center gap-4">
-              <label htmlFor="quantize-active" className="my-2">
-                Quantize:
+            <div className="w-full max-w-2xl flex items-center gap-1 mb-2">
+              <label htmlFor="quantize-active" className="">
+                Quantize
               </label>
               <input
                 type="checkbox"
@@ -284,7 +284,7 @@ const SampleSettings = () => {
 
                 // setQuantizeValue(Number(e.target.value))
               }}
-              className="w-16 p-1 border border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
+              className="w-12 mb-3 border flex mx-auto border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
             >
               {[1, 4, 8, 16].map((option) => (
                 <option key={option} value={option}>
@@ -292,22 +292,22 @@ const SampleSettings = () => {
                 </option>
               ))}
             </select>
-            <div className="flex m-1">
+            <div className="flex justify-start">
               <button
-                className={`border rounded-sm border-black mx-1 p-1 ${isMuted ? "bg-red-600" : "bg-slate-400"}`}
+                className={`border shadow-inner shadow-slate-600 border-black px-1 mx-1 ${isMuted ? "bg-red-600" : ""}`}
                 onClick={toggleMute}
               >
                 M
               </button>
               <button
-                className={`border rounded-sm border-black mx-1 p-1 ${isSoloed ? "bg-yellow-300" : "bg-slate-400"}`}
+                className={`border shadow-inner shadow-slate-600 border-black px-1 mx-1 ${isSoloed ? "bg-yellow-300" : ""}`}
                 onClick={toggleSolo}
               >
                 S
               </button>
               <button
                 onClick={() => setSampleMenuOpen((prev) => !prev)}
-                className="border rounded-sm border-black mx-1 p-1"
+                className="border shadow-inner shadow-slate-600 border-black px-1 mx-1"
               >
                 📂
               </button>

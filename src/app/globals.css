@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import "@fontsource/jetbrains-mono";
 
 :root {
   --background: #ffffff;

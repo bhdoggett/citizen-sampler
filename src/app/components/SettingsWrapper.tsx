@@ -11,17 +11,19 @@ type settingsWindow = "sample" | "loop" | "master";
 const SettingsWrapper = () => {
   const [settingsShown, setSettingShown] = useState<settingsWindow>("loop");
   const { clearSolos } = useMutesAndSolos();
-  const { solosExist } = useAudioContext();
+  const { solosExist, isRecording } = useAudioContext();
 
   return (
     <>
-      <button
-        className={`border rounded-sm border-black mx-1 p-1 ${solosExist ? "bg-yellow-300" : "bg-slate-400"}`}
-        onClick={clearSolos}
+      <div
+        className={`relative flex flex-col items-center border-2 shadow-md shadow-slate-500 ${isRecording ? "border-red-600" : "border-black"}`}
       >
-        S
-      </button>
-      <div className="flex flex-col items-center border border-black shadow-md shadow-slate-500">
+        <button
+          className={`absolute left-0 border shadow-inner shadow-slate-500 border-black px-1 ${solosExist ? "bg-yellow-200" : ""}`}
+          onClick={clearSolos}
+        >
+          Clear Solo
+        </button>
         <div className="flex shadow-inner shadow-slate-500 border border-black overflow-hidden mx-auto">
           <button
             className={`px-2 border-black ${settingsShown === "sample" ? "bg-black text-white" : ""}`}

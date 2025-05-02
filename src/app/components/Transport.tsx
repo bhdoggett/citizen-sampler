@@ -43,21 +43,24 @@ const Transport = () => {
     transport.current.loopEnd = `${loopLength}:0:0`;
   }, [loopLength, transport]);
 
-  const handleToggleRecord = () => {
-    setIsRecording((prev) => !prev);
-  };
-
   const handlePlay = async () => {
     if (loopIsPlaying) return;
     await Tone.start();
-    transport.current.start();
+    Tone.getTransport().start();
     setLoopIsPlaying(true);
+  };
+
+  const handlePressRecord = () => {
+    if (!isRecording) setIsRecording(true);
+    if (!loopIsPlaying) handlePlay();
+    if (isRecording) setIsRecording(false);
   };
 
   const handleStop = () => {
     if (!loopIsPlaying) return;
     transport.current.stop();
     setLoopIsPlaying(false);
+    setIsRecording(false);
   };
 
   const handleToggleMetronome = () => {
@@ -73,14 +76,14 @@ const Transport = () => {
           className="hover:fill-slate-300 cursor-pointer"
           onClick={handlePlay}
         />
-        <Square
-          className="hover:fill-slate-300 cursor-pointer"
-          onClick={handleStop}
-        />
         <Circle
           fill={isRecording ? "red" : "white"}
           className="hover:fill-slate-300 cursor-pointer"
-          onClick={handleToggleRecord}
+          onClick={handlePressRecord}
+        />
+        <Square
+          className="hover:fill-slate-300 cursor-pointer"
+          onClick={handleStop}
         />
         <Music3
           fill={metronomeActive ? "black" : "white"}

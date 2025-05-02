@@ -10,6 +10,7 @@
     "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
+    "@fontsource/jetbrains-mono": "^5.2.5",
     "@next/bundle-analyzer": "^15.2.2",
     "audiobuffer-to-wav": "^1.0.0",
     "axios": "^1.7.9",
