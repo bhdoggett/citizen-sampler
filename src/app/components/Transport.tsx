@@ -1,8 +1,8 @@
 "use client";
 import { useEffect } from "react";
-import * as Tone from "tone";
 import { Circle, Play, Square, Music3 } from "lucide-react";
 import { useAudioContext } from "../contexts/AudioContext";
+import useTransportControls from "../hooks/useTransportControls";
 
 const Transport = () => {
   const {
@@ -21,6 +21,8 @@ const Transport = () => {
     setIsRecording,
   } = useAudioContext();
 
+  const { handlePlay, handleStop, handleRecord, handleToggleMetronome } =
+    useTransportControls();
   // test some things
   useEffect(() => {
     console.log("loop length", loopLength);
@@ -43,29 +45,45 @@ const Transport = () => {
     transport.current.loopEnd = `${loopLength}:0:0`;
   }, [loopLength, transport]);
 
-  const handlePlay = async () => {
-    if (loopIsPlaying) return;
-    await Tone.start();
-    Tone.getTransport().start();
-    setLoopIsPlaying(true);
-  };
+  // Add event listeners for "hot keys"
+  // spacebar = play/stop
+  // "command r" =  toggle record
+  // "m" = toggle metronome
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === " ") {
+        e.preventDefault();
+        if (loopIsPlaying) {
+          handleStop();
+        } else {
+          handlePlay();
+        }
+      }
+      if (e.key === "r" && e.metaKey) {
+        e.preventDefault();
+        handleRecord();
+      }
+      if (e.key === "m") {
+        handleToggleMetronome();
+      }
+    };
 
-  const handlePressRecord = () => {
-    if (!isRecording) setIsRecording(true);
-    if (!loopIsPlaying) handlePlay();
-    if (isRecording) setIsRecording(false);
-  };
+    window.addEventListener("keydown", handleKeyDown);
 
-  const handleStop = () => {
-    if (!loopIsPlaying) return;
-    transport.current.stop();
-    setLoopIsPlaying(false);
-    setIsRecording(false);
-  };
-
-  const handleToggleMetronome = () => {
-    setMetronomeActive((prev) => !prev);
-  };
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    loopIsPlaying,
+    setLoopIsPlaying,
+    isRecording,
+    setIsRecording,
+    handlePlay,
+    handleStop,
+    handleRecord,
+    setMetronomeActive,
+    handleToggleMetronome,
+  ]);
 
   return (
     <div className="px-2 pb-2 flex flex-col items-center space-y-4">
@@ -79,7 +97,7 @@ const Transport = () => {
         <Circle
           fill={isRecording ? "red" : "white"}
           className="hover:fill-slate-300 cursor-pointer"
-          onClick={handlePressRecord}
+          onClick={handleRecord}
         />
         <Square
           className="hover:fill-slate-300 cursor-pointer"
