@@ -1,5 +1,12 @@
 "use client";
-import { createContext, useContext, useEffect, useState, useRef } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import * as Tone from "tone";
 import {
   SampleType,
@@ -313,25 +320,29 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     transport.current.loopEnd = `${loopLength}:0:0`;
   }, [loopLength, transport]);
 
+  // Function for loading samplers from seperate locSamples and kitSamples arrays
+  const loadSamplers = useCallback(async (samplesArray: SampleType[]) => {
+    const samplers = await Promise.all(
+      samplesArray.map(async ({ id, url }) => await makeSampler(id, url, false))
+    );
+
+    samplers.forEach((sampler, i) => {
+      const id = samplesArray[i].id;
+      samplersRef.current[id] = sampler;
+    });
+  }, []);
+
   //create samplers for library of congress samples
   useEffect(() => {
-    if (locSamples.length > 0) {
-      locSamples.forEach(async ({ id, url }) => {
-        // const name = id.split("_")[0];
-        samplersRef.current[id] = await makeSampler(id, url);
-        samplersRef.current[id].panVol.connect(masterGainNode.current);
-      });
-    }
-  }, [locSamples]);
+    if (locSamples.length === 0) return;
+    loadSamplers(locSamples);
+  }, [locSamples, loadSamplers]);
 
   //create samplers for drum kit samples
   useEffect(() => {
-    if (kitSamples.length > 0) {
-      kitSamples.forEach(async ({ id, url }) => {
-        samplersRef.current[id] = await makeSampler(id, url, false);
-      });
-    }
-  }, [kitSamples]);
+    if (kitSamples.length === 0) return;
+    loadSamplers(kitSamples);
+  }, [kitSamples, loadSamplers]);
 
   // Cleanup effect for samplers when component unmounts
   useEffect(() => {
@@ -400,15 +411,21 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setLocSamples(formattedSamples);
       } catch (error) {
         console.error("Error fetching samples:", error);
-        // Set empty array on error to prevent null/undefined issues
         setLocSamples([]);
       }
     };
 
+    // Clean up only the library of congress samplers
+    if (samplersRef.current) {
+      Object.entries(samplersRef.current).forEach(([key, sampler]) => {
+        // omit kit samples from a change in sample collection
+        if (sampler.id.includes("kit")) return;
+        cleanupSampler(key, samplersRef);
+      });
+    }
+
     fetchSamples();
   }, [globalCollectionName]);
-
-  // const loadNewSampler = (sampler, id) => {};
 
   // initialize allSampleData state with the locSamples and kitSamples
   ///  I NEED TO UPDATE THIS SO THAT ONLY THE LOC SAMPLER DATA GETS SWAPPED WHEN THOSE CHANGE. DON'T WANT TO REINITIALIZE THE KIT SAMPLES

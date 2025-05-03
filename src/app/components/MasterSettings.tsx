@@ -5,7 +5,7 @@ const MasterSettings = () => {
   const handleDownloadStems = useDownloadWavStems();
   return (
     <div className="flex flex-col mx-auto w-96">
-      <span className="flex mx-auto text-xs">This doesn't work yet...</span>
+      <span className="flex mx-auto text-xs">This works!</span>
       <button
         className="flex mx-auto border border-black my-2 px-1"
         onClick={handleDownloadStems}

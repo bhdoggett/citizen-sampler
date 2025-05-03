@@ -3,6 +3,7 @@ import * as Tone from "tone";
 import { useAudioContext } from "../contexts/AudioContext";
 import quantize from "../functions/quantize";
 import toWav from "audiobuffer-to-wav";
+import { SampleEvent } from "@/types/SampleTypes";
 
 const useDownloadWavStems = () => {
   const { allSampleData, samplersRef, makeSampler } = useAudioContext();
@@ -15,53 +16,47 @@ const useDownloadWavStems = () => {
     const { events, settings } = allSampleData[id];
     if (events.length === 0) return null;
 
-    // await offlineSamplerWithFx.sampler.loaded;
-    debugger;
     const toneBuffer = await Tone.Offline(async ({ transport }) => {
-      /// I need to recreate the entire audio context here per sample.
-      // create a new tone.sampler (with FX)
-      // create connect the smapler to all the fx nodes
+      const offlineSamplerWithFx = await makeSampler(
+        id,
+        allSampleData[id].url,
+        true
+      );
 
-      const offlineSamplerWithFx = makeSampler(id, allSampleData[id].url, true);
+      const createTonePartFromEvents = (events: SampleEvent[]) => {
+        const toneEvents = events
+          .filter((event) => event.startTime !== null)
+          .map((event) => {
+            const eventTime = settings.quantize
+              ? quantize(event.startTime as number, settings.quantVal)
+              : event.startTime;
+            return [
+              eventTime,
+              {
+                startTime: eventTime,
+                duration: event.duration,
+              },
+            ];
+          });
 
-      // console.log(
-      //   "Sampler loaded keys:",
-      //   offlineSamplerWithFx.sampler._buffers._buffers
-      // );
+        const part = new Tone.Part((time, event) => {
+          if (
+            typeof event !== "object" ||
+            event === null ||
+            !("duration" in event)
+          )
+            return;
 
-      // await offlineSamplerWithFx.sampler.loaded;
+          offlineSamplerWithFx.sampler.triggerAttackRelease(
+            "C4",
+            event.duration ?? 0,
+            time
+          );
+        }, toneEvents);
+        return part;
+      };
 
-      offlineSamplerWithFx.panVol.toDestination();
-
-      const toneEvents = events
-        .filter((event) => event.startTime !== null)
-        .map((event) => {
-          const eventTime = settings.quantize
-            ? quantize(event.startTime as number, settings.quantVal)
-            : event.startTime;
-          return [
-            eventTime,
-            {
-              startTime: eventTime,
-              duration: event.duration,
-            },
-          ];
-        });
-
-      const part = new Tone.Part((time, event) => {
-        if (
-          typeof event !== "object" ||
-          event === null ||
-          !("duration" in event)
-        )
-          return;
-
-        offlineSamplerWithFx.sampler.triggerAttackRelease(
-          "C4",
-          event.duration ?? 0,
-          time
-        );
-      }, toneEvents);
+      const part = createTonePartFromEvents(events);
 
       part.start(0);
       transport.start();
@@ -102,6 +97,7 @@ const useDownloadWavStems = () => {
     allIds.forEach((id) => {
       downloadWav(id);
     });
+    Tone.start();
   };
 
   return downloadAllWavs;
