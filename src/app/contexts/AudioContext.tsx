@@ -32,7 +32,7 @@ type AudioContextType = {
     sampleId: string,
     sampleUrl: string,
     offline: boolean
-  ) => SamplerWithFX;
+  ) => Promise<SamplerWithFX>;
   initializeSamplerData: (
     id: string,
     url: string,
@@ -182,39 +182,66 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // New ref to store all samplers and their FX chains
 
   // Function to create a sampler with FX chain. If using to with Tone.Offline to download wav files, the third argument should be "true".
-  const makeSampler = (
+  const makeSampler = async (
     sampleId: string,
     sampleUrl: string,
     offline: boolean = false
-  ): SamplerWithFX => {
-    const sampler = new Tone.Sampler({
-      urls: { C4: sampleUrl },
+  ): Promise<SamplerWithFX> => {
+    return new Promise((resolve, reject) => {
+      const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
+      const panVol = new Tone.PanVol(0, 0);
+      const highpass = new Tone.Filter(0, "highpass");
+      const lowpass = new Tone.Filter(20000, "lowpass");
+      const sampler = new Tone.Sampler({
+        urls: { C4: sampleUrl },
+        onload: () => {
+          // Connect the FX chain
+          sampler.connect(gain);
+          gain.connect(highpass);
+          highpass.connect(lowpass);
+          lowpass.connect(panVol);
+
+          if (!offline) {
+            panVol.connect(masterGainNode.current).toDestination();
+          } else {
+            panVol.toDestination();
+          }
+          resolve({
+            id: sampleId,
+            sampler,
+            gain,
+            panVol,
+            highpass,
+            lowpass,
+            currentEvent: { startTime: null, duration: null },
+          });
+        },
+        onerror: (err) => {
+          console.error(`Error loading sample: ${sampleId}`, err);
+          reject(err);
+        },
+      });
     });
+  };
 
-    const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
-    const panVol = new Tone.PanVol(0, 0);
-    const highpass = new Tone.Filter(0, "highpass");
-    const lowpass = new Tone.Filter(20000, "lowpass");
+  // Universal cleanup function for samplers
+  const cleanupSampler = (
+    sampleId: string,
+    ref: React.RefObject<Record<string, SamplerWithFX>>
+  ) => {
+    const samplerWithFX = ref.current[sampleId];
+    if (samplerWithFX) {
+      const { sampler, panVol, highpass, lowpass } = samplerWithFX;
 
-    // Connect the FX chain
-    sampler.connect(gain);
-    gain.connect(highpass);
-    highpass.connect(lowpass);
-    lowpass.connect(panVol);
+      // Dispose of each Tone.js node
+      sampler.dispose();
+      panVol.dispose();
+      highpass.dispose();
+      lowpass.dispose();
 
-    if (!offline) {
-      panVol.connect(masterGainNode.current).toDestination();
+      // Delete the reference
+      delete ref.current[sampleId];
     }
-
-    return {
-      id: sampleId,
-      sampler,
-      gain,
-      panVol,
-      highpass,
-      lowpass,
-      currentEvent: { startTime: null, duration: null },
-    };
   };
 
   //testing things
@@ -289,12 +316,10 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   //create samplers for library of congress samples
   useEffect(() => {
     if (locSamples.length > 0) {
-      locSamples.forEach(({ id, url }) => {
+      locSamples.forEach(async ({ id, url }) => {
         // const name = id.split("_")[0];
-        samplersRef.current[id] = makeSampler(id, url);
-        samplersRef.current[id].panVol
-          .connect(masterGainNode.current)
-          .toDestination();
+        samplersRef.current[id] = await makeSampler(id, url);
+        samplersRef.current[id].panVol.connect(masterGainNode.current);
       });
     }
   }, [locSamples]);
@@ -302,8 +327,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   //create samplers for drum kit samples
   useEffect(() => {
     if (kitSamples.length > 0) {
-      kitSamples.forEach(({ id, url }) => {
-        samplersRef.current[id] = makeSampler(id, url, false);
+      kitSamples.forEach(async ({ id, url }) => {
+        samplersRef.current[id] = await makeSampler(id, url, false);
       });
     }
   }, [kitSamples]);
@@ -397,26 +422,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     });
   }, [locSamples, kitSamples]);
 
-  // Universal cleanup function for samplers
-  const cleanupSampler = (
-    sampleId: string,
-    ref: React.RefObject<Record<string, SamplerWithFX>>
-  ) => {
-    const samplerWithFX = ref.current[sampleId];
-    if (samplerWithFX) {
-      const { sampler, panVol, highpass, lowpass } = samplerWithFX;
-
-      // Dispose of each Tone.js node
-      sampler.dispose();
-      panVol.dispose();
-      highpass.dispose();
-      lowpass.dispose();
-
-      // Delete the reference
-      delete ref.current[sampleId];
-    }
-  };
-
   // WHERE DO I USE THIS???
 
   // funciton to update one sampler's data (entire) whenever anythign inside that sampler's data changes
@@ -478,42 +483,24 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
   };
 
-  // updates solosExist when samplers' solo state changes
+  // updates solosExist when a sampler's solo state changes
   useEffect(() => {
     const solosExistNow = Object.values(allSampleData).some(
       (sample) => sample.settings.solo
     );
     setSolosExist(solosExistNow);
-    console.log("solosExist", solosExist);
-  }, [allSampleData, solosExist]);
+  }, [allSampleData]);
 
   // Sampler audio output based on mutes and solos:
   useEffect(() => {
-    // const solosExist = Object.values(allSampleData).some(
-    //   (sample) => sample.settings.solo
-    // );
+    Object.keys(allSampleData).forEach((id) => {
+      const sampler = samplersRef.current[id];
+      if (!sampler) return;
 
-    if (solosExist) {
-      Object.keys(allSampleData).forEach((id) => {
-        samplersRef.current[id].gain.gain.value = allSampleData[id].settings
-          .mute
-          ? 0
-          : allSampleData[id].settings.solo
-            ? 1
-            : 0;
-      });
-    }
+      const { mute, solo } = allSampleData[id].settings;
 
-    if (!solosExist) {
-      Object.keys(allSampleData).forEach((id) => {
-        samplersRef.current[id].gain.gain.value = allSampleData[id].settings
-          .mute
-          ? 0
-          : 1;
-      });
-    }
-
-    console.log("allsampleData", allSampleData);
+      sampler.gain.gain.value = mute ? 0 : solosExist ? (solo ? 1 : 0) : 1;
+    });
   }, [allSampleData, solosExist]);
 
   return (

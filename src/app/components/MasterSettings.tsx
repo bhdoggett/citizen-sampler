@@ -4,7 +4,8 @@ import useDownloadWavStems from "../hooks/useDownloadWavStems";
 const MasterSettings = () => {
   const handleDownloadStems = useDownloadWavStems();
   return (
-    <div className="w-96">
+    <div className="flex flex-col mx-auto w-96">
+      <span className="flex mx-auto text-xs">This doesn't work yet...</span>
       <button
         className="flex mx-auto border border-black my-2 px-1"
         onClick={handleDownloadStems}

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Citizens Sampler",
+  title: "Citizen Sampler",
   description:
     "Citizen Sampler, made possible by Citizen DJ, is an MPC-style sampler making use of public domain audio curated by the Library of Congress",
   keywords: [
