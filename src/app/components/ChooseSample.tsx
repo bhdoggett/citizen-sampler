@@ -64,7 +64,7 @@ const ChooseSample: React.FC<ChooseSampleProps> = ({ setSampleMenuOpen }) => {
   };
 
   // Update allSampleData and samplersRef when a new sample is chosen
-  const handleChooseSample = () => {
+  const handleChooseSample = async () => {
     if (
       selectedIndex === null ||
       !samplesArray[selectedIndex] ||
@@ -81,7 +81,7 @@ const ChooseSample: React.FC<ChooseSampleProps> = ({ setSampleMenuOpen }) => {
     );
 
     updateSamplerData(selectedSampleId, sampleData);
-    samplersRef.current[selectedSampleId] = makeSampler(
+    samplersRef.current[selectedSampleId] = await makeSampler(
       selectedSampleId,
       url,
       false
