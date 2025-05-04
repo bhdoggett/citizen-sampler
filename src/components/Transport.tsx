@@ -1,12 +1,12 @@
 "use client";
 import { useEffect } from "react";
 import { Circle, Play, Square, Music3 } from "lucide-react";
-import { useAudioContext } from "../contexts/AudioContext";
-import useTransportControls from "../hooks/useTransportControls";
+import { useAudioContext } from "@/app/contexts/AudioContext";
+import useTransportControls from "@/app/hooks/useTransportControls";
+import * as Tone from "tone";
 
 const Transport = () => {
   const {
-    transport,
     metronomeActive,
     loopLength,
     setLoopLength,
@@ -18,28 +18,27 @@ const Transport = () => {
     isRecording,
   } = useAudioContext();
 
+  // Get the transport
+  const transport = Tone.getTransport();
+
   const { handlePlay, handleStop, handleRecord, handleToggleMetronome } =
     useTransportControls();
-  // test some things
-  useEffect(() => {
-    console.log("loop length", loopLength);
-  }, [loopLength]);
 
   // Update ToneJS Transport bpm setting
   useEffect(() => {
-    transport.current.bpm.value = bpm;
+    transport.bpm.value = bpm;
   }, [bpm, transport]);
 
   // Update Tone.js timeSignature when beatsPerBar changes;
   useEffect(() => {
-    transport.current.timeSignature = beatsPerBar;
+    transport.timeSignature = beatsPerBar;
   }, [transport, beatsPerBar]);
 
   // Update ToneJS Transport loop length
   useEffect(() => {
-    transport.current.loop = true;
-    transport.current.loopStart = "0:0:0";
-    transport.current.loopEnd = `${loopLength}:0:0`;
+    transport.loop = true;
+    transport.loopStart = "0:0:0";
+    transport.loopEnd = `${loopLength}:0:0`;
   }, [loopLength, transport]);
 
   return (

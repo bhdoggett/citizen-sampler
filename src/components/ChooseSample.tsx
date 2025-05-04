@@ -1,7 +1,7 @@
 "use client";
 import * as Tone from "tone";
 import { useState, useEffect, useRef } from "react";
-import { useAudioContext } from "../contexts/AudioContext";
+import { useAudioContext } from "@/app/contexts/AudioContext";
 import { getCollectionArray, collectionNames } from "@/lib/collections";
 
 type ChooseSampleProps = {

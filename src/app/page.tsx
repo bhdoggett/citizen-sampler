@@ -3,15 +3,15 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import useHotKeys from "./hooks/useHotKeys";
 
-const DrumMachine = dynamic(() => import("./components/DrumMachine"), {
+const DrumMachine = dynamic(() => import("../components/DrumMachine"), {
   ssr: false,
 });
 
-const SettingsWrapper = dynamic(() => import("./components/SettingsWrapper"), {
+const SettingsWrapper = dynamic(() => import("../components/SettingsWrapper"), {
   ssr: false,
 });
 
-const CollectionMenu = dynamic(() => import("./components/CollectionMenu"), {
+const CollectionMenu = dynamic(() => import("../components/CollectionMenu"), {
   ssr: false,
 });
 

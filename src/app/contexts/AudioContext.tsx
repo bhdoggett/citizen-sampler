@@ -21,8 +21,6 @@ import metronome from "../metronome";
 type AudioContextType = {
   masterGainNode: React.RefObject<Tone.Gain>;
   setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
-  transport: React.RefObject<TransportClass>;
-  audioContext: Tone.BaseContext | null;
   metronomeActive: boolean;
   setMetronomeActive: React.Dispatch<React.SetStateAction<boolean>>;
   metronome: Tone.Sampler;
@@ -69,9 +67,6 @@ type AudioContextType = {
 const AudioContextContext = createContext<AudioContextType | null>(null);
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
-  const [audioContext, setAudioContext] = useState<Tone.BaseContext | null>(
-    null
-  );
   const [allSampleData, setAllSampleData] = useState<
     Record<string, SampleType>
   >({});
@@ -185,10 +180,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   const [selectedSampleId, setSelectedSampleId] = useState<string>("loc-1");
   const [solosExist, setSolosExist] = useState<boolean>(false);
-  const transport = useRef<TransportClass>(Tone.getTransport());
+  // const transport = useRef<TransportClass>(Tone.getTransport());
   // New ref to store all samplers and their FX chains
 
-  // Function to create a sampler with FX chain. If using to with Tone.Offline to download wav files, the third argument should be "true".
+  // Function to create a sampler with FX chain.
+  // If using with Tone.Offline to download WAV stems, the third argument should be "true".
   const makeSampler = async (
     sampleId: string,
     sampleUrl: string,
@@ -262,7 +258,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     const init = async () => {
       await Tone.start();
       console.log("Tone.js started");
-      setAudioContext(Tone.getContext());
     };
     init();
   }, []);
@@ -270,10 +265,10 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // Update ToneJS loopEnd when loopLength or beatsPerBar changes
   useEffect(() => {
     const loopEnd = `${loopLength}:0:0`;
-    transport.current.loop = true;
-    transport.current.loopStart = "0:0:0";
-    transport.current.loopEnd = loopEnd;
-  }, [loopLength, transport, beatsPerBar]);
+    Tone.getTransport().loop = true;
+    Tone.getTransport().loopStart = "0:0:0";
+    Tone.getTransport().loopEnd = loopEnd;
+  }, [loopLength, beatsPerBar]);
   ///////////
 
   // Schedule metronome playback based on time signature
@@ -281,7 +276,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     // beatsCount will increment to keep track of when down-beat or off-beat should play
     let beatCount = 0;
 
-    const metronomeLoop = transport.current.scheduleRepeat((time) => {
+    const metronomeLoop = Tone.getTransport().scheduleRepeat((time) => {
       if (!loopIsPlaying || !metronomeActive) return;
 
       const [, beats] = (Tone.getTransport().position as string)
@@ -296,29 +291,29 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       }
     }, "4n");
 
-    const transportForCleanup = transport.current;
+    const transportForCleanup = Tone.getTransport();
 
     return () => {
       transportForCleanup.clear(metronomeLoop);
     };
-  }, [loopIsPlaying, metronomeActive, beatsPerBar, transport]);
+  }, [loopIsPlaying, metronomeActive, beatsPerBar]);
 
   // Update ToneJS Transport bpm setting
   useEffect(() => {
-    transport.current.bpm.value = bpm;
-  }, [bpm, transport]);
+    Tone.getTransport().bpm.value = bpm;
+  }, [bpm]);
 
   // Update Tone.js timeSignature when beatsPerBar changes;
   useEffect(() => {
-    transport.current.timeSignature = beatsPerBar;
-  }, [transport, beatsPerBar]);
+    Tone.getTransport().timeSignature = beatsPerBar;
+  }, [beatsPerBar]);
 
   // Update ToneJS Transport loop length
   useEffect(() => {
-    transport.current.loop = true;
-    transport.current.loopStart = "0:0:0";
-    transport.current.loopEnd = `${loopLength}:0:0`;
-  }, [loopLength, transport]);
+    Tone.getTransport().loop = true;
+    Tone.getTransport().loopStart = "0:0:0";
+    Tone.getTransport().loopEnd = `${loopLength}:0:0`;
+  }, [loopLength]);
 
   // Function for loading samplers from seperate locSamples and kitSamples arrays
   const loadSamplers = useCallback(async (samplesArray: SampleType[]) => {
@@ -523,10 +518,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   return (
     <AudioContextContext.Provider
       value={{
-        audioContext,
         masterGainNode,
         setMasterGainLevel,
-        transport,
         metronomeActive,
         setMetronomeActive,
         metronome,

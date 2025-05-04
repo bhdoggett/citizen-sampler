@@ -1,8 +1,8 @@
 "use client";
-import { useAudioContext } from "../contexts/AudioContext";
+import { useAudioContext } from "@/app/contexts/AudioContext";
 import { useState, useEffect } from "react";
-import type { SampleSettings } from "../../types/SampleTypes";
-import useMutesAndSolos from "../hooks/useMutesAndSolos";
+import type { SampleSettings } from "@/types/SampleTypes";
+import useMutesAndSolos from "@/app/hooks/useMutesAndSolos";
 import ChooseSample from "./ChooseSample";
 
 const SampleSettings = () => {

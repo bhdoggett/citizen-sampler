@@ -1,8 +1,8 @@
 "use client";
 import { useRef, useEffect, useState } from "react";
-import { useAudioContext } from "../contexts/AudioContext";
+import { useAudioContext } from "@/app/contexts/AudioContext";
 import * as Tone from "tone";
-import quantize from "../functions/quantize";
+import quantize from "@/app/functions/quantize";
 
 type DrumPadProps = {
   id: string;
@@ -11,7 +11,6 @@ type DrumPadProps = {
 
 const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const {
-    transport,
     isRecording,
     loopIsPlaying,
     allSampleData,
@@ -26,7 +25,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
 
-  // update
+  // Update this component's sampleDataRef when allSampleData state changes
   useEffect(() => {
     sampleDataRef.current = allSampleData[id];
   }, [allSampleData, id]);
@@ -35,12 +34,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   useEffect(() => {
     const sampleData = allSampleData[id];
 
-    if (
-      !loopIsPlaying ||
-      allSampleData[id].events.length === 0
-      // !sampleData.events[sampleData.events.length - 1].duration
-    )
-      return;
+    if (!loopIsPlaying || allSampleData[id].events.length === 0) return;
 
     const events = sampleData.events.map((event, idx) => {
       if (!event.startTime) return;
@@ -91,7 +85,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     return () => {
       disposePart();
     };
-  }, [loopIsPlaying, sampler, transport, allSampleData, id]);
+  }, [loopIsPlaying, sampler, allSampleData, id]);
 
   // Sync isSelected state with selectedSampleId
   useEffect(() => {
@@ -107,8 +101,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     console.log("samplerRef", samplersRef.current);
 
     if (loopIsPlaying && isRecording) {
-      // const startTime = transport.current.seconds;
-      currentEvent.startTime = transport.current.seconds;
+      currentEvent.startTime = Tone.getTransport().seconds;
       currentEvent.duration = 0;
     }
   };
@@ -125,7 +118,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     )
       return;
 
-    const releaseTime = transport.current.seconds;
+    const releaseTime = Tone.getTransport().seconds;
 
     currentEvent.duration =
       releaseTime > currentEvent.startTime
@@ -137,9 +130,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     sampleDataRef.current.events.push({ ...currentEvent });
     setAllSampleData((prev) => ({ ...prev, [id]: sampleDataRef.current }));
 
-    // if (loopIsPlaying && isRecording && currentEvent.duration === 0) {
-    //   // Calculate duration, accomodating for events that overlap the transport loop boundary.
-    // }
+    if (loopIsPlaying && isRecording && currentEvent.duration === 0) {
+    }
   };
 
   const handleFocus = () => {

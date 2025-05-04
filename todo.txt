@@ -1,12 +1,16 @@
-- download WAV master
-- download WAV stems
-- Remove Tone.context info from AudioContext. Just get directly from Tone.context wherever you need it.
+- master settings component
+- add "clear events" to sample settings (to clear one sampler's play events)
+- use ticks rather than seconds to record samples so that bpm changes influence sample playback events
+- add wave form with wavesurfer
+  - ability to select start/stop points
+- remove double click auto stuff
+- remove hard press auto interactions for mobile
+- add hot keys for sample pads
 - add swing to loop settings
 - add reverse setting
 - pitch shift functionality
 - add links to "view details" for samples
-- "error disposing part" when stop is pressed mid sampler playback
 - add to master settings: compression, reverb, delay, compression, eq.
 - piano roll to play samples at different pitches
-- record should also enable play. stop should also disable record.
-- initialize allSampleData state with the locSamples and kitSamples... NEED TO UPDATE THIS SO THAT ONLY THE LOC SAMPLER DATA GETS SWAPPED WHEN THOSE CHANGE. DON'T WANT TO REINITIALIZE THE KIT SAMPLES
+- download WAV master
+- add four loop patterns "A" "B" "C" "D" with 

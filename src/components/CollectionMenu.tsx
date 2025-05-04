@@ -1,6 +1,6 @@
 "use client";
-import { useAudioContext } from "../contexts/AudioContext";
-import { collectionNames } from "../../lib/collections";
+import { useAudioContext } from "@/app/contexts/AudioContext";
+import { collectionNames } from "@/lib/collections";
 
 const CollectionMenu = () => {
   const { setGlobalCollectionName } = useAudioContext();

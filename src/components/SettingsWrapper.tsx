@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { useAudioContext } from "../contexts/AudioContext";
-import useMutesAndSolos from "../hooks/useMutesAndSolos";
+import { useAudioContext } from "@/app/contexts/AudioContext";
+import useMutesAndSolos from "@/app/hooks/useMutesAndSolos";
 import SampleSettings from "./SampleSettings";
 import Transport from "./Transport";
 import MasterSettings from "./MasterSettings";

@@ -1,5 +1,5 @@
 "use client";
-import useDownloadWavStems from "../hooks/useDownloadWavStems";
+import useDownloadWavStems from "@/app/hooks/useDownloadWavStems";
 
 const MasterSettings = () => {
   const handleDownloadStems = useDownloadWavStems();
