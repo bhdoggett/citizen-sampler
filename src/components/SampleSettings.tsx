@@ -14,6 +14,9 @@ const SampleSettings = () => {
     updateSamplerRefSettings,
   } = useAudioContext();
 
+  // Need Frequency Params for translating frequency filters from exponential to linear inputs
+  const maxFreq = 20000;
+
   const { setSampleMute, setSampleSolo } = useMutesAndSolos();
 
   const [settings, setSettings] = useState<Partial<SampleSettings> | null>(
@@ -42,6 +45,29 @@ const SampleSettings = () => {
       setSampleMute(selectedSampleId, true);
       setIsMuted(true);
     }
+  };
+
+  // Update settings in this component's state by setting type
+  const updateSetting = <K extends keyof SampleSettings>(
+    key: K,
+    value: SampleSettings[K]
+  ) => {
+    setSettings((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  // Convert from frequency (Hz) to a 0-1 linear slider value
+  const linearizeFrequency = (frequency: number): number => {
+    if (frequency <= 0) return 0;
+    return Math.log10(frequency) / Math.log10(maxFreq);
+  };
+
+  // Convert from slider (0-1) back to frequency (Hz)
+  const exponentiateFrequency = (sliderValue: number): number => {
+    if (sliderValue <= 0) return 0;
+    return Math.pow(10, sliderValue * Math.log10(maxFreq));
   };
 
   // initialize settings with selected sample's settings
@@ -100,17 +126,6 @@ const SampleSettings = () => {
     updateSamplerRefSettings,
   ]);
 
-  // update settings in this component's state by setting type
-  const updateCurrentSampleSettings = <K extends keyof SampleSettings>(
-    key: K,
-    value: SampleSettings[K]
-  ) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
   if (!selectedSampleId) {
     return (
       <p className="text-center p-4">Select a sample to modify its settings</p>
@@ -120,20 +135,6 @@ const SampleSettings = () => {
   if (!settings) {
     return <p>Loading...</p>;
   }
-
-  // Need Frequency Params for translating frequency filters from exponential to linear inputs
-  const minFreq = 20;
-  const maxFreq = 20000;
-
-  // Convert from frequency (Hz) to a 0-1 linear slider value
-  const linearizeFrequency = (frequency: number): number => {
-    return Math.log(frequency / minFreq) / Math.log(maxFreq / minFreq);
-  };
-
-  // Convert from slider (0-1) back to frequency (Hz)
-  const exponentiateFrequency = (sliderValue: number): number => {
-    return minFreq * Math.pow(maxFreq / minFreq, sliderValue);
-  };
 
   return (
     <>
@@ -158,10 +159,7 @@ const SampleSettings = () => {
               step="0.1"
               value={settings.volume || 0}
               onChange={(e) => {
-                updateCurrentSampleSettings(
-                  "volume",
-                  parseFloat(e.target.value)
-                );
+                updateSetting("volume", parseFloat(e.target.value));
               }}
               className="w-full slider slider"
             />
@@ -176,9 +174,7 @@ const SampleSettings = () => {
               max="1"
               step="0.1"
               value={settings.pan || 0}
-              onChange={(e) =>
-                updateCurrentSampleSettings("pan", parseFloat(e.target.value))
-              }
+              onChange={(e) => updateSetting("pan", parseFloat(e.target.value))}
               className="w-full slider"
             />
           </div>
@@ -194,10 +190,7 @@ const SampleSettings = () => {
               step="0.01"
               value={settings.attack || 0}
               onChange={(e) =>
-                updateCurrentSampleSettings(
-                  "attack",
-                  parseFloat(e.target.value)
-                )
+                updateSetting("attack", parseFloat(e.target.value))
               }
               className="w-full slider"
             />
@@ -213,10 +206,7 @@ const SampleSettings = () => {
               step="0.01"
               value={settings.release || 0}
               onChange={(e) =>
-                updateCurrentSampleSettings(
-                  "release",
-                  parseFloat(e.target.value)
-                )
+                updateSetting("release", parseFloat(e.target.value))
               }
               className="w-full slider"
             />
@@ -231,11 +221,9 @@ const SampleSettings = () => {
               min="0"
               max="1"
               step="0.001"
-              value={linearizeFrequency(settings.highpass?.[0] || 20).toFixed(
-                2
-              )}
+              value={linearizeFrequency(settings.highpass?.[0] || 0).toFixed(2)}
               onChange={(e) =>
-                updateCurrentSampleSettings("highpass", [
+                updateSetting("highpass", [
                   exponentiateFrequency(parseFloat(e.target.value)),
                   "highpass",
                 ])
@@ -252,9 +240,9 @@ const SampleSettings = () => {
               min="0"
               max="1"
               step="0.01"
-              value={linearizeFrequency(settings.lowpass?.[0] || 20)}
+              value={linearizeFrequency(settings.lowpass?.[0] || 0)}
               onChange={(e) =>
-                updateCurrentSampleSettings("lowpass", [
+                updateSetting("lowpass", [
                   exponentiateFrequency(parseFloat(e.target.value)),
                   "lowpass",
                 ])
@@ -273,16 +261,14 @@ const SampleSettings = () => {
                 id="quantize-active"
                 checked={settings.quantize}
                 onChange={(e) => {
-                  updateCurrentSampleSettings("quantize", e.target.checked);
+                  updateSetting("quantize", e.target.checked);
                 }}
               />
             </div>
             <select
               value={settings.quantVal}
               onChange={(e) => {
-                updateCurrentSampleSettings("quantVal", Number(e.target.value));
-
-                // setQuantizeValue(Number(e.target.value))
+                updateSetting("quantVal", Number(e.target.value));
               }}
               className="w-12 mb-3 border flex mx-auto border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
             >
