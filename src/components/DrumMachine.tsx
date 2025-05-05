@@ -35,29 +35,23 @@ const DrumMachine = () => {
     return <div>Loading samplers...</div>; // Display loading message while samplers are not loaded
   }
 
+  // Conditionally render Drum Pads based on sampler type
+  const renderDrumPads = (type: "loc" | "kit" | "loading") => {
+    return Object.entries(samplersRef.current)
+      .filter((entry) => {
+        return entry[0].includes(type);
+      })
+      .map(([id, samplerNodes]) => (
+        <DrumPad key={id} id={id} sampler={samplerNodes.sampler} />
+      ));
+  };
+
+
   return (
     <div>
-      <div className="grid grid-cols-4 gap-2 my-3">
-        {Object.entries(samplersRef.current)
-          .filter((entry) => {
-            return entry[0].includes("loc");
-          })
-          .map(([id, samplerNodes]) => (
-            <DrumPad key={id} id={id} sampler={samplerNodes.sampler} />
-          ))}
-      </div>
-
+      <div className="grid grid-cols-4 gap-2 my-3">{renderDrumPads("loc")}</div>
       <hr />
-
-      <div className="grid grid-cols-4 gap-4 my-3">
-        {Object.entries(samplersRef.current)
-          .filter((entry) => {
-            return entry[0].includes("kit");
-          })
-          .map(([id, samplerNodes]) => (
-            <DrumPad key={id} id={id} sampler={samplerNodes.sampler} />
-          ))}
-      </div>
+      <div className="grid grid-cols-4 gap-4 my-3">{renderDrumPads("kit")}</div>
     </div>
   );
 };

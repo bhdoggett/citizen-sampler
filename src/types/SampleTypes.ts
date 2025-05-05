@@ -1,30 +1,31 @@
 import * as Tone from "tone";
 
-// import {
-//   AudioRange,
-//   Cents,
-//   Decibels,
-//   Frequency,
-//   NormalRange,
-//   Time,
-// } from "tone/build/esm/core/type/Units";
+import {
+  //   AudioRange,
+  //   Cents,
+  //   Decibels,
+  Frequency,
+  //   NormalRange,
+  //   Time,
+} from "tone/build/esm/core/type/Units";
 
 export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
 
 export type SampleEvent = {
   startTime: number | null;
   duration: number | null;
-  note: string | null;
-  velocity: number | null;
+  note: Frequency;
+  // velocity: number | null;
 };
+
 export type SampleSettings = {
   mute: boolean;
   solo: boolean;
   reverse: boolean;
   volume: number;
   pan: number;
-  pitch: number;
-  finetune: number;
+  baseNote: Frequency;
+  pitchShift: number;
   attack: number;
   release: number;
   quantize: boolean;
