@@ -14,7 +14,8 @@ export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
 export type SampleEvent = {
   startTime: number | null;
   duration: number | null;
-  // velocity: number;
+  note: string | null;
+  velocity: number | null;
 };
 export type SampleSettings = {
   mute: boolean;

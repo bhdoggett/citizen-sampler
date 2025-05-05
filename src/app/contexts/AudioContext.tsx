@@ -13,7 +13,6 @@ import {
   SampleSettings,
   SamplerWithFX,
 } from "../../types/SampleTypes";
-import { TransportClass } from "tone/build/esm/core/clock/Transport";
 import { getCollectionArray } from "@/lib/collections";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
@@ -216,7 +215,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
             panVol,
             highpass,
             lowpass,
-            currentEvent: { startTime: null, duration: null },
+            currentEvent: {
+              startTime: null,
+              duration: null,
+              note: null,
+              velocity: null,
+            },
           });
         },
         onerror: (err) => {

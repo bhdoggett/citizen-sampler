@@ -38,10 +38,11 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
     const events = sampleData.events.map((event, idx) => {
       if (!event.startTime) return;
+      const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
       const eventTime = sampleData.settings.quantize
-        ? quantize(event.startTime, sampleData.settings.quantVal)
-        : event.startTime;
-      console.log(`event at index: ${idx}`, event);
+        ? quantize(startTimeInSeconds, sampleData.settings.quantVal)
+        : startTimeInSeconds;
+      // console.log(`event at index: ${idx}`, event);
       return [
         eventTime,
         {
@@ -101,7 +102,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     console.log("samplerRef", samplersRef.current);
 
     if (loopIsPlaying && isRecording) {
-      currentEvent.startTime = Tone.getTransport().seconds;
+      currentEvent.startTime = Tone.getTransport().ticks;
       currentEvent.duration = 0;
     }
   };
@@ -119,12 +120,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       return;
 
     const releaseTime = Tone.getTransport().seconds;
+    const startTimeInSeconds = Tone.Ticks(currentEvent.startTime).toSeconds();
 
     currentEvent.duration =
-      releaseTime > currentEvent.startTime
-        ? releaseTime - currentEvent.startTime
-        : Tone.Time(transport.current.loopEnd).toSeconds() -
-          currentEvent.startTime +
+      releaseTime > startTimeInSeconds
+        ? releaseTime - startTimeInSeconds
+        : Tone.Time(Tone.getTransport().loopEnd).toSeconds() -
+          startTimeInSeconds +
           releaseTime;
     console.log("currentEvent.duration", currentEvent.duration);
     sampleDataRef.current.events.push({ ...currentEvent });
