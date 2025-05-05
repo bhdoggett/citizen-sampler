@@ -191,6 +191,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   ): Promise<SamplerWithFX> => {
     return new Promise((resolve, reject) => {
       const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
+      const pitch = new Tone.PitchShift(0);
       const panVol = new Tone.PanVol(0, 0);
       const highpass = new Tone.Filter(0, "highpass");
       const lowpass = new Tone.Filter(20000, "lowpass");
@@ -199,7 +200,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         onload: () => {
           // Connect the FX chain
           sampler.connect(gain);
-          gain.connect(highpass);
+          gain.connect(pitch);
+          pitch.connect(highpass);
           highpass.connect(lowpass);
           lowpass.connect(panVol);
 
@@ -211,6 +213,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           resolve({
             id: sampleId,
             sampler,
+            pitch,
             gain,
             panVol,
             highpass,
@@ -251,6 +254,18 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
   };
 
+  // Function for loading samplers from seperate locSamples and kitSamples arrays
+  const loadSamplers = useCallback(async (samplesArray: SampleType[]) => {
+    const samplers = await Promise.all(
+      samplesArray.map(async ({ id, url }) => await makeSampler(id, url))
+    );
+
+    samplers.forEach((sampler, i) => {
+      const id = samplesArray[i].id;
+      samplersRef.current[id] = sampler;
+    });
+  }, []);
+
   //testing things
   useEffect(() => {
     console.log("all collected samples:", allSampleData);
@@ -273,7 +288,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     Tone.getTransport().loopStart = "0:0:0";
     Tone.getTransport().loopEnd = loopEnd;
   }, [loopLength, beatsPerBar]);
-  ///////////
 
   // Schedule metronome playback based on time signature
   useEffect(() => {
@@ -319,19 +333,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     Tone.getTransport().loopEnd = `${loopLength}:0:0`;
   }, [loopLength]);
 
-  // Function for loading samplers from seperate locSamples and kitSamples arrays
-  const loadSamplers = useCallback(async (samplesArray: SampleType[]) => {
-    const samplers = await Promise.all(
-      samplesArray.map(async ({ id, url }) => await makeSampler(id, url, false))
-    );
-
-    samplers.forEach((sampler, i) => {
-      const id = samplesArray[i].id;
-      samplersRef.current[id] = sampler;
-    });
-  }, []);
-
-  //create samplers for library of congress samples
+  // create samplers for library of congress samples
   useEffect(() => {
     if (locSamples.length === 0) return;
     loadSamplers(locSamples);

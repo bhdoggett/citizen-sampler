@@ -25,7 +25,7 @@ export type SampleSettings = {
   volume: number;
   pan: number;
   baseNote: Frequency;
-  pitchShift: number;
+  pitch: number;
   attack: number;
   release: number;
   quantize: boolean;
@@ -49,6 +49,7 @@ export type SamplerWithFX = {
   id: string;
   sampler: Tone.Sampler;
   gain: Tone.Gain;
+  pitch: Tone.PitchShift;
   panVol: Tone.PanVol;
   highpass: Tone.Filter;
   lowpass: Tone.Filter;

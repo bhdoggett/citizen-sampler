@@ -61,9 +61,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         "duration" in event &&
         event.duration !== null
       ) {
-        const pitchShift = allSampleData[id].settings.pitchShift;
-        const note = Tone.Frequency(event.note).transpose(pitchShift).toNote();
-        sampler.triggerAttackRelease(note, event.duration, time);
+        // const pitchShift = allSampleData[id].settings.pitchShift;
+        // const note = Tone.Frequency(event.note).transpose(pitchShift).toNote();
+        sampler.triggerAttackRelease(event.note, event.duration, time);
         setSampleIsPlaying(true);
         setTimeout(() => {
           setSampleIsPlaying(false);

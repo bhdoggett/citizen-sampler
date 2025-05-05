@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import type { SampleSettings } from "@/types/SampleTypes";
 import useMutesAndSolos from "@/app/hooks/useMutesAndSolos";
 import ChooseSample from "./ChooseSample";
+import notes from "@/lib/notes";
 
 const SampleSettings = () => {
   const {
@@ -83,7 +84,8 @@ const SampleSettings = () => {
 
     const samplerWithFX = samplersRef.current[selectedSampleId];
     if (samplerWithFX) {
-      const { sampler, panVol, highpass, lowpass } = samplerWithFX;
+      const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
+      pitch.pitch = settings.pitch || 0;
       panVol.volume.value = settings.volume || 0;
       panVol.pan.value = settings.pan || 0;
       highpass.frequency.value = settings.highpass?.[0] || 0;
@@ -163,7 +165,6 @@ const SampleSettings = () => {
               }}
               className="w-full slider slider"
             />
-
             <label className="mt-3 mb-2 flex justify-between">
               <span>Pan</span>
               <span>{settings.pan?.toFixed(1) || "0.0"}</span>
@@ -231,12 +232,13 @@ const SampleSettings = () => {
               className="w-full slider"
             />
 
-            <label className="mt-3 mb-2 flex justify-between">
+            <label htmlFor="lowpass" className="mt-3 mb-2 flex justify-between">
               <span>Lowpass</span>
               <span>{settings.lowpass?.[0].toFixed(0) || "20000"} Hz</span>
             </label>
             <input
               type="range"
+              name="lowpass"
               min="0"
               max="1"
               step="0.01"
@@ -248,6 +250,38 @@ const SampleSettings = () => {
                 ])
               }
               className="w-full slider"
+            />
+          </div>
+          <div>
+            <label htmlFor="base-note">Base Note</label>
+            <select
+              value={settings.baseNote}
+              onChange={(e) => {
+                updateSetting("baseNote", e.target.value);
+              }}
+              className="w-12 mb-3 border flex mx-auto border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
+            >
+              {notes.map((note) => (
+                <option key={note} value={note}>
+                  {note}
+                </option>
+              ))}
+            </select>
+            <label htmlFor="pitch" className="mb-2 flex justify-between">
+              <span>Pitch</span>
+              <span>{settings.pitch?.toFixed(1) || "0.0"} dB</span>
+            </label>
+            <input
+              name="pitch"
+              type="range"
+              min="-12"
+              max="12"
+              step="0.01"
+              value={settings.pitch || 0}
+              onChange={(e) => {
+                updateSetting("pitch", parseFloat(e.target.value));
+              }}
+              className="w-full slider slider"
             />
           </div>
           <div className="flex flex-col">
