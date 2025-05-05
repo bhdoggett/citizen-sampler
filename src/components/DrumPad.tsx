@@ -36,7 +36,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
     if (!loopIsPlaying || allSampleData[id].events.length === 0) return;
 
-    const events = sampleData.events.map((event, idx) => {
+    const events = sampleData.events.map((event) => {
       if (!event.startTime) return;
       const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
       const eventTime = sampleData.settings.quantize
