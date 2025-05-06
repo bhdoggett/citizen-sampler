@@ -50,7 +50,7 @@ const SamplerSchema = new Schema({
   details: { type: String, required: true },
 });
 
-const SongSchema = new Schema({
+export const SongSchema = new Schema({
   title: { type: String, required: true },
   samples: { type: [SamplerSchema], required: true },
   transport: {
@@ -60,6 +60,6 @@ const SongSchema = new Schema({
   },
 });
 
-const Song = model("Song", SongSchema);
+export const Song = model("Song", SongSchema);
 
 export default Song;
