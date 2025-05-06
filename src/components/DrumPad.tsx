@@ -18,6 +18,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setSelectedSampleId,
     selectedSampleId,
     samplersRef,
+    setWaveformIsPlaying,
   } = useAudioContext();
 
   const sampleDataRef = useRef(allSampleData[id]);
@@ -65,8 +66,15 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         // const note = Tone.Frequency(event.note).transpose(pitchShift).toNote();
         sampler.triggerAttackRelease(event.note, event.duration, time);
         setSampleIsPlaying(true);
+        if (id === selectedSampleId) {
+          setWaveformIsPlaying(true);
+        }
+
         setTimeout(() => {
           setSampleIsPlaying(false);
+          if (id === selectedSampleId) {
+            setWaveformIsPlaying(false);
+          }
         }, event.duration * 1000);
         console.log(event);
       }
@@ -90,7 +98,14 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     return () => {
       disposePart();
     };
-  }, [loopIsPlaying, sampler, allSampleData, id]);
+  }, [
+    loopIsPlaying,
+    sampler,
+    allSampleData,
+    id,
+    selectedSampleId,
+    setWaveformIsPlaying,
+  ]);
 
   // Sync isSelected state with selectedSampleId
   useEffect(() => {
@@ -99,6 +114,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   const handlePressPad = () => {
     sampler.triggerAttack("C4");
+    setWaveformIsPlaying(true);
     setSelectedSampleId(id);
     setIsSelected(true);
     setSampleIsPlaying(true);
@@ -113,6 +129,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   const handleReleasePad = () => {
     setSampleIsPlaying(false);
+    setWaveformIsPlaying(false);
     sampler.triggerRelease("C4");
 
     if (

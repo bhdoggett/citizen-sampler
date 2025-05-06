@@ -61,6 +61,8 @@ type AudioContextType = {
   selectedSampleId: string;
   setSelectedSampleId: React.Dispatch<React.SetStateAction<string>>;
   solosExist: boolean;
+  waveformIsPlaying: boolean;
+  setWaveformIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const AudioContextContext = createContext<AudioContextType | null>(null);
@@ -176,11 +178,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
   );
-
   const [selectedSampleId, setSelectedSampleId] = useState<string>("loc-1");
   const [solosExist, setSolosExist] = useState<boolean>(false);
-  // const transport = useRef<TransportClass>(Tone.getTransport());
-  // New ref to store all samplers and their FX chains
+  const [waveformIsPlaying, setWaveformIsPlaying] = useState<boolean>(false);
 
   // Function to create a sampler with FX chain.
   // If using with Tone.Offline to download WAV stems, the third argument should be "true".
@@ -554,6 +554,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setSelectedSampleId,
         samplersRef,
         solosExist,
+        waveformIsPlaying,
+        setWaveformIsPlaying,
       }}
     >
       {children}

@@ -5,6 +5,7 @@ import type { SampleSettings } from "@/types/SampleTypes";
 import useMutesAndSolos from "@/app/hooks/useMutesAndSolos";
 import ChooseSample from "./ChooseSample";
 import notes from "@/lib/notes";
+import Waveform from "./WaveForm";
 
 const SampleSettings = () => {
   const {
@@ -154,6 +155,7 @@ const SampleSettings = () => {
   return (
     <>
       <div className="flex flex-col justify-center">
+        <Waveform audioUrl={allSampleData[selectedSampleId].url} />
         <div className="p-2 mx-auto mb-3">
           {sampleMenuOpen && (
             <div className="fixed z-10 mt-2 w-max rounded-sm shadow-lg bg-white ring-1 ring-black ring-opacity-5">

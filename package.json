@@ -19,7 +19,8 @@
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tone": "^15.0.4"
+    "tone": "^15.0.4",
+    "wavesurfer.js": "^7.9.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
