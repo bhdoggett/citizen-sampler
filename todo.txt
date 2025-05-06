@@ -1,6 +1,4 @@
 - master settings component
-- add "clear events" to sample settings (to clear one sampler's play events)
-- use ticks rather than seconds to record samples so that bpm changes influence sample playback events
 - add wave form with wavesurfer
   - ability to select start/stop points
 - remove double click auto stuff
@@ -8,9 +6,9 @@
 - add hot keys for sample pads
 - add swing to loop settings
 - add reverse setting
-- pitch shift functionality
 - add links to "view details" for samples
 - add to master settings: compression, reverb, delay, compression, eq.
 - piano roll to play samples at different pitches
 - download WAV master
 - add four loop patterns "A" "B" "C" "D" with 
+- quantize with tuplets
