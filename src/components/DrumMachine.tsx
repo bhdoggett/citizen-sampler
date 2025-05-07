@@ -46,7 +46,6 @@ const DrumMachine = () => {
       ));
   };
 
-
   return (
     <div>
       <div className="grid grid-cols-4 gap-2 my-3">{renderDrumPads("loc")}</div>
