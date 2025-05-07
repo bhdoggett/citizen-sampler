@@ -12,3 +12,4 @@
 - download WAV master
 - add four loop patterns "A" "B" "C" "D" with 
 - quantize with tuplets
+- double-click on a settings fader should default it back to it's original position

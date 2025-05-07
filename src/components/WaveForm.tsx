@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
 import { useAudioContext } from "@/app/contexts/AudioContext";
 
@@ -7,65 +7,113 @@ interface WaveformProps {
 }
 
 const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
-  const waveformRef = useRef<HTMLDivElement>(null); // Reference for the waveform container
-  const wavesurferRef = useRef<WaveSurfer | null>(null); // Reference for WaveSurfer instance
-  const { waveformIsPlaying, setWaveformIsPlaying } = useAudioContext();
+  const containerRef = useRef<HTMLDivElement>(null); // Reference for the waveform container
+  const waveSurferRef = useRef<WaveSurfer | null>(null); // Reference for WaveSurfer instance
+  const { waveformIsPlaying } = useAudioContext();
+  const [zoom, setZoom] = useState<number>(100);
+
+  const MIN_ZOOM = 20;
+  const MAX_ZOOM = 1000;
 
   useEffect(() => {
-    // if (!wavesurferRef.current) return;
-
     // Cleanup previous wavesurfer if it exists and the audioUrl is changing
-    if (wavesurferRef.current) {
-      wavesurferRef.current.destroy();
+    if (waveSurferRef.current) {
+      waveSurferRef.current.destroy();
     }
 
     // Initialize a new WaveSurfer instance
-    if (waveformRef.current) {
+    if (containerRef.current) {
       const wavesurfer = WaveSurfer.create({
-        container: waveformRef.current,
-        waveColor: "violet",
-        progressColor: "purple",
+        container: containerRef.current,
+        waveColor: "blue",
+        progressColor: "red",
         height: 100,
-        barWidth: 3,
+        barWidth: 0,
         backend: "WebAudio",
         normalize: true,
+        dragToSeek: true,
       });
 
-      wavesurferRef.current = wavesurfer;
+      waveSurferRef.current = wavesurfer;
 
       // Load the new audio
       wavesurfer.load(audioUrl);
-
-      // Event listeners for play/pause toggling
-      wavesurfer.on("play", () => setWaveformIsPlaying(true));
-      wavesurfer.on("pause", () => setWaveformIsPlaying(false));
     }
 
     // Cleanup function to destroy the instance when the component unmounts or audioUrl changes
     return () => {
-      if (wavesurferRef.current) {
-        wavesurferRef.current.destroy();
+      if (waveSurferRef.current) {
+        waveSurferRef.current.destroy();
       }
     };
-  }, [audioUrl, setWaveformIsPlaying]); // This effect runs whenever the audioUrl changes
+  }, [audioUrl]); // This effect runs whenever the audioUrl changes
 
+  // Animate the audio playback but set volume to zero so as not to double the audio output.
   useEffect(() => {
-    if (wavesurferRef.current) {
-      if (waveformIsPlaying && !wavesurferRef.current.isPlaying()) {
-        wavesurferRef.current.play();
-      } else if (!waveformIsPlaying && wavesurferRef.current.isPlaying()) {
-        wavesurferRef.current.pause();
-        wavesurferRef.current.seekTo(0);
+    if (waveSurferRef.current) {
+      if (waveformIsPlaying && !waveSurferRef.current.isPlaying()) {
+        waveSurferRef.current.setVolume(0);
+        waveSurferRef.current.play();
+      } else if (!waveformIsPlaying && waveSurferRef.current.isPlaying()) {
+        waveSurferRef.current.pause();
+        waveSurferRef.current.seekTo(0);
       }
     }
   }, [waveformIsPlaying]);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    let lastDistance = 0;
+
+    const getTouchDistance = (e: TouchEvent) => {
+      const [touch1, touch2] = [e.touches[0], e.touches[1]];
+      const dx = touch1.clientX - touch2.clientX;
+      return Math.abs(dx);
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        lastDistance = getTouchDistance(e);
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault(); // Prevent page from scrolling
+        const newDistance = getTouchDistance(e);
+        const delta = newDistance - lastDistance;
+
+        // Use delta directly for zoom adjustment
+        let newZoom = zoom + delta * 2; // Adjust the multiplier as needed
+        newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
+
+        setZoom(newZoom);
+        waveSurferRef.current?.zoom(newZoom);
+        lastDistance = newDistance; // Update for next move
+      }
+    };
+
+    const onTouchEnd = () => {
+      lastDistance = 0;
+    };
+
+    // Use non-passive so preventDefault works
+    container?.addEventListener("touchstart", onTouchStart);
+    container?.addEventListener("touchmove", onTouchMove, { passive: false });
+    container?.addEventListener("touchend", onTouchEnd);
+
+    return () => {
+      container?.removeEventListener("touchstart", onTouchStart);
+      container?.removeEventListener("touchmove", onTouchMove);
+      container?.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [zoom]);
+
   return (
-    <div>
-      <div ref={waveformRef}></div>{" "}
-      {/* This is where the waveform will be rendered */}
-      <button>{waveformIsPlaying ? "Pause" : "Play"}</button>
-    </div>
+    <div
+      ref={containerRef}
+      className="cursor-pointer border border-gray-400 bg-white mx-10 shadow-inner shadow-slate-700"
+    ></div>
   );
 };
 

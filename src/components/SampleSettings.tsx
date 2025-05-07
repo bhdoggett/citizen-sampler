@@ -5,7 +5,7 @@ import type { SampleSettings } from "@/types/SampleTypes";
 import useMutesAndSolos from "@/app/hooks/useMutesAndSolos";
 import ChooseSample from "./ChooseSample";
 import notes from "@/lib/notes";
-import Waveform from "./WaveForm";
+import Waveform from "./Waveform";
 
 const SampleSettings = () => {
   const {

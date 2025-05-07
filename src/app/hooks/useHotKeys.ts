@@ -23,7 +23,7 @@ const useHotKeys = () => {
           handlePlay();
         }
       }
-      if (e.key === "r" && e.metaKey) {
+      if (e.ctrlKey && e.key.toLowerCase() === "r") {
         e.preventDefault();
         handleRecord();
       }

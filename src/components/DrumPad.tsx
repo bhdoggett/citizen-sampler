@@ -3,6 +3,7 @@ import { useRef, useEffect, useState } from "react";
 import { useAudioContext } from "@/app/contexts/AudioContext";
 import * as Tone from "tone";
 import quantize from "@/app/functions/quantize";
+import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 
 type DrumPadProps = {
   id: string;
@@ -175,7 +176,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   return (
     <div
-      className={`${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"} rounded-sm`}
+      className={`flex m-auto  rounded-sm ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
       onFocus={handleFocus}
     >
       <button
@@ -184,9 +185,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onMouseUp={handleReleasePad}
         onMouseLeave={handleReleasePad}
         onTouchEnd={handleReleasePad}
-        className={`flex mx-auto select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800  focus:border-double w-32 h-32 shadow-md shadow-slate-700  `}
+        className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800  focus:border-double w-32 h-32 shadow-md shadow-slate-700  `}
       >
-        {id}
+        <p className="flex top-1 left-0 text-xs">{id}</p>
+        <AudioSnippetVisualizer id={id} />
       </button>
     </div>
   );

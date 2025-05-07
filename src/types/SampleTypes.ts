@@ -22,6 +22,8 @@ export type SampleSettings = {
   mute: boolean;
   solo: boolean;
   reverse: boolean;
+  start: number;
+  end: number | null;
   volume: number;
   pan: number;
   baseNote: Frequency;
