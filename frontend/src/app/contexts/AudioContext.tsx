@@ -13,7 +13,7 @@ import {
   SampleSettings,
   SamplerWithFX,
 } from "../../types/SampleTypes";
-import { getCollectionArray } from "@/lib/collections";
+import { getCollectionArray } from "../../lib/collections";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
 

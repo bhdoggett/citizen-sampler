@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useAudioContext } from "@/app/contexts/AudioContext";
+import React, { useState, useEffect } from "react";
+import { useAudioContext } from "../app/contexts/AudioContext";
 import DrumPad from "./DrumPad";
 
 const DrumMachine = () => {

@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
-import { useAudioContext } from "@/app/contexts/AudioContext";
+import { useAudioContext } from "../app/contexts/AudioContext";
 
 interface WaveformProps {
   audioUrl: string; // URL of the audio file to load
