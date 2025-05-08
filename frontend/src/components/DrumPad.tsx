@@ -114,7 +114,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   }, [selectedSampleId, id]);
 
   const handlePressPad = () => {
-    sampler.triggerAttack("C4");
+    const sampleStart = allSampleData[selectedSampleId].settings.start;
+    sampler.triggerAttack("C4", sampleStart);
     setWaveformIsPlaying(true);
     setSelectedSampleId(id);
     setIsSelected(true);
@@ -141,15 +142,24 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     )
       return;
 
-    const releaseTime = Tone.getTransport().seconds;
+    const padReleasetime = Tone.getTransport().seconds;
+    const sampleEnd = allSampleData[selectedSampleId].settings.end;
+
+    const actualReleaseTime = sampleEnd
+      ? padReleasetime < sampleEnd
+        ? padReleasetime
+        : sampleEnd
+      : padReleasetime;
+
     const startTimeInSeconds = Tone.Ticks(currentEvent.startTime).toSeconds();
 
     currentEvent.duration =
-      releaseTime > startTimeInSeconds
-        ? releaseTime - startTimeInSeconds
+      actualReleaseTime > startTimeInSeconds
+        ? actualReleaseTime - startTimeInSeconds
         : Tone.Time(Tone.getTransport().loopEnd).toSeconds() -
           startTimeInSeconds +
-          releaseTime;
+          actualReleaseTime;
+
     console.log("currentEvent.duration", currentEvent.duration);
     sampleDataRef.current.events.push({ ...currentEvent });
     setAllSampleData((prev) => ({ ...prev, [id]: sampleDataRef.current }));

@@ -51,6 +51,7 @@ export type SamplerWithFX = {
   id: string;
   sampler: Tone.Sampler;
   gain: Tone.Gain;
+  env: Tone.Envelope;
   pitch: Tone.PitchShift;
   panVol: Tone.PanVol;
   highpass: Tone.Filter;
