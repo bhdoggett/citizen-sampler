@@ -27,95 +27,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
 
-  // Update this component's sampleDataRef when allSampleData state changes
-  useEffect(() => {
-    sampleDataRef.current = allSampleData[id];
-  }, [allSampleData, id]);
-
-  // Schedule playback of sampleData
-  useEffect(() => {
-    const sampleData = allSampleData[id];
-
-    if (!loopIsPlaying || allSampleData[id].events.length === 0) return;
-
-    const events = sampleData.events.map((event) => {
-      if (!event.startTime) return;
-      const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
-      const eventTime = sampleData.settings.quantize
-        ? quantize(startTimeInSeconds, sampleData.settings.quantVal)
-        : startTimeInSeconds;
-      // console.log(`event at index: ${idx}`, event);
-      return [
-        eventTime,
-        {
-          startTime: eventTime,
-          duration: event.duration,
-          note: event.note,
-          // velocity: event.velocity,
-        },
-      ];
-    });
-
-    const part = new Tone.Part((time, event) => {
-      if (
-        typeof event === "object" &&
-        event !== null &&
-        "duration" in event &&
-        event.duration !== null
-      ) {
-        // const pitchShift = allSampleData[id].settings.pitchShift;
-        // const note = Tone.Frequency(event.note).transpose(pitchShift).toNote();
-        sampler.triggerAttackRelease(event.note, event.duration, time);
-        setSampleIsPlaying(true);
-        if (id === selectedSampleId) {
-          setWaveformIsPlaying(true);
-        }
-
-        setTimeout(() => {
-          setSampleIsPlaying(false);
-          if (id === selectedSampleId) {
-            setWaveformIsPlaying(false);
-          }
-        }, event.duration * 1000);
-        console.log(event);
-      }
-    }, events);
-
-    part.start(0);
-
-    const disposePart = () => {
-      if (part) {
-        try {
-          if (part.state === "started") {
-            part.stop();
-          }
-          part.dispose();
-        } catch (error) {
-          console.warn("Error disposing part:", error);
-        }
-      }
-    };
-
-    return () => {
-      disposePart();
-    };
-  }, [
-    loopIsPlaying,
-    sampler,
-    allSampleData,
-    id,
-    selectedSampleId,
-    setWaveformIsPlaying,
-  ]);
-
-  // Sync isSelected state with selectedSampleId
-  useEffect(() => {
-    setIsSelected(selectedSampleId === id);
-  }, [selectedSampleId, id]);
-
   const handlePressPad = () => {
-    const sampleStart = allSampleData[selectedSampleId].settings.start;
-    sampler.triggerAttack("C4", sampleStart);
+    // const sampleStart = allSampleData[selectedSampleId].settings.start;
+    sampler.triggerAttack(
+      "C4",
+      Tone.now(),
+      sampleDataRef.current.settings.start
+    );
     setWaveformIsPlaying(true);
     setSelectedSampleId(id);
     setIsSelected(true);
@@ -183,6 +101,90 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       ? "brightness-75 saturate-150 transition-all duration-100"
       : "brightness-100 saturate-100 transition-all duration-300";
   };
+
+  // Update this component's sampleDataRef when allSampleData state changes
+  useEffect(() => {
+    sampleDataRef.current = allSampleData[id];
+  }, [allSampleData, id]);
+
+  // Schedule playback of sampleData
+  useEffect(() => {
+    const sampleData = allSampleData[id];
+
+    if (!loopIsPlaying || allSampleData[id].events.length === 0) return;
+
+    const events = sampleData.events.map((event) => {
+      if (!event.startTime) return;
+      const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
+      const eventTime = sampleData.settings.quantize
+        ? quantize(startTimeInSeconds, sampleData.settings.quantVal)
+        : startTimeInSeconds;
+      // console.log(`event at index: ${idx}`, event);
+      return [
+        eventTime,
+        {
+          startTime: eventTime,
+          duration: event.duration,
+          note: event.note,
+          // velocity: event.velocity,
+        },
+      ];
+    });
+
+    const part = new Tone.Part((time, event) => {
+      if (
+        typeof event === "object" &&
+        event !== null &&
+        "duration" in event &&
+        event.duration !== null
+      ) {
+        sampler.triggerAttackRelease(event.note, event.duration, time);
+        setSampleIsPlaying(true);
+        if (id === selectedSampleId) {
+          setWaveformIsPlaying(true);
+        }
+
+        setTimeout(() => {
+          setSampleIsPlaying(false);
+          if (id === selectedSampleId) {
+            setWaveformIsPlaying(false);
+          }
+        }, event.duration * 1000);
+        console.log(event);
+      }
+    }, events);
+
+    part.start(0);
+
+    const disposePart = () => {
+      if (part) {
+        try {
+          if (part.state === "started") {
+            part.stop();
+          }
+          part.dispose();
+        } catch (error) {
+          console.warn("Error disposing part:", error);
+        }
+      }
+    };
+
+    return () => {
+      disposePart();
+    };
+  }, [
+    loopIsPlaying,
+    sampler,
+    allSampleData,
+    id,
+    selectedSampleId,
+    setWaveformIsPlaying,
+  ]);
+
+  // Sync isSelected state with selectedSampleId
+  useEffect(() => {
+    setIsSelected(selectedSampleId === id);
+  }, [selectedSampleId, id]);
 
   return (
     <div

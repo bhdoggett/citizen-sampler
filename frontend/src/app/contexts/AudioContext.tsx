@@ -13,6 +13,10 @@ import {
   SampleSettings,
   SamplerWithFX,
 } from "../../types/SampleTypes";
+import {
+  CustomSampler,
+  // CustomSamplerType,
+} from "../../lib/audio/CustomSampler";
 import { getCollectionArray } from "../../lib/collections";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
@@ -207,7 +211,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       const panVol = new Tone.PanVol(0, 0);
       const highpass = new Tone.Filter(0, "highpass");
       const lowpass = new Tone.Filter(20000, "lowpass");
-      const sampler = new Tone.Sampler({
+      const sampler = new CustomSampler({
         urls: { C4: sampleUrl },
         onload: () => {
           // Connect the FX chain

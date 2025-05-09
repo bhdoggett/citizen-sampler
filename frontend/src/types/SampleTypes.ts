@@ -1,5 +1,4 @@
 import * as Tone from "tone";
-
 import {
   //   AudioRange,
   //   Cents,
@@ -8,6 +7,8 @@ import {
   //   NormalRange,
   //   Time,
 } from "tone/build/esm/core/type/Units";
+
+import { CustomSampler } from "@/lib/audio/CustomSampler";
 
 export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
 
@@ -49,7 +50,7 @@ export type SampleType = {
 
 export type SamplerWithFX = {
   id: string;
-  sampler: Tone.Sampler;
+  sampler: CustomSampler;
   gain: Tone.Gain;
   env: Tone.Envelope;
   pitch: Tone.PitchShift;

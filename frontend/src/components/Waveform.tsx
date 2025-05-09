@@ -24,21 +24,21 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       waveSurferRef.current.destroy();
     }
 
+    let isMounted = true;
+
     if (!containerRef.current) return;
 
     const regionsPlugin = RegionsPlugin.create();
     const wavesurfer = WaveSurfer.create({
       container: containerRef.current,
       waveColor: "blue",
+      interact: false,
       height: 100,
       barWidth: NaN,
       backend: "WebAudio",
       normalize: true,
-      dragToSeek: false,
       plugins: [regionsPlugin],
     });
-
-    waveSurferRef.current = wavesurfer;
 
     wavesurfer.load(audioUrl);
 
@@ -46,6 +46,8 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     wavesurfer.on("ready", () => {
       const regionStart = settings.start ?? 0;
       const regionEnd = settings.end ?? wavesurfer.getDuration();
+
+      waveSurferRef.current = wavesurfer;
 
       // Clear any preexisting region
       regionsPlugin.clearRegions();

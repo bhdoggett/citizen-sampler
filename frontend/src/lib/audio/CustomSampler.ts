@@ -5,7 +5,7 @@ import {
   intervalToFrequencyRatio,
 } from "tone/build/esm/core/type/Conversions.js";
 import { FrequencyClass } from "tone/build/esm/core/type/Frequency.js";
-import {
+import type {
   Frequency,
   Interval,
   MidiNote,
@@ -55,7 +55,7 @@ export interface CustomSamplerOptions extends InstrumentOptions {
  * For sample or buffer playback where repitching is not necessary,
  * use {@link Player}.
  * @example
- * const sampler = new Tone.Sampler({
+ * const sampler = new CustomSampler({
  * 	urls: {
  * 		A1: "A1.mp3",
  * 		A2: "A2.mp3",
@@ -67,6 +67,7 @@ export interface CustomSamplerOptions extends InstrumentOptions {
  * }).toDestination();
  * @category Instrument
  */
+
 export class CustomSampler extends Instrument<CustomSamplerOptions> {
   readonly name: string = "CustomSampler";
 
@@ -85,7 +86,6 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
    * @min 0
    * @max 1
    */
-
   @timeRange(0)
   attack: Time;
 
@@ -94,7 +94,6 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
    * @min 0
    * @max 1
    */
-
   @timeRange(0)
   release: Time;
 
@@ -130,7 +129,8 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
     );
     super(options);
 
-    const urlMap = {};
+    const urlMap: { [midi: number]: string | ToneAudioBuffer | AudioBuffer } =
+      {};
     Object.keys(options.urls).forEach((note) => {
       const noteNumber = parseInt(note, 10);
       assert(
@@ -203,6 +203,7 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
   triggerAttack(
     notes: Frequency | Frequency[],
     time?: Time,
+    offset?: Time,
     velocity: NormalRange = 1
   ): this {
     this.log("triggerAttack", notes, time, velocity);
@@ -229,7 +230,7 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
         fadeOut: this.release,
         playbackRate,
       }).connect(this.output);
-      source.start(time, 0, buffer.duration / playbackRate, velocity);
+      source.start(time, offset, buffer.duration / playbackRate, velocity);
       // add it to the active sources
       if (!isArray(this._activeSources.get(midi))) {
         this._activeSources.set(midi, []);

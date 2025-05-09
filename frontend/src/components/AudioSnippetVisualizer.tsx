@@ -12,7 +12,6 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
   const { allSampleData } = useAudioContext();
   const { url } = allSampleData[id];
   const { start, end, attack, release } = allSampleData[id].settings;
-
   const waveformRef = useRef<HTMLDivElement | null>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const [duration, setDuration] = useState(0);
@@ -20,7 +19,7 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
   useEffect(() => {
     if (!url || !waveformRef.current) return;
 
-    wavesurferRef.current?.destroy();
+    // wavesurferRef.current?.destroy();
 
     wavesurferRef.current = WaveSurfer.create({
       container: waveformRef.current,
