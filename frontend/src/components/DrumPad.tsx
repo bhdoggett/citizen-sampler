@@ -4,10 +4,11 @@ import { useAudioContext } from "@/app/contexts/AudioContext";
 import * as Tone from "tone";
 import quantize from "@/app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
+import { CustomSampler } from "@/lib/audio/CustomSampler";
 
 type DrumPadProps = {
   id: string;
-  sampler: Tone.Sampler;
+  sampler: CustomSampler;
 };
 
 const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
@@ -21,11 +22,105 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     samplersRef,
     setWaveformIsPlaying,
   } = useAudioContext();
-
   const sampleDataRef = useRef(allSampleData[id]);
   const { currentEvent } = samplersRef.current[id];
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
+  const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasReleasedRef = useRef(false);
+
+  const handlePressPad = () => {
+    const now = Tone.now();
+    const { start, end } = sampleDataRef.current.settings;
+
+    hasReleasedRef.current = false;
+    sampler.triggerAttack("C4", now, start);
+    setWaveformIsPlaying(true);
+    setSelectedSampleId(id);
+    setIsSelected(true);
+    setSampleIsPlaying(true);
+
+    if (end) {
+      const duration = end - start;
+      scheduledReleaseTimeoutRef.current = setTimeout(() => {
+        if (!hasReleasedRef.current) {
+          hasReleasedRef.current = true;
+          sampler.triggerRelease("C4", Tone.now());
+          setSampleIsPlaying(false);
+          setWaveformIsPlaying(false);
+        }
+      }, duration * 1000);
+    }
+
+    if (loopIsPlaying && isRecording) {
+      currentEvent.startTime = Tone.getTransport().ticks;
+      currentEvent.duration = 0;
+    }
+  };
+
+  const handleReleasePad = () => {
+    if (!sampleIsPlaying) return;
+
+    // Stop scheduled release
+    if (scheduledReleaseTimeoutRef.current) {
+      clearTimeout(scheduledReleaseTimeoutRef.current);
+      scheduledReleaseTimeoutRef.current = null;
+    }
+
+    hasReleasedRef.current = true;
+    setSampleIsPlaying(false);
+    setWaveformIsPlaying(false);
+    sampler.triggerRelease("C4", Tone.now());
+
+    if (
+      // !currentEvent ||
+      !currentEvent.startTime ||
+      !loopIsPlaying ||
+      !isRecording
+    )
+      return;
+
+    const padReleasetime = Tone.getTransport().seconds;
+    const sampleEnd = allSampleData[selectedSampleId].settings.end;
+
+    const actualReleaseTime = sampleEnd
+      ? padReleasetime < sampleEnd
+        ? padReleasetime
+        : sampleEnd
+      : padReleasetime;
+
+    const startTimeInSeconds = Tone.Ticks(currentEvent.startTime).toSeconds();
+
+    currentEvent.duration =
+      actualReleaseTime > startTimeInSeconds
+        ? actualReleaseTime - startTimeInSeconds
+        : Tone.Time(Tone.getTransport().loopEnd).toSeconds() -
+          startTimeInSeconds +
+          actualReleaseTime;
+
+    console.log("currentEvent.duration", currentEvent.duration);
+    sampleDataRef.current.events.push({ ...currentEvent });
+    setAllSampleData((prev) => ({ ...prev, [id]: sampleDataRef.current }));
+
+    if (loopIsPlaying && isRecording && currentEvent.duration === 0) {
+    }
+  };
+
+  const handleFocus = () => {
+    setSelectedSampleId(id);
+  };
+
+  const getPadColor = () => {
+    if (allSampleData[id].settings.mute) return "bg-red-400";
+    if (allSampleData[id].settings.solo) return "bg-yellow-200";
+    return "bg-slate-400";
+  };
+
+  const getActiveStyle = () => {
+    return sampleIsPlaying
+      ? "brightness-75 saturate-150 transition-all duration-100"
+      : "brightness-100 saturate-100 transition-all duration-300";
+  };
 
   // Update this component's sampleDataRef when allSampleData state changes
   useEffect(() => {
@@ -57,15 +152,19 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     });
 
     const part = new Tone.Part((time, event) => {
+      const { start, end } = sampleDataRef.current.settings;
       if (
         typeof event === "object" &&
         event !== null &&
         "duration" in event &&
         event.duration !== null
       ) {
-        // const pitchShift = allSampleData[id].settings.pitchShift;
-        // const note = Tone.Frequency(event.note).transpose(pitchShift).toNote();
-        sampler.triggerAttackRelease(event.note, event.duration, time);
+        const actualDuration = end
+          ? end - start < event.duration
+            ? end - start
+            : event.duration
+          : event.duration;
+        sampler.triggerAttackRelease(event.note, actualDuration, time, start);
         setSampleIsPlaying(true);
         if (id === selectedSampleId) {
           setWaveformIsPlaying(true);
@@ -112,67 +211,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   useEffect(() => {
     setIsSelected(selectedSampleId === id);
   }, [selectedSampleId, id]);
-
-  const handlePressPad = () => {
-    sampler.triggerAttack("C4");
-    setWaveformIsPlaying(true);
-    setSelectedSampleId(id);
-    setIsSelected(true);
-    setSampleIsPlaying(true);
-    console.log("allSampleData", allSampleData);
-    console.log("samplerRef", samplersRef.current);
-
-    if (loopIsPlaying && isRecording) {
-      currentEvent.startTime = Tone.getTransport().ticks;
-      currentEvent.duration = 0;
-    }
-  };
-
-  const handleReleasePad = () => {
-    setSampleIsPlaying(false);
-    setWaveformIsPlaying(false);
-    sampler.triggerRelease("C4");
-
-    if (
-      // !currentEvent ||
-      !currentEvent.startTime ||
-      !loopIsPlaying ||
-      !isRecording
-    )
-      return;
-
-    const releaseTime = Tone.getTransport().seconds;
-    const startTimeInSeconds = Tone.Ticks(currentEvent.startTime).toSeconds();
-
-    currentEvent.duration =
-      releaseTime > startTimeInSeconds
-        ? releaseTime - startTimeInSeconds
-        : Tone.Time(Tone.getTransport().loopEnd).toSeconds() -
-          startTimeInSeconds +
-          releaseTime;
-    console.log("currentEvent.duration", currentEvent.duration);
-    sampleDataRef.current.events.push({ ...currentEvent });
-    setAllSampleData((prev) => ({ ...prev, [id]: sampleDataRef.current }));
-
-    if (loopIsPlaying && isRecording && currentEvent.duration === 0) {
-    }
-  };
-
-  const handleFocus = () => {
-    setSelectedSampleId(id);
-  };
-
-  const getPadColor = () => {
-    if (allSampleData[id].settings.mute) return "bg-red-400";
-    if (allSampleData[id].settings.solo) return "bg-yellow-200";
-    return "bg-slate-400";
-  };
-
-  const getActiveStyle = () => {
-    return sampleIsPlaying
-      ? "brightness-75 saturate-150 transition-all duration-100"
-      : "brightness-100 saturate-100 transition-all duration-300";
-  };
 
   return (
     <div
