@@ -24,15 +24,15 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       waveSurferRef.current.destroy();
     }
 
-    let isMounted = true;
-
     if (!containerRef.current) return;
 
     const regionsPlugin = RegionsPlugin.create();
     const wavesurfer = WaveSurfer.create({
       container: containerRef.current,
       waveColor: "blue",
-      interact: false,
+      progressColor: "red",
+      cursorColor: "red",
+      interact: true,
       height: 100,
       barWidth: NaN,
       backend: "WebAudio",
@@ -94,14 +94,21 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     const ws = waveSurferRef.current;
     if (!ws) return;
 
-    if (waveformIsPlaying && !ws.isPlaying()) {
-      ws.setVolume(0);
-      ws.play();
-    } else if (!waveformIsPlaying && ws.isPlaying()) {
-      ws.pause();
-      ws.seekTo(0);
+    if (waveformIsPlaying) {
+      const { start = 0, end } = allSampleData[selectedSampleId].settings;
+
+      ws.setVolume(0); // mute so it doesn't interfere
+      // play only the region
+      if (end) {
+        ws.play(start, end);
+      } else ws.play(start);
+    } else {
+      if (ws.isPlaying()) {
+        ws.pause();
+        ws.seekTo(0);
+      }
     }
-  }, [waveformIsPlaying]);
+  }, [waveformIsPlaying, allSampleData, selectedSampleId]);
 
   return (
     <div

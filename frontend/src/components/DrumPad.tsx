@@ -22,21 +22,35 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     samplersRef,
     setWaveformIsPlaying,
   } = useAudioContext();
-
   const sampleDataRef = useRef(allSampleData[id]);
   const { currentEvent } = samplersRef.current[id];
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
+  const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasReleasedRef = useRef(false);
 
   const handlePressPad = () => {
-    const { start } = sampleDataRef.current.settings;
-    sampler.triggerAttack("C4", Tone.now(), start);
+    const now = Tone.now();
+    const { start, end } = sampleDataRef.current.settings;
+
+    hasReleasedRef.current = false;
+    sampler.triggerAttack("C4", now, start);
     setWaveformIsPlaying(true);
     setSelectedSampleId(id);
     setIsSelected(true);
     setSampleIsPlaying(true);
-    console.log("allSampleData", allSampleData);
-    console.log("samplerRef", samplersRef.current);
+
+    if (end) {
+      const duration = end - start;
+      scheduledReleaseTimeoutRef.current = setTimeout(() => {
+        if (!hasReleasedRef.current) {
+          hasReleasedRef.current = true;
+          sampler.triggerRelease("C4", Tone.now());
+          setSampleIsPlaying(false);
+          setWaveformIsPlaying(false);
+        }
+      }, duration * 1000);
+    }
 
     if (loopIsPlaying && isRecording) {
       currentEvent.startTime = Tone.getTransport().ticks;
@@ -45,6 +59,15 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   };
 
   const handleReleasePad = () => {
+    if (!sampleIsPlaying) return;
+
+    // Stop scheduled release
+    if (scheduledReleaseTimeoutRef.current) {
+      clearTimeout(scheduledReleaseTimeoutRef.current);
+      scheduledReleaseTimeoutRef.current = null;
+    }
+
+    hasReleasedRef.current = true;
     setSampleIsPlaying(false);
     setWaveformIsPlaying(false);
     sampler.triggerRelease("C4", Tone.now());
