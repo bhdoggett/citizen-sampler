@@ -4,10 +4,11 @@ import { useAudioContext } from "@/app/contexts/AudioContext";
 import * as Tone from "tone";
 import quantize from "@/app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
+import { CustomSampler } from "@/lib/audio/CustomSampler";
 
 type DrumPadProps = {
   id: string;
-  sampler: Tone.Sampler;
+  sampler: CustomSampler;
 };
 
 const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
@@ -28,12 +29,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
 
   const handlePressPad = () => {
-    // const sampleStart = allSampleData[selectedSampleId].settings.start;
-    sampler.triggerAttack(
-      "C4",
-      Tone.now(),
-      sampleDataRef.current.settings.start
-    );
+    const { start } = sampleDataRef.current.settings;
+    sampler.triggerAttack("C4", Tone.now(), start);
     setWaveformIsPlaying(true);
     setSelectedSampleId(id);
     setIsSelected(true);
@@ -50,7 +47,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const handleReleasePad = () => {
     setSampleIsPlaying(false);
     setWaveformIsPlaying(false);
-    sampler.triggerRelease("C4");
+    sampler.triggerRelease("C4", Tone.now());
 
     if (
       // !currentEvent ||
@@ -132,13 +129,19 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     });
 
     const part = new Tone.Part((time, event) => {
+      const { start, end } = sampleDataRef.current.settings;
       if (
         typeof event === "object" &&
         event !== null &&
         "duration" in event &&
         event.duration !== null
       ) {
-        sampler.triggerAttackRelease(event.note, event.duration, time);
+        const actualDuration = end
+          ? end - start < event.duration
+            ? end - start
+            : event.duration
+          : event.duration;
+        sampler.triggerAttackRelease(event.note, actualDuration, time, start);
         setSampleIsPlaying(true);
         if (id === selectedSampleId) {
           setWaveformIsPlaying(true);

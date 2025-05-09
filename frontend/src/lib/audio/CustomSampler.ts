@@ -206,7 +206,7 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
     offset?: Time,
     velocity: NormalRange = 1
   ): this {
-    this.log("triggerAttack", notes, time, velocity);
+    this.log("triggerAttack", notes, time, offset, velocity);
     if (!Array.isArray(notes)) {
       notes = [notes];
     }
@@ -312,10 +312,11 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
     notes: Frequency[] | Frequency,
     duration: Time | Time[],
     time?: Time,
+    offset?: Time,
     velocity: NormalRange = 1
   ): this {
     const computedTime = this.toSeconds(time);
-    this.triggerAttack(notes, computedTime, velocity);
+    this.triggerAttack(notes, computedTime, offset, velocity);
     if (isArray(duration)) {
       assert(isArray(notes), "notes must be an array when duration is array");
       (notes as Frequency[]).forEach((note, index) => {
