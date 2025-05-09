@@ -123,6 +123,7 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
   constructor() {
     const options = optionsFromArguments(
       CustomSampler.getDefaults(),
+      // eslint-disable-next-line prefer-rest-params
       arguments,
       ["urls", "onload", "baseUrl"],
       "urls"
