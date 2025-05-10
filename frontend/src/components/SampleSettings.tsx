@@ -98,14 +98,14 @@ const SampleSettings = () => {
 
     const samplerWithFX = samplersRef.current[selectedSampleId];
     if (samplerWithFX) {
-      const { env, pitch, panVol, highpass, lowpass } = samplerWithFX;
+      const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
       pitch.pitch = settings.pitch || 0;
       panVol.volume.value = settings.volume || 0;
       panVol.pan.value = settings.pan || 0;
       highpass.frequency.value = settings.highpass?.[0] || 0;
       lowpass.frequency.value = settings.lowpass?.[0] || 20000;
-      env.attack = settings.attack || 0;
-      env.release = settings.release || 0;
+      sampler.attack = settings.attack || 0;
+      sampler.release = settings.release || 0;
     }
   }, [samplersRef, selectedSampleId, settings]);
 

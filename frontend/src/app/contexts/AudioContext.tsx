@@ -203,10 +203,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   ): Promise<SamplerWithFX> => {
     return new Promise((resolve, reject) => {
       const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
-      const env = new Tone.Envelope({
-        attack: 0,
-        release: 0,
-      });
       const pitch = new Tone.PitchShift(0);
       const panVol = new Tone.PanVol(0, 0);
       const highpass = new Tone.Filter(0, "highpass");
@@ -216,7 +212,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         onload: () => {
           // Connect the FX chain
           sampler.connect(gain);
-
           gain.connect(pitch);
           pitch.connect(highpass);
           highpass.connect(lowpass);
@@ -232,7 +227,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
             sampler,
             pitch,
             gain,
-            env,
             panVol,
             highpass,
             lowpass,
