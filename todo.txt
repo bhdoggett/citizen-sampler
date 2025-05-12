@@ -5,6 +5,15 @@ BACKEND
 
 
 FRONTEND
+- Menu component 
+  Song title
+  Open Song
+  Save Song
+  Load from collection
+  Load to drum pads
+  About (explainers, hot keyts, effect)
+  Prefernces???
+  
 - master settings component
 - remove double click auto stuff
 - remove hard press auto interactions for mobile

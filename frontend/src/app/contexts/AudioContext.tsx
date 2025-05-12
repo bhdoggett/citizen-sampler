@@ -22,6 +22,8 @@ import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
 
 type AudioContextType = {
+  songTitle: string;
+  setSongTitle: React.Dispatch<React.SetStateAction<string>>;
   masterGainNode: React.RefObject<Tone.Gain>;
   setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
   metronomeActive: boolean;
@@ -70,6 +72,7 @@ type AudioContextType = {
 const AudioContextContext = createContext<AudioContextType | null>(null);
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
+  const [songTitle, setSongTitle] = useState<string>("New Song");
   const [allSampleData, setAllSampleData] = useState<
     Record<string, SampleType>
   >({});
@@ -535,6 +538,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   return (
     <AudioContextContext.Provider
       value={{
+        songTitle,
+        setSongTitle,
         masterGainNode,
         setMasterGainLevel,
         metronomeActive,

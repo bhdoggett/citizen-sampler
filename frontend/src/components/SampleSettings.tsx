@@ -155,15 +155,11 @@ const SampleSettings = () => {
   return (
     <>
       <div className="flex flex-col justify-center">
+        {sampleMenuOpen && (
+          <ChooseSample setSampleMenuOpen={setSampleMenuOpen} />
+        )}
         <Waveform audioUrl={allSampleData[selectedSampleId].url} />
         <div className="p-2 mx-auto mb-3">
-          {sampleMenuOpen && (
-            <div className="fixed z-10 mt-2 w-max rounded-sm shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-              <div className="p-1">
-                <ChooseSample setSampleMenuOpen={setSampleMenuOpen} />
-              </div>
-            </div>
-          )}
           <div className="flex gap-x-4 md:gap-x-6">
             <div className="flex flex-col">
               <label className="mb-2 flex justify-between">
