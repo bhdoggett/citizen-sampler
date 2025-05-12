@@ -3,18 +3,36 @@ import * as Tone from "tone";
 import { useAudioContext } from "../contexts/AudioContext";
 import quantize from "../functions/quantize";
 import toWav from "audiobuffer-to-wav";
-import { SampleEvent } from "@/types/SampleTypes";
 
 const useDownloadWavStems = () => {
   const { allSampleData, samplersRef, makeSampler } = useAudioContext();
-
   const allIds = Object.keys(samplersRef.current);
   const loopEnd = Tone.getTransport().loopEnd;
   const loopDuration = Tone.Time(loopEnd).toSeconds();
 
+  // Function to get Audio Buffer for a given sampler's loop recording
   const getAudioBuffer = async (id: string) => {
-    const { events, settings } = allSampleData[id];
+    const sampleData = allSampleData[id];
+    const { events, settings } = sampleData;
+
     if (events.length === 0) return null;
+
+    // Find max end time for this sample
+    let maxEndTime = 0;
+    for (const event of events) {
+      if (event.startTime !== null && event.duration !== null) {
+        const eventStart = Tone.Ticks(event.startTime).toSeconds();
+        const quantizedStart = settings.quantize
+          ? quantize(eventStart, settings.quantVal)
+          : eventStart;
+        const eventEnd = quantizedStart + event.duration;
+        if (eventEnd > maxEndTime) {
+          maxEndTime = eventEnd;
+        }
+      }
+    }
+
+    const renderDuration = Math.max(loopDuration, maxEndTime);
 
     const toneBuffer = await Tone.Offline(async ({ transport }) => {
       const offlineSamplerWithFx = await makeSampler(
@@ -23,48 +41,56 @@ const useDownloadWavStems = () => {
         true
       );
 
-      const createTonePartFromEvents = (events: SampleEvent[]) => {
-        const toneEvents = events
-          .filter((event) => event.startTime !== null)
-          .map((event) => {
-            const eventTime = settings.quantize
-              ? quantize(event.startTime as number, settings.quantVal)
-              : event.startTime;
-            return [
-              eventTime,
-              {
-                startTime: eventTime,
-                duration: event.duration,
-              },
-            ];
-          });
+      const { sampler } = offlineSamplerWithFx;
 
-        const part = new Tone.Part((time, event) => {
-          if (
-            typeof event !== "object" ||
-            event === null ||
-            !("duration" in event)
-          )
-            return;
+      const toneEvents = events
+        .filter((event) => event.startTime !== null)
+        .map((event) => {
+          if (!event.startTime) return;
+          const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
+          const eventTime = settings.quantize
+            ? quantize(startTimeInSeconds, settings.quantVal)
+            : startTimeInSeconds;
+          // console.log(`event at index: ${idx}`, event);
+          return [
+            eventTime,
+            {
+              startTime: eventTime,
+              duration: event.duration,
+              note: event.note,
+              // velocity: event.velocity,
+            },
+          ];
+        });
 
-          offlineSamplerWithFx.sampler.triggerAttackRelease(
-            "C4",
-            event.duration ?? 0,
-            time
-          );
-        }, toneEvents);
-        return part;
-      };
+      const part = new Tone.Part((time, event) => {
+        const { start, end } = settings;
+        if (
+          typeof event === "object" &&
+          event !== null &&
+          "duration" in event &&
+          event.duration !== null
+        ) {
+          const actualDuration = end
+            ? end - start < event.duration
+              ? end - start
+              : event.duration
+            : event.duration;
+          sampler.triggerAttackRelease(event.note, actualDuration, time, start);
 
-      const part = createTonePartFromEvents(events);
+          setTimeout(() => {}, event.duration * 1000);
+          console.log(event);
+        }
+      }, toneEvents);
 
       part.start(0);
       transport.start();
-    }, loopDuration);
+    }, renderDuration);
 
     return toneBuffer;
   };
 
+  // Translate audio buffer into a downloadable wave file
   const translateBufferToWavUrl = async (toneBuffer: Tone.ToneAudioBuffer) => {
     const wavData = toWav(toneBuffer);
     const blob = new Blob([wavData], { type: "audio/wav" });
@@ -72,6 +98,7 @@ const useDownloadWavStems = () => {
     return url;
   };
 
+  // Download a given sampler's Wav file
   const downloadWav = async (id: string) => {
     const toneBuffer = await getAudioBuffer(id);
     if (!toneBuffer) {
@@ -93,6 +120,7 @@ const useDownloadWavStems = () => {
     document.body.removeChild(link);
   };
 
+  // Download all wav files - grouped in one function for button click
   const downloadAllWavs = () => {
     allIds.forEach((id) => {
       downloadWav(id);

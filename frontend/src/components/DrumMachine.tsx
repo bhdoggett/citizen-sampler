@@ -48,9 +48,9 @@ const DrumMachine = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-4 gap-2 my-3">{renderDrumPads("loc")}</div>
+      <div className="grid grid-cols-4 gap-0 my-3">{renderDrumPads("loc")}</div>
       <hr />
-      <div className="grid grid-cols-4 gap-4 my-3">{renderDrumPads("kit")}</div>
+      <div className="grid grid-cols-4 gap-0 my-3">{renderDrumPads("kit")}</div>
     </div>
   );
 };

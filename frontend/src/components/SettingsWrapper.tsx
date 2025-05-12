@@ -19,10 +19,10 @@ const SettingsWrapper = () => {
         className={`relative flex flex-col items-center border-2 shadow-md shadow-slate-500 ${isRecording ? "border-red-600" : "border-black"}`}
       >
         <button
-          className={`absolute left-0 border shadow-inner shadow-slate-500 border-black px-1 ${solosExist ? "bg-yellow-200" : ""}`}
+          className={`absolute top-1 left-1 border shadow-inner shadow-slate-500 border-black px-1 ${solosExist ? "bg-yellow-200" : ""}`}
           onClick={clearSolos}
         >
-          Clear Solo
+          S
         </button>
         <div className="flex shadow-inner shadow-slate-500 border border-black overflow-hidden mx-auto">
           <button

@@ -20,9 +20,12 @@ export default function Home() {
   return (
     <div className="flex flex-col justify-center items-center my-5">
       <h1 className="text-6xl font-bold block">Citizen Sampler</h1>
-      <CollectionMenu />
-      <SettingsWrapper />
-      <DrumMachine />
+      <div className="w-full p-1 sm:w-[400px] md:w-[600px] xl:w-[700px]">
+        <CollectionMenu />
+        <SettingsWrapper />
+        <DrumMachine />
+      </div>
+
       <p className="text-sm">
         Inspired by and built on
         <Link

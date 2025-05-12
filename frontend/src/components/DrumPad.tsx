@@ -20,7 +20,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setSelectedSampleId,
     selectedSampleId,
     samplersRef,
-    setWaveformIsPlaying,
   } = useAudioContext();
   const sampleDataRef = useRef(allSampleData[id]);
   const { currentEvent } = samplersRef.current[id];
@@ -35,7 +34,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
     hasReleasedRef.current = false;
     sampler.triggerAttack("C4", now, start);
-    setWaveformIsPlaying(true);
     setSelectedSampleId(id);
     setIsSelected(true);
     setSampleIsPlaying(true);
@@ -47,7 +45,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
           hasReleasedRef.current = true;
           sampler.triggerRelease("C4", Tone.now());
           setSampleIsPlaying(false);
-          setWaveformIsPlaying(false);
         }
       }, duration * 1000);
     }
@@ -69,7 +66,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
     hasReleasedRef.current = true;
     setSampleIsPlaying(false);
-    setWaveformIsPlaying(false);
     sampler.triggerRelease("C4", Tone.now());
 
     if (
@@ -127,7 +123,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     sampleDataRef.current = allSampleData[id];
   }, [allSampleData, id]);
 
-  // Schedule playback of sampleData
+  // Schedule playback of sampler play events
   useEffect(() => {
     const sampleData = allSampleData[id];
 
@@ -139,7 +135,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       const eventTime = sampleData.settings.quantize
         ? quantize(startTimeInSeconds, sampleData.settings.quantVal)
         : startTimeInSeconds;
-      // console.log(`event at index: ${idx}`, event);
       return [
         eventTime,
         {
@@ -166,15 +161,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
           : event.duration;
         sampler.triggerAttackRelease(event.note, actualDuration, time, start);
         setSampleIsPlaying(true);
-        if (id === selectedSampleId) {
-          setWaveformIsPlaying(true);
-        }
 
         setTimeout(() => {
           setSampleIsPlaying(false);
-          if (id === selectedSampleId) {
-            setWaveformIsPlaying(false);
-          }
         }, event.duration * 1000);
         console.log(event);
       }
@@ -198,14 +187,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     return () => {
       disposePart();
     };
-  }, [
-    loopIsPlaying,
-    sampler,
-    allSampleData,
-    id,
-    selectedSampleId,
-    setWaveformIsPlaying,
-  ]);
+  }, [loopIsPlaying, sampler, allSampleData, id, selectedSampleId]);
 
   // Sync isSelected state with selectedSampleId
   useEffect(() => {
@@ -214,7 +196,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   return (
     <div
-      className={`flex m-auto  rounded-sm ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
+      className={`flex m-auto rounded-sm w-full aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
       onFocus={handleFocus}
     >
       <button
@@ -223,7 +205,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onMouseUp={handleReleasePad}
         onMouseLeave={handleReleasePad}
         onTouchEnd={handleReleasePad}
-        className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800  focus:border-double w-32 h-32 shadow-md shadow-slate-700  `}
+        className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800  focus:border-double w-full aspect-square shadow-md shadow-slate-700  `}
       >
         <p className="flex top-1 left-0 text-xs">{id}</p>
         <AudioSnippetVisualizer id={id} />
