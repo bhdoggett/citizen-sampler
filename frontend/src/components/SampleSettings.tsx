@@ -163,7 +163,7 @@ const SampleSettings = () => {
           <div className="flex gap-x-4 md:gap-x-6">
             <div className="flex flex-col">
               <label className="mb-2 flex justify-between">
-                <span>Volume</span>
+                <span>Vol</span>
                 <span>{settings.volume?.toFixed(1) || "0.0"} dB</span>
               </label>
               <input
@@ -195,7 +195,7 @@ const SampleSettings = () => {
             </div>
             <div className="flex flex-col">
               <label className="mb-2 flex justify-between">
-                <span>Attack</span>
+                <span>Att</span>
                 <span>{settings.attack?.toFixed(2) || "0.00"} s</span>
               </label>
               <input
@@ -211,7 +211,7 @@ const SampleSettings = () => {
               />
 
               <label className="mt-3 mb-2 flex justify-between">
-                <span>Release</span>
+                <span>Rel</span>
                 <span>{settings.release?.toFixed(2) || "0.00"} s</span>
               </label>
               <input
@@ -228,7 +228,7 @@ const SampleSettings = () => {
             </div>
             <div className="flex flex-col">
               <label className="mb-2 flex justify-between">
-                <span>Highpass</span>
+                <span>HP</span>
                 <span>{settings.highpass?.[0].toFixed(0) || "0"} Hz</span>
               </label>
               <input
@@ -252,7 +252,7 @@ const SampleSettings = () => {
                 htmlFor="lowpass"
                 className="mt-3 mb-2 flex justify-between"
               >
-                <span>Lowpass</span>
+                <span>LP</span>
                 <span>{settings.lowpass?.[0].toFixed(0) || "20000"} Hz</span>
               </label>
               <input
@@ -361,7 +361,7 @@ const SampleSettings = () => {
 
           <button
             onClick={handleClearSampleEvents}
-            className="border border-black px-1 mt-2 bg-slate-400 shadow-inner shadow-slate-800 flex mx-auto"
+            className="border border-black px-1 mt-2 bg-slate-400 hover:bg-slate-500 shadow-inner shadow-slate-800 flex mx-auto"
           >
             Clear
           </button>
