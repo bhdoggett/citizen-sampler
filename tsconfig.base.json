@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2020", // Shared target for both backend and frontend
+    "strict": true, // Enable strict mode
+    "esModuleInterop": true, // Ensures compatibility with non-ES module libraries
+    "experimentalDecorators": true, // Allow decorators like @timeRange
+    "emitDecoratorMetadata": true, // Enable decorator metadata emission
+    "skipLibCheck": true, // Skip type checking of declaration files
+    "moduleResolution": "node", // Resolve modules as Node.js does
+    "baseUrl": ".", // Base directory for module resolution
+    "paths": {
+      "@shared/*": ["shared/*"] // Path for shared types
+    }
+  }
+}

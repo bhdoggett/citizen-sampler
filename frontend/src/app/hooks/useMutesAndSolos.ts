@@ -1,6 +1,6 @@
 "useClient";
 import { useAudioContext } from "../contexts/AudioContext";
-import type { SampleType } from "../../types/audioTypes";
+import type { SampleType } from "../../../../shared/types/audioTypes";
 
 const useMutesAndSolos = () => {
   const { allSampleData, setAllSampleData, solosExist } = useAudioContext();

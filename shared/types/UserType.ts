@@ -1,6 +1,6 @@
 import type { Song } from "./audioTypes";
 
-export type User = {
+export type UserType = {
   id: string;
   email: string;
   name: string;

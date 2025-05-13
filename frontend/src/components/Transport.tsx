@@ -1,8 +1,8 @@
 "use client";
 import { useEffect } from "react";
 import { Circle, Play, Square, Music3 } from "lucide-react";
-import { useAudioContext } from "@/app/contexts/AudioContext";
-import useTransportControls from "@/app/hooks/useTransportControls";
+import { useAudioContext } from "../app/contexts/AudioContext";
+import useTransportControls from "../app/hooks/useTransportControls";
 import * as Tone from "tone";
 
 const Transport = () => {

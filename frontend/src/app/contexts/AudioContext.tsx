@@ -11,12 +11,9 @@ import * as Tone from "tone";
 import {
   SampleType,
   SampleSettings,
-  SamplerWithFX,
-} from "../../types/audioTypes";
-import {
-  CustomSampler,
-  // CustomSamplerType,
-} from "../../lib/audio/CustomSampler";
+} from "../../../../shared/types/audioTypes";
+import { SamplerWithFX } from "frontend/src/types/SamplerWithFX";
+import { CustomSampler } from "frontend/src/types/CustomSampler";
 import { getCollectionArray } from "../../lib/collections";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";

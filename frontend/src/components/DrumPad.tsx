@@ -1,10 +1,10 @@
 "use client";
 import { useRef, useEffect, useState } from "react";
-import { useAudioContext } from "@/app/contexts/AudioContext";
+import { useAudioContext } from "../app/contexts/AudioContext";
 import * as Tone from "tone";
-import quantize from "@/app/functions/quantize";
+import quantize from "../app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
-import { CustomSampler } from "@/lib/audio/CustomSampler";
+import { CustomSampler } from "../lib/audio/CustomSampler";
 
 type DrumPadProps = {
   id: string;

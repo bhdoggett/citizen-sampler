@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import useHotKeys from "./hooks/useHotKeys";
-import MainMenu from "@/components/MainMenu";
+import MainMenu from "../components/MainMenu";
 
 const DrumMachine = dynamic(() => import("../components/DrumMachine"), {
   ssr: false,

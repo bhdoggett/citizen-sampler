@@ -1,10 +1,10 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
-import type { User } from "../../types/User";
+import type { UserType } from "../../../../shared/types/UserType";
 
 type AuthContextType = {
-  user: User | null;
+  user: UserType | null;
   token: string | null;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
@@ -13,7 +13,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: React.PropsWithChildren) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   const login = async (username: string, password: string) => {

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useAudioContext } from "@/app/contexts/AudioContext";
+import { useAudioContext } from "../app/contexts/AudioContext";
 
 const Menu = () => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
