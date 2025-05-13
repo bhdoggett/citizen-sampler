@@ -1,4 +1,4 @@
-import * as Tone from "tone";
+import * as Tone from "../../frontend/node_modules/tone";
 import {
   //   AudioRange,
   //   Cents,
@@ -6,9 +6,9 @@ import {
   Frequency,
   //   NormalRange,
   //   Time,
-} from "tone/build/esm/core/type/Units";
+} from "../../frontend/node_modules/tone/build/esm/core/type/Units";
 
-import { CustomSampler } from "@/lib/audio/CustomSampler";
+import { CustomSampler } from "../../frontend/src/lib/audio/CustomSampler";
 
 export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
 
@@ -48,14 +48,16 @@ export type SampleType = {
   attribution?: string;
 };
 
-export type SamplerWithFX = {
+export type Loop = {
+  loop: string;
+  bpm: number;
+  beats: number;
+  samples: SampleType[];
+};
+
+export type Song = {
   id: string;
-  sampler: CustomSampler;
-  gain: Tone.Gain;
-  env: Tone.Envelope;
-  pitch: Tone.PitchShift;
-  panVol: Tone.PanVol;
-  highpass: Tone.Filter;
-  lowpass: Tone.Filter;
-  currentEvent: SampleEvent;
+  title: string;
+  bpm: number;
+  loops: Loop[];
 };

@@ -11,17 +11,16 @@ import * as Tone from "tone";
 import {
   SampleType,
   SampleSettings,
-  SamplerWithFX,
-} from "../../types/SampleTypes";
-import {
-  CustomSampler,
-  // CustomSamplerType,
-} from "../../lib/audio/CustomSampler";
+} from "../../../../shared/types/audioTypes";
+import { SamplerWithFX } from "frontend/src/types/SamplerWithFX";
+import { CustomSampler } from "frontend/src/types/CustomSampler";
 import { getCollectionArray } from "../../lib/collections";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
 
 type AudioContextType = {
+  songTitle: string;
+  setSongTitle: React.Dispatch<React.SetStateAction<string>>;
   masterGainNode: React.RefObject<Tone.Gain>;
   setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
   metronomeActive: boolean;
@@ -65,13 +64,12 @@ type AudioContextType = {
   selectedSampleId: string;
   setSelectedSampleId: React.Dispatch<React.SetStateAction<string>>;
   solosExist: boolean;
-  waveformIsPlaying: boolean;
-  setWaveformIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const AudioContextContext = createContext<AudioContextType | null>(null);
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
+  const [songTitle, setSongTitle] = useState<string>("New Song");
   const [allSampleData, setAllSampleData] = useState<
     Record<string, SampleType>
   >({});
@@ -192,7 +190,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   );
   const [selectedSampleId, setSelectedSampleId] = useState<string>("loc-1");
   const [solosExist, setSolosExist] = useState<boolean>(false);
-  const [waveformIsPlaying, setWaveformIsPlaying] = useState<boolean>(false);
 
   // Function to create a sampler with FX chain.
   // If using with Tone.Offline to download WAV stems, the third argument should be "true".
@@ -203,10 +200,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   ): Promise<SamplerWithFX> => {
     return new Promise((resolve, reject) => {
       const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
-      const env = new Tone.Envelope({
-        attack: 0,
-        release: 0,
-      });
       const pitch = new Tone.PitchShift(0);
       const panVol = new Tone.PanVol(0, 0);
       const highpass = new Tone.Filter(0, "highpass");
@@ -216,7 +209,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         onload: () => {
           // Connect the FX chain
           sampler.connect(gain);
-
           gain.connect(pitch);
           pitch.connect(highpass);
           highpass.connect(lowpass);
@@ -232,7 +224,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
             sampler,
             pitch,
             gain,
-            env,
             panVol,
             highpass,
             lowpass,
@@ -544,6 +535,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   return (
     <AudioContextContext.Provider
       value={{
+        songTitle,
+        setSongTitle,
         masterGainNode,
         setMasterGainLevel,
         metronomeActive,
@@ -574,16 +567,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setSelectedSampleId,
         samplersRef,
         solosExist,
-        waveformIsPlaying,
-        setWaveformIsPlaying,
       }}
     >
       {children}
     </AudioContextContext.Provider>
   );
 };
-
-// export const useAudioContext = () => useContext(AudioContextContext);
 
 export const useAudioContext = () => {
   const context = useContext(AudioContextContext);

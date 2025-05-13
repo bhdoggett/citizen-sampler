@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import useHotKeys from "./hooks/useHotKeys";
+import MainMenu from "../components/MainMenu";
 
 const DrumMachine = dynamic(() => import("../components/DrumMachine"), {
   ssr: false,
@@ -19,10 +20,16 @@ export default function Home() {
   useHotKeys();
   return (
     <div className="flex flex-col justify-center items-center my-5">
-      <h1 className="text-6xl font-bold block">Citizen Sampler</h1>
-      <CollectionMenu />
-      <SettingsWrapper />
-      <DrumMachine />
+      <div className="w-full p-1 sm:w-[400px] md:w-[600px] xl:w-[700px]">
+        <div className="flex justify-between">
+          <h1 className="text-6xl font-bold block">Citizen Sampler</h1>
+          <MainMenu />
+        </div>
+        <CollectionMenu />
+        <SettingsWrapper />
+        <DrumMachine />
+      </div>
+
       <p className="text-sm">
         Inspired by and built on
         <Link

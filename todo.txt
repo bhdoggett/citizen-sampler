@@ -1,6 +1,20 @@
+BACKEND
+- post/get username
+- post/get songs
+
+
+
+FRONTEND
+- Menu component 
+  Song title
+  Open Song
+  Save Song
+  Load from collection
+  Load to drum pads
+  About (explainers, hot keyts, effect)
+  Prefernces???
+
 - master settings component
-- add wave form with wavesurfer
-  - ability to select start/stop points
 - remove double click auto stuff
 - remove hard press auto interactions for mobile
 - add hot keys for sample pads
@@ -13,3 +27,5 @@
 - add four loop patterns "A" "B" "C" "D" with 
 - quantize with tuplets
 - double-click on a settings fader should default it back to it's original position
+- add velocity to regular loop events AND OFFLINE
+- If a sample is played in such a way that it passes the loop boundary, the exported wave file should acount for that...

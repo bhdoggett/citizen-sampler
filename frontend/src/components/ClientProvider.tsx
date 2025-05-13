@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 
 const AudioProvider = dynamic(
-  () => import("@/app/contexts/AudioContext").then((mod) => mod.AudioProvider),
+  () => import("../app/contexts/AudioContext").then((mod) => mod.AudioProvider),
   {
     ssr: false,
   }

@@ -1,7 +1,7 @@
 "use client";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import { useState, useEffect } from "react";
-import type { SampleSettings } from "../types/SampleTypes";
+import type { SampleSettings } from "../../../shared/types/audioTypes";
 import useMutesAndSolos from "../app/hooks/useMutesAndSolos";
 import ChooseSample from "./ChooseSample";
 import Waveform from "./Waveform";
@@ -98,14 +98,14 @@ const SampleSettings = () => {
 
     const samplerWithFX = samplersRef.current[selectedSampleId];
     if (samplerWithFX) {
-      const { env, pitch, panVol, highpass, lowpass } = samplerWithFX;
+      const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
       pitch.pitch = settings.pitch || 0;
       panVol.volume.value = settings.volume || 0;
       panVol.pan.value = settings.pan || 0;
       highpass.frequency.value = settings.highpass?.[0] || 0;
       lowpass.frequency.value = settings.lowpass?.[0] || 20000;
-      env.attack = settings.attack || 0;
-      env.release = settings.release || 0;
+      sampler.attack = settings.attack || 0;
+      sampler.release = settings.release || 0;
     }
   }, [samplersRef, selectedSampleId, settings]);
 
@@ -155,19 +155,15 @@ const SampleSettings = () => {
   return (
     <>
       <div className="flex flex-col justify-center">
+        {sampleMenuOpen && (
+          <ChooseSample setSampleMenuOpen={setSampleMenuOpen} />
+        )}
         <Waveform audioUrl={allSampleData[selectedSampleId].url} />
         <div className="p-2 mx-auto mb-3">
-          {sampleMenuOpen && (
-            <div className="fixed z-10 mt-2 w-max rounded-sm shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-              <div className="p-1">
-                <ChooseSample setSampleMenuOpen={setSampleMenuOpen} />
-              </div>
-            </div>
-          )}
           <div className="flex gap-x-4 md:gap-x-6">
             <div className="flex flex-col">
               <label className="mb-2 flex justify-between">
-                <span>Volume</span>
+                <span>Vol</span>
                 <span>{settings.volume?.toFixed(1) || "0.0"} dB</span>
               </label>
               <input
@@ -199,7 +195,7 @@ const SampleSettings = () => {
             </div>
             <div className="flex flex-col">
               <label className="mb-2 flex justify-between">
-                <span>Attack</span>
+                <span>Att</span>
                 <span>{settings.attack?.toFixed(2) || "0.00"} s</span>
               </label>
               <input
@@ -215,7 +211,7 @@ const SampleSettings = () => {
               />
 
               <label className="mt-3 mb-2 flex justify-between">
-                <span>Release</span>
+                <span>Rel</span>
                 <span>{settings.release?.toFixed(2) || "0.00"} s</span>
               </label>
               <input
@@ -232,7 +228,7 @@ const SampleSettings = () => {
             </div>
             <div className="flex flex-col">
               <label className="mb-2 flex justify-between">
-                <span>Highpass</span>
+                <span>HP</span>
                 <span>{settings.highpass?.[0].toFixed(0) || "0"} Hz</span>
               </label>
               <input
@@ -256,7 +252,7 @@ const SampleSettings = () => {
                 htmlFor="lowpass"
                 className="mt-3 mb-2 flex justify-between"
               >
-                <span>Lowpass</span>
+                <span>LP</span>
                 <span>{settings.lowpass?.[0].toFixed(0) || "20000"} Hz</span>
               </label>
               <input
@@ -365,7 +361,7 @@ const SampleSettings = () => {
 
           <button
             onClick={handleClearSampleEvents}
-            className="border border-black px-1 mt-2 bg-slate-400 shadow-inner shadow-slate-800 flex mx-auto"
+            className="border border-black px-1 mt-2 bg-slate-400 hover:bg-slate-500 shadow-inner shadow-slate-800 flex mx-auto"
           >
             Clear
           </button>

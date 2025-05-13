@@ -11,7 +11,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const waveSurferRef = useRef<WaveSurfer | null>(null);
   const {
-    waveformIsPlaying,
+    // waveformIsPlaying,
     selectedSampleId,
     allSampleData,
     updateSamplerStateSettings,
@@ -30,9 +30,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     const wavesurfer = WaveSurfer.create({
       container: containerRef.current,
       waveColor: "blue",
-      progressColor: "red",
-      cursorColor: "red",
-      interact: true,
+      interact: false,
       height: 100,
       barWidth: NaN,
       backend: "WebAudio",
@@ -57,7 +55,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
         end: regionEnd,
         drag: true,
         resize: true,
-        color: "rgba(0, 255, 0, 0.1)",
+        color: "rgba(255, 0, 0, 0.2)",
       });
 
       // Update global state when region is updated
@@ -89,26 +87,26 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     updateSamplerStateSettings,
   ]);
 
-  // Visual-only playback animation
-  useEffect(() => {
-    const ws = waveSurferRef.current;
-    if (!ws) return;
+  // // Visual-only playback animation
+  // useEffect(() => {
+  //   const ws = waveSurferRef.current;
+  //   if (!ws) return;
 
-    if (waveformIsPlaying) {
-      const { start = 0, end } = allSampleData[selectedSampleId].settings;
+  //   if (waveformIsPlaying) {
+  //     const { start = 0, end } = allSampleData[selectedSampleId].settings;
 
-      ws.setVolume(0); // mute so it doesn't interfere
-      // play only the region
-      if (end) {
-        ws.play(start, end);
-      } else ws.play(start);
-    } else {
-      if (ws.isPlaying()) {
-        ws.pause();
-        ws.seekTo(0);
-      }
-    }
-  }, [waveformIsPlaying, allSampleData, selectedSampleId]);
+  //     ws.setVolume(0); // mute so it doesn't interfere
+  //     // play only the region
+  //     if (end) {
+  //       ws.play(start, end);
+  //     } else ws.play(start);
+  //   } else {
+  //     if (ws.isPlaying()) {
+  //       ws.pause();
+  //       ws.seekTo(0);
+  //     }
+  //   }
+  // }, [waveformIsPlaying, allSampleData, selectedSampleId]);
 
   return (
     <div
