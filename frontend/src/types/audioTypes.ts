@@ -58,3 +58,17 @@ export type SamplerWithFX = {
   lowpass: Tone.Filter;
   currentEvent: SampleEvent;
 };
+
+export type Loop = {
+  loop: string;
+  bpm: number;
+  beats: number;
+  samples: SampleType[];
+};
+
+export type Song = {
+  id: string;
+  title: string;
+  bpm: number;
+  loops: Loop[];
+};

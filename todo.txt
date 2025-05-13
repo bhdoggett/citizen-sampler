@@ -13,7 +13,7 @@ FRONTEND
   Load to drum pads
   About (explainers, hot keyts, effect)
   Prefernces???
-  
+
 - master settings component
 - remove double click auto stuff
 - remove hard press auto interactions for mobile

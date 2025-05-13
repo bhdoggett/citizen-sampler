@@ -1,7 +1,7 @@
 "use client";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import { useState, useEffect } from "react";
-import type { SampleSettings } from "../types/SampleTypes";
+import type { SampleSettings } from "../types/audioTypes";
 import useMutesAndSolos from "../app/hooks/useMutesAndSolos";
 import ChooseSample from "./ChooseSample";
 import Waveform from "./Waveform";

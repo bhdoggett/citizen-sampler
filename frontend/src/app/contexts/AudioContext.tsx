@@ -12,7 +12,7 @@ import {
   SampleType,
   SampleSettings,
   SamplerWithFX,
-} from "../../types/SampleTypes";
+} from "../../types/audioTypes";
 import {
   CustomSampler,
   // CustomSamplerType,
@@ -576,8 +576,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     </AudioContextContext.Provider>
   );
 };
-
-// export const useAudioContext = () => useContext(AudioContextContext);
 
 export const useAudioContext = () => {
   const context = useContext(AudioContextContext);

@@ -11,6 +11,7 @@ const MasterSettings = () => {
     downloadWavs();
     Tone.start();
   };
+
   return (
     <div className="flex flex-col mx-auto w-96">
       <span className="flex mx-auto text-xs">{songTitle}</span>
