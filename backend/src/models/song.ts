@@ -91,6 +91,18 @@ export const SongSchema = new Schema({
   //   of: LoopSchema,
   //   required: true,
   // },
+  beats: {
+    type: Number,
+    required: true,
+  },
+  bars: {
+    type: Number,
+    required: true,
+  },
+  bpm: {
+    type: Number,
+    required: true,
+  },
   samples: {
     type: [SampleSchema],
     required: true,

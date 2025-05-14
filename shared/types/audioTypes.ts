@@ -56,6 +56,9 @@ export type Loop = {
 export type SongType = {
   _id?: string;
   title: string;
+  beats: number;
+  bars: number;
+  bpm: number;
   // loops: Record<string, Loop>;
   samples: SampleType[];
 };

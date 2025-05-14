@@ -29,8 +29,8 @@ type AudioContextType = {
   metronomeActive: boolean;
   setMetronomeActive: React.Dispatch<React.SetStateAction<boolean>>;
   metronome: Tone.Sampler;
-  loopLength: number;
-  setLoopLength: React.Dispatch<React.SetStateAction<number>>;
+  bars: number;
+  setBars: React.Dispatch<React.SetStateAction<number>>;
   beatsPerBar: number;
   setBeatsPerBar: React.Dispatch<React.SetStateAction<number>>;
   bpm: number;
@@ -72,7 +72,7 @@ type AudioContextType = {
 const AudioContextContext = createContext<AudioContextType | null>(null);
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
-  const [songTitle, setSongTitle] = useState<string>("New Song");
+  const [songTitle, setSongTitle] = useState<string>("Song001");
   const [allSampleData, setAllSampleData] = useState<
     Record<string, SampleType>
   >({});
@@ -181,11 +181,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [globalCollectionName, setGlobalCollectionName] = useState<string>(
     "Inventing Entertainment"
   );
-  const [currentLoop, setCurrentLoop] = useState<string>("A");
+  // const [currentLoop, setCurrentLoop] = useState<string>("A");
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [metronomeActive, setMetronomeActive] = useState(false);
-  const [loopLength, setLoopLength] = useState<number>(2);
+  const [bars, setBars] = useState<number>(2);
   const [beatsPerBar, setBeatsPerBar] = useState<number>(4);
   const [bpm, setBpm] = useState<number>(120);
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
@@ -195,27 +195,42 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [selectedSampleId, setSelectedSampleId] = useState<string>("loc-1");
   const [solosExist, setSolosExist] = useState<boolean>(false);
 
-  // If there is ane existing express session, fetch the temporary song when reloading browser
-  const fetchTempSong = async () => {
-    const result = await axios.get(`${API_URL}/temp-song`);
-    console.log(result);
-  };
+  // If user is not logged in, save the current song when allSampleData state changes
+  const saveTemporarySong = useCallback(async () => {
+    try {
+      await axios.post(`${API_URL}/temp-song`, {
+        title: songTitle,
+        bars,
+        beats: beatsPerBar,
+        bpm,
+        globalCollectionName,
+        samples: allSampleData,
+      });
+      console.log("✅ Temporary song saved to session.");
+    } catch (err) {
+      console.error("❌ Error saving temporary song:", err);
+    }
+  }, [songTitle, bars, beatsPerBar, bpm, globalCollectionName, allSampleData]);
 
-  const saveTempSong = async () => {
-    const result = await axios.post(`${API_URL}/temp-song`, {
-      title: songTitle,
-      loops: {
-        A: {
-          beats: beatsPerBar * loopLength,
-          bars: loopLength,
-          bpm: bpm,
-          sampleEvents: {},
-        },
-      },
-      samples: Object.values(allSampleData),
-    });
-    console.log(result);
-  };
+  const fetchTemporarySong = useCallback(async () => {
+    try {
+      const { data } = await axios.get(`${API_URL}/temp-song`);
+      if (!data) return;
+
+      if (data.title) setSongTitle(data.title);
+      if (typeof data.bars === "number") setBars(data.bars);
+      if (typeof data.beats === "number") setBeatsPerBar(data.beats);
+      if (typeof data.bpm === "number") setBpm(data.bpm);
+      if (data.samples) setAllSampleData(data.samples);
+      if (data.globalCollectionName)
+        setGlobalCollectionName(data.globalCollectionName);
+
+      console.log("✅ Temporary song restored from session.");
+    } catch (err) {
+      console.error("❌ Error fetching temporary song:", err);
+    }
+  }, []);
+
   // Function to create a sampler with FX chain.
   // If using with Tone.Offline to download WAV stems, the third argument should be "true".
   const makeSampler = async (
@@ -288,6 +303,39 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
   };
 
+  const initializeSamplerData = (
+    id: string,
+    url: string,
+    collection: string
+  ): SampleType => {
+    return {
+      id: id,
+      title: getTitle(url),
+      collectionName: collection,
+      label: getLabel(url),
+      url: url,
+      events: [],
+      settings: {
+        mute: false,
+        solo: false,
+        reverse: false,
+        start: 0,
+        end: null,
+        volume: 0,
+        pan: 0,
+        baseNote: "C4",
+        pitch: 0,
+        attack: 0,
+        release: 0,
+        quantize: false,
+        quantVal: 4,
+        highpass: [0, "highpass"] as [number, "highpass"],
+        lowpass: [20000, "lowpass"] as [number, "lowpass"],
+      },
+      attribution: "",
+    };
+  };
+
   // Function for loading samplers from seperate locSamples and kitSamples arrays
   const loadSamplers = useCallback(async (samplesArray: SampleType[]) => {
     const samplers = await Promise.all(
@@ -315,13 +363,13 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     init();
   }, []);
 
-  // Update ToneJS loopEnd when loopLength or beatsPerBar changes
+  // Update ToneJS loopEnd when bars or beatsPerBar changes
   useEffect(() => {
-    const loopEnd = `${loopLength}:0:0`;
+    const loopEnd = `${bars}:0:0`;
     Tone.getTransport().loop = true;
     Tone.getTransport().loopStart = "0:0:0";
     Tone.getTransport().loopEnd = loopEnd;
-  }, [loopLength, beatsPerBar]);
+  }, [bars, beatsPerBar]);
 
   // Schedule metronome playback based on time signature
   useEffect(() => {
@@ -364,8 +412,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     Tone.getTransport().loop = true;
     Tone.getTransport().loopStart = "0:0:0";
-    Tone.getTransport().loopEnd = `${loopLength}:0:0`;
-  }, [loopLength]);
+    Tone.getTransport().loopEnd = `${bars}:0:0`;
+  }, [bars]);
 
   // create samplers for library of congress samples
   useEffect(() => {
@@ -391,39 +439,19 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   }, []);
 
-  const initializeSamplerData = (
-    id: string,
-    url: string,
-    collection: string
-  ): SampleType => {
-    return {
-      id: id,
-      title: getTitle(url),
-      collectionName: collection,
-      label: getLabel(url),
-      url: url,
-      events: [],
-      settings: {
-        mute: false,
-        solo: false,
-        reverse: false,
-        start: 0,
-        end: null,
-        volume: 0,
-        pan: 0,
-        baseNote: "C4",
-        pitch: 0,
-        attack: 0,
-        release: 0,
-        quantize: false,
-        quantVal: 4,
-        highpass: [0, "highpass"] as [number, "highpass"],
-        lowpass: [20000, "lowpass"] as [number, "lowpass"],
-      },
-      attribution: "",
-    };
-  };
-  // fetch samples using the globalCollectionName
+  // If user is not logged in, fetch the temporary song when reloading browser
+  useEffect(() => {
+    fetchTemporarySong();
+  }, [fetchTemporarySong]);
+
+  // If user is not logged in, save the current song temporily in backend express-session
+  useEffect(() => {
+    if (allSampleData) {
+      saveTemporarySong();
+    }
+  }, [allSampleData, saveTemporarySong]);
+
+  // Fetch samples using the globalCollectionName
   useEffect(() => {
     const fetchSamples = async () => {
       try {
@@ -464,7 +492,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     fetchSamples();
   }, [globalCollectionName]);
 
-  // initialize allSampleData state with the locSamples and kitSamples
+  // Initialize allSampleData state with the locSamples and kitSamples
   ///  I NEED TO UPDATE THIS SO THAT ONLY THE LOC SAMPLER DATA GETS SWAPPED WHEN THOSE CHANGE. DON'T WANT TO REINITIALIZE THE KIT SAMPLES
   useEffect(() => {
     setAllSampleData(() => {
@@ -478,7 +506,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // WHERE DO I USE THIS???
 
-  // funciton to update one sampler's data (entire) whenever anythign inside that sampler's data changes
+  // Update one sampler's data (entire) whenever anythign inside that sampler's data changes
   const updateSamplerData = (id: string, data: SampleType): void => {
     setAllSampleData((prev) => ({
       ...prev,
@@ -567,8 +595,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         metronomeActive,
         setMetronomeActive,
         metronome,
-        loopLength,
-        setLoopLength,
+        bars,
+        setBars,
         beatsPerBar,
         setBeatsPerBar,
         bpm,

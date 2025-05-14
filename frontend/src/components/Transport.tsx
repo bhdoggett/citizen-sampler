@@ -8,8 +8,8 @@ import * as Tone from "tone";
 const Transport = () => {
   const {
     metronomeActive,
-    loopLength,
-    setLoopLength,
+    bars,
+    setBars,
     beatsPerBar,
     setBeatsPerBar,
     bpm,
@@ -38,8 +38,8 @@ const Transport = () => {
   useEffect(() => {
     transport.loop = true;
     transport.loopStart = "0:0:0";
-    transport.loopEnd = `${loopLength}:0:0`;
-  }, [loopLength, transport]);
+    transport.loopEnd = `${bars}:0:0`;
+  }, [bars, transport]);
 
   return (
     <div className="px-2 pb-2 flex flex-col items-center space-y-4">
@@ -52,7 +52,7 @@ const Transport = () => {
           viewBox="0 0 24 24"
           fill={loopIsPlaying ? "green" : "white"}
           stroke="currentColor"
-          stroke-width="2"
+          strokeWidth="2"
           // stroke-linecap="round"
           // stroke-linejoin="round"
           className="hover:fill-slate-300 cursor-pointer"
@@ -77,7 +77,7 @@ const Transport = () => {
           viewBox="0 0 24 24"
           fill="white"
           stroke="currentColor"
-          stroke-width="2"
+          strokeWidth="2"
           className="hover:fill-slate-300 cursor-pointer"
           onClick={handleStop}
         >
@@ -134,12 +134,12 @@ const Transport = () => {
 
         <div className="flex-1 items-center">
           <label htmlFor="loop-length" className="text-lg font-semibold">
-            Loop Length:
+            Bars:
           </label>
           <input
             type="number"
-            value={loopLength}
-            onChange={(e) => setLoopLength(Number(e.target.value))}
+            value={bars}
+            onChange={(e) => setBars(Number(e.target.value))}
             className="w-12 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
           />
         </div>

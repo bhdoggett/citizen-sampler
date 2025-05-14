@@ -10,18 +10,18 @@ router.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-router.get(
-  "/songs",
-  requireAuth,
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { username } = req;
-    const user = await User.find((user) => user.username === username);
-    if (!user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+// router.get(
+//   "/songs",
+//   requireAuth,
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const { username } = req;
+//     const user = await User.find((user) => user.username === username);
+//     if (!user) {
+//       return res.status(401).json({ message: "Unauthorized" });
+//     }
 
-    res.json(user.songs);
-  }
-);
+//     res.json(user.songs);
+//   }
+// );
 
-export default router;
+// export default router;
