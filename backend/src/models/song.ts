@@ -86,11 +86,11 @@ const LoopSchema = new Schema({
 // Song
 export const SongSchema = new Schema({
   title: { type: String, required: true },
-  loops: {
-    type: Map,
-    of: LoopSchema,
-    required: true,
-  },
+  // loops: {
+  //   type: Map,
+  //   of: LoopSchema,
+  //   required: true,
+  // },
   samples: {
     type: [SampleSchema],
     required: true,
