@@ -415,7 +415,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     Tone.getTransport().loopEnd = `${bars}:0:0`;
   }, [bars]);
 
-  // create samplers for library of congress samples
+  // create samplers for library of congress samgples
   useEffect(() => {
     if (locSamples.length === 0) return;
     loadSamplers(locSamples);
