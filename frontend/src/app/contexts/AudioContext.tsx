@@ -17,6 +17,9 @@ import { CustomSampler } from "frontend/src/types/CustomSampler";
 import { getCollectionArray } from "../../lib/collections";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
+import axios from "axios";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "localhost:8000";
 
 type AudioContextType = {
   songTitle: string;
@@ -80,7 +83,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     {
       id: "kit-1",
       title: "Kick_Bulldog_2",
-      collection: "Kit",
+      collectionName: "Kit",
       label: "Kick",
       url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
       events: [],
@@ -105,7 +108,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     {
       id: "kit-2",
       title: "Snare_Astral_1",
-      collection: "Kit",
+      collectionName: "Kit",
       url: "/samples/drums/snares/Snare_Astral_1.wav",
       events: [],
       settings: {
@@ -129,7 +132,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     {
       id: "kit-3",
       title: "ClosedHH_Alessya_DS",
-      collection: "Kit",
+      collectionName: "Kit",
       url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
       events: [],
       settings: {
@@ -153,7 +156,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     {
       id: "kit-4",
       title: "Clap_Graphite",
-      collection: "Kit",
+      collectionName: "Kit",
       url: "/samples/drums/claps/Clap_Graphite.wav",
       events: [],
       settings: {
@@ -178,6 +181,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [globalCollectionName, setGlobalCollectionName] = useState<string>(
     "Inventing Entertainment"
   );
+  const [currentLoop, setCurrentLoop] = useState<string>("A");
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [metronomeActive, setMetronomeActive] = useState(false);
@@ -191,6 +195,27 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [selectedSampleId, setSelectedSampleId] = useState<string>("loc-1");
   const [solosExist, setSolosExist] = useState<boolean>(false);
 
+  // If there is ane existing express session, fetch the temporary song when reloading browser
+  const fetchTempSong = async () => {
+    const result = await axios.get(`${API_URL}/temp-song`);
+    console.log(result);
+  };
+
+  const saveTempSong = async () => {
+    const result = await axios.post(`${API_URL}/temp-song`, {
+      title: songTitle,
+      loops: {
+        A: {
+          beats: beatsPerBar * loopLength,
+          bars: loopLength,
+          bpm: bpm,
+          sampleEvents: {},
+        },
+      },
+      samples: Object.values(allSampleData),
+    });
+    console.log(result);
+  };
   // Function to create a sampler with FX chain.
   // If using with Tone.Offline to download WAV stems, the third argument should be "true".
   const makeSampler = async (
@@ -374,7 +399,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     return {
       id: id,
       title: getTitle(url),
-      collection: collection,
+      collectionName: collection,
       label: getLabel(url),
       url: url,
       events: [],

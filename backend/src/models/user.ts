@@ -11,4 +11,6 @@ export const UserSchema = new Schema({
   songs: { type: [SongSchema] },
 });
 
-export const User = model("User", UserSchema);
+const User = model("User", UserSchema);
+
+export default User;

@@ -8,8 +8,6 @@ import {
   //   Time,
 } from "../../frontend/node_modules/tone/build/esm/core/type/Units";
 
-import { CustomSampler } from "../../frontend/src/lib/audio/CustomSampler";
-
 export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
 
 export type SampleEvent = {
@@ -39,7 +37,7 @@ export type SampleSettings = {
 
 export type SampleType = {
   id: string;
-  collection: string;
+  collectionName: string;
   label?: string;
   title: string;
   url: string;
@@ -49,15 +47,15 @@ export type SampleType = {
 };
 
 export type Loop = {
-  loop: string;
-  bpm: number;
   beats: number;
-  samples: SampleType[];
+  bars: number;
+  bpm: number;
+  sampleEvents: Record<string, SampleEvent[]>;
 };
 
-export type Song = {
-  id: string;
+export type SongType = {
+  _id?: string;
   title: string;
-  bpm: number;
-  loops: Loop[];
+  loops: Record<string, Loop>;
+  samples: SampleType[];
 };
