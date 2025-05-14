@@ -97,22 +97,23 @@ const Loop = () => {
           onClick={handleToggleMetronome}
         />
       </div>
-      <div className="flex mr-3">
-        {loops.map((loop) => (
-          <button
-            key={loop}
-            className={`px-1 border-black hover:bg-slate-400 ${
-              loop !== "D"
-                ? "border-t border-l border-b border-black px-1"
-                : "border border-black px-1"
-            } ${loop === currentLoop ? "bg-slate-400 shadow-inner shadow-black" : "bg-slate-300"}`}
-            onClick={() => setCurrentLoop(loop)}
-          >
-            {loop}
-          </button>
-        ))}
-      </div>
+
       <div className="flex w-full mx-auto border p-2">
+        <div className="flex mr-3">
+          {loops.map((loop) => (
+            <button
+              key={loop}
+              className={`px-1 border-black hover:bg-slate-400 ${
+                loop !== "D"
+                  ? "border-t border-l border-b border-black px-1"
+                  : "border border-black px-1"
+              } ${loop === currentLoop ? "bg-slate-400 shadow-inner shadow-black" : "bg-slate-300"}`}
+              onClick={() => setCurrentLoop(loop)}
+            >
+              {loop}
+            </button>
+          ))}
+        </div>
         <div className="flex-1 flex items-center">
           <label htmlFor="bpm" className="text-lg font-semibold">
             BPM:
@@ -141,14 +142,12 @@ const Loop = () => {
           <label htmlFor="time-signature" className="text-lg font-semibold">
             Beats:
           </label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              value={beatsPerBar}
-              onChange={(e) => setBeatsPerBar(Number(e.target.value))}
-              className="w-12 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
-            />
-          </div>
+          <input
+            type="number"
+            value={beatsPerBar}
+            onChange={(e) => setBeatsPerBar(Number(e.target.value))}
+            className="w-12 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
+          />
         </div>
 
         <div className="flex-1 items-center">
