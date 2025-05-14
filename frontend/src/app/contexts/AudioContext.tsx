@@ -51,6 +51,8 @@ type AudioContextType = {
   updateSamplerData: (id: string, data: SampleType) => void;
   globalCollectionName: string;
   setGlobalCollectionName: React.Dispatch<React.SetStateAction<string>>;
+  currentLoop: string;
+  setCurrentLoop: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
   setLoopIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   isRecording: boolean;
@@ -181,7 +183,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [globalCollectionName, setGlobalCollectionName] = useState<string>(
     "Inventing Entertainment"
   );
-  // const [currentLoop, setCurrentLoop] = useState<string>("A");
+  const [currentLoop, setCurrentLoop] = useState<string>("A");
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [metronomeActive, setMetronomeActive] = useState(false);
@@ -601,6 +603,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setBeatsPerBar,
         bpm,
         setBpm,
+        currentLoop,
+        setCurrentLoop,
         loopIsPlaying,
         setLoopIsPlaying,
         isRecording,

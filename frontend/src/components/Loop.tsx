@@ -5,7 +5,9 @@ import { useAudioContext } from "../app/contexts/AudioContext";
 import useTransportControls from "../app/hooks/useTransportControls";
 import * as Tone from "tone";
 
-const Transport = () => {
+const loops = ["A", "B", "C", "D"];
+
+const Loop = () => {
   const {
     metronomeActive,
     bars,
@@ -16,6 +18,8 @@ const Transport = () => {
     setBpm,
     loopIsPlaying,
     isRecording,
+    currentLoop,
+    setCurrentLoop,
   } = useAudioContext();
 
   // Get the transport
@@ -93,6 +97,21 @@ const Transport = () => {
           onClick={handleToggleMetronome}
         />
       </div>
+      <div className="flex mr-3">
+        {loops.map((loop) => (
+          <button
+            key={loop}
+            className={`px-1 border-black hover:bg-slate-400 ${
+              loop !== "D"
+                ? "border-t border-l border-b border-black px-1"
+                : "border border-black px-1"
+            } ${loop === currentLoop ? "bg-slate-400 shadow-inner shadow-black" : "bg-slate-300"}`}
+            onClick={() => setCurrentLoop(loop)}
+          >
+            {loop}
+          </button>
+        ))}
+      </div>
       <div className="flex w-full mx-auto border p-2">
         <div className="flex-1 flex items-center">
           <label htmlFor="bpm" className="text-lg font-semibold">
@@ -150,4 +169,4 @@ const Transport = () => {
   );
 };
 
-export default Transport;
+export default Loop;
