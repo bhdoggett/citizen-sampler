@@ -13,6 +13,7 @@ FRONTEND
   Load to drum pads
   About (explainers, hot keyts, effect)
   Prefernces???
+- reliably download audio (make sure loop settings are properly updated)
 
 - master settings component
 - remove double click auto stuff

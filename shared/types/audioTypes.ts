@@ -41,16 +41,22 @@ export type SampleType = {
   label?: string;
   title: string;
   url: string;
-  events: SampleEvent[];
+  events: Record<string, SampleEvent[]>; // This has sample events indexed by Loop
   settings: SampleSettings;
   attribution?: string;
 };
 
-export type Loop = {
+export type LoopName = "A" | "B" | "C" | "D";
+
+export type LoopSettings = {
   beats: number;
   bars: number;
   bpm: number;
-  sampleEvents: Record<string, SampleEvent[]>;
+  // swing: number
+} | null;
+
+export type AllLoopSettings = {
+  [key in LoopName]: LoopSettings;
 };
 
 export type SongType = {
@@ -59,6 +65,5 @@ export type SongType = {
   beats: number;
   bars: number;
   bpm: number;
-  // loops: Record<string, Loop>;
   samples: SampleType[];
 };

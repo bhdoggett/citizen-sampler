@@ -11,6 +11,9 @@ import * as Tone from "tone";
 import {
   SampleType,
   SampleSettings,
+  LoopName,
+  LoopSettings,
+  AllLoopSettings,
 } from "../../../../shared/types/audioTypes";
 import { SamplerWithFX } from "frontend/src/types/SamplerWithFX";
 import { CustomSampler } from "frontend/src/types/CustomSampler";
@@ -55,6 +58,8 @@ type AudioContextType = {
   setCurrentLoop: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
   setLoopIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
+  handleSelectLoop: (loop: LoopName) => void;
+  allLoopSettings: React.RefObject<AllLoopSettings>;
   isRecording: boolean;
   setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
   allSampleData: Record<string, SampleType>;
@@ -88,7 +93,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       collectionName: "Kit",
       label: "Kick",
       url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
-      events: [],
+      events: { A: [], B: [], C: [], D: [] },
       settings: {
         mute: false,
         solo: false,
@@ -112,7 +117,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       title: "Snare_Astral_1",
       collectionName: "Kit",
       url: "/samples/drums/snares/Snare_Astral_1.wav",
-      events: [],
+      events: { A: [], B: [], C: [], D: [] },
       settings: {
         mute: false,
         solo: false,
@@ -136,7 +141,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       title: "ClosedHH_Alessya_DS",
       collectionName: "Kit",
       url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
-      events: [],
+      events: { A: [], B: [], C: [], D: [] },
       settings: {
         mute: false,
         solo: false,
@@ -160,7 +165,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       title: "Clap_Graphite",
       collectionName: "Kit",
       url: "/samples/drums/claps/Clap_Graphite.wav",
-      events: [],
+      events: { A: [], B: [], C: [], D: [] },
       settings: {
         mute: false,
         solo: false,
@@ -183,13 +188,22 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [globalCollectionName, setGlobalCollectionName] = useState<string>(
     "Inventing Entertainment"
   );
-  const [currentLoop, setCurrentLoop] = useState<string>("A");
+
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [bars, setBars] = useState<number>(2);
   const [beatsPerBar, setBeatsPerBar] = useState<number>(4);
   const [bpm, setBpm] = useState<number>(120);
+  const [currentLoop, setCurrentLoop] = useState<string>("A");
+  const lastLoopRef = useRef<LoopName>("A");
+  const allLoopSettings = useRef<AllLoopSettings>({
+    A: { beats: beatsPerBar, bars, bpm },
+    B: null,
+    C: null,
+    D: null,
+  });
+
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
@@ -316,7 +330,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       collectionName: collection,
       label: getLabel(url),
       url: url,
-      events: [],
+      events: { A: [], B: [], C: [], D: [] },
       settings: {
         mute: false,
         solo: false,
@@ -336,6 +350,30 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
       attribution: "",
     };
+  };
+
+  const handleSelectLoop = (newLoop: LoopName) => {
+    const settings = allLoopSettings.current;
+
+    // Copy settings from the last loop if needed
+    if (!settings[newLoop]) {
+      const lastLoop = lastLoopRef.current;
+      const lastSettings = settings[lastLoop];
+      if (lastSettings) {
+        settings[newLoop] = { ...lastSettings };
+      }
+    }
+
+    const currentSettings = settings[newLoop];
+    if (currentSettings) {
+      setBpm(currentSettings.bpm);
+      setBeatsPerBar(currentSettings.beats);
+      setBars(currentSettings.bars);
+      setCurrentLoop(newLoop);
+    }
+
+    // Update last selected loop
+    lastLoopRef.current = newLoop;
   };
 
   // Function for loading samplers from seperate locSamples and kitSamples arrays
@@ -607,6 +645,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setCurrentLoop,
         loopIsPlaying,
         setLoopIsPlaying,
+        handleSelectLoop,
+        allLoopSettings,
         isRecording,
         setIsRecording,
         locSamples,

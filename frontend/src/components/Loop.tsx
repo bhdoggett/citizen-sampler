@@ -4,6 +4,7 @@ import { Circle, Music3 } from "lucide-react";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import useTransportControls from "../app/hooks/useTransportControls";
 import * as Tone from "tone";
+import type { LoopName } from "@shared/types/audioTypes";
 
 const loops = ["A", "B", "C", "D"];
 
@@ -17,9 +18,10 @@ const Loop = () => {
     bpm,
     setBpm,
     loopIsPlaying,
+    allLoopSettings,
     isRecording,
     currentLoop,
-    setCurrentLoop,
+    handleSelectLoop,
   } = useAudioContext();
 
   // Get the transport
@@ -44,6 +46,15 @@ const Loop = () => {
     transport.loopStart = "0:0:0";
     transport.loopEnd = `${bars}:0:0`;
   }, [bars, transport]);
+
+  // Keep allLoopSettingsRef in sync with UI
+  useEffect(() => {
+    allLoopSettings.current[currentLoop as LoopName] = {
+      bpm,
+      beats: beatsPerBar,
+      bars,
+    };
+  }, [allLoopSettings, bpm, beatsPerBar, bars, currentLoop]);
 
   return (
     <div className="px-2 pb-2 flex flex-col items-center space-y-4">
@@ -108,7 +119,7 @@ const Loop = () => {
                   ? "border-t border-l border-b border-black px-1"
                   : "border border-black px-1"
               } ${loop === currentLoop ? "bg-slate-400 shadow-inner shadow-black" : "bg-slate-300"}`}
-              onClick={() => setCurrentLoop(loop)}
+              onClick={() => handleSelectLoop(loop as LoopName)}
             >
               {loop}
             </button>

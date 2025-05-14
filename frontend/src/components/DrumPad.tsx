@@ -9,9 +9,18 @@ import { CustomSampler } from "../types/CustomSampler";
 type DrumPadProps = {
   id: string;
   sampler: CustomSampler;
+  samplerIsPlaying: boolean;
+  setSamplerIsPlayingTrue: () => void;
+  setSamplerIsPlayingFalse: () => void;
 };
 
-const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
+const DrumPad: React.FC<DrumPadProps> = ({
+  id,
+  sampler,
+  samplerIsPlaying,
+  setSamplerIsPlayingTrue,
+  setSamplerIsPlayingFalse,
+}) => {
   const {
     isRecording,
     loopIsPlaying,
@@ -20,8 +29,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setSelectedSampleId,
     selectedSampleId,
     samplersRef,
+    currentLoop,
   } = useAudioContext();
-  const sampleDataRef = useRef(allSampleData[id]);
+  const sampleDataRef = allSampleData[id];
   const { currentEvent } = samplersRef.current[id];
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
@@ -36,7 +46,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     sampler.triggerAttack("C4", now, start);
     setSelectedSampleId(id);
     setIsSelected(true);
-    setSampleIsPlaying(true);
+    setSamplerIsPlayingTrue();
 
     if (end) {
       const duration = end - start;
@@ -44,7 +54,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
           sampler.triggerRelease("C4", Tone.now());
-          setSampleIsPlaying(false);
+          setSamplerIsPlayingFalse();
         }
       }, duration * 1000);
     }
@@ -56,7 +66,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   };
 
   const handleReleasePad = () => {
-    if (!sampleIsPlaying) return;
+    if (!samplerIsPlaying) return;
 
     // Stop scheduled release
     if (scheduledReleaseTimeoutRef.current) {
@@ -65,7 +75,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     }
 
     hasReleasedRef.current = true;
-    setSampleIsPlaying(false);
+    setSamplerIsPlayingFalse();
     sampler.triggerRelease("C4", Tone.now());
 
     if (
@@ -95,7 +105,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
           actualReleaseTime;
 
     console.log("currentEvent.duration", currentEvent.duration);
-    sampleDataRef.current.events.push({ ...currentEvent });
+    sampleDataRef.current.events[currentLoop].push({ ...currentEvent });
     setAllSampleData((prev) => ({ ...prev, [id]: sampleDataRef.current }));
 
     if (loopIsPlaying && isRecording && currentEvent.duration === 0) {
@@ -113,7 +123,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   };
 
   const getActiveStyle = () => {
-    return sampleIsPlaying
+    return samplerIsPlaying
       ? "brightness-75 saturate-150 transition-all duration-100"
       : "brightness-100 saturate-100 transition-all duration-300";
   };
@@ -121,15 +131,16 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   // Update this component's sampleDataRef when allSampleData state changes
   useEffect(() => {
     sampleDataRef.current = allSampleData[id];
-  }, [allSampleData, id]);
+  }, [allSampleData, id, sampleDataRef]);
 
   // Schedule playback of sampler play events
   useEffect(() => {
     const sampleData = allSampleData[id];
 
-    if (!loopIsPlaying || allSampleData[id].events.length === 0) return;
+    if (!loopIsPlaying || allSampleData[id].events[currentLoop].length === 0)
+      return;
 
-    const events = sampleData.events.map((event) => {
+    const events = sampleData.events[currentLoop].map((event) => {
       if (!event.startTime) return;
       const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
       const eventTime = sampleData.settings.quantize
@@ -160,10 +171,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
             : event.duration
           : event.duration;
         sampler.triggerAttackRelease(event.note, actualDuration, time, start);
-        setSampleIsPlaying(true);
+        setSamplerIsPlayingTrue();
 
         setTimeout(() => {
-          setSampleIsPlaying(false);
+          setSamplerIsPlayingFalse();
         }, event.duration * 1000);
         console.log(event);
       }
@@ -187,7 +198,15 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     return () => {
       disposePart();
     };
-  }, [loopIsPlaying, sampler, allSampleData, id, selectedSampleId]);
+  }, [
+    loopIsPlaying,
+    sampler,
+    allSampleData,
+    id,
+    selectedSampleId,
+    currentLoop,
+    sampleDataRef,
+  ]);
 
   // Sync isSelected state with selectedSampleId
   useEffect(() => {

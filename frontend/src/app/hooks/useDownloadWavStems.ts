@@ -3,17 +3,21 @@ import * as Tone from "tone";
 import { useAudioContext } from "../contexts/AudioContext";
 import quantize from "../functions/quantize";
 import toWav from "audiobuffer-to-wav";
+import type { LoopName } from "../../../../shared/types/audioTypes";
 
 const useDownloadWavStems = () => {
-  const { allSampleData, samplersRef, makeSampler } = useAudioContext();
+  const { allSampleData, samplersRef, allLoopSettings, makeSampler } =
+    useAudioContext();
   const allIds = Object.keys(samplersRef.current);
-  const loopEnd = Tone.getTransport().loopEnd;
-  const loopDuration = Tone.Time(loopEnd).toSeconds();
+  const loops = ["A", "B", "C", "D"];
 
   // Function to get Audio Buffer for a given sampler's loop recording
-  const getAudioBuffer = async (id: string) => {
+  const getAudioBuffer = async (id: string, loop: LoopName) => {
+    const loopEnd = Tone.getTransport().loopEnd;
+    const loopDuration = Tone.Time(loopEnd).toSeconds();
     const sampleData = allSampleData[id];
-    const { events, settings } = sampleData;
+    const { settings } = sampleData;
+    const events = sampleData.events[loop];
 
     if (events.length === 0) return null;
 
@@ -35,6 +39,14 @@ const useDownloadWavStems = () => {
     const renderDuration = Math.max(loopDuration, maxEndTime);
 
     const toneBuffer = await Tone.Offline(async ({ transport }) => {
+      // Set tempo and loop settings per loop
+      const loopSettings = allLoopSettings.current[loop];
+      if (!loopSettings) return;
+      transport.bpm.value = loopSettings.bpm;
+      transport.loop = true;
+      transport.loopStart = 0;
+      transport.loopEnd = `${loopSettings.bars}m`;
+
       const offlineSamplerWithFx = await makeSampler(
         id,
         allSampleData[id].url,
@@ -99,22 +111,22 @@ const useDownloadWavStems = () => {
   };
 
   // Download a given sampler's Wav file
-  const downloadWav = async (id: string) => {
-    const toneBuffer = await getAudioBuffer(id);
+  const downloadWav = async (id: string, loop: LoopName) => {
+    const toneBuffer = await getAudioBuffer(id, loop as LoopName);
     if (!toneBuffer) {
-      console.warn(`No audio buffer generated for ID: ${id}`);
+      console.warn(`No audio buffer generated for ID ${id} at loop ${loop}`);
       return;
     }
 
     const wavUrl = translateBufferToWavUrl(toneBuffer as Tone.ToneAudioBuffer);
     if (!wavUrl) {
-      console.warn(`No WAV URL generated for ID: ${id}`);
+      console.warn(`No WAV URL generated for for ID ${id} at loop ${loop}`);
       return;
     }
     const link = document.createElement("a");
 
     link.href = await wavUrl;
-    link.download = `${id}.wav`;
+    link.download = `${id}-${loop}.wav`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -123,7 +135,9 @@ const useDownloadWavStems = () => {
   // Download all wav files - grouped in one function for button click
   const downloadAllWavs = () => {
     allIds.forEach((id) => {
-      downloadWav(id);
+      loops.forEach((loop) => {
+        downloadWav(id, loop as LoopName);
+      });
     });
     Tone.start();
   };

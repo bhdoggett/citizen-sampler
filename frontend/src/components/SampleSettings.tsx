@@ -15,6 +15,7 @@ const SampleSettings = () => {
     samplersRef,
     updateSamplerStateSettings,
     updateSamplerRefSettings,
+    currentLoop,
   } = useAudioContext();
 
   // Need Frequency Params for translating frequency filters from exponential to linear inputs
@@ -80,7 +81,10 @@ const SampleSettings = () => {
       ...prev,
       [selectedSampleId]: {
         ...prev[selectedSampleId],
-        events: [],
+        events: {
+          ...prev[selectedSampleId].events,
+          [currentLoop]: [],
+        },
       },
     }));
   };
