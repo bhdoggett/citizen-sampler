@@ -45,13 +45,21 @@ const DrumMachine = () => {
 
   return (
     <div>
-      <div className="mb-4">
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded mr-2"
-          onClick={() => setShowGrid((prev) => !prev)}
-        >
-          Switch to {showGrid ? "Drum Pads" : "Pitch Grid"}
-        </button>
+      <div className="flex mx-auto mb-4">
+        <div className="border-2 border-black flex mx-auto shadow shadow-slate-800 p-1 z-20">
+          <button
+            className={`px-3 py-1 border ${showGrid ? "bg-slate-800 text-white" : "bg-slate-200 border border-black shadow-inner shadow-slate-700"}`}
+            onClick={() => setShowGrid(false)}
+          >
+            Drum Pads
+          </button>
+          <button
+            className={`px-3 py-1 border ${showGrid ? "bg-slate-200 border border-black shadow-inner shadow-slate-700" : "bg-slate-800 text-white"}`}
+            onClick={() => setShowGrid(true)}
+          >
+            Pitch Grid
+          </button>
+        </div>
       </div>
 
       <div className={`${showGrid ? "hidden" : ""} `}>

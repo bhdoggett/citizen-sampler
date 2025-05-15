@@ -2,6 +2,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import * as Tone from "tone";
+import { Frequency } from "tone/build/esm/core/type/Units";
 import quantize from "../app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../types/CustomSampler";
@@ -22,6 +23,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
     setSelectedSampleId,
     selectedSampleId,
     samplersRef,
+    currentLoop,
   } = useAudioContext();
   const sampleDataRef = useRef(allSampleData[id]);
   const { currentEvent } = samplersRef.current[id];
@@ -29,13 +31,14 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
+  const { baseNote } = allSampleData[id].settings;
 
-  const handlePressPad = () => {
+  const handlePress = (note: Frequency) => {
     const now = Tone.now();
     const { start, end } = sampleDataRef.current.settings;
 
     hasReleasedRef.current = false;
-    sampler.triggerAttack("C4", now, start);
+    sampler.triggerAttack(note, now, start);
     setSelectedSampleId(id);
     setIsSelected(true);
     setSampleIsPlaying(true);
@@ -45,7 +48,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
       scheduledReleaseTimeoutRef.current = setTimeout(() => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
-          sampler.triggerRelease("C4", Tone.now());
+          sampler.triggerRelease(note, Tone.now());
           setSampleIsPlaying(false);
         }
       }, duration * 1000);
@@ -54,10 +57,11 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
     if (loopIsPlaying && isRecording) {
       currentEvent.startTime = Tone.getTransport().ticks;
       currentEvent.duration = 0;
+      currentEvent.note = note;
     }
   };
 
-  const handleReleasePad = () => {
+  const handleRelease = (note: Frequency) => {
     if (!sampleIsPlaying) return;
 
     // Stop scheduled release
@@ -68,7 +72,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
 
     hasReleasedRef.current = true;
     setSampleIsPlaying(false);
-    sampler.triggerRelease("C4", Tone.now());
+    sampler.triggerRelease(note, Tone.now());
 
     if (
       // !currentEvent ||
@@ -97,7 +101,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
           actualReleaseTime;
 
     console.log("currentEvent.duration", currentEvent.duration);
-    sampleDataRef.current.events.push({ ...currentEvent });
+    sampleDataRef.current.events[currentLoop].push({ ...currentEvent });
     setAllSampleData((prev) => ({ ...prev, [id]: sampleDataRef.current }));
 
     if (loopIsPlaying && isRecording && currentEvent.duration === 0) {
@@ -129,9 +133,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
   useEffect(() => {
     const sampleData = allSampleData[id];
 
-    if (!loopIsPlaying || allSampleData[id].events.length === 0) return;
+    if (!loopIsPlaying || allSampleData[id].events[currentLoop].length === 0)
+      return;
 
-    const events = sampleData.events.map((event) => {
+    const events = sampleData.events[currentLoop].map((event) => {
       if (!event.startTime) return;
       const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
       const eventTime = sampleData.settings.quantize
@@ -189,7 +194,14 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
     return () => {
       disposePart();
     };
-  }, [loopIsPlaying, sampler, allSampleData, id, selectedSampleId]);
+  }, [
+    loopIsPlaying,
+    sampler,
+    allSampleData,
+    id,
+    selectedSampleId,
+    currentLoop,
+  ]);
 
   // Sync isSelected state with selectedSampleId
   useEffect(() => {
@@ -197,18 +209,22 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
   }, [selectedSampleId, id]);
 
   return showGrid ? (
-    <PitchGrid id={id} />
+    <PitchGrid
+      baseNote={baseNote}
+      handlePress={handlePress}
+      handleRelease={handleRelease}
+    />
   ) : (
     <div
       className={`flex m-auto rounded-sm w-full aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
       onFocus={handleFocus}
     >
       <button
-        onMouseDown={handlePressPad}
-        onTouchStart={handlePressPad}
-        onMouseUp={handleReleasePad}
-        onMouseLeave={handleReleasePad}
-        onTouchEnd={handleReleasePad}
+        onMouseDown={() => handlePress(baseNote)}
+        onTouchStart={() => handlePress(baseNote)}
+        onMouseUp={() => handleRelease(baseNote)}
+        onMouseLeave={() => handleRelease(baseNote)}
+        onTouchEnd={() => handleRelease(baseNote)}
         className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800  focus:border-double w-full aspect-square shadow-md shadow-slate-700  `}
       >
         <p className="flex top-1 left-0 text-xs">{id}</p>
