@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import DrumPad from "./DrumPad";
-import PitchGrid from "./PitchGrid"; // ✅ import your PitchGrid component
 
 const DrumMachine = () => {
-  const { allSampleData, samplersRef, selectedSampleId } = useAudioContext();
+  const { samplersRef, selectedSampleId } = useAudioContext();
   const [samplersLoaded, setSamplersLoaded] = useState(false);
   const [samplerCount, setSamplerCount] = useState(0);
-  const currentSampleDataRef = useRef(allSampleData[selectedSampleId]);
   const [showGrid, setShowGrid] = useState<boolean>(false);
 
   useEffect(() => {
@@ -44,17 +42,17 @@ const DrumMachine = () => {
   }
 
   return (
-    <div>
-      <div className="flex mx-auto mb-4">
-        <div className="border-2 border-black flex mx-auto shadow shadow-slate-800 p-1 z-20">
+    <div className="mt-1">
+      <div className="flex mx-auto">
+        <div className="w-full border-2 flex mx-auto border-black  shadow shadow-slate-800 p-1 z-20">
           <button
-            className={`px-3 py-1 border ${showGrid ? "bg-slate-800 text-white" : "bg-slate-200 border border-black shadow-inner shadow-slate-700"}`}
+            className={`w-1/2 px-3 py-1 mr-0.5 border-1 border-black ${showGrid ? " bg-slate-800 text-white shadow shadow-slate-400" : "bg-slate-200 shadow-inner shadow-slate-700"}`}
             onClick={() => setShowGrid(false)}
           >
             Drum Pads
           </button>
           <button
-            className={`px-3 py-1 border ${showGrid ? "bg-slate-200 border border-black shadow-inner shadow-slate-700" : "bg-slate-800 text-white"}`}
+            className={`w-1/2 px-3 py-1 ml-0.5 border-2 border-black ${showGrid ? "bg-slate-200  shadow-inner shadow-slate-700" : "bg-slate-800 text-white shadow shadow-slate-400"}`}
             onClick={() => setShowGrid(true)}
           >
             Pitch Grid
@@ -63,11 +61,11 @@ const DrumMachine = () => {
       </div>
 
       <div className={`${showGrid ? "hidden" : ""} `}>
-        <div className="grid grid-cols-4 gap-0 my-3">
+        <div className="grid grid-cols-4 gap-0 mt-2 mb-1">
           {renderDrumPads("loc")}
         </div>
         <hr />
-        <div className="grid grid-cols-4 gap-0 my-3">
+        <div className="grid grid-cols-4 gap-0 my-1">
           {renderDrumPads("kit")}
         </div>
       </div>

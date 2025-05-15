@@ -1,8 +1,5 @@
-import React, { useState, useRef } from "react";
 import * as Tone from "tone";
 import { Frequency } from "tone/build/esm/core/type/Units";
-import { useAudioContext } from "../app/contexts/AudioContext";
-import type { SampleType } from "@shared/types/audioTypes";
 
 const NUM_ROWS = 5;
 const NUM_COLS = 5;
@@ -47,7 +44,7 @@ const PitchGrid: React.FC<PitchGridProps> = ({
   const gridNotes = generateNotes();
 
   return (
-    <div className="w-full grid grid-cols-5 gap-0 border-2 border-black">
+    <div className="w-full grid grid-cols-5 gap-0 border-2 border-black mt-3">
       {gridNotes.flat().map((note, i) => (
         <button
           key={note + i}

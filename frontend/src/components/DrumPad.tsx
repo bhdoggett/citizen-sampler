@@ -38,7 +38,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
     const { start, end } = sampleDataRef.current.settings;
 
     hasReleasedRef.current = false;
-    sampler.triggerAttack(note, now, start);
+    sampler.triggerAttack(note, now, start, 1);
     setSelectedSampleId(id);
     setIsSelected(true);
     setSampleIsPlaying(true);
@@ -166,7 +166,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
             ? end - start
             : event.duration
           : event.duration;
-        sampler.triggerAttackRelease(event.note, actualDuration, time, start);
+        sampler.triggerAttackRelease(
+          event.note,
+          actualDuration,
+          time,
+          start,
+          1
+        );
         setSampleIsPlaying(true);
 
         setTimeout(() => {

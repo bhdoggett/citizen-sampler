@@ -168,7 +168,7 @@ const SampleSettings = () => {
             <div className="flex flex-col">
               <label className="mb-2 flex justify-between">
                 <span>Vol</span>
-                <span>{settings.volume?.toFixed(1) || "0.0"} dB</span>
+                <span>{settings.volume?.toFixed(1) || "0.0"}</span>
               </label>
               <input
                 type="range"
