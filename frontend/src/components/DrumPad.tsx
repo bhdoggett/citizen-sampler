@@ -5,13 +5,15 @@ import * as Tone from "tone";
 import quantize from "../app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../types/CustomSampler";
+import PitchGrid from "./PitchGrid";
 
 type DrumPadProps = {
   id: string;
   sampler: CustomSampler;
+  showGrid: boolean;
 };
 
-const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
+const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
   const {
     isRecording,
     loopIsPlaying,
@@ -194,7 +196,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setIsSelected(selectedSampleId === id);
   }, [selectedSampleId, id]);
 
-  return (
+  return showGrid ? (
+    <PitchGrid id={id} />
+  ) : (
     <div
       className={`flex m-auto rounded-sm w-full aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
       onFocus={handleFocus}

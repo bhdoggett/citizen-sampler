@@ -8,9 +8,7 @@ const DrumMachine = () => {
   const [samplersLoaded, setSamplersLoaded] = useState(false);
   const [samplerCount, setSamplerCount] = useState(0);
   const currentSampleDataRef = useRef(allSampleData[selectedSampleId]);
-  const [padsOrPitchGrid, setPadsOrPitchGrid] = useState<"pads" | "pitch-grid">(
-    "pads"
-  );
+  const [showGrid, setShowGrid] = useState<boolean>(false);
 
   useEffect(() => {
     const checkSamplers = () => {
@@ -32,7 +30,12 @@ const DrumMachine = () => {
     return Object.entries(samplersRef.current)
       .filter(([id]) => id.includes(type))
       .map(([id, samplerNodes]) => (
-        <DrumPad key={id} id={id} sampler={samplerNodes.sampler} />
+        <DrumPad
+          key={id}
+          id={id}
+          sampler={samplerNodes.sampler}
+          showGrid={showGrid}
+        />
       ));
   };
 
@@ -45,28 +48,30 @@ const DrumMachine = () => {
       <div className="mb-4">
         <button
           className="px-4 py-2 bg-blue-500 text-white rounded mr-2"
-          onClick={() =>
-            setPadsOrPitchGrid(
-              padsOrPitchGrid === "pads" ? "pitch-grid" : "pads"
-            )
-          }
+          onClick={() => setShowGrid((prev) => !prev)}
         >
-          Switch to {padsOrPitchGrid === "pads" ? "Pitch Grid" : "Drum Pads"}
+          Switch to {showGrid ? "Drum Pads" : "Pitch Grid"}
         </button>
       </div>
 
-      {padsOrPitchGrid === "pads" ? (
-        <>
-          <div className="grid grid-cols-4 gap-0 my-3">
-            {renderDrumPads("loc")}
-          </div>
-          <hr />
-          <div className="grid grid-cols-4 gap-0 my-3">
-            {renderDrumPads("kit")}
-          </div>
-        </>
-      ) : (
-        <PitchGrid id={selectedSampleId} />
+      <div className={`${showGrid ? "hidden" : ""} `}>
+        <div className="grid grid-cols-4 gap-0 my-3">
+          {renderDrumPads("loc")}
+        </div>
+        <hr />
+        <div className="grid grid-cols-4 gap-0 my-3">
+          {renderDrumPads("kit")}
+        </div>
+      </div>
+
+      {showGrid && (
+        <div className="flex justify-center">
+          <DrumPad
+            id={selectedSampleId}
+            sampler={samplersRef.current[selectedSampleId].sampler}
+            showGrid={showGrid}
+          />
+        </div>
       )}
     </div>
   );
