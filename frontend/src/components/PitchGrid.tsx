@@ -135,12 +135,12 @@ const PitchGrid: React.FC<PitchGridProps> = ({ id }) => {
 
   return (
     <div
-      className="grid grid-cols-8 gap-0 border-1 border-black"
-      // style={{
-      //   display: "grid",
-      //   gridTemplateColumns: `repeat(${NUM_COLS}, 1fr)`,
-      //   gap: "4px",
-      // }}
+      className="grid"
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${NUM_COLS}, 1fr)`,
+        gap: "4px",
+      }}
     >
       {gridNotes.flat().map((note, i) => (
         <button
@@ -150,15 +150,15 @@ const PitchGrid: React.FC<PitchGridProps> = ({ id }) => {
           onMouseUp={() => handleReleasePitch(note)}
           onMouseLeave={() => handleReleasePitch(note)}
           onTouchEnd={() => handleReleasePitch(note)}
-          className={`border border-black text-sm cursor-pointer aspect-square ${note === midiToNoteName(BASE_NOTE) ? "#88f" : "#ccc"}${i === 0 ? "border-2 border-black" : ""}`}
-          // style={{
-          //   padding: "20px",
-          //   background: note === midiToNoteName(BASE_NOTE) ? "#88f" : "#ccc",
-          //   border: "1px solid #999",
-          //   borderRadius: "4px",
-          //   fontSize: "0.8rem",
-          //   cursor: "pointer",
-          // }}
+          className={`${note === midiToNoteName(BASE_NOTE) ? "#88f" : "#ccc"}${i === 0 ? "border-2 border-black" : ""}`}
+          style={{
+            padding: "20px",
+            background: note === midiToNoteName(BASE_NOTE) ? "#88f" : "#ccc",
+            border: "1px solid #999",
+            borderRadius: "4px",
+            fontSize: "0.8rem",
+            cursor: "pointer",
+          }}
         >
           {note}
         </button>
