@@ -1,7 +1,8 @@
 import express, { Request, Response, NextFunction } from "express";
 import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as LocalStrategy } from "passport-local"; // don't need this
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+//get JWT strategy
 import User from "../models/user";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";

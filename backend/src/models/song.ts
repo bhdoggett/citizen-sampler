@@ -76,31 +76,18 @@ const LoopSchema = new Schema({
     type: Number,
     required: true,
   },
-  sampleEvents: {
-    type: Map,
-    of: [SampleEventSchema],
-    default: {},
-  },
+  // swing: {
+  //   type: Number,
+  //   required: true,
+  // },
 });
 
 // Song
 export const SongSchema = new Schema({
   title: { type: String, required: true },
-  // loops: {
-  //   type: Map,
-  //   of: LoopSchema,
-  //   required: true,
-  // },
-  beats: {
-    type: Number,
-    required: true,
-  },
-  bars: {
-    type: Number,
-    required: true,
-  },
-  bpm: {
-    type: Number,
+  loops: {
+    type: Map,
+    of: LoopSchema,
     required: true,
   },
   samples: {

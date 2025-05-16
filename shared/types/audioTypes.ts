@@ -53,10 +53,10 @@ export type LoopSettings = {
   bars: number;
   bpm: number;
   // swing: number
-} | null;
+};
 
 export type AllLoopSettings = {
-  [key in LoopName]: LoopSettings;
+  [key in LoopName]: LoopSettings | null;
 };
 
 export type SongType = {

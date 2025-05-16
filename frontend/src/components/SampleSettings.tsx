@@ -116,8 +116,9 @@ const SampleSettings = () => {
   // Keep mute and solo rendering in sync with global state
   useEffect(() => {
     if (selectedSampleId && allSampleData[selectedSampleId]) {
-      setIsMuted(allSampleData[selectedSampleId].settings.mute);
-      setIsSoloed(allSampleData[selectedSampleId].settings.solo);
+      const { mute, solo } = allSampleData[selectedSampleId].settings;
+      setIsMuted(mute);
+      setIsSoloed(solo);
     }
   }, [selectedSampleId, allSampleData]);
 
@@ -133,7 +134,7 @@ const SampleSettings = () => {
 
     const handler = setTimeout(() => {
       updateSamplerStateSettings(selectedSampleId, settings);
-    }, 50);
+    }, 500);
 
     return () => {
       clearTimeout(handler); // cancel if settings change before debounceDelay

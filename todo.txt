@@ -5,6 +5,7 @@ BACKEND
 
 
 FRONTEND
+- save tempSong to local storage
 - Menu component 
   Song title
   Open Song
@@ -14,7 +15,7 @@ FRONTEND
   About (explainers, hot keyts, effect)
   Prefernces???
 - reliably download audio (make sure loop settings are properly updated)
-
+- handle collectionMenue more carefully. if someone chooses a collection it will wipe out the current song they're working on.
 - master settings component
 - remove double click auto stuff
 - remove hard press auto interactions for mobile
@@ -30,3 +31,12 @@ FRONTEND
 - double-click on a settings fader should default it back to it's original position
 - add velocity to regular loop events AND OFFLINE
 - If a sample is played in such a way that it passes the loop boundary, the exported wave file should acount for that...
+
+
+
+
+unique identifier
+i don't need to save the data to Server
+i can save to local storage
+
+
