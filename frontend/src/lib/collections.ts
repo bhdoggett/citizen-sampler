@@ -85,3 +85,65 @@ export const getCollectionArray = (collection: string) => {
       return inventingEntertainment;
   }
 };
+
+export const getCollectionNameFromArray = (array: string[]): string => {
+  if (array === inventingEntertainment) return "Inventing Entertainment";
+  if (array === varietyStageSoundRecordingsAndMotionPictures)
+    return "Variety State Sound Recordngs and Motion Pictures";
+  if (array === theJoeSmithCollection) return "The Joe Smith Collection";
+  if (array === freeMusicArchive) return "Free Music Archive";
+  if (array === musicBoxProject) return "MusicBox Project";
+  if (array === tonySchwartzCollection) return "Tony Schwatz Collection";
+  if (array === americanEnglishDialectRecordings)
+    return "American English Dialect Recordings";
+  if (array === theNationalScreeningRoom) return "The National Screening Room";
+  if (array === njbBlues) return "The National Jukebox: Blues";
+  if (array === njbJazz) return "The National Jukebox: Jazz";
+  if (array === njbFolkMusic) return "The National Jukebox: Folk Music";
+  if (array === njbOpera) return "The National Jukebox: Opera";
+  if (array === njbMusicalTheater)
+    return "The National Jukebox: Musical Theater";
+  if (array === njbClassicalMusic)
+    return "The National Jukebox: Classical Music";
+  if (array === njbPopularMusic) return "The National Jukebox: Popular Music";
+  return "Unknown Collection";
+};
+
+// get allUrls in one combined array function.. all collections combined into one array
+export type UrlEntry = {
+  url: string;
+  collection: string;
+};
+
+export const getAllUrls = (): UrlEntry[] => {
+  const sources = [
+    inventingEntertainment,
+    varietyStageSoundRecordingsAndMotionPictures,
+    theJoeSmithCollection,
+    freeMusicArchive,
+    musicBoxProject,
+    tonySchwartzCollection,
+    americanEnglishDialectRecordings,
+    theNationalScreeningRoom,
+    njbBlues,
+    njbJazz,
+    njbFolkMusic,
+    njbOpera,
+    njbMusicalTheater,
+    njbClassicalMusic,
+    njbPopularMusic,
+  ];
+
+  const allUrls: UrlEntry[] = [];
+
+  sources.forEach((sourceArray) => {
+    sourceArray.forEach((url) => {
+      allUrls.push({
+        url,
+        collection: getCollectionNameFromArray(sourceArray),
+      });
+    });
+  });
+
+  return allUrls;
+};

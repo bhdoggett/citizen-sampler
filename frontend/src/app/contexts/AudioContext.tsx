@@ -17,7 +17,8 @@ import {
 } from "../../../../shared/types/audioTypes";
 import { SamplerWithFX } from "frontend/src/types/SamplerWithFX";
 import { CustomSampler } from "frontend/src/types/CustomSampler";
-import { getCollectionArray } from "../../lib/collections";
+import { getCollectionArray, UrlEntry } from "../../lib/collections";
+import { allUrlsWithCollectionNames } from "frontend/src/lib/sampleSources";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
 // import axios from "axios";
@@ -134,8 +135,22 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [hasLoadedFromStorage, setHasLoadedFromStorage] =
     useState<boolean>(false);
 
+  // funciton to select 8 random urls from the allLOCUrls array
+  const selectRandomUrlEntries = (array: UrlEntry[]): UrlEntry[] => {
+    const arr = [...array]; // make a copy to avoid mutating the original
+    const n = arr.length;
+    const k = 8;
+
+    for (let i = 0; i < k; i++) {
+      const j = i + Math.floor(Math.random() * (n - i));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+
+    return arr.slice(0, k);
+  };
+
   useEffect(() => {
-    if (!hasLoadedFromStorage || thereIsASongInStorage.current) return;
+    if (!hasLoadedFromStorage || localStorage.tempSong) return;
 
     setKitSamples([
       {
@@ -237,122 +252,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     ]);
   }, [hasLoadedFromStorage]);
-
-  // // If there is no song saved in local storage, initialize kit samples
-  // useEffect(() => {
-  //   if (thereIsASongInStorage.current) return;
-  //   setKitSamples([
-  //     {
-  //       id: "kit-1",
-  //       title: "Kick_Bulldog_2",
-  //       collectionName: "Kit",
-  //       label: "Kick",
-  //       url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
-  //       events: { A: [], B: [], C: [], D: [] },
-  //       settings: {
-  //         mute: false,
-  //         solo: false,
-  //         reverse: false,
-  //         start: 0,
-  //         end: null,
-  //         volume: 0,
-  //         pan: 0,
-  //         baseNote: "C4",
-  //         pitch: 0,
-  //         attack: 0,
-  //         release: 0,
-  //         quantize: false,
-  //         quantVal: 4,
-  //         highpass: [0, "highpass"],
-  //         lowpass: [20000, "lowpass"],
-  //       },
-  //     },
-  //     {
-  //       id: "kit-2",
-  //       title: "Snare_Astral_1",
-  //       collectionName: "Kit",
-  //       url: "/samples/drums/snares/Snare_Astral_1.wav",
-  //       events: { A: [], B: [], C: [], D: [] },
-  //       settings: {
-  //         mute: false,
-  //         solo: false,
-  //         reverse: false,
-  //         start: 0,
-  //         end: null,
-  //         volume: 0,
-  //         pan: 0,
-  //         baseNote: "C4",
-  //         pitch: 0,
-  //         attack: 0,
-  //         release: 0,
-  //         quantize: false,
-  //         quantVal: 4,
-  //         highpass: [0, "highpass"],
-  //         lowpass: [20000, "lowpass"],
-  //       },
-  //     },
-  //     {
-  //       id: "kit-3",
-  //       title: "ClosedHH_Alessya_DS",
-  //       collectionName: "Kit",
-  //       url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
-  //       events: { A: [], B: [], C: [], D: [] },
-  //       settings: {
-  //         mute: false,
-  //         solo: false,
-  //         reverse: false,
-  //         start: 0,
-  //         end: null,
-  //         volume: 0,
-  //         pan: 0,
-  //         baseNote: "C4",
-  //         pitch: 0,
-  //         attack: 0,
-  //         release: 0,
-  //         quantize: false,
-  //         quantVal: 4,
-  //         highpass: [0, "highpass"],
-  //         lowpass: [20000, "lowpass"],
-  //       },
-  //     },
-  //     {
-  //       id: "kit-4",
-  //       title: "Clap_Graphite",
-  //       collectionName: "Kit",
-  //       url: "/samples/drums/claps/Clap_Graphite.wav",
-  //       events: { A: [], B: [], C: [], D: [] },
-  //       settings: {
-  //         mute: false,
-  //         solo: false,
-  //         reverse: false,
-  //         start: 0,
-  //         end: null,
-  //         volume: 0,
-  //         pan: 0,
-  //         baseNote: "C4",
-  //         pitch: 0,
-  //         attack: 0,
-  //         release: 0,
-  //         quantize: false,
-  //         quantVal: 4,
-  //         highpass: [0, "highpass"],
-  //         lowpass: [20000, "lowpass"],
-  //       },
-  //     },
-  //   ]);
-  // }, [thereIsASongInStorage]);
-
-  // const saveToLocal = useCallback(() => {
-  //   localStorage.setItem(
-  //     "tempSong",
-  //     JSON.stringify({
-  //       title: songTitle,
-  //       loops: allLoopSettings.current,
-  //       // globalCollectionName,
-  //       samples: allSampleData,
-  //     })
-  //   );
-  // }, [allSampleData, songTitle, allLoopSettings]);
 
   // test allSampleData state
   useEffect(() => {
@@ -504,6 +403,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     });
   }, []);
 
+  // Load samples from local storage if present in the browser
   useEffect(() => {
     const loadFromStorage = async () => {
       const data = localStorage.getItem("tempSong");
@@ -655,7 +555,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // Cleanup effect for samplers when component unmounts
   useEffect(() => {
     const samplersForCleanup = samplersRef.current;
-
     return () => {
       // Cleanup library of congress samplers
       Object.keys(samplersForCleanup).forEach((sampleId) => {
@@ -670,26 +569,30 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       "useEffect for globalCollectionNameChange just ran",
       nowMilliseconds
     );
+    if (
+      // thereIsASongInStorage &&
+      localStorage.tempSong &&
+      localStorage.tempSong.samples &&
+      localStorage.tempSong.samples.includes("loc-1")
+    )
+      return;
+
     const fetchSamples = async () => {
       try {
-        const collectionArray = getCollectionArray(globalCollectionName);
-        if (!collectionArray) return;
-
-        // Select 8 samples from the colletion randomly
-        const selectedSamples = Array.from({ length: 8 }, () => {
-          const index = Math.floor(Math.random() * collectionArray.length);
-          return collectionArray[index];
-        });
+        const selectedSamples = selectRandomUrlEntries(
+          allUrlsWithCollectionNames
+        );
 
         // Create data structutre for the selected samples
         const formattedSamples: SampleType[] = Array.from(
           selectedSamples,
-          (url, index) => {
+          ({ url, collection }, index) => {
             const sampleId = `loc-${index + 1}`;
 
-            return initializeSamplerData(sampleId, url, globalCollectionName);
+            return initializeSamplerData(sampleId, url, collection);
           }
         );
+        console.log("formatted Samples", formattedSamples);
         setLocSamples(formattedSamples);
       } catch (error) {
         console.error("Error fetching samples:", error);
@@ -707,7 +610,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
 
     fetchSamples();
-  }, [globalCollectionName]);
+  }, []);
 
   // Update LOC samples only
   useEffect(() => {
