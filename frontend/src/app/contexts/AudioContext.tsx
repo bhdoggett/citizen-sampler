@@ -569,13 +569,14 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       "useEffect for globalCollectionNameChange just ran",
       nowMilliseconds
     );
-    if (
-      // thereIsASongInStorage &&
-      localStorage.tempSong &&
-      localStorage.tempSong.samples &&
-      localStorage.tempSong.samples.includes("loc-1")
-    )
-      return;
+    // if (
+    //   // thereIsASongInStorage &&
+    //   localStorage.tempSong &&
+    //   localStorage.tempSong.samples &&
+    //   localStorage.tempSong.samples.includes("loc-1")
+    // )
+    //   return;
+    if (!hasLoadedFromStorage || localStorage.tempSong) return;
 
     const fetchSamples = async () => {
       try {
@@ -614,6 +615,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // Update LOC samples only
   useEffect(() => {
+    if (locSamples.length === 0) return; /// Do i need this???
     setAllSampleData((prev) => {
       const updated = { ...prev };
       locSamples.forEach((sample) => {
@@ -625,7 +627,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // Update Kit samples only when they actually change
   useEffect(() => {
-    if (kitSamples.length === 0) return;
+    if (kitSamples.length === 0) return; /// Do I need this???
     setAllSampleData((prev) => {
       const updated = { ...prev };
       kitSamples.forEach((sample) => {
