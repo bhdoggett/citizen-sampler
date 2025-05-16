@@ -131,13 +131,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   );
   const [selectedSampleId, setSelectedSampleId] = useState<string>("loc-1");
   const [solosExist, setSolosExist] = useState<boolean>(false);
-  const hasLoadedFromStorage = useRef<boolean>(false);
   const [hasLoadedFromStorage, setHasLoadedFromStorage] =
     useState<boolean>(false);
 
-  // If there is no song saved in local storage, initialize kit samples
   useEffect(() => {
-    if (thereIsASongInStorage.current) return;
+    if (!hasLoadedFromStorage || thereIsASongInStorage.current) return;
+
     setKitSamples([
       {
         id: "kit-1",
@@ -237,7 +236,111 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         },
       },
     ]);
-  }, [thereIsASongInStorage]);
+  }, [hasLoadedFromStorage]);
+
+  // // If there is no song saved in local storage, initialize kit samples
+  // useEffect(() => {
+  //   if (thereIsASongInStorage.current) return;
+  //   setKitSamples([
+  //     {
+  //       id: "kit-1",
+  //       title: "Kick_Bulldog_2",
+  //       collectionName: "Kit",
+  //       label: "Kick",
+  //       url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
+  //       events: { A: [], B: [], C: [], D: [] },
+  //       settings: {
+  //         mute: false,
+  //         solo: false,
+  //         reverse: false,
+  //         start: 0,
+  //         end: null,
+  //         volume: 0,
+  //         pan: 0,
+  //         baseNote: "C4",
+  //         pitch: 0,
+  //         attack: 0,
+  //         release: 0,
+  //         quantize: false,
+  //         quantVal: 4,
+  //         highpass: [0, "highpass"],
+  //         lowpass: [20000, "lowpass"],
+  //       },
+  //     },
+  //     {
+  //       id: "kit-2",
+  //       title: "Snare_Astral_1",
+  //       collectionName: "Kit",
+  //       url: "/samples/drums/snares/Snare_Astral_1.wav",
+  //       events: { A: [], B: [], C: [], D: [] },
+  //       settings: {
+  //         mute: false,
+  //         solo: false,
+  //         reverse: false,
+  //         start: 0,
+  //         end: null,
+  //         volume: 0,
+  //         pan: 0,
+  //         baseNote: "C4",
+  //         pitch: 0,
+  //         attack: 0,
+  //         release: 0,
+  //         quantize: false,
+  //         quantVal: 4,
+  //         highpass: [0, "highpass"],
+  //         lowpass: [20000, "lowpass"],
+  //       },
+  //     },
+  //     {
+  //       id: "kit-3",
+  //       title: "ClosedHH_Alessya_DS",
+  //       collectionName: "Kit",
+  //       url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
+  //       events: { A: [], B: [], C: [], D: [] },
+  //       settings: {
+  //         mute: false,
+  //         solo: false,
+  //         reverse: false,
+  //         start: 0,
+  //         end: null,
+  //         volume: 0,
+  //         pan: 0,
+  //         baseNote: "C4",
+  //         pitch: 0,
+  //         attack: 0,
+  //         release: 0,
+  //         quantize: false,
+  //         quantVal: 4,
+  //         highpass: [0, "highpass"],
+  //         lowpass: [20000, "lowpass"],
+  //       },
+  //     },
+  //     {
+  //       id: "kit-4",
+  //       title: "Clap_Graphite",
+  //       collectionName: "Kit",
+  //       url: "/samples/drums/claps/Clap_Graphite.wav",
+  //       events: { A: [], B: [], C: [], D: [] },
+  //       settings: {
+  //         mute: false,
+  //         solo: false,
+  //         reverse: false,
+  //         start: 0,
+  //         end: null,
+  //         volume: 0,
+  //         pan: 0,
+  //         baseNote: "C4",
+  //         pitch: 0,
+  //         attack: 0,
+  //         release: 0,
+  //         quantize: false,
+  //         quantVal: 4,
+  //         highpass: [0, "highpass"],
+  //         lowpass: [20000, "lowpass"],
+  //       },
+  //     },
+  //   ]);
+  // }, [thereIsASongInStorage]);
 
   // const saveToLocal = useCallback(() => {
   //   localStorage.setItem(
@@ -251,19 +354,15 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   //   );
   // }, [allSampleData, songTitle, allLoopSettings]);
 
-  // Function to create a sampler with FX chain.
-  // If using with Tone.Offline to download WAV stems, the third argument should be "true".
-
   // test allSampleData state
-
-  // initialize kitSamples
-
   useEffect(() => {
     if (allSampleData) {
       console.log("allSampleData", nowMilliseconds, allSampleData);
     }
   }, [allSampleData]);
 
+  // Function to create a sampler with FX chain.
+  // If using with Tone.Offline to download WAV stems, the third argument should be "true".
   const makeSampler = async (
     sampleId: string,
     sampleUrl: string,
@@ -405,37 +504,72 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     });
   }, []);
 
-  // If "tempSong" exists in local storage use that to initialize state
   useEffect(() => {
-    const data = localStorage.getItem("tempSong");
-    if (data) {
-      thereIsASongInStorage.current = true;
-      const tempSong = JSON.parse(data);
-      if (tempSong.title) setSongTitle(tempSong.title);
-      if (
-        typeof tempSong.loop === "object" &&
-        typeof tempSong.loop.bars === "number"
-      )
-        setBars(tempSong.loop.bars);
-      if (
-        typeof tempSong.loop === "object" &&
-        typeof tempSong.loop.beats === "number"
-      )
-        setBeatsPerBar(tempSong.loop.beats);
-      if (
-        typeof tempSong.loop === "object" &&
-        typeof tempSong.loop.bpm === "number"
-      )
-        setBpm(tempSong.loop.bpm);
-      if (tempSong.samples) setAllSampleData(tempSong.samples);
-      console.log("✅ LocalStorage loaded to app", nowMilliseconds, tempSong);
-      hasLoadedFromStorage.current = true;
-    }
+    const loadFromStorage = async () => {
+      const data = localStorage.getItem("tempSong");
+
+      if (data) {
+        thereIsASongInStorage.current = true;
+        const tempSong = JSON.parse(data);
+
+        if (tempSong.title) setSongTitle(tempSong.title);
+        if (tempSong.loops) {
+          allLoopSettings.current = tempSong.loops;
+          setBars(tempSong.loops?.A?.bars || 2);
+          setBeatsPerBar(tempSong.loops?.A?.beats || 4);
+          setBpm(tempSong.loops?.A?.bpm || 120);
+        }
+
+        if (tempSong.samples) {
+          setAllSampleData(tempSong.samples);
+          const loc = Object.values(tempSong.samples).filter(
+            (s) => s.collectionName !== "Kit"
+          );
+          const kit = Object.values(tempSong.samples).filter(
+            (s) => s.collectionName === "Kit"
+          );
+          setLocSamples(loc);
+          setKitSamples(kit);
+        }
+      }
+
+      setHasLoadedFromStorage(true);
+    };
+
+    loadFromStorage();
   }, []);
+
+  // // If "tempSong" exists in local storage use that to initialize state
+  // useEffect(() => {
+  //   const data = localStorage.getItem("tempSong");
+  //   if (data) {
+  //     thereIsASongInStorage.current = true;
+  //     const tempSong = JSON.parse(data);
+  //     if (tempSong.title) setSongTitle(tempSong.title);
+  //     if (
+  //       typeof tempSong.loop === "object" &&
+  //       typeof tempSong.loop.bars === "number"
+  //     )
+  //       setBars(tempSong.loop.bars);
+  //     if (
+  //       typeof tempSong.loop === "object" &&
+  //       typeof tempSong.loop.beats === "number"
+  //     )
+  //       setBeatsPerBar(tempSong.loop.beats);
+  //     if (
+  //       typeof tempSong.loop === "object" &&
+  //       typeof tempSong.loop.bpm === "number"
+  //     )
+  //       setBpm(tempSong.loop.bpm);
+  //     if (tempSong.samples) setAllSampleData(tempSong.samples);
+  //     console.log("✅ LocalStorage loaded to app", nowMilliseconds, tempSong);
+  //     setHasLoadedFromStorage(true);
+  //   }
+  // }, []);
 
   // Save necessary state to local storage when updated
   useEffect(() => {
-    if (!hasLoadedFromStorage.current) return;
+    if (!hasLoadedFromStorage) return;
     const dataToStore = {
       title: songTitle,
       loops: allLoopSettings.current,
@@ -530,55 +664,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   }, []);
 
-  // // Initialize samplers as a grop from a given collection "Inventing Entertainment"
-  // const initializeSamplesFromCollection = (collection: string) => {
-  //   console.log("initialize samplers function is running");
-  //   const fetchSamples = async () => {
-  //     try {
-  //       const collectionArray = getCollectionArray(collection);
-  //       if (!collectionArray) return;
-
-  //       // Select 8 samples from the colletion randomly
-  //       const selectedSamples = Array.from({ length: 8 }, () => {
-  //         const index = Math.floor(Math.random() * collectionArray.length);
-  //         return collectionArray[index];
-  //       });
-
-  //       // Create data structutre for the selected samples
-  //       const formattedSamples: SampleType[] = Array.from(
-  //         selectedSamples,
-  //         (url, index) => {
-  //           const sampleId = `loc-${index + 1}`;
-
-  //           return initializeSamplerData(sampleId, url, collection);
-  //         }
-  //       );
-  //       setLocSamples(formattedSamples);
-  //       // setGlobalCollectionName(collection);
-  //     } catch (error) {
-  //       console.error("Error fetching samples:", error);
-  //       setLocSamples([]);
-  //     }
-  //   };
-
-  //   // Clean up only the library of congress samplers
-  //   if (samplersRef.current) {
-  //     Object.entries(samplersRef.current).forEach(([key, sampler]) => {
-  //       // Kit samples should not be impacted by a change in globalCollectionName
-  //       if (sampler.id.includes("kit")) return;
-  //       cleanupSampler(key, samplersRef);
-  //     });
-  //   }
-
-  //   fetchSamples();
-  // };
-
-  // // Initialize samplers from collection "Inventing Entertainment"
-  // useEffect(() => {
-  //   initializeSamplesFromCollection("Inventing Entertainment");
-  //   setGlobalCollectionName("Inventing Entertainment");
-  // }, []);
-
   // Fetch samples when globalCollectionName changes
   useEffect(() => {
     console.log(
@@ -624,18 +709,28 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     fetchSamples();
   }, [globalCollectionName]);
 
-  // Initialize allSampleData state with the locSamples and kitSamples
-  ///  I NEED TO UPDATE THIS SO THAT ONLY THE LOC SAMPLER DATA GETS SWAPPED WHEN THOSE CHANGE. DON'T WANT TO REINITIALIZE THE KIT SAMPLES
+  // Update LOC samples only
   useEffect(() => {
-    if (!kitSamples) return;
-    setAllSampleData(() => {
-      const sampleDataObj: Record<string, SampleType> = {};
-      [...locSamples, ...kitSamples].forEach((sample) => {
-        sampleDataObj[sample.id] = sample;
+    setAllSampleData((prev) => {
+      const updated = { ...prev };
+      locSamples.forEach((sample) => {
+        updated[sample.id] = sample;
       });
-      return sampleDataObj;
+      return updated;
     });
-  }, [locSamples, kitSamples]);
+  }, [locSamples]);
+
+  // Update Kit samples only when they actually change
+  useEffect(() => {
+    if (kitSamples.length === 0) return;
+    setAllSampleData((prev) => {
+      const updated = { ...prev };
+      kitSamples.forEach((sample) => {
+        updated[sample.id] = sample;
+      });
+      return updated;
+    });
+  }, [kitSamples]);
 
   // Update one sampler's data (entire) whenever anything inside that sampler's data changes
   const updateSamplerData = (id: string, data: SampleType): void => {
