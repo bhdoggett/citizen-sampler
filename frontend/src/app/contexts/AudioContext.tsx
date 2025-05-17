@@ -57,7 +57,7 @@ type AudioContextType = {
     sampleUrl: string,
     offline: boolean
   ) => Promise<SamplerWithFX>;
-  initializeSamplerData: (
+  initializeLocSampleData: (
     id: string,
     url: string,
     collection: string
@@ -332,8 +332,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
   };
 
-  // Format state data for a given sampler
-  const initializeSamplerData = (
+  // Format state data for a given loc sampler
+  const initializeLocSampleData = (
     id: string,
     url: string,
     collection: string
@@ -364,6 +364,36 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
       attribution: "",
     };
+  };
+
+  ///////////////////////////THIS IS WHAT I'M WORKING ON RIGHT NOW
+  ///////////////////////////THIS IS WHAT I'M WORKING ON RIGHT NOW
+  ///////////////////////////THIS IS WHAT I'M WORKING ON RIGHT NOW
+  ///////////////////////////THIS IS WHAT I'M WORKING ON RIGHT NOW
+  ///////////////////////////THIS IS WHAT I'M WORKING ON RIGHT NOW
+  ///////////////////////////THIS IS WHAT I'M WORKING ON RIGHT NOW
+  // Format object of selected loc Samples. this will be destructured to combine with initialized kit samples to create allSampleData state.
+
+  // now i need a similar funciton for initializeing kit samples. these will then be combiend with below. Bypass the useState for locSamples and kitSamples. destructure the initialized objects for each group to create allSampleData. Then this can be the one source of truth for storing and fetching from local storage or from database calls.  Consider using the npm hook useLocalStorageState.
+  const initializeLocSamples = () => {
+    try {
+      const selectedSamples = selectRandomUrlEntries(
+        allUrlsWithCollectionNames
+      );
+
+      // Create data structutre for the selected samples
+      const locSampleData = selectedSamples.map((sample) =>
+        initializeLocSampleData(
+          `loc-${sample.id}`,
+          sample.url,
+          sample.collection
+        )
+      );
+
+      return locSampleData;
+    } catch (error) {
+      console.error("Error fetching samples:", error);
+    }
   };
 
   // Update render state when different loops are selected
@@ -477,7 +507,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
     localStorage.setItem("tempSong", JSON.stringify(dataToStore));
     console.log("✅ LocalStorage updated at", nowMilliseconds, dataToStore);
-  }, [allSampleData, songTitle]);
+  }, [allSampleData, songTitle, nowMilliseconds, hasLoadedFromStorage]);
 
   // Start Tone.js context once
   useEffect(() => {
@@ -590,7 +620,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           ({ url, collection }, index) => {
             const sampleId = `loc-${index + 1}`;
 
-            return initializeSamplerData(sampleId, url, collection);
+            return initializeLocSampleData(sampleId, url, collection);
           }
         );
         console.log("formatted Samples", formattedSamples);
@@ -745,7 +775,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         locSamples,
         kitSamples,
         makeSampler,
-        initializeSamplerData,
+        initializeLocSampleData,
         updateSamplerData,
         globalCollectionName,
         setGlobalCollectionName,
