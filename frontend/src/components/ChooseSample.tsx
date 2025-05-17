@@ -12,7 +12,7 @@ const ChooseSample: React.FC<ChooseSampleProps> = ({ setSampleMenuOpen }) => {
   const {
     globalCollectionName,
     selectedSampleId,
-    initializeSamplerData,
+    initLocSampleData,
     updateSamplerData,
     makeSampler,
     samplersRef,
@@ -74,11 +74,7 @@ const ChooseSample: React.FC<ChooseSampleProps> = ({ setSampleMenuOpen }) => {
 
     const url = samplesArray[selectedIndex];
 
-    const sampleData = initializeSamplerData(
-      selectedSampleId,
-      url,
-      collectionName
-    );
+    const sampleData = initLocSampleData(selectedSampleId, url, collectionName);
 
     updateSamplerData(selectedSampleId, sampleData);
     samplersRef.current[selectedSampleId] = await makeSampler(

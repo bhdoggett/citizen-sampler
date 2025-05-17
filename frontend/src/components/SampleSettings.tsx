@@ -14,7 +14,6 @@ const SampleSettings = () => {
     setAllSampleData,
     samplersRef,
     updateSamplerStateSettings,
-    updateSamplerRefSettings,
     currentLoop,
   } = useAudioContext();
 
@@ -139,13 +138,7 @@ const SampleSettings = () => {
     return () => {
       clearTimeout(handler); // cancel if settings change before debounceDelay
     };
-  }, [
-    selectedSampleId,
-    allSampleData,
-    settings,
-    updateSamplerStateSettings,
-    updateSamplerRefSettings,
-  ]);
+  }, [selectedSampleId, allSampleData, settings, updateSamplerStateSettings]);
 
   if (!selectedSampleId) {
     return (

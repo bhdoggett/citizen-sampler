@@ -4,7 +4,7 @@ import { Circle, Music3 } from "lucide-react";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import useTransportControls from "../app/hooks/useTransportControls";
 import * as Tone from "tone";
-import type { LoopName } from "@shared/types/audioTypes";
+import type { LoopName, LoopSettings } from "@shared/types/audioTypes";
 
 const loops = ["A", "B", "C", "D"];
 
@@ -19,42 +19,39 @@ const Loop = () => {
     setBpm,
     loopIsPlaying,
     allLoopSettings,
+    setAllLoopSettings,
     isRecording,
     currentLoop,
     handleSelectLoop,
   } = useAudioContext();
 
-  // Get the transport
-  const transport = Tone.getTransport();
-
   const { handlePlay, handleStop, handleRecord, handleToggleMetronome } =
     useTransportControls();
 
-  // Update ToneJS Transport bpm setting
+  function updateLoopSetting<K extends keyof LoopSettings>(
+    key: K,
+    value: LoopSettings[K]
+  ) {
+    setAllLoopSettings((prev) => ({
+      ...prev,
+      [currentLoop as LoopName]: {
+        ...prev[currentLoop as LoopName],
+        [key]: value,
+      },
+    }));
+  }
+
+  // Update ToneJS Transport settings when state changes
   useEffect(() => {
+    const thisLoopSettings = allLoopSettings[currentLoop as LoopName];
+    if (!thisLoopSettings) return;
+    const { bpm, beats, bars } = thisLoopSettings;
+    const transport = Tone.getTransport();
     transport.bpm.value = bpm;
-  }, [bpm, transport]);
-
-  // Update Tone.js timeSignature when beatsPerBar changes;
-  useEffect(() => {
-    transport.timeSignature = beatsPerBar;
-  }, [transport, beatsPerBar]);
-
-  // Update ToneJS Transport loop length
-  useEffect(() => {
+    transport.timeSignature = beats;
     transport.loop = true;
-    transport.loopStart = "0:0:0";
     transport.loopEnd = `${bars}:0:0`;
-  }, [bars, transport]);
-
-  // Keep allLoopSettingsRef in sync with UI
-  useEffect(() => {
-    allLoopSettings.current[currentLoop as LoopName] = {
-      bpm,
-      beats: beatsPerBar,
-      bars,
-    };
-  }, [allLoopSettings, bpm, beatsPerBar, bars, currentLoop]);
+  }, [allLoopSettings, currentLoop]);
 
   return (
     <div className="px-2 pb-2 flex flex-col items-center space-y-4">
@@ -134,16 +131,16 @@ const Loop = () => {
             type="number"
             min="40"
             max="240"
-            value={bpm}
-            onChange={(e) => setBpm(Number(e.target.value))}
+            value={allLoopSettings[currentLoop as LoopName]?.bpm}
+            onChange={(e) => updateLoopSetting("bpm", Number(e.target.value))}
             className="w-16 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
           />
           <input
             type="range"
             min="40"
             max="240"
-            value={bpm}
-            onChange={(e) => setBpm(Number(e.target.value))}
+            value={allLoopSettings[currentLoop as LoopName]?.bpm}
+            onChange={(e) => updateLoopSetting("bpm", Number(e.target.value))}
             className="w-full mx-2 cursor-pointer slider"
           />
         </div>
@@ -155,8 +152,8 @@ const Loop = () => {
           </label>
           <input
             type="number"
-            value={beatsPerBar}
-            onChange={(e) => setBeatsPerBar(Number(e.target.value))}
+            value={allLoopSettings[currentLoop as LoopName]?.beats}
+            onChange={(e) => updateLoopSetting("beats", Number(e.target.value))}
             className="w-12 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
           />
         </div>
@@ -167,8 +164,8 @@ const Loop = () => {
           </label>
           <input
             type="number"
-            value={bars}
-            onChange={(e) => setBars(Number(e.target.value))}
+            value={allLoopSettings[currentLoop as LoopName]?.bars}
+            onChange={(e) => updateLoopSetting("bars", Number(e.target.value))}
             className="w-12 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
           />
         </div>
