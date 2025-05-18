@@ -10,17 +10,11 @@ const loops = ["A", "B", "C", "D"];
 
 const Loop = () => {
   const {
-    metronomeActive,
-    bars,
-    setBars,
-    beatsPerBar,
-    setBeatsPerBar,
-    bpm,
-    setBpm,
     loopIsPlaying,
+    isRecording,
+    metronomeActive,
     allLoopSettings,
     setAllLoopSettings,
-    isRecording,
     currentLoop,
     handleSelectLoop,
   } = useAudioContext();
@@ -28,10 +22,10 @@ const Loop = () => {
   const { handlePlay, handleStop, handleRecord, handleToggleMetronome } =
     useTransportControls();
 
-  function updateLoopSetting<K extends keyof LoopSettings>(
+  const updateLoopSetting = <K extends keyof LoopSettings>(
     key: K,
     value: LoopSettings[K]
-  ) {
+  ) => {
     setAllLoopSettings((prev) => ({
       ...prev,
       [currentLoop as LoopName]: {
@@ -39,7 +33,7 @@ const Loop = () => {
         [key]: value,
       },
     }));
-  }
+  };
 
   // Update ToneJS Transport settings when state changes
   useEffect(() => {

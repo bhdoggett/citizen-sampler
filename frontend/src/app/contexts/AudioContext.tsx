@@ -17,7 +17,7 @@ import {
 } from "../../../../shared/types/audioTypes";
 import { SamplerWithFX } from "frontend/src/types/SamplerWithFX";
 import { CustomSampler } from "frontend/src/types/CustomSampler";
-import { getCollectionArray, UrlEntry } from "../../lib/collections";
+import { UrlEntry } from "../../lib/collections";
 import { allUrlsWithCollectionNames } from "frontend/src/lib/sampleSources";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
@@ -42,15 +42,7 @@ type AudioContextType = {
   metronomeActive: boolean;
   setMetronomeActive: React.Dispatch<React.SetStateAction<boolean>>;
   metronome: Tone.Sampler;
-  bars: number;
-  setBars: React.Dispatch<React.SetStateAction<number>>;
-  beatsPerBar: number;
-  setBeatsPerBar: React.Dispatch<React.SetStateAction<number>>;
-  bpm: number;
-  setBpm: React.Dispatch<React.SetStateAction<number>>;
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
-  locSamples: SampleType[];
-  kitSamples: SampleType[];
   makeSampler: (
     sampleId: string,
     sampleUrl: string,
@@ -62,13 +54,14 @@ type AudioContextType = {
     collection: string
   ) => SampleType;
   updateSamplerData: (id: string, data: SampleType) => void;
+  handleSelectLoop: (loop: LoopName) => void;
   globalCollectionName: string;
   setGlobalCollectionName: React.Dispatch<React.SetStateAction<string>>;
   currentLoop: string;
   setCurrentLoop: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
   setLoopIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
-  handleSelectLoop: (loop: LoopName) => void;
+
   allLoopSettings: AllLoopSettings;
   setAllLoopSettings: React.Dispatch<React.SetStateAction<AllLoopSettings>>;
   isRecording: boolean;
@@ -97,8 +90,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     now.getSeconds() +
     now.getMilliseconds() / 1000;
   ////////////////
-
-  const thereIsASongInStorage = useRef<boolean>(false);
 
   // funciton to select 8 random urls from the allLOCUrls array
   const selectRandomUrlEntries = (array: UrlEntry[]): UrlEntry[] => {
@@ -247,9 +238,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         };
   });
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
-
-  const [locSamples, setLocSamples] = useState<SampleType[] | []>([]);
-  const [kitSamples, setKitSamples] = useState<SampleType[] | []>([]);
   const [globalCollectionName, setGlobalCollectionName] = useState<string>(
     "Inventing Entertainment"
   );
@@ -375,6 +363,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // Function for loading samplers
   const loadSamplers = useCallback(
     async (type: "loc" | "kit") => {
+      if (!allSampleData) return;
       // Filter the sample data based on the type
       const samplesArray = Object.entries(allSampleData)
         .filter(([key]) => key.startsWith(`${type}-`))
@@ -392,19 +381,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     [allSampleData]
   );
 
-  // // THIS WAS PREVIOUS LOAD SAMPLERS
-  // // Function for loading samplers from seperate locSamples and kitSamples arrays
-  // const loadSamplers = useCallback(async (samplesArray: SampleType[]) => {
-  //   const samplers = await Promise.all(
-  //     samplesArray.map(async ({ id, url }) => await makeSampler(id, url))
-  //   );
-
-  //   samplers.forEach((sampler, i) => {
-  //     const id = samplesArray[i].id;
-  //     samplersRef.current[id] = sampler;
-  //   });
-  // }, []);
-
   const updateSamplerStateSettings = (
     id: string,
     settings: Partial<SampleSettings>
@@ -420,40 +396,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     }));
   };
-
-  // // WHERE DO I USE THIS???
-  // const updateSamplerRefSettings = (
-  //   id: string,
-  //   key: string,
-  //   value: number
-  // ): void => {
-  //   const samplerWithFX = samplersRef.current[id];
-  //   if (samplerWithFX) {
-  //     const { sampler, panVol, highpass, lowpass } = samplerWithFX;
-  //     switch (key) {
-  //       case "volume":
-  //         panVol.volume.value = value;
-  //         break;
-  //       case "pan":
-  //         panVol.pan.value = value;
-  //         break;
-  //       case "highpass":
-  //         highpass.frequency.value = value;
-  //         break;
-  //       case "lowpass":
-  //         lowpass.frequency.value = value;
-  //         break;
-  //       case "attack":
-  //         sampler.attack = value;
-  //         break;
-  //       case "release":
-  //         sampler.release = value;
-  //         break;
-  //       default:
-  //         break;
-  //     }
-  //   }
-  // };
 
   // test allSampleData state
   useEffect(() => {
@@ -670,17 +612,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     Tone.getTransport().loopEnd = `${bars}:0:0`;
   }, [bars]);
 
-  // create samplers for library of congress samgples
+  // Load samplers to samplerRef
   useEffect(() => {
-    if (locSamples.length === 0) return;
-    loadSamplers(locSamples);
-  }, [locSamples, loadSamplers]);
-
-  //create samplers for drum kit samples
-  useEffect(() => {
-    if (kitSamples.length === 0) return;
-    loadSamplers(kitSamples);
-  }, [kitSamples, loadSamplers]);
+    loadSamplers("loc");
+    loadSamplers("kit");
+  }, []);
 
   // Cleanup effect for samplers when component unmounts
   useEffect(() => {
@@ -743,30 +679,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   //   fetchSamples();
   // }, []);
 
-  // Update LOC samples only
-  useEffect(() => {
-    if (locSamples.length === 0) return; /// Do i need this???
-    setAllSampleData((prev) => {
-      const updated = { ...prev };
-      locSamples.forEach((sample) => {
-        updated[sample.id] = sample;
-      });
-      return updated;
-    });
-  }, [locSamples]);
-
-  // Update Kit samples only when they actually change
-  useEffect(() => {
-    if (kitSamples.length === 0) return; /// Do I need this???
-    setAllSampleData((prev) => {
-      const updated = { ...prev };
-      kitSamples.forEach((sample) => {
-        updated[sample.id] = sample;
-      });
-      return updated;
-    });
-  }, [kitSamples]);
-
   // Update one sampler's data (entire) whenever anything inside that sampler's data changes
   const updateSamplerData = (id: string, data: SampleType): void => {
     setAllSampleData((prev) => ({
@@ -809,12 +721,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         metronomeActive,
         setMetronomeActive,
         metronome,
-        bars,
-        setBars,
-        beatsPerBar,
-        setBeatsPerBar,
-        bpm,
-        setBpm,
         currentLoop,
         setCurrentLoop,
         loopIsPlaying,
@@ -824,8 +730,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setAllLoopSettings,
         isRecording,
         setIsRecording,
-        locSamples,
-        kitSamples,
         makeSampler,
         initLocSampleData,
         updateSamplerData,
