@@ -40,7 +40,7 @@ const useDownloadWavStems = () => {
 
     const toneBuffer = await Tone.Offline(async ({ transport }) => {
       // Set tempo and loop settings per loop
-      const loopSettings = allLoopSettings.current[loop];
+      const loopSettings = allLoopSettings[loop];
       if (!loopSettings) return;
       transport.bpm.value = loopSettings.bpm;
       transport.loop = true;
