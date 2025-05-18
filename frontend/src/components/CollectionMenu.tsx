@@ -3,8 +3,12 @@ import { useAudioContext } from "../app/contexts/AudioContext";
 import { collectionNames } from "../lib/collections";
 
 const CollectionMenu = () => {
-  const { initLocSamplesFromOneCollection, setAllSampleData } =
-    useAudioContext();
+  const {
+    initLocSamplesFromOneCollection,
+    setAllSampleData,
+    samplersRef,
+    makeSampler,
+  } = useAudioContext();
 
   const handleSelect = (collection: string) => {
     const newSamples = initLocSamplesFromOneCollection(collection);
@@ -20,6 +24,11 @@ const CollectionMenu = () => {
         ...filteredPrev,
         ...newSamples,
       };
+    });
+
+    Object.entries(newSamples).forEach(async ([key, sample]) => {
+      samplersRef.current[key].sampler.dispose();
+      samplersRef.current[key] = await makeSampler(sample.id, sample.url);
     });
   };
 

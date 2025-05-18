@@ -46,7 +46,7 @@ type AudioContextType = {
   makeSampler: (
     sampleId: string,
     sampleUrl: string,
-    offline: boolean
+    offline?: boolean
   ) => Promise<SamplerWithFX>;
   initLocSampleData: (
     id: string,

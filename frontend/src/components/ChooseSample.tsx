@@ -80,6 +80,7 @@ const ChooseSample: React.FC<ChooseSampleProps> = ({ setSampleMenuOpen }) => {
     const sampleData = initLocSampleData(selectedSampleId, url, collectionName);
 
     updateSamplerData(selectedSampleId, sampleData);
+    samplersRef.current[selectedSampleId].sampler.dispose();
     samplersRef.current[selectedSampleId] = await makeSampler(
       selectedSampleId,
       url,
@@ -90,7 +91,7 @@ const ChooseSample: React.FC<ChooseSampleProps> = ({ setSampleMenuOpen }) => {
   };
 
   return (
-    <div className="absolute left-1/2 transform -translate-x-1/2 top-6 z-10 w-[650px] rounded-sm shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+    <div className="absolute left-1/2 transform -translate-x-1/2 top-6 z-30 w-[650px] rounded-sm shadow-lg bg-white ring-1 ring-black ring-opacity-5">
       <div className="p-1 relative">
         <div className="flex flex-col border-2 border-black bg-slate-800 m-3 p-4 shadow-md shadow-slate-800 text-white">
           <button
