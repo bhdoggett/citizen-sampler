@@ -3,10 +3,24 @@ import { useAudioContext } from "../app/contexts/AudioContext";
 import { collectionNames } from "../lib/collections";
 
 const CollectionMenu = () => {
-  const { setGlobalCollectionName } = useAudioContext();
+  const { initLocSamplesFromOneCollection, setAllSampleData } =
+    useAudioContext();
 
   const handleSelect = (collection: string) => {
-    setGlobalCollectionName(collection);
+    const newSamples = initLocSamplesFromOneCollection(collection);
+
+    setAllSampleData((prev) => {
+      // Filter out all keys that start with "loc-"
+      const filteredPrev = Object.fromEntries(
+        Object.entries(prev).filter(([key]) => !key.startsWith("loc-"))
+      );
+
+      // Merge in new loc samples
+      return {
+        ...filteredPrev,
+        ...newSamples,
+      };
+    });
   };
 
   return (

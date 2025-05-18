@@ -49,7 +49,7 @@ export const collectionNames = [
   "The National Jukebox: Popular Music",
 ];
 
-export const getCollectionArray = (collection: string) => {
+export const getCollectionArrayFromName = (collection: string) => {
   switch (collection) {
     case "Inventing Entertainment":
       return inventingEntertainment;
@@ -109,7 +109,7 @@ export const getCollectionNameFromArray = (array: string[]): string => {
   return "Unknown Collection";
 };
 
-// get allUrls in one combined array function.. all collections combined into one array
+// Get allUrls in one combined array.
 export type UrlEntry = {
   url: string;
   collection: string;

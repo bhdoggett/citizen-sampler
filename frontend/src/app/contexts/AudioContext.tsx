@@ -17,7 +17,7 @@ import {
 } from "../../../../shared/types/audioTypes";
 import { SamplerWithFX } from "frontend/src/types/SamplerWithFX";
 import { CustomSampler } from "frontend/src/types/CustomSampler";
-import { UrlEntry } from "../../lib/collections";
+import { getCollectionArrayFromName, UrlEntry } from "../../lib/collections";
 import { allUrlsWithCollectionNames } from "frontend/src/lib/sampleSources";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
@@ -77,6 +77,9 @@ type AudioContextType = {
   selectedSampleId: string;
   setSelectedSampleId: React.Dispatch<React.SetStateAction<string>>;
   solosExist: boolean;
+  initLocSamplesFromOneCollection: (
+    collection: string
+  ) => Record<string, SampleType>;
 };
 
 const AudioContextContext = createContext<AudioContextType | null>(null);
@@ -91,18 +94,31 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     now.getMilliseconds() / 1000;
   ////////////////
 
-  // funciton to select 8 random urls from the allLOCUrls array
-  const selectRandomUrlEntries = (array: UrlEntry[]): UrlEntry[] => {
-    const arr = [...array]; // make a copy to avoid mutating the original
-    const n = arr.length;
-    const k = 8;
+  // Select 8 random urls from the allLOCUrls array
+  // Uses Fisher-Yates shuffle algorithm to shuffle the array randomly
+  const selectRandomUrlEntries = (
+    array: UrlEntry[] | string[],
+    collection?: string
+  ): UrlEntry[] | string[] => {
+    let workingArray: UrlEntry[] | string[];
+
+    // If it's a string array and collection is defined, override with collection array
+    if (typeof array[0] === "string" && collection) {
+      workingArray = getCollectionArrayFromName(collection);
+    } else {
+      workingArray = [...array] as UrlEntry[];
+    }
+
+    // Shuffle and return k elements
+    const n = workingArray.length;
+    const k = Math.min(8, n);
 
     for (let i = 0; i < k; i++) {
       const j = i + Math.floor(Math.random() * (n - i));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+      [workingArray[i], workingArray[j]] = [workingArray[j], workingArray[i]];
     }
 
-    return arr.slice(0, k);
+    return workingArray.slice(0, k);
   };
 
   // Format state data for a given loc sampler
@@ -139,13 +155,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   };
 
-  const initLocSamples = () => {
+  const initLocSamplesFromAllCollections = () => {
     try {
       const selectedSamples = selectRandomUrlEntries(
         allUrlsWithCollectionNames
-      );
+      ) as UrlEntry[];
 
-      // Reduce to an object keyed by the sample id
       const locSampleData = selectedSamples.reduce(
         (acc, sample, i) => {
           const key = `loc-${i + 1}`;
@@ -153,11 +168,34 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           return acc;
         },
         {} as Record<string, SampleType>
-      ); // Replace with actual type
+      );
 
       return locSampleData;
     } catch (error) {
       console.error("Error fetching samples:", error);
+      return {};
+    }
+  };
+
+  const initLocSamplesFromOneCollection = (collection: string) => {
+    try {
+      const selectedSamples = selectRandomUrlEntries(
+        getCollectionArrayFromName(collection)
+      ) as string[];
+
+      const locSampleData = selectedSamples.reduce(
+        (acc, url, i) => {
+          const key = `loc-${i + 1}`;
+          acc[key] = initLocSampleData(key, url, collection);
+          return acc;
+        },
+        {} as Record<string, SampleType>
+      );
+
+      return locSampleData;
+    } catch (error) {
+      console.error("Error fetching samples:", error);
+      return {};
     }
   };
 
@@ -233,7 +271,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     return saved
       ? JSON.parse(saved)
       : {
-          ...initLocSamples(),
+          ...initLocSamplesFromAllCollections(),
           ...initKitSamples(),
         };
   });
@@ -742,6 +780,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setSelectedSampleId,
         samplersRef,
         solosExist,
+        initLocSamplesFromOneCollection,
       }}
     >
       {children}
