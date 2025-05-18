@@ -2,7 +2,10 @@
 import * as Tone from "tone";
 import { useState, useEffect, useRef } from "react";
 import { useAudioContext } from "../app/contexts/AudioContext";
-import { getCollectionArray, collectionNames } from "../lib/collections";
+import {
+  getCollectionArrayFromName,
+  collectionNames,
+} from "../lib/collections";
 
 type ChooseSampleProps = {
   setSampleMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -24,7 +27,7 @@ const ChooseSample: React.FC<ChooseSampleProps> = ({ setSampleMenuOpen }) => {
   const currentPlayer = useRef<Tone.Player | null>(null);
 
   useEffect(() => {
-    const array = getCollectionArray(collectionName);
+    const array = getCollectionArrayFromName(collectionName);
     setSamplesArray(array);
   }, [collectionName]);
 
