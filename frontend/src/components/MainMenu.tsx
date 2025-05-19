@@ -1,24 +1,25 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useAudioContext } from "../app/contexts/AudioContext";
+import SaveNewSong from "./SaveNewSong";
 
-const Menu = () => {
+type MenuProps = {
+  setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  const { songTitle, setSongTitle } = useAudioContext();
+  const [showDialogue, setShowDialogue] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("song Title", songTitle);
-  }, [songTitle]);
+    if (showDialogue) {
+      setHotKeysActive(false);
+    } else {
+      setHotKeysActive(true);
+    }
+  }, [showDialogue, setHotKeysActive]);
 
   return (
-    <div
-      className=""
-      id="main-menu"
-      onBlur={(e) => {
-        if (e.target.id === "main-menu") return;
-        setMenuOpen(false);
-      }}
-    >
+    <div className="" id="main-menu">
       <button
         className="bg-slate-500 text-white border border-slate-700 px-1 py-1 rounded-sm  hover:bg-slate-600"
         onClick={() => setMenuOpen((prev) => !prev)}
@@ -31,18 +32,22 @@ const Menu = () => {
           <ul className="main-menu flex flex-col text-sm">
             <li
               className="px-1 py-1 hover:bg-slate-100 cursor-pointer"
-              onClick={() => setSongTitle("Title!!")}
+              onClick={() => {
+                setShowDialogue("save-song");
+                setMenuOpen(false);
+              }}
             >
               Save Song
             </li>
-            <li
-              className="px-1 py-1 hover:bg-slate-100 cursor-pointer"
-              onClick={() => setSongTitle("Title!!")}
-            >
-              Load Song
-            </li>
           </ul>
         </div>
+      )}
+
+      {showDialogue === "save-song" && (
+        <SaveNewSong
+          setShowDialogue={setShowDialogue}
+          setHotKeysActive={setHotKeysActive}
+        />
       )}
     </div>
   );

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import useTransportControls from "./useTransportControls";
 import { useAudioContext } from "../contexts/AudioContext";
 
-const useHotKeys = () => {
+const useHotKeys = (hotKeysActive: boolean) => {
   const { loopIsPlaying } = useAudioContext();
 
   const { handlePlay, handleStop, handleRecord, handleToggleMetronome } =
@@ -14,6 +14,8 @@ const useHotKeys = () => {
   // "command r" =  toggle record
   // "m" = toggle metronome
   useEffect(() => {
+    if (!hotKeysActive) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === " ") {
         e.preventDefault();
@@ -43,6 +45,7 @@ const useHotKeys = () => {
     handleStop,
     handleToggleMetronome,
     loopIsPlaying,
+    hotKeysActive,
   ]);
 };
 

@@ -54,7 +54,6 @@ type AudioContextType = {
     collection: string
   ) => SampleType;
   updateSamplerData: (id: string, data: SampleType) => void;
-  handleSelectLoop: (loop: LoopName) => void;
   globalCollectionName: string;
   setGlobalCollectionName: React.Dispatch<React.SetStateAction<string>>;
   currentLoop: string;
@@ -80,19 +79,23 @@ type AudioContextType = {
   initLocSamplesFromOneCollection: (
     collection: string
   ) => Record<string, SampleType>;
+  cleanupSampler: (
+    id: string,
+    ref: React.RefObject<Record<string, SamplerWithFX>>
+  ) => void;
 };
 
 const AudioContextContext = createContext<AudioContextType | null>(null);
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
-  /////////////////
-  const now = new Date();
-  const nowMilliseconds =
-    now.getHours() * 3600 +
-    now.getMinutes() * 60 +
-    now.getSeconds() +
-    now.getMilliseconds() / 1000;
-  ////////////////
+  // /////////////////
+  // const now = new Date();
+  // const nowMilliseconds =
+  //   now.getHours() * 3600 +
+  //   now.getMinutes() * 60 +
+  //   now.getSeconds() +
+  //   now.getMilliseconds() / 1000;
+  // ////////////////
 
   // Select 8 random urls from the allLOCUrls array
   // Uses Fisher-Yates shuffle algorithm to shuffle the array randomly
@@ -267,14 +270,28 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [allSampleData, setAllSampleData] = useState<
     Record<string, SampleType>
   >(() => {
-    const saved = localStorage.getItem("samples");
-    return saved
-      ? JSON.parse(saved)
+    const savedSamples = localStorage.getItem("samples");
+    return savedSamples
+      ? JSON.parse(savedSamples)
       : {
           ...initLocSamplesFromAllCollections(),
           ...initKitSamples(),
         };
   });
+  const [allLoopSettings, setAllLoopSettings] = useState<AllLoopSettings>(
+    () => {
+      const savedLoops = localStorage.getItem("loops");
+      return savedLoops
+        ? JSON.parse(savedLoops)
+        : {
+            A: { beats: 4, bars: 2, bpm: 120 },
+            B: null,
+            C: null,
+            D: null,
+          };
+    }
+  );
+
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
   const [globalCollectionName, setGlobalCollectionName] = useState<string>(
     "Inventing Entertainment"
@@ -283,17 +300,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [metronomeActive, setMetronomeActive] = useState(false);
-  const [bars, setBars] = useState<number>(2);
-  const [beatsPerBar, setBeatsPerBar] = useState<number>(4);
-  const [bpm, setBpm] = useState<number>(120);
   const [currentLoop, setCurrentLoop] = useState<string>("A");
-  const lastLoopRef = useRef<LoopName>("A");
-  const [allLoopSettings, setAllLoopSettings] = useState<AllLoopSettings>({
-    A: { beats: beatsPerBar, bars, bpm },
-    B: null,
-    C: null,
-    D: null,
-  });
+  // const lastLoopRef = useRef<LoopName>("A");
+
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
@@ -360,10 +369,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   ) => {
     const samplerWithFX = ref.current[sampleId];
     if (samplerWithFX) {
-      const { sampler, panVol, highpass, lowpass } = samplerWithFX;
+      const { sampler, gain, panVol, highpass, lowpass } = samplerWithFX;
 
       // Dispose of each Tone.js node
       sampler.dispose();
+      gain.dispose();
       panVol.dispose();
       highpass.dispose();
       lowpass.dispose();
@@ -371,31 +381,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       // Delete the reference
       delete ref.current[sampleId];
     }
-  };
-
-  // Update render state when different loops are selected
-  const handleSelectLoop = (newLoop: LoopName) => {
-    const settings = allLoopSettings;
-
-    // Copy settings from the last loop if the first time selecting current loop
-    if (!settings[newLoop]) {
-      const lastLoop = lastLoopRef.current;
-      const lastSettings = settings[lastLoop];
-      if (lastSettings) {
-        settings[newLoop] = { ...lastSettings };
-      }
-    }
-
-    const currentSettings = settings[newLoop];
-    if (currentSettings) {
-      setBpm(currentSettings.bpm);
-      setBeatsPerBar(currentSettings.beats);
-      setBars(currentSettings.bars);
-      setCurrentLoop(newLoop);
-    }
-
-    // Update last selected loop
-    lastLoopRef.current = newLoop;
   };
 
   // Function for loading samplers
@@ -419,6 +404,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     [allSampleData]
   );
 
+  // Load samplers to samplerRef
+  useEffect(() => {
+    loadSamplers("loc");
+    loadSamplers("kit");
+  });
+
   const updateSamplerStateSettings = (
     id: string,
     settings: Partial<SampleSettings>
@@ -435,116 +426,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }));
   };
 
-  // test allSampleData state
-  useEffect(() => {
-    if (allSampleData) {
-      console.log("allSampleData", nowMilliseconds, allSampleData);
-    }
-  }, [allSampleData]);
-
+  // // test allSampleData state
   // useEffect(() => {
-  //   if (!hasLoadedFromStorage || localStorage.tempSong) return;
-
-  //   setKitSamples([
-  //     {
-  //       id: "kit-1",
-  //       title: "Kick_Bulldog_2",
-  //       collectionName: "Kit",
-  //       label: "Kick",
-  //       url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
-  //       events: { A: [], B: [], C: [], D: [] },
-  //       settings: {
-  //         mute: false,
-  //         solo: false,
-  //         reverse: false,
-  //         start: 0,
-  //         end: null,
-  //         volume: 0,
-  //         pan: 0,
-  //         baseNote: "C4",
-  //         pitch: 0,
-  //         attack: 0,
-  //         release: 0,
-  //         quantize: false,
-  //         quantVal: 4,
-  //         highpass: [0, "highpass"],
-  //         lowpass: [20000, "lowpass"],
-  //       },
-  //     },
-  //     {
-  //       id: "kit-2",
-  //       title: "Snare_Astral_1",
-  //       collectionName: "Kit",
-  //       url: "/samples/drums/snares/Snare_Astral_1.wav",
-  //       events: { A: [], B: [], C: [], D: [] },
-  //       settings: {
-  //         mute: false,
-  //         solo: false,
-  //         reverse: false,
-  //         start: 0,
-  //         end: null,
-  //         volume: 0,
-  //         pan: 0,
-  //         baseNote: "C4",
-  //         pitch: 0,
-  //         attack: 0,
-  //         release: 0,
-  //         quantize: false,
-  //         quantVal: 4,
-  //         highpass: [0, "highpass"],
-  //         lowpass: [20000, "lowpass"],
-  //       },
-  //     },
-  //     {
-  //       id: "kit-3",
-  //       title: "ClosedHH_Alessya_DS",
-  //       collectionName: "Kit",
-  //       url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
-  //       events: { A: [], B: [], C: [], D: [] },
-  //       settings: {
-  //         mute: false,
-  //         solo: false,
-  //         reverse: false,
-  //         start: 0,
-  //         end: null,
-  //         volume: 0,
-  //         pan: 0,
-  //         baseNote: "C4",
-  //         pitch: 0,
-  //         attack: 0,
-  //         release: 0,
-  //         quantize: false,
-  //         quantVal: 4,
-  //         highpass: [0, "highpass"],
-  //         lowpass: [20000, "lowpass"],
-  //       },
-  //     },
-  //     {
-  //       id: "kit-4",
-  //       title: "Clap_Graphite",
-  //       collectionName: "Kit",
-  //       url: "/samples/drums/claps/Clap_Graphite.wav",
-  //       events: { A: [], B: [], C: [], D: [] },
-  //       settings: {
-  //         mute: false,
-  //         solo: false,
-  //         reverse: false,
-  //         start: 0,
-  //         end: null,
-  //         volume: 0,
-  //         pan: 0,
-  //         baseNote: "C4",
-  //         pitch: 0,
-  //         attack: 0,
-  //         release: 0,
-  //         quantize: false,
-  //         quantVal: 4,
-  //         highpass: [0, "highpass"],
-  //         lowpass: [20000, "lowpass"],
-  //       },
-  //     },
-  //   ]);
-  // }, [hasLoadedFromStorage]);
+  //   if (allSampleData) {
+  //     console.log("allSampleData", nowMilliseconds, allSampleData);
+  //   }
+  // }, [allSampleData]);
 
   // useEffect to upload allSampleData to localStorage.samples when allSampleData state changes
   useEffect(() => {
@@ -561,34 +448,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     localStorage.setItem("loops", JSON.stringify(allLoopSettings));
   }, [allLoopSettings]);
 
-  // // If "tempSong" exists in local storage use that to init state
-  // useEffect(() => {
-  //   const data = localStorage.getItem("tempSong");
-  //   if (data) {
-  //     thereIsASongInStorage.current = true;
-  //     const tempSong = JSON.parse(data);
-  //     if (tempSong.title) setSongTitle(tempSong.title);
-  //     if (
-  //       typeof tempSong.loop === "object" &&
-  //       typeof tempSong.loop.bars === "number"
-  //     )
-  //       setBars(tempSong.loop.bars);
-  //     if (
-  //       typeof tempSong.loop === "object" &&
-  //       typeof tempSong.loop.beats === "number"
-  //     )
-  //       setBeatsPerBar(tempSong.loop.beats);
-  //     if (
-  //       typeof tempSong.loop === "object" &&
-  //       typeof tempSong.loop.bpm === "number"
-  //     )
-  //       setBpm(tempSong.loop.bpm);
-  //     if (tempSong.samples) setAllSampleData(tempSong.samples);
-  //     console.log("✅ LocalStorage loaded to app", nowMilliseconds, tempSong);
-  //     setHasLoadedFromStorage(true);
-  //   }
-  // }, []);
-
   // Start Tone.js context once
   useEffect(() => {
     const init = async () => {
@@ -597,14 +456,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
     init();
   }, []);
-
-  // Update ToneJS loopEnd when bars or beatsPerBar changes
-  useEffect(() => {
-    const loopEnd = `${bars}:0:0`;
-    Tone.getTransport().loop = true;
-    Tone.getTransport().loopStart = "0:0:0";
-    Tone.getTransport().loopEnd = loopEnd;
-  }, [bars, beatsPerBar]);
 
   // Schedule metronome playback based on time signature
   useEffect(() => {
@@ -617,7 +468,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       const [, beats] = (Tone.getTransport().position as string)
         .split(":")
         .map(Number);
-      beatCount = beats % beatsPerBar;
+      beatCount = beats % allLoopSettings[currentLoop as LoopName]!.beats;
 
       if (beatCount === 0) {
         metronome.triggerAttackRelease("C6", "8n", time);
@@ -631,30 +482,20 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     return () => {
       transportForCleanup.clear(metronomeLoop);
     };
-  }, [loopIsPlaying, metronomeActive, beatsPerBar]);
+  }, [loopIsPlaying, metronomeActive, allLoopSettings, currentLoop]);
 
-  // Update ToneJS Transport bpm setting
+  // Update ToneJS Transport when currentLoop changes
   useEffect(() => {
-    Tone.getTransport().bpm.value = bpm;
-  }, [bpm]);
+    const transport = Tone.getTransport();
+    const settings = allLoopSettings[currentLoop as LoopName];
+    if (!settings) return;
 
-  // Update Tone.js timeSignature when beatsPerBar changes;
-  useEffect(() => {
-    Tone.getTransport().timeSignature = beatsPerBar;
-  }, [beatsPerBar]);
-
-  // Update ToneJS Transport loop length
-  useEffect(() => {
-    Tone.getTransport().loop = true;
-    Tone.getTransport().loopStart = "0:0:0";
-    Tone.getTransport().loopEnd = `${bars}:0:0`;
-  }, [bars]);
-
-  // Load samplers to samplerRef
-  useEffect(() => {
-    loadSamplers("loc");
-    loadSamplers("kit");
-  }, []);
+    transport.bpm.value = settings.bpm;
+    transport.timeSignature = settings.beats;
+    transport.loop = true;
+    transport.loopStart = "0:0:0";
+    transport.loopEnd = `${settings.bars}:0:0`;
+  }, [allLoopSettings, currentLoop]);
 
   // Cleanup effect for samplers when component unmounts
   useEffect(() => {
@@ -763,7 +604,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setCurrentLoop,
         loopIsPlaying,
         setLoopIsPlaying,
-        handleSelectLoop,
         allLoopSettings,
         setAllLoopSettings,
         isRecording,
@@ -781,6 +621,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         samplersRef,
         solosExist,
         initLocSamplesFromOneCollection,
+        cleanupSampler,
       }}
     >
       {children}

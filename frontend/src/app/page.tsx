@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import useHotKeys from "./hooks/useHotKeys";
@@ -17,13 +18,16 @@ const CollectionMenu = dynamic(() => import("../components/CollectionMenu"), {
 });
 
 export default function Home() {
-  useHotKeys();
+  const [hotKeysActive, setHotKeysActive] = useState<boolean>(true);
+
+  useHotKeys(hotKeysActive);
+
   return (
     <div className="flex flex-col justify-center items-center my-5">
       <div className="w-[800px] p-1 xs:w-full sm:w-full md:w-[700px]">
         <div className="flex justify-between">
           <h1 className="text-6xl font-bold block">Citizen Sampler</h1>
-          <MainMenu />
+          <MainMenu setHotKeysActive={setHotKeysActive} />
         </div>
         <CollectionMenu />
         <SettingsWrapper />

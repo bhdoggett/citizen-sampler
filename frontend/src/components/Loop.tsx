@@ -16,7 +16,8 @@ const Loop = () => {
     allLoopSettings,
     setAllLoopSettings,
     currentLoop,
-    handleSelectLoop,
+    setCurrentLoop,
+    // handleSelectLoop,
   } = useAudioContext();
 
   const { handlePlay, handleStop, handleRecord, handleToggleMetronome } =
@@ -110,7 +111,7 @@ const Loop = () => {
                   ? "border-t border-l border-b border-black px-1"
                   : "border border-black px-1"
               } ${loop === currentLoop ? "bg-slate-400 shadow-inner shadow-black" : "bg-slate-300"}`}
-              onClick={() => handleSelectLoop(loop as LoopName)}
+              onClick={() => setCurrentLoop(loop as LoopName)}
             >
               {loop}
             </button>

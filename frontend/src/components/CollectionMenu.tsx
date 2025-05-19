@@ -5,6 +5,7 @@ import { collectionNames } from "../lib/collections";
 const CollectionMenu = () => {
   const {
     initLocSamplesFromOneCollection,
+    cleanupSampler,
     setAllSampleData,
     samplersRef,
     makeSampler,
@@ -27,7 +28,7 @@ const CollectionMenu = () => {
     });
 
     Object.entries(newSamples).forEach(async ([key, sample]) => {
-      samplersRef.current[key].sampler.dispose();
+      cleanupSampler(key, samplersRef);
       samplersRef.current[key] = await makeSampler(sample.id, sample.url);
     });
   };
