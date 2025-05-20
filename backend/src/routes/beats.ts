@@ -1,14 +1,14 @@
-import keys from "../config/keys";
-import express, { Request, Response, NextFunction } from "express";
-import User from "../models/user";
-import { requireAuth } from "./auth";
+// import keys from "../config/keys";
+// import express, { Request, Response, NextFunction } from "express";
+// import User from "../models/user";
+// import { requireAuth } from "./auth";
 
-const router = express.Router();
-const PORT = process.env.PORT || 8000;
+// const router = express.Router();
+// const PORT = process.env.PORT || 8000;
 
-router.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+// router.get("/", (req, res) => {
+//   res.send("Hello World!");
+// });
 
 // router.get(
 //   "/songs",
@@ -17,7 +17,8 @@ router.get("/", (req, res) => {
 //     const { username } = req;
 //     const user = await User.find((user) => user.username === username);
 //     if (!user) {
-//       return res.status(401).json({ message: "Unauthorized" });
+//       res.status(401).json({ message: "Unauthorized" });
+//       return;
 //     }
 
 //     res.json(user.songs);

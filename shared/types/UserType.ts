@@ -1,8 +1,13 @@
 import type { SongType } from "./audioTypes";
+import mongoose from "mongoose";
 
 export type UserType = {
-  id: string;
-  email: string;
-  name: string;
+  _id: mongoose.ObjectId;
+  username?: string;
+  password?: string;
+  email?: string;
+  googleId?: string;
+  lastLogin: Date;
+  createdAt: Date;
   songs: SongType[];
 };

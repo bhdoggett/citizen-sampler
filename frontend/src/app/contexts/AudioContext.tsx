@@ -98,11 +98,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // ////////////////
 
   // Select 8 random urls from the allLOCUrls array
-  // Uses Fisher-Yates shuffle algorithm to shuffle the array randomly
   const selectRandomUrlEntries = (
     array: UrlEntry[] | string[],
     collection?: string
   ): UrlEntry[] | string[] => {
+    // Fisher-Yates algorithm to shuffle the array into random order
     let workingArray: UrlEntry[] | string[];
 
     // If it's a string array and collection is defined, override with collection array

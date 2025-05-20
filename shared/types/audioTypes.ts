@@ -1,17 +1,18 @@
-import * as Tone from "../../frontend/node_modules/tone";
 import {
-  //   AudioRange,
-  //   Cents,
-  //   Decibels,
+  // AudioRange,
+  // Cents,
+  // Decibels,
   Frequency,
-  //   NormalRange,
-  //   Time,
-} from "../../frontend/node_modules/tone/build/esm/core/type/Units";
+  // NormalRange,
+  // Time,
+  Ticks,
+} from "tone/build/esm/core/type/Units";
+import mongoose from "mongoose";
 
 export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
 
 export type SampleEvent = {
-  startTime: number | null;
+  startTime: Ticks | null;
   duration: number | null;
   note: Frequency;
   // velocity: number | null;
@@ -60,10 +61,8 @@ export type AllLoopSettings = {
 };
 
 export type SongType = {
-  _id?: string;
+  _id?: mongoose.ObjectId;
   title: string;
-  beats: number;
-  bars: number;
-  bpm: number;
+  loops: AllLoopSettings;
   samples: SampleType[];
 };

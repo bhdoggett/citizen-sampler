@@ -1,99 +1,77 @@
 import express, { Request, Response, NextFunction } from "express";
 import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local"; // don't need this
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-//get JWT strategy
+import jwt from "jsonwebtoken";
 import User from "../models/user";
+import requireJwtAuth from "../middleware/requireJwtAuth";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
+import "../strategies/jwt";
+import "../strategies/local";
+import "../strategies/google";
 
 dotenv.config();
 
 const router = express.Router();
 
-export const requireAuth = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if (req.isAuthenticated()) return next();
-  res.status(401).send("Not logged in");
-};
+// Local signup
+router.post("/signup", async (req: Request, res: Response): Promise<void> => {
+  const { username, email, password } = req.body;
 
-// ---- LOCAL STRATEGY ----
-passport.use(
-  new LocalStrategy(async (username, password, done) => {
-    try {
-      const user = await User.findOne({ username });
-      if (!user) return done(null, false, { message: "Incorrect username" });
-
-      const match = await bcrypt.compare(password, user.password);
-      if (!match) return done(null, false, { message: "Incorrect password" });
-
-      return done(null, user);
-    } catch (err) {
-      return done(err);
-    }
-  })
-);
-
-// ---- GOOGLE STRATEGY ----
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: "/auth/google/callback",
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        let user = await User.findOne({ googleId: profile.id });
-
-        if (!user) {
-          user = new User({
-            googleId: profile.id,
-            username: profile.displayName,
-            email: profile.emails?.[0].value,
-          });
-          await user.save();
-        }
-
-        return done(null, user);
-      } catch (err) {
-        return done(err);
-      }
-    }
-  )
-);
-
-// ---- SERIALIZE USER ----
-passport.serializeUser((user: any, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
   try {
-    const user = await User.findById(id);
-    done(null, user);
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      res.status(400).json({ message: "User already exists" });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+      googleId: null,
+      lastLogin: new Date(),
+      createdAt: new Date(),
+      songs: [],
+    });
+
+    await newUser.save();
+
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET!, {
+      expiresIn: "7d",
+    });
+
+    res.status(201).json({
+      message: "Signup successful",
+      token,
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+      },
+    });
   } catch (err) {
-    done(err, null);
+    console.error("Signup error:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-// ---- AUTH ROUTES ----
-
 // Local login
-router.post("/login", (req, res, next) => {
+router.post("/login", async (req, res, next) => {
   passport.authenticate(
     "local",
-    (err: any, user: Express.User, info: { message: string }) => {
+    (err: any, user: any, info: { message: string }) => {
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: info.message });
 
-      req.logIn(user, (err) => {
-        if (err) return next(err);
-        res.json({ message: "Login successful", user });
-      });
+      // Generate JWT
+      const token = jwt.sign(
+        { sub: user._id, username: user.username },
+        process.env.JWT_SECRET!,
+        { expiresIn: "1h" }
+      );
+
+      res.json({ message: "Login successful", token });
     }
   )(req, res, next);
 });
@@ -113,7 +91,7 @@ router.get(
 );
 
 // Check login status
-router.get("/me", (req, res) => {
+router.get("/me", requireJwtAuth, (req, res) => {
   if (req.isAuthenticated()) {
     res.json(req.user);
   } else {
