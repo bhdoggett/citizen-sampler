@@ -1,15 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import dynamic from "next/dynamic";
-// import ClientProviders from "../components/ClientProvider";
-import { AuthProvider } from "../app/contexts/AuthContext";
-const AudioProvider = dynamic(
-  () => import("../app/contexts/AudioContext").then((mod) => mod.AudioProvider),
-  {
-    ssr: false,
-  }
-);
+import ClientProviders from "../components/ClientProvider";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -49,9 +42,7 @@ export default function RootLayout({
           // ${geistSans.variable} ${geistMono.variable} antialiased
           `}
       >
-        <AuthProvider>
-          <AudioProvider>{children}</AudioProvider>
-        </AuthProvider>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );
