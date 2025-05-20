@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import SaveNewSong from "./SaveNewSong";
 import CollectionMenu from "./CollectionMenu";
+// import { useAuthContext } from "../app/contexts/AuthContext";
 
 type MenuProps = {
   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -10,6 +11,7 @@ type MenuProps = {
 const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [showDialogue, setShowDialogue] = useState<string | null>(null);
+  // const { user, localSignup, login, logout } = useAuthContext();
 
   useEffect(() => {
     if (showDialogue) {

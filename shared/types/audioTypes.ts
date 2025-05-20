@@ -1,13 +1,13 @@
+import * as Tone from "../../frontend/node_modules/tone";
 import {
-  // AudioRange,
-  // Cents,
-  // Decibels,
-  Frequency,
-  // NormalRange,
-  // Time,
   Ticks,
-} from "tone/build/esm/core/type/Units";
-import mongoose from "mongoose";
+  Frequency,
+  //   AudioRange,
+  //   Cents,
+  //   Decibels,
+  //   NormalRange,
+  //   Time,
+} from "../../frontend/node_modules/tone/build/esm/core/type/Units";
 
 export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
 
@@ -61,7 +61,7 @@ export type AllLoopSettings = {
 };
 
 export type SongType = {
-  _id?: mongoose.ObjectId;
+  _id?: string;
   title: string;
   loops: AllLoopSettings;
   samples: SampleType[];
