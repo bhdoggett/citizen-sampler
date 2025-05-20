@@ -158,6 +158,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   };
 
+  //
   const initLocSamplesFromAllCollections = () => {
     try {
       const selectedSamples = selectRandomUrlEntries(
@@ -266,7 +267,10 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     );
   };
 
-  const [songTitle, setSongTitle] = useState<string>("Song001");
+  const [songTitle, setSongTitle] = useState<string>(() => {
+    const savedSongTitle = localStorage.getItem("songTitle");
+    return savedSongTitle ? JSON.parse(savedSongTitle) : "Song001";
+  });
   const [allSampleData, setAllSampleData] = useState<
     Record<string, SampleType>
   >(() => {
@@ -408,7 +412,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     loadSamplers("loc");
     loadSamplers("kit");
-  });
+  }, []); // <===== if this empty dependency array is removed, the samplers are loaded with every update in allSampleData state
 
   const updateSamplerStateSettings = (
     id: string,

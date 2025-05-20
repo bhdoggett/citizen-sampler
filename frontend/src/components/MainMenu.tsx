@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import SaveNewSong from "./SaveNewSong";
+import CollectionMenu from "./CollectionMenu";
 
 type MenuProps = {
   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -39,15 +40,34 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
             >
               Save Song
             </li>
+            <li
+              className="px-1 py-1 hover:bg-slate-100 cursor-pointer"
+              onClick={() => {
+                setShowDialogue("collection-menu");
+                setMenuOpen(false);
+              }}
+            >
+              Load from Collection
+            </li>
           </ul>
         </div>
       )}
 
-      {showDialogue === "save-song" && (
-        <SaveNewSong
-          setShowDialogue={setShowDialogue}
-          setHotKeysActive={setHotKeysActive}
-        />
+      {showDialogue && (
+        <div className="absolute left-1/2 transform -translate-x-1/2 top-6 z-30 w-[650px] rounded-sm shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+          {showDialogue === "save-song" && (
+            <SaveNewSong
+              setShowDialogue={setShowDialogue}
+              setHotKeysActive={setHotKeysActive}
+            />
+          )}
+          {showDialogue === "collection-menu" && (
+            <CollectionMenu
+              setShowDialogue={setShowDialogue}
+              setHotKeysActive={setHotKeysActive}
+            />
+          )}
+        </div>
       )}
     </div>
   );

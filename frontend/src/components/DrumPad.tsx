@@ -10,7 +10,7 @@ import PitchGrid from "./PitchGrid";
 
 type DrumPadProps = {
   id: string;
-  sampler: CustomSampler;
+  sampler: CustomSampler | null;
   showGrid: boolean;
 };
 
@@ -26,14 +26,22 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
     currentLoop,
   } = useAudioContext();
   const sampleDataRef = useRef(allSampleData[id]);
-  const { currentEvent } = samplersRef.current[id];
+  const currentEvent = samplersRef.current[id]?.currentEvent;
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
-  const { baseNote } = allSampleData[id].settings;
+  const baseNote = allSampleData[id]?.settings.baseNote;
 
   const handlePress = (note: Frequency) => {
+    if (!sampler) return;
+
+    // Stop scheduled release
+    if (scheduledReleaseTimeoutRef.current) {
+      clearTimeout(scheduledReleaseTimeoutRef.current);
+      scheduledReleaseTimeoutRef.current = null;
+    }
+
     const now = Tone.now();
     const { start, end } = sampleDataRef.current.settings;
 
@@ -62,6 +70,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
   };
 
   const handleRelease = (note: Frequency) => {
+    if (!sampler) return;
+
     if (!sampleIsPlaying) return;
 
     // Stop scheduled release
@@ -113,6 +123,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
   };
 
   const getPadColor = () => {
+    if (!allSampleData[id] || !allSampleData[id].settings) return;
     if (allSampleData[id].settings.mute) return "bg-red-400";
     if (allSampleData[id].settings.solo) return "bg-yellow-200";
     return "bg-slate-400";
@@ -154,6 +165,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
     });
 
     const part = new Tone.Part((time, event) => {
+      if (!sampler) return;
       const { start, end } = sampleDataRef.current.settings;
       if (
         typeof event === "object" &&

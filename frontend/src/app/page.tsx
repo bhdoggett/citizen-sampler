@@ -1,19 +1,15 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import useHotKeys from "./hooks/useHotKeys";
 import MainMenu from "../components/MainMenu";
 
-const DrumMachine = dynamic(() => import("../components/DrumMachine"), {
-  ssr: false,
-});
-
 const SettingsWrapper = dynamic(() => import("../components/SettingsWrapper"), {
   ssr: false,
 });
 
-const CollectionMenu = dynamic(() => import("../components/CollectionMenu"), {
+const DrumMachine = dynamic(() => import("../components/DrumMachine"), {
   ssr: false,
 });
 
@@ -29,7 +25,6 @@ export default function Home() {
           <h1 className="text-6xl font-bold block">Citizen Sampler</h1>
           <MainMenu setHotKeysActive={setHotKeysActive} />
         </div>
-        <CollectionMenu />
         <SettingsWrapper />
         <DrumMachine />
       </div>

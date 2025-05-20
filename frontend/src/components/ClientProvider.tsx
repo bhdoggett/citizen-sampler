@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-
+import { AuthProvider } from "../app/contexts/AuthContext";
 const AudioProvider = dynamic(
   () => import("../app/contexts/AudioContext").then((mod) => mod.AudioProvider),
   {
@@ -13,5 +13,9 @@ export default function ClientProviders({
 }: {
   children: React.ReactNode;
 }) {
-  return <AudioProvider>{children}</AudioProvider>;
+  return (
+    <AuthProvider>
+      <AudioProvider>{children}</AudioProvider>
+    </AuthProvider>
+  );
 }

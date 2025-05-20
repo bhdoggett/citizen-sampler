@@ -10,7 +10,8 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
   id,
 }) => {
   const { allSampleData } = useAudioContext();
-  const { url, settings } = allSampleData[id];
+  const url = allSampleData[id]?.url;
+  const settings = allSampleData[id]?.settings;
   const { start, end, attack, release } = settings;
 
   const waveformRef = useRef<HTMLDivElement | null>(null);
