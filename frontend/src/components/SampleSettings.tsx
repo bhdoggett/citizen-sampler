@@ -6,6 +6,10 @@ import useMutesAndSolos from "../app/hooks/useMutesAndSolos";
 import ChooseSample from "./ChooseSample";
 import Waveform from "./Waveform";
 import notes from "../lib/notes";
+import {
+  linearizeFrequency,
+  exponentiateFrequency,
+} from "../lib/audio/util/frequencyConversion";
 
 const SampleSettings = () => {
   const {
@@ -17,8 +21,8 @@ const SampleSettings = () => {
     currentLoop,
   } = useAudioContext();
 
-  // Need Frequency Params for translating frequency filters from exponential to linear inputs
-  const maxFreq = 20000;
+  // // Need Frequency Params for translating frequency filters from exponential to linear inputs
+  // const maxFreq = 20000;
 
   const { setSampleMute, setSampleSolo } = useMutesAndSolos();
 
@@ -59,18 +63,6 @@ const SampleSettings = () => {
       ...prev,
       [key]: value,
     }));
-  };
-
-  // Convert from frequency (Hz) to a 0-1 linear slider value
-  const linearizeFrequency = (frequency: number): number => {
-    if (frequency <= 0) return 0;
-    return Math.log10(frequency) / Math.log10(maxFreq);
-  };
-
-  // Convert from slider (0-1) back to frequency (Hz)
-  const exponentiateFrequency = (sliderValue: number): number => {
-    if (sliderValue <= 0) return 0;
-    return Math.pow(10, sliderValue * Math.log10(maxFreq));
   };
 
   // Clear recorded sample events from specified sampler
