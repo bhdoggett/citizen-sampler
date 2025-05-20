@@ -14,50 +14,53 @@ dotenv.config();
 const router = express.Router();
 
 // Local signup
-router.post("/signup", async (req: Request, res: Response): Promise<void> => {
-  const { username, email, password } = req.body;
+router.post(
+  "/signup/local",
+  async (req: Request, res: Response): Promise<void> => {
+    const { username, email, password } = req.body;
 
-  try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      res.status(400).json({ message: "User already exists" });
-      return;
+    try {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        res.status(400).json({ message: "User already exists" });
+        return;
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = new User({
+        username,
+        email,
+        password: hashedPassword,
+        googleId: null,
+        lastLogin: new Date(),
+        createdAt: new Date(),
+        songs: [],
+      });
+
+      await newUser.save();
+
+      const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET!, {
+        expiresIn: "7d",
+      });
+
+      res.status(201).json({
+        message: "Signup successful",
+        token,
+        user: {
+          id: newUser._id,
+          username: newUser.username,
+          email: newUser.email,
+        },
+      });
+    } catch (err) {
+      console.error("Signup error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({
-      username,
-      email,
-      password: hashedPassword,
-      googleId: null,
-      lastLogin: new Date(),
-      createdAt: new Date(),
-      songs: [],
-    });
-
-    await newUser.save();
-
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET!, {
-      expiresIn: "7d",
-    });
-
-    res.status(201).json({
-      message: "Signup successful",
-      token,
-      user: {
-        id: newUser._id,
-        username: newUser.username,
-        email: newUser.email,
-      },
-    });
-  } catch (err) {
-    console.error("Signup error:", err);
-    res.status(500).json({ message: "Internal server error" });
   }
-});
+);
 
 // Local login
-router.post("/login", async (req, res, next) => {
+router.post("/login/local", async (req, res, next) => {
   passport.authenticate(
     "local",
     (err: any, user: any, info: { message: string }) => {
