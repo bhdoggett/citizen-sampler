@@ -1,6 +1,13 @@
 "use client";
 import dynamic from "next/dynamic";
-import { AuthProvider } from "../app/contexts/AuthContext";
+
+const AuthProvider = dynamic(
+  () => import("../app/contexts/AuthContext").then((mod) => mod.AuthProvider),
+  {
+    ssr: false,
+  }
+);
+
 const AudioProvider = dynamic(
   () => import("../app/contexts/AudioContext").then((mod) => mod.AudioProvider),
   {

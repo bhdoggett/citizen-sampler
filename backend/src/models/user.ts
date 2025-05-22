@@ -11,6 +11,7 @@ type UserType = Document & {
   createdAt?: Date;
   songs: SongType[];
 };
+
 export const UserSchema = new Schema<UserType>({
   username: {
     type: String,

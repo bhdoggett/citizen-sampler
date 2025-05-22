@@ -60,7 +60,7 @@ router.post(
 );
 
 // Local login
-router.post("/login/local", async (req, res, next) => {
+router.post("/login", async (req, res, next) => {
   passport.authenticate(
     "local",
     (err: any, user: any, info: { message: string }) => {
