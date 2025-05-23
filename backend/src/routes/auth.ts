@@ -90,14 +90,14 @@ router.get(
   })
 );
 
-// Check login status
-router.get("/me", requireJwtAuth, (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json(req.user);
-  } else {
-    res.status(401).json({ message: "Not logged in" });
-  }
-});
+// // Check login status
+// router.get("/me", requireJwtAuth, (req, res) => {
+//   if (req.isAuthenticated()) {
+//     res.json(req.user);
+//   } else {
+//     res.status(401).json({ message: "Not logged in" });
+//   }
+// });
 
 // I DON"T THINK I NEED THIS?? Logging out on frontend by deleteing jwt
 // Logout

@@ -10,6 +10,7 @@ import {
   linearizeFrequency,
   exponentiateFrequency,
 } from "../lib/audio/util/frequencyConversion";
+import { useUIContext } from "../app/contexts/UIContext";
 
 const SampleSettings = () => {
   const {
@@ -20,6 +21,7 @@ const SampleSettings = () => {
     updateSamplerStateSettings,
     currentLoop,
   } = useAudioContext();
+  const { confirmActionRef, setShowDialog } = useUIContext();
 
   // // Need Frequency Params for translating frequency filters from exponential to linear inputs
   // const maxFreq = 20000;
@@ -350,7 +352,15 @@ const SampleSettings = () => {
           </div>
 
           <button
-            onClick={handleClearSampleEvents}
+            onClick={() => {
+              confirmActionRef.current = {
+                message:
+                  "This will clear all recorded play events for this sampler",
+                buttonText: "Okay",
+                action: handleClearSampleEvents,
+              };
+              setShowDialog("confirm-action");
+            }}
             className="border border-black px-1 mt-2 bg-slate-400 hover:bg-slate-500 shadow-inner shadow-slate-800 flex mx-auto"
           >
             Clear

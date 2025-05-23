@@ -4,6 +4,13 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import useHotKeys from "./hooks/useHotKeys";
 import MainMenu from "../components/MainMenu";
+import DialogWrapper from "../components/DialogWrapper";
+import AuthDialog from "../components/AuthDialog";
+import ConfirmActionDialog from "../components/ConfirmActionDialog";
+import SaveNewSong from "../components/SaveNewSong";
+import CollectionMenu from "../components/CollectionMenu";
+import { useUIContext } from "./contexts/UIContext";
+import { useAuthContext } from "./contexts/AuthContext";
 
 const SettingsWrapper = dynamic(() => import("../components/SettingsWrapper"), {
   ssr: false,
@@ -15,7 +22,8 @@ const DrumMachine = dynamic(() => import("../components/DrumMachine"), {
 
 export default function Home() {
   const [hotKeysActive, setHotKeysActive] = useState<boolean>(true);
-
+  const { showDialog, setShowDialog, confirmActionRef } = useUIContext();
+  const { authIsSignup, setAuthIsSignup } = useAuthContext();
   useHotKeys(hotKeysActive);
 
   return (
@@ -44,6 +52,39 @@ export default function Home() {
           Library of Congress
         </Link>
       </p>
+      {/* --Menu Dialogues-- */}
+
+      {showDialog && (
+        <DialogWrapper>
+          {showDialog === "save-song" && (
+            <SaveNewSong
+              setShowDialog={setShowDialog}
+              setHotKeysActive={setHotKeysActive}
+            />
+          )}
+          {showDialog === "collection-menu" && (
+            <CollectionMenu
+              setShowDialog={setShowDialog}
+              setHotKeysActive={setHotKeysActive}
+            />
+          )}
+          {showDialog === "auth-dialogue" && (
+            <AuthDialog
+              setShowDialog={setShowDialog}
+              setHotKeysActive={setHotKeysActive}
+              authIsSignup={authIsSignup}
+              setAuthIsSignup={setAuthIsSignup}
+            />
+          )}
+          {showDialog === "confirm-action" && (
+            <ConfirmActionDialog
+              confirmActionRef={confirmActionRef}
+              setShowDialog={setShowDialog}
+              setHotKeysActive={setHotKeysActive}
+            />
+          )}
+        </DialogWrapper>
+      )}
     </div>
   );
 }

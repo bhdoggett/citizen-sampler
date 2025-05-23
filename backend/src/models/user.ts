@@ -2,7 +2,7 @@ import { Schema, Document, model } from "mongoose";
 import { SongSchema } from "./song";
 import { SongType } from "../../../shared/types/audioTypes";
 
-type UserType = Document & {
+export type UserType = Document & {
   username?: string;
   email?: string;
   password?: string;

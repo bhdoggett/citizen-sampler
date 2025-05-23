@@ -8,14 +8,14 @@ dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 type AuthDialogProps = {
-  setShowDialogue: React.Dispatch<React.SetStateAction<string | null>>;
+  setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
   authIsSignup: boolean;
   setAuthIsSignup: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const AuthDialog: React.FC<AuthDialogProps> = ({
-  setShowDialogue,
+  setShowDialog,
   setHotKeysActive,
   authIsSignup,
   setAuthIsSignup,
@@ -44,7 +44,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         if (result.status === 201) {
           setToken(result.data.token);
           setUser(result.data.user);
-          setShowDialogue(null);
+          setShowDialog(null);
         }
       }
     } catch (err) {
@@ -72,7 +72,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         console.log("result.data", result.data);
         setToken(result.data.token);
         setUser(result.data.user);
-        setShowDialogue(null);
+        setShowDialog(null);
       } else {
         setError(result.data.message);
       }
@@ -118,7 +118,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
     <div className="flex flex-col border-2 border-black bg-slate-800 m-3 p-4 shadow-md shadow-slate-800 text-white">
       <button
         onClick={() => {
-          setShowDialogue(null);
+          setShowDialog(null);
         }}
         className="absolute top-5 right-6 text-white hover:text-black"
       >

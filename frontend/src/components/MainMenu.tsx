@@ -1,16 +1,13 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import SaveNewSong from "./SaveNewSong";
-import CollectionMenu from "./CollectionMenu";
-import AuthDialog from "./AuthDialog";
+import { useState, useEffect } from "react";
 import { useAuthContext } from "../app/contexts/AuthContext";
-import ConfirmActionDialog from "./ConfirmActionDialog";
+import { useUIContext } from "../app/contexts/UIContext";
 
 type MenuProps = {
   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export type ConfirmAction = {
+export type ConfirmActionRef = {
   message: string;
   buttonText: string;
   action: () => void;
@@ -18,10 +15,16 @@ export type ConfirmAction = {
 
 const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  const [showDialogue, setShowDialogue] = useState<string | null>(null);
-  const [authIsSignup, setAuthIsSignup] = useState<boolean>(false);
-  const confirmAction = useRef<ConfirmAction>(null);
-  const { isAuthenticated, setToken, user, setUser } = useAuthContext();
+  // const [authIsSignup, setAuthIsSignup] = useState<boolean>(false);
+  // const confirmActionRef = useRef<ConfirmActionRef>(null);
+  const {
+    isAuthenticated,
+    setToken,
+    user,
+    setUser,
+    setAuthIsSignup,
+  } = useAuthContext();
+  const { confirmActionRef, showDialog, setShowDialog } = useUIContext();
 
   const logout = (): void => {
     localStorage.removeItem("token");
@@ -30,12 +33,12 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
   };
 
   useEffect(() => {
-    if (showDialogue) {
+    if (showDialog) {
       setHotKeysActive(false);
     } else {
       setHotKeysActive(true);
     }
-  }, [showDialogue, setHotKeysActive]);
+  }, [showDialog, setHotKeysActive]);
 
   useEffect(() => {
     console.log("user:", user);
@@ -79,12 +82,12 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                 <li
                   className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                   onClick={() => {
-                    confirmAction.current = {
+                    confirmActionRef.current = {
                       message: "Are you sure you want to log out?",
                       buttonText: "Log Out",
                       action: logout,
                     };
-                    setShowDialogue("confirm-action");
+                    setShowDialog("confirm-action");
                     setMenuOpen(false);
                   }}
                 >
@@ -93,7 +96,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                 <li
                   className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                   onClick={() => {
-                    setShowDialogue("save-song");
+                    setShowDialog("save-song");
                     setMenuOpen(false);
                   }}
                 >
@@ -106,7 +109,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                   className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                   onClick={() => {
                     setAuthIsSignup(true);
-                    setShowDialogue("auth-dialogue");
+                    setShowDialog("auth-dialogue");
                     setMenuOpen(false);
                   }}
                 >
@@ -116,7 +119,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                   className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                   onClick={() => {
                     setAuthIsSignup(false);
-                    setShowDialogue("auth-dialogue");
+                    setShowDialog("auth-dialogue");
                     setMenuOpen(false);
                   }}
                 >
@@ -128,51 +131,13 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
             <li
               className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
               onClick={() => {
-                setShowDialogue("collection-menu");
+                setShowDialog("collection-menu");
                 setMenuOpen(false);
               }}
             >
               Load from Collection
             </li>
           </ul>
-        </div>
-      )}
-
-      {/* --Menu Dialogues-- */}
-
-      {showDialogue && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center">
-          {/* BACKDROP */}
-          <div className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm z-30" />
-          <div className="absolute left-1/2 transform -translate-x-1/2 top-28 z-30 w-[650px] rounded-sm shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-            {showDialogue === "save-song" && (
-              <SaveNewSong
-                setShowDialogue={setShowDialogue}
-                setHotKeysActive={setHotKeysActive}
-              />
-            )}
-            {showDialogue === "collection-menu" && (
-              <CollectionMenu
-                setShowDialogue={setShowDialogue}
-                setHotKeysActive={setHotKeysActive}
-              />
-            )}
-            {showDialogue === "auth-dialogue" && (
-              <AuthDialog
-                setShowDialogue={setShowDialogue}
-                setHotKeysActive={setHotKeysActive}
-                authIsSignup={authIsSignup}
-                setAuthIsSignup={setAuthIsSignup}
-              />
-            )}
-            {showDialogue === "confirm-action" && (
-              <ConfirmActionDialog
-                confirmAction={confirmAction}
-                setShowDialogue={setShowDialogue}
-                setHotKeysActive={setHotKeysActive}
-              />
-            )}
-          </div>
         </div>
       )}
     </div>

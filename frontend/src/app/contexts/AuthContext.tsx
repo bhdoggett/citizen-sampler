@@ -9,6 +9,8 @@ type AuthContextType = {
   token: string | null;
   setToken: (token: string | null) => void;
   isAuthenticated: boolean;
+  authIsSignup: boolean;
+  setAuthIsSignup: React.Dispatch<React.SetStateAction<boolean>>;
   // localSignup: (
   //   username: string,
   //   password: string,
@@ -26,6 +28,7 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   const [token, setTokenState] = useState<string | null>(() =>
     localStorage.getItem("token")
   );
+  const [authIsSignup, setAuthIsSignup] = useState<boolean>(false);
 
   const setToken = (newToken: string | null) => {
     if (newToken) {
@@ -93,6 +96,8 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
         // googleSignup,
         setToken,
         isAuthenticated: !!token,
+        authIsSignup,
+        setAuthIsSignup,
       }}
     >
       {children}
