@@ -5,7 +5,6 @@ import keys from "../config/keys";
 import dotenv from "dotenv";
 dotenv.config();
 
-console.log("keys", keys);
 passport.use(
   new JWTStrategy(
     {

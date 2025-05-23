@@ -1,11 +1,11 @@
 "use client";
 import * as Tone from "tone";
 import { useState, useEffect, useRef } from "react";
-import { useAudioContext } from "../app/contexts/AudioContext";
+import { useAudioContext } from "../../app/contexts/AudioContext";
 import {
   getCollectionArrayFromName,
   collectionNames,
-} from "../lib/collections";
+} from "../../lib/collections";
 
 type ChooseSampleProps = {
   setSampleMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;

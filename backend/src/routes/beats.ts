@@ -2,29 +2,28 @@ import keys from "../config/keys";
 import express, { Request, Response, NextFunction } from "express";
 import User from "../models/user";
 import { UserType } from "../models/user";
-import requireAuth from "./auth";
+import requireJwtAuth from "src/middleware/requireJwtAuth";
 
 const router = express.Router();
-const PORT = process.env.PORT || 8000;
 
-router.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+router.post(
+  "/me/songs",
+  requireJwtAuth,
+  async (req: Request, res: Response, next: NextFunction) => {
+    /// Do STUFF HERE
+
+    res.json({ message: "Hiya" });
+    return;
+  }
+);
 
 router.get(
   "/me/songs",
-  requireAuth,
+  requireJwtAuth,
   async (req: Request, res: Response, next: NextFunction) => {
-    const { username } = req.body;
-    const user = await User.findOne(
-      (user: UserType) => user.username === username
-    );
-    if (!user) {
-      res.status(401).json({ message: "Unauthorized" });
-      return;
-    }
+    /// Do STUFF HERE
 
-    res.json(user.songs);
+    res.json("Hiya");
   }
 );
 

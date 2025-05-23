@@ -11,6 +11,8 @@ type AuthContextType = {
   isAuthenticated: boolean;
   authIsSignup: boolean;
   setAuthIsSignup: React.Dispatch<React.SetStateAction<boolean>>;
+  error: string | null;
+  setError: React.Dispatch<React.SetStateAction<string | null>>;
   // localSignup: (
   //   username: string,
   //   password: string,
@@ -29,6 +31,7 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     localStorage.getItem("token")
   );
   const [authIsSignup, setAuthIsSignup] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const setToken = (newToken: string | null) => {
     if (newToken) {
@@ -98,6 +101,8 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
         isAuthenticated: !!token,
         authIsSignup,
         setAuthIsSignup,
+        error,
+        setError,
       }}
     >
       {children}

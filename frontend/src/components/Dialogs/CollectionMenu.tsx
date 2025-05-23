@@ -1,17 +1,15 @@
 "use client";
 import { useState } from "react";
-import { useAudioContext } from "../app/contexts/AudioContext";
-import { collectionNames } from "../lib/collections";
+import { useAudioContext } from "../../app/contexts/AudioContext";
+import { collectionNames } from "../../lib/collections";
+import { useUIContext } from "frontend/src/app/contexts/UIContext";
 
 type CollectionMenuProps = {
   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const CollectionMenu: React.FC<CollectionMenuProps> = ({
-  setShowDialog,
-  setHotKeysActive,
-}) => {
+const CollectionMenu: React.FC<CollectionMenuProps> = () => {
   const {
     initLocSamplesFromOneCollection,
     cleanupSampler,
@@ -19,6 +17,7 @@ const CollectionMenu: React.FC<CollectionMenuProps> = ({
     samplersRef,
     makeSampler,
   } = useAudioContext();
+  const { confirmActionRef, setShowDialog } = useUIContext();
   const [c, setC] = useState<string>(collectionNames[0]);
 
   const handleSelect = (collection: string) => {
@@ -44,46 +43,45 @@ const CollectionMenu: React.FC<CollectionMenuProps> = ({
   };
 
   return (
-    <div className="flex flex-col border-2 border-black bg-slate-800 m-3 p-4 shadow-md shadow-slate-800 text-white">
-      <button
-        onClick={() => setShowDialog(null)}
-        className="absolute top-5 right-6 text-white hover:text-black"
-      >
-        ✖
-      </button>
-      <div className="flex flex-col">
-        <label htmlFor="collection" className="text-white pb-2">
+    <>
+      <div className="flex flex-col w-full max-w-sm mx-auto">
+        <label htmlFor="collection" className="text-white">
           Choose a Collection:
         </label>
         <select
           name="collection"
           id="collection"
           onChange={(e) => setC(e.target.value)}
-          className="shadow-inner text-black shadow-slate-700 w-3/4"
+          className="shadow-inner text-black shadow-slate-700 w-full"
         >
           {collectionNames.map((collection) => (
             <option
               key={collection}
               value={collection}
-              className="w-3/4 text-ellipsis"
+              className="w-full text-ellipsis"
             >
               {collection}
             </option>
           ))}
         </select>
       </div>
+
       <button
-        onClick={(e) => {
-          e.preventDefault();
-          handleSelect(c);
-          setShowDialog(null);
-          setHotKeysActive(true);
+        onClick={() => {
+          // e.preventDefault();
+          confirmActionRef.current = {
+            message:
+              "This will replace all current Library of Congress Samples. Are you sure?",
+            buttonText: "You Betcha",
+            action: () => handleSelect(c),
+          };
+          setShowDialog("confirm-action");
         }}
-        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-1/4"
+        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-1/3"
       >
         Load Samples
       </button>
-    </div>
+    </>
   );
 };
 

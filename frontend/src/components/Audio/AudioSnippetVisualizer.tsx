@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
-import { useAudioContext } from "../app/contexts/AudioContext";
+import { useAudioContext } from "../../app/contexts/AudioContext";
 
 type AudioSnippetVisualizerProps = {
   id: string;

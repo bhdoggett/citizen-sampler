@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
-import { useAudioContext } from "../app/contexts/AudioContext";
-import useMutesAndSolos from "../app/hooks/useMutesAndSolos";
-import SampleSettings from "./SampleSettings";
-import Loop from "./Loop";
-import MasterSettings from "./MasterSettings";
+import { useAudioContext } from "../../app/contexts/AudioContext";
+import useMutesAndSolos from "../../app/hooks/useMutesAndSolos";
+import SampleSettings from "./../Audio/SampleSettings";
+import Loop from "./../Audio/Loop";
+import MasterSettings from "./../Audio/MasterSettings";
 
 type settingsWindow = "sample" | "loop" | "master";
 

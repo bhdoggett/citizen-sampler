@@ -12,9 +12,10 @@ const requireJwtAuth = async (
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res
+    res
       .status(401)
       .json({ message: "Authorization header missing or malformed" });
+    return;
   }
 
   const token = authHeader.split(" ")[1];
@@ -28,12 +29,16 @@ const requireJwtAuth = async (
     };
 
     const user = await User.findById(payload.sub);
-    if (!user) return res.status(401).json({ message: "User not found" });
+    if (!user) {
+      res.status(401).json({ message: "User not found" });
+      return;
+    }
 
     req.user = user; // Make the user available in request handlers
     next();
   } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    res.status(401).json({ message: "Invalid or expired token" });
+    return;
   }
 };
 

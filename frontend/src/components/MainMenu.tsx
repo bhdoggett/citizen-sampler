@@ -17,13 +17,8 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   // const [authIsSignup, setAuthIsSignup] = useState<boolean>(false);
   // const confirmActionRef = useRef<ConfirmActionRef>(null);
-  const {
-    isAuthenticated,
-    setToken,
-    user,
-    setUser,
-    setAuthIsSignup,
-  } = useAuthContext();
+  const { isAuthenticated, setToken, user, setUser, setAuthIsSignup } =
+    useAuthContext();
   const { confirmActionRef, showDialog, setShowDialog } = useUIContext();
 
   const logout = (): void => {
@@ -51,7 +46,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
       {/* --Menu Button-- */}
 
       <button
-        className="absolute top-4 flex items-center justify-center w-8 h-8 bg-slate-500 text-white border border-slate-700 rounded-sm hover:bg-slate-600 transition-colors"
+        className="absolute top-4 flex items-center justify-center w-8 h-8 bg-slate-500 text-white border border-slate-700 hover:bg-slate-700 transition-colors"
         onClick={() => setMenuOpen((prev) => !prev)}
         aria-label="Menu"
       >
@@ -84,7 +79,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                   onClick={() => {
                     confirmActionRef.current = {
                       message: "Are you sure you want to log out?",
-                      buttonText: "Log Out",
+                      buttonText: "See Ya!",
                       action: logout,
                     };
                     setShowDialog("confirm-action");

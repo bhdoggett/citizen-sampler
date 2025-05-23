@@ -1,11 +1,11 @@
 "use client";
 import { useRef, useEffect, useState } from "react";
-import { useAudioContext } from "../app/contexts/AudioContext";
+import { useAudioContext } from "../../app/contexts/AudioContext";
 import * as Tone from "tone";
 import { Frequency } from "tone/build/esm/core/type/Units";
-import quantize from "../app/functions/quantize";
+import quantize from "../../app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
-import { CustomSampler } from "../types/CustomSampler";
+import { CustomSampler } from "../../types/CustomSampler";
 import PitchGrid from "./PitchGrid";
 
 type DrumPadProps = {

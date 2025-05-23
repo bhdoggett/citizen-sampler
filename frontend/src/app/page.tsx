@@ -4,19 +4,22 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import useHotKeys from "./hooks/useHotKeys";
 import MainMenu from "../components/MainMenu";
-import DialogWrapper from "../components/DialogWrapper";
-import AuthDialog from "../components/AuthDialog";
-import ConfirmActionDialog from "../components/ConfirmActionDialog";
-import SaveNewSong from "../components/SaveNewSong";
-import CollectionMenu from "../components/CollectionMenu";
+import DialogWrapper from "../components/Dialogs/DialogWrapper";
+import AuthDialog from "../components/Dialogs/AuthDialog";
+import ConfirmActionDialog from "../components/Dialogs/ConfirmActionDialog";
+import SaveNewSong from "../components/Dialogs/SaveNewSong";
+import CollectionMenu from "../components/Dialogs/CollectionMenu";
 import { useUIContext } from "./contexts/UIContext";
 import { useAuthContext } from "./contexts/AuthContext";
 
-const SettingsWrapper = dynamic(() => import("../components/SettingsWrapper"), {
-  ssr: false,
-});
+const SettingsWrapper = dynamic(
+  () => import("../components/Audio/SettingsWrapper"),
+  {
+    ssr: false,
+  }
+);
 
-const DrumMachine = dynamic(() => import("../components/DrumMachine"), {
+const DrumMachine = dynamic(() => import("../components/Audio/DrumMachine"), {
   ssr: false,
 });
 

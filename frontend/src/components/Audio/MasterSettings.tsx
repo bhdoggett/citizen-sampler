@@ -1,7 +1,7 @@
 "use client";
 import * as Tone from "tone";
-import useDownloadWavStems from "../app/hooks/useDownloadWavStems";
-import { useAudioContext } from "../app/contexts/AudioContext";
+import useDownloadWavStems from "../../app/hooks/useDownloadWavStems";
+import { useAudioContext } from "../../app/contexts/AudioContext";
 
 const MasterSettings = () => {
   const downloadWavs = useDownloadWavStems();

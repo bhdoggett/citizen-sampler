@@ -54,8 +54,6 @@ type AudioContextType = {
     collection: string
   ) => SampleType;
   updateSamplerData: (id: string, data: SampleType) => void;
-  globalCollectionName: string;
-  setGlobalCollectionName: React.Dispatch<React.SetStateAction<string>>;
   currentLoop: string;
   setCurrentLoop: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
@@ -297,10 +295,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   );
 
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
-  const [globalCollectionName, setGlobalCollectionName] = useState<string>(
-    "Inventing Entertainment"
-  );
-
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [metronomeActive, setMetronomeActive] = useState(false);
@@ -437,19 +431,27 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   //   }
   // }, [allSampleData]);
 
-  // useEffect to upload allSampleData to localStorage.samples when allSampleData state changes
+  // Upload allSampleData to localStorage.samples when allSampleData state changes.
+  // Changes in state coming from SampleSettings are debounced in that component.
   useEffect(() => {
     localStorage.setItem("samples", JSON.stringify(allSampleData));
   }, [allSampleData]);
 
-  // useEffect to upload songTitle to localStorage.songTitle when songTitle state changes
+  // Upload songTitle to localStorage.songTitle when songTitle state changes
   useEffect(() => {
     localStorage.setItem("songTitle", JSON.stringify(songTitle));
   }, [songTitle]);
 
-  // useEffect to upload allLoopSettings to localStorage.loops when allLoopSettings state changes
+  // Upload allLoopSettings with debounce to localStorage.loops when allLoopSettings state changes.
   useEffect(() => {
-    localStorage.setItem("loops", JSON.stringify(allLoopSettings));
+    const timeoutId = setTimeout(() => {
+      localStorage.setItem("loops", JSON.stringify(allLoopSettings));
+    }, 500);
+
+    return () => {
+      clearTimeout(timeoutId); // cancel if settings change before debounceDelay
+      localStorage.setItem("loops", JSON.stringify(allLoopSettings));
+    };
   }, [allLoopSettings]);
 
   // Start Tone.js context once
@@ -512,56 +514,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   }, []);
 
-  // // Fetch samples when globalCollectionName changes
-  // useEffect(() => {
-  //   console.log(
-  //     "useEffect for globalCollectionNameChange just ran",
-  //     nowMilliseconds
-  //   );
-  //   // if (
-  //   //   // thereIsASongInStorage &&
-  //   //   localStorage.tempSong &&
-  //   //   localStorage.tempSong.samples &&
-  //   //   localStorage.tempSong.samples.includes("loc-1")
-  //   // )
-  //   //   return;
-  //   if (!hasLoadedFromStorage || localStorage.tempSong) return;
-
-  //   const fetchSamples = async () => {
-  //     try {
-  //       const selectedSamples = selectRandomUrlEntries(
-  //         allUrlsWithCollectionNames
-  //       );
-
-  //       // Create data structutre for the selected samples
-  //       const formattedSamples: SampleType[] = Array.from(
-  //         selectedSamples,
-  //         ({ url, collection }, index) => {
-  //           const sampleId = `loc-${index + 1}`;
-
-  //           return initLocSampleData(sampleId, url, collection);
-  //         }
-  //       );
-  //       console.log("formatted Samples", formattedSamples);
-  //       setLocSamples(formattedSamples);
-  //     } catch (error) {
-  //       console.error("Error fetching samples:", error);
-  //       setLocSamples([]);
-  //     }
-  //   };
-
-  //   // Clean up only the library of congress samplers
-  //   if (samplersRef.current) {
-  //     Object.entries(samplersRef.current).forEach(([key, sampler]) => {
-  //       // Kit samples should not be impacted by a change in globalCollectionName
-  //       if (sampler.id.includes("kit")) return;
-  //       cleanupSampler(key, samplersRef);
-  //     });
-  //   }
-
-  //   fetchSamples();
-  // }, []);
-
   // Update one sampler's data (entire) whenever anything inside that sampler's data changes
   const updateSamplerData = (id: string, data: SampleType): void => {
     setAllSampleData((prev) => ({
@@ -615,8 +567,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         makeSampler,
         initLocSampleData,
         updateSamplerData,
-        globalCollectionName,
-        setGlobalCollectionName,
         allSampleData,
         updateSamplerStateSettings,
         setAllSampleData,
