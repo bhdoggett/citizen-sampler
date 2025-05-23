@@ -1,13 +1,11 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
-import type { UserType } from "../../../../shared/types/UserType";
 import dotenv from "dotenv";
 dotenv.config();
 
 type AuthContextType = {
-  user: UserType | null;
-  setUser: React.Dispatch<React.SetStateAction<UserType | null>>;
+  user: string | null;
+  setUser: (token: string | null) => void;
   token: string | null;
   setToken: (token: string | null) => void;
   isAuthenticated: boolean;
@@ -22,7 +20,9 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: React.PropsWithChildren) => {
-  const [user, setUser] = useState<UserType | null>(null);
+  const [user, setUserState] = useState<string | null>(() =>
+    localStorage.getItem("user")
+  );
   const [token, setTokenState] = useState<string | null>(() =>
     localStorage.getItem("token")
   );
@@ -36,6 +36,14 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     setTokenState(newToken);
   };
 
+  const setUser = (newUser: string | null) => {
+    if (newUser) {
+      localStorage.setItem("user", newUser);
+    } else {
+      localStorage.removeItem("user");
+    }
+    setUserState(newUser);
+  };
   // const localSignup = async (
   //   username: string,
   //   password: string,

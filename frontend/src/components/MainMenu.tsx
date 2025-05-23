@@ -21,7 +21,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
   const [showDialogue, setShowDialogue] = useState<string | null>(null);
   const [authIsSignup, setAuthIsSignup] = useState<boolean>(false);
   const confirmAction = useRef<ConfirmAction>(null);
-  const { isAuthenticated, setToken, setUser } = useAuthContext();
+  const { isAuthenticated, setToken, user, setUser } = useAuthContext();
 
   const logout = (): void => {
     localStorage.removeItem("token");
@@ -37,24 +37,47 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
     }
   }, [showDialogue, setHotKeysActive]);
 
+  useEffect(() => {
+    console.log("user:", user);
+  }, [user]);
+
   return (
-    <div className="" id="main-menu">
+    <div className="relative flex flex-col items-end" id="main-menu">
+      {user && <p className="text-xs font-bold w-full pb-1">{user}</p>}
+
+      {/* --Menu Button-- */}
+
       <button
-        className="bg-slate-500 text-white border border-slate-700 px-1 py-1 rounded-sm  hover:bg-slate-600"
+        className="absolute top-4 flex items-center justify-center w-8 h-8 bg-slate-500 text-white border border-slate-700 rounded-sm hover:bg-slate-600 transition-colors"
         onClick={() => setMenuOpen((prev) => !prev)}
+        aria-label="Menu"
       >
-        Menu
+        <span
+          className={`absolute h-0.5 w-5 bg-white transform transition-transform duration-200 ease-in-out ${
+            menuOpen ? "rotate-45" : "-translate-y-1.5"
+          }`}
+        />
+        <span
+          className={`absolute h-0.5 w-5 bg-white transition-all duration-100 ease-in-out ${
+            menuOpen ? "opacity-0" : "opacity-100"
+          }`}
+        />
+        <span
+          className={`absolute h-0.5 w-5 bg-white transform transition-transform duration-200 ease-in-out ${
+            menuOpen ? "-rotate-45" : "translate-y-1.5"
+          }`}
+        />
       </button>
 
-      {/* --Menu Dropdown-- */}
+      {/* --Menu Options-- */}
 
       {menuOpen && (
-        <div className="absolute mt-1 bg-white border rounded-sm shadow-lg z-10">
-          <ul className="main-menu flex flex-col text-sm">
+        <div className="absolute right-0 mt-12 bg-white border rounded-sm shadow-lg z-10 min-w-[150px]">
+          <ul className="relative flex flex-col main-menu text-sm">
             {isAuthenticated ? (
               <>
                 <li
-                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer"
+                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                   onClick={() => {
                     confirmAction.current = {
                       message: "Are you sure you want to log out?",
@@ -68,7 +91,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                   Log Out
                 </li>
                 <li
-                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer"
+                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                   onClick={() => {
                     setShowDialogue("save-song");
                     setMenuOpen(false);
@@ -80,7 +103,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
             ) : (
               <>
                 <li
-                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer"
+                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                   onClick={() => {
                     setAuthIsSignup(true);
                     setShowDialogue("auth-dialogue");
@@ -90,7 +113,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                   Sign Up
                 </li>
                 <li
-                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer"
+                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                   onClick={() => {
                     setAuthIsSignup(false);
                     setShowDialogue("auth-dialogue");
@@ -103,7 +126,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
             )}
 
             <li
-              className="px-1 py-1 hover:bg-slate-100 cursor-pointer"
+              className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
               onClick={() => {
                 setShowDialogue("collection-menu");
                 setMenuOpen(false);

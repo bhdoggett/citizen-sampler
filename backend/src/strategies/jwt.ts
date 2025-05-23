@@ -1,14 +1,16 @@
 import passport from "passport";
 import { ExtractJwt, Strategy as JWTStrategy } from "passport-jwt";
 import User from "../models/user";
+import keys from "../config/keys";
 import dotenv from "dotenv";
 dotenv.config();
 
+console.log("keys", keys);
 passport.use(
   new JWTStrategy(
     {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_SECRET!,
+      secretOrKey: keys.TOKEN_SECRET!,
     },
     async (jwt_payload, done) => {
       try {

@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState } from "react";
+import axios, { AxiosError } from "axios";
 import dotenv from "dotenv";
 import { useAuthContext } from "../app/contexts/AuthContext";
 dotenv.config();
@@ -26,17 +26,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   const [confirmationPassword, setConfirmationPassword] = useState<string>("");
   const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { token, setToken, isAuthenticated, setUser } = useAuthContext();
-
-  useEffect(() => {
-    console.log("error in state:", error);
-    console.log("token:", token);
-  }, [token, error]);
-
-  // test all state values
-  useEffect(() => {
-    console.log("isAuthenticated in state", isAuthenticated);
-  }, [isAuthenticated]);
+  const { setToken, setUser } = useAuthContext();
 
   const signup = async () => {
     try {
@@ -46,19 +36,19 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         return;
       } else {
         setPasswordsMatch(true);
-        const result = await axios.post(`${BASE_URL}/auth/signup/local`, {
+        const result = await axios.post(`${BASE_URL}/auth/signup`, {
           username,
           email,
           password,
         });
-        if (result.data.success) {
+        if (result.status === 201) {
           setToken(result.data.token);
           setUser(result.data.user);
           setShowDialogue(null);
         }
       }
-    } catch (error: any) {
-      // Axios error: check if response data has message
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
       if (
         error.response &&
         error.response.data &&
@@ -78,26 +68,24 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         password,
       });
 
-      console.log("result", result);
-
       if (result.status === 200) {
-        console.log("result.data.token", result.data.token);
+        console.log("result.data", result.data);
         setToken(result.data.token);
         setUser(result.data.user);
         setShowDialogue(null);
       } else {
-        // setError(result.data.message);
+        setError(result.data.message);
       }
-    } catch (error: any) {
-      // Axios error: check if response data has message
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
       if (
         error.response &&
         error.response.data &&
         error.response.data.message
       ) {
-        // setError(error.response.data.message);
+        setError(error.response.data.message);
       } else {
-        // setError("An unexpected error occurred.");
+        setError("An unexpected error occurred.");
       }
     }
   };
@@ -110,8 +98,8 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       } else {
         await login();
       }
-    } catch (error: any) {
-      // Axios error: check if response data has message
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
       if (
         error.response &&
         error.response.data &&
@@ -156,7 +144,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       ) : (
         <form onSubmit={handleSubmit}>
           <h2 className="text-center text-lg font-bold mb-3">
-            {authIsSignup ? "Sign Up" : "Sign In"}
+            {authIsSignup ? "Sign Up" : "Login"}
           </h2>
           <div className="mx-auto relative w-3/4">
             <div className="flex">
