@@ -148,7 +148,9 @@ const SampleSettings = () => {
     <>
       <div className="relative flex flex-col items-center border-2 shadow-md shadow-slate-500 border-black">
         <div className="flex shadow-inner shadow-slate-500 border border-black overflow-hidden mx-auto">
-          <h1 className={"px-2 border-black bg-black text-white"}>Sample</h1>
+          <h1 className={"px-2 border-black bg-black text-white"}>
+            {allSampleData[selectedSampleId].title}
+          </h1>
         </div>
 
         <div className="mt-4 w-full">
@@ -156,7 +158,9 @@ const SampleSettings = () => {
             {sampleMenuOpen && (
               <ChooseSample setSampleMenuOpen={setSampleMenuOpen} />
             )}
-            <Waveform audioUrl={allSampleData[selectedSampleId].url} />
+            <div className="flex justify-center w-full">
+              <Waveform audioUrl={allSampleData[selectedSampleId].url} />
+            </div>
             <div className="p-2 mx-auto mb-3">
               <div className="flex gap-x-4 md:gap-x-6">
                 <div className="flex flex-col">

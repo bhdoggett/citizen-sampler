@@ -33,7 +33,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       container: containerRef.current,
       waveColor: "blue",
       interact: false,
-      height: 50,
+      height: 60,
       barWidth: NaN,
       backend: "WebAudio",
       normalize: true,
@@ -160,24 +160,29 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   // }, [waveformIsPlaying, allSampleData, selectedSampleId]);
 
   return (
-    <div className="flex w-[650px] mx-auto items-center mb-2">
+    <div className="flex w-[650px] justify-center mb-2">
       {/* Border wrapper */}
-      <div
-        className="border border-slate-600 w-[600px] overflow-x-auto"
-        ref={scrollRef}
-      >
-        <div className="w-fit">
+      <div className="border border-slate-600 w-[575px]" ref={scrollRef}>
+        <div className="w-[600px]">
           <div
             ref={containerRef}
-            className="cursor-pointer bg-white shadow-inner shadow-slate-700 w-[1200px] box-border"
+            className="cursor-pointer bg-white shadow-inner shadow-slate-700 w-[573px] box-border"
           />
         </div>
       </div>
 
       {/* Zoom buttons */}
-      <div className="flex flex-col space-y-2 ml-2">
+      <div className="flex flex-col items-center my-auto space-y-2 ml-2">
         <button
-          onClick={() => setZoom((prev) => Math.min(prev + 20, 1000))}
+          onClick={() => {
+            let zoomDiff;
+            if (zoom === 0) {
+              zoomDiff = 60;
+            } else {
+              zoomDiff = 20;
+            }
+            setZoom((prev) => Math.min(prev + zoomDiff, 1000));
+          }}
           className="text-sm px-1 bg-slate-400 hover:bg-slate-500 text-white border border-black shadow-inner shadow-slate-800"
         >
           +

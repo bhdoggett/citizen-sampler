@@ -84,7 +84,7 @@ const Loop = () => {
               type="number"
               min="0"
               max="1"
-              step="0.05"
+              step="0.1"
               value={allLoopSettings[currentLoop as LoopName]?.swing}
               onChange={(e) =>
                 updateLoopSetting("swing", Number(e.target.value))
@@ -100,6 +100,8 @@ const Loop = () => {
             </label>
             <input
               type="number"
+              min="1"
+              max="32"
               value={allLoopSettings[currentLoop as LoopName]?.beats}
               onChange={(e) =>
                 updateLoopSetting("beats", Number(e.target.value))
@@ -114,6 +116,8 @@ const Loop = () => {
             </label>
             <input
               type="number"
+              min="1"
+              max="32"
               value={allLoopSettings[currentLoop as LoopName]?.bars}
               onChange={(e) =>
                 updateLoopSetting("bars", Number(e.target.value))
