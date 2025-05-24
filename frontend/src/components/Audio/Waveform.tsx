@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import { useAudioContext } from "../../app/contexts/AudioContext";
@@ -10,13 +10,15 @@ type WaveformProps = {
 const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const waveSurferRef = useRef<WaveSurfer | null>(null);
+  const regionsPluginRef = useRef(RegionsPlugin.create());
   const {
     // waveformIsPlaying,
     selectedSampleId,
     allSampleData,
     updateSamplerStateSettings,
   } = useAudioContext();
-
+  const [zoom, setZoom] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { settings } = allSampleData[selectedSampleId];
 
   useEffect(() => {
@@ -26,12 +28,12 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
 
     if (!containerRef.current) return;
 
-    const regionsPlugin = RegionsPlugin.create();
+    const regionsPlugin = regionsPluginRef.current;
     const wavesurfer = WaveSurfer.create({
       container: containerRef.current,
       waveColor: "blue",
       interact: false,
-      height: 100,
+      height: 50,
       barWidth: NaN,
       backend: "WebAudio",
       normalize: true,
@@ -87,6 +89,55 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     updateSamplerStateSettings,
   ]);
 
+  // Zoom functionality
+  useEffect(() => {
+    if (!waveSurferRef.current || !scrollRef.current) return;
+
+    const ws = waveSurferRef.current;
+    const scrollContainer = scrollRef.current;
+
+    // Apply zoom level
+    ws.zoom(zoom);
+
+    const regions = regionsPluginRef.current.getRegions();
+    const region = Object.values(regions)[0];
+    if (region) {
+      const duration = ws.getDuration();
+      const pixelPerSecond = zoom / duration;
+      const regionCenter = (region.start + region.end) / 2;
+      const centerX = regionCenter * pixelPerSecond;
+
+      const containerWidth = scrollContainer.clientWidth;
+      scrollContainer.scrollLeft = Math.max(centerX - containerWidth / 2, 0);
+    }
+  }, [zoom]);
+
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      // Check for two-finger pinch/zoom gesture
+      if (e.ctrlKey) {
+        e.preventDefault(); // prevent zooming the page
+        if (e.deltaY < 0) {
+          // Zoom in
+          setZoom((prev) => Math.min(prev + 5, 1000)); // Optional max
+        } else if (e.deltaY > 0) {
+          // Zoom out
+          setZoom((prev) => Math.max(prev - 5, 0)); // Optional min
+        }
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener("wheel", handleWheel, { passive: false });
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener("wheel", handleWheel);
+      }
+    };
+  }, []);
   // // Visual-only playback animation
   // useEffect(() => {
   //   const ws = waveSurferRef.current;
@@ -109,10 +160,36 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   // }, [waveformIsPlaying, allSampleData, selectedSampleId]);
 
   return (
-    <div
-      ref={containerRef}
-      className="cursor-pointer border border-gray-400 bg-white mx-10 shadow-inner shadow-slate-700"
-    />
+    <div className="flex w-[650px] mx-auto items-center mb-2">
+      {/* Border wrapper */}
+      <div
+        className="border border-slate-600 w-[600px] overflow-x-auto"
+        ref={scrollRef}
+      >
+        <div className="w-fit">
+          <div
+            ref={containerRef}
+            className="cursor-pointer bg-white shadow-inner shadow-slate-700 w-[1200px] box-border"
+          />
+        </div>
+      </div>
+
+      {/* Zoom buttons */}
+      <div className="flex flex-col space-y-2 ml-2">
+        <button
+          onClick={() => setZoom((prev) => Math.min(prev + 20, 1000))}
+          className="text-sm px-1 bg-slate-400 hover:bg-slate-500 text-white border border-black shadow-inner shadow-slate-800"
+        >
+          +
+        </button>
+        <button
+          onClick={() => setZoom((prev) => Math.max(prev - 20, 0))}
+          className="text-sm px-1 bg-slate-400 hover:bg-slate-500 text-white border border-black shadow-inner shadow-slate-800"
+        >
+          -
+        </button>
+      </div>
+    </div>
   );
 };
 

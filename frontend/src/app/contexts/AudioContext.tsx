@@ -286,7 +286,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       return savedLoops
         ? JSON.parse(savedLoops)
         : {
-            A: { beats: 4, bars: 2, bpm: 120 },
+            A: { beats: 4, bars: 2, bpm: 120, swing: 0 },
             B: null,
             C: null,
             D: null,

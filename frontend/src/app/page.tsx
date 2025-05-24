@@ -9,11 +9,13 @@ import AuthDialog from "../components/Dialogs/AuthDialog";
 import ConfirmActionDialog from "../components/Dialogs/ConfirmActionDialog";
 import SaveNewSong from "../components/Dialogs/SaveNewSong";
 import CollectionMenu from "../components/Dialogs/CollectionMenu";
+import Transport from "../components/Audio/Transport";
+import Loop from "../components/Audio/Loop";
 import { useUIContext } from "./contexts/UIContext";
 import { useAuthContext } from "./contexts/AuthContext";
 
-const SettingsWrapper = dynamic(
-  () => import("../components/Audio/SettingsWrapper"),
+const SampleSettings = dynamic(
+  () => import("../components/Audio/SampleSettings"),
   {
     ssr: false,
   }
@@ -31,12 +33,19 @@ export default function Home() {
 
   return (
     <div className="flex flex-col justify-center items-center my-5">
-      <div className="w-[800px] p-1 xs:w-full sm:w-full md:w-[700px]">
+      <div className="w-[1000px] p-1 xs:w-full sm:w-full md:w-[800px]">
         <div className="flex justify-between">
           <h1 className="text-6xl font-bold block">Citizen Sampler</h1>
           <MainMenu setHotKeysActive={setHotKeysActive} />
         </div>
-        <SettingsWrapper />
+        <div className="flex">
+          <SampleSettings />
+          <div className="flex flex-col">
+            <Transport />
+            <Loop />
+          </div>
+        </div>
+
         <DrumMachine />
       </div>
 

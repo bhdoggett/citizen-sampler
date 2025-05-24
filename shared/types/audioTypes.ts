@@ -5,7 +5,7 @@ import {
   //   AudioRange,
   //   Cents,
   //   Decibels,
-  //   NormalRange,
+  NormalRange,
   //   Time,
 } from "../../frontend/node_modules/tone/build/esm/core/type/Units";
 
@@ -53,7 +53,7 @@ export type LoopSettings = {
   beats: number;
   bars: number;
   bpm: number;
-  // swing: number
+  swing: NormalRange;
 };
 
 export type AllLoopSettings = {

@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
+import * as Tone from "tone";
 import { useAuthContext } from "../app/contexts/AuthContext";
 import { useUIContext } from "../app/contexts/UIContext";
+import useDownloadWavStems from "../app/hooks/useDownloadWavStems";
 
 type MenuProps = {
   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -20,11 +22,18 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
   const { isAuthenticated, setToken, user, setUser, setAuthIsSignup } =
     useAuthContext();
   const { confirmActionRef, showDialog, setShowDialog } = useUIContext();
+  const downloadWavStems = useDownloadWavStems();
 
   const logout = (): void => {
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
+  };
+
+  const handleDownloadWavStems = async () => {
+    await downloadWavStems();
+    Tone.start();
+    setMenuOpen(false);
   };
 
   useEffect(() => {
@@ -118,7 +127,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                     setMenuOpen(false);
                   }}
                 >
-                  Sign In
+                  Login
                 </li>
               </>
             )}
@@ -131,6 +140,12 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
               }}
             >
               Load from Collection
+            </li>
+            <li
+              className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+              onClick={handleDownloadWavStems}
+            >
+              Download Stems
             </li>
           </ul>
         </div>
