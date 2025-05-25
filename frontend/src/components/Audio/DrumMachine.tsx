@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import DrumPad from "./DrumPad";
 

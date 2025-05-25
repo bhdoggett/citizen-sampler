@@ -34,7 +34,7 @@ export default function Home() {
   const [hotKeysActive, setHotKeysActive] = useState<boolean>(true);
   const { showDialog, setShowDialog, confirmActionRef } = useUIContext();
   const { authIsSignup, setAuthIsSignup } = useAuthContext();
-  const { samplersRef, selectedSample } = useAudioContext();
+  const { samplersRef, selectedSampleId } = useAudioContext();
   useHotKeys(hotKeysActive);
 
   return (
@@ -54,7 +54,7 @@ export default function Home() {
         <div className="flex">
           <DrumMachine />
           <PitchGrid
-            sampler={samplersRef.current[selectedSample]?.sampler ?? null}
+            sampler={samplersRef.current[selectedSampleId]?.sampler ?? null}
           />
         </div>
       </div>

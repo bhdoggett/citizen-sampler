@@ -29,10 +29,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
-  const baseNote = allSampleData[id]?.settings.baseNote;
+  const baseNote: Frequency = allSampleData[id]?.settings.baseNote;
 
   // Put this and handleRelease in the drum machine and add an "id" or "sampler" parameter.
-  const handlePress = (note: Frequency) => {
+  const handlePress = () => {
     if (!sampler) return;
 
     // Stop scheduled release
@@ -45,7 +45,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     const { start, end } = sampleDataRef.current.settings;
 
     hasReleasedRef.current = false;
-    sampler.triggerAttack(note, now, start, 1);
+    sampler.triggerAttack(baseNote, now, start, 1);
     setSelectedSampleId(id);
     setIsSelected(true);
     setSampleIsPlaying(true);
@@ -55,7 +55,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       scheduledReleaseTimeoutRef.current = setTimeout(() => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
-          sampler.triggerRelease(note, Tone.now());
+          sampler.triggerRelease(baseNote, Tone.now());
           setSampleIsPlaying(false);
         }
       }, duration * 1000);
@@ -64,11 +64,11 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     if (loopIsPlaying && isRecording) {
       currentEvent.startTime = Tone.getTransport().ticks;
       currentEvent.duration = 0;
-      currentEvent.note = note;
+      currentEvent.note = baseNote;
     }
   };
 
-  const handleRelease = (note: Frequency) => {
+  const handleRelease = () => {
     if (!sampler) return;
 
     if (!sampleIsPlaying) return;
@@ -81,7 +81,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
     hasReleasedRef.current = true;
     setSampleIsPlaying(false);
-    sampler.triggerRelease(note, Tone.now());
+    sampler.triggerRelease(baseNote, Tone.now());
 
     if (
       // !currentEvent ||
@@ -231,11 +231,11 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       onFocus={handleFocus}
     >
       <button
-        onMouseDown={() => handlePress(baseNote)}
-        onTouchStart={() => handlePress(baseNote)}
-        onMouseUp={() => handleRelease(baseNote)}
-        onMouseLeave={() => handleRelease(baseNote)}
-        onTouchEnd={() => handleRelease(baseNote)}
+        onMouseDown={() => handlePress()}
+        onTouchStart={() => handlePress()}
+        onMouseUp={() => handleRelease()}
+        onMouseLeave={() => handleRelease()}
+        onTouchEnd={() => handleRelease()}
         className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800  focus:border-double w-full aspect-square shadow-md shadow-slate-700  `}
       >
         <p className="flex top-1 left-0 text-xs">{id}</p>

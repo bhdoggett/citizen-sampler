@@ -1,9 +1,8 @@
 "use client";
 import * as Tone from "tone";
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { CustomSampler } from "../../types/CustomSampler";
-import { Frequency } from "tone/build/esm/core/type/Units";
 
 type PitchPadProps = {
   note: string;
@@ -58,7 +57,7 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     }
   };
 
-  const handleRelease = (note: Frequency) => {
+  const handleRelease = () => {
     if (!sampler) return;
 
     // Stop scheduled release
@@ -109,12 +108,12 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
 
   return (
     <button
-      onMouseDown={() => handlePress(note)}
-      onTouchStart={() => handlePress(note)}
-      onDragOver={() => handlePress(note)}
-      onMouseUp={() => handleRelease(note)}
-      onMouseLeave={() => handleRelease(note)}
-      onTouchEnd={() => handleRelease(note)}
+      onMouseDown={() => handlePress()}
+      onTouchStart={() => handlePress()}
+      onDragOver={() => handlePress()}
+      onMouseUp={() => handleRelease()}
+      onMouseLeave={() => handleRelease()}
+      onTouchEnd={() => handleRelease()}
       className={`border border-black text-sm cursor-pointer aspect-square ${note === baseNote ? "bg-slate-400" : "bg-slate-300"}`}
     >
       {note}
