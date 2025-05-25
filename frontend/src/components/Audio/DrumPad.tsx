@@ -6,15 +6,13 @@ import { Frequency } from "tone/build/esm/core/type/Units";
 import quantize from "../../app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
-import PitchGrid from "./PitchGrid";
 
 type DrumPadProps = {
   id: string;
   sampler: CustomSampler | null;
-  showGrid: boolean;
 };
 
-const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
+const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const {
     isRecording,
     loopIsPlaying,
@@ -33,6 +31,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
   const hasReleasedRef = useRef(false);
   const baseNote = allSampleData[id]?.settings.baseNote;
 
+  // Put this and handleRelease in the drum machine and add an "id" or "sampler" parameter.
   const handlePress = (note: Frequency) => {
     if (!sampler) return;
 
@@ -226,13 +225,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler, showGrid }) => {
     setIsSelected(selectedSampleId === id);
   }, [selectedSampleId, id]);
 
-  return showGrid ? (
-    <PitchGrid
-      baseNote={baseNote}
-      handlePress={handlePress}
-      handleRelease={handleRelease}
-    />
-  ) : (
+  return (
     <div
       className={`flex m-auto rounded-sm w-full aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
       onFocus={handleFocus}

@@ -1,23 +1,16 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { useAudioContext } from "frontend/src/app/contexts/AudioContext";
-import { CustomSampler } from "frontend/src/types/CustomSampler";
 import * as Tone from "tone";
+import { useState, useRef } from "react";
+import { useAudioContext } from "../../app/contexts/AudioContext";
+import { CustomSampler } from "../../types/CustomSampler";
 import { Frequency } from "tone/build/esm/core/type/Units";
-import PitchPad from "./PitchPad";
 
-const NUM_ROWS = 5;
-const NUM_COLS = 5;
-
-// MIDI note numbers for C4 to C6 = 60 to 84
-
-const midiToNoteName = (midi: number) => Tone.Frequency(midi, "midi").toNote();
-
-type PitchGridProps = {
-  sampler: CustomSampler | null;
+type PitchPadProps = {
+  note: string;
+  sampler: CustomSampler;
 };
 
-const PitchGrid: React.FC<PitchGridProps> = ({ sampler }) => {
+const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
   const {
     selectedSampleId,
     allSampleData,
@@ -33,40 +26,7 @@ const PitchGrid: React.FC<PitchGridProps> = ({ sampler }) => {
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
 
-  console.log("hello from pitch grid");
-
-  // test
-  useEffect(() => {
-    if (sampler) {
-      console.log("Sampler loaded and ready to use", sampler);
-    }
-  }, [sampler]);
-
-  // Define root position (row 5, col 3, zero-indexed)
-  const rootRow = NUM_ROWS - 3; // row 5
-  const rootCol = 2; // col 3
-
-  // Generate the note grid starting from root in middle
-  const generateNotes = () => {
-    const notes: string[][] = [];
-    const rootIndex = rootRow * NUM_COLS + rootCol;
-
-    for (let row = 0; row < NUM_ROWS; row++) {
-      const rowNotes: string[] = [];
-      for (let col = 0; col < NUM_COLS; col++) {
-        const index = row * NUM_COLS + col;
-        const midi = Tone.Frequency(baseNote).toMidi() + (index - rootIndex);
-        rowNotes.push(midiToNoteName(midi));
-      }
-      notes.push(rowNotes);
-    }
-
-    return notes.reverse();
-  };
-
-  const gridNotes = generateNotes();
-
-  const handlePress = (note: Frequency) => {
+  const handlePress = () => {
     if (!sampler) return;
 
     // Stop scheduled release
@@ -147,37 +107,19 @@ const PitchGrid: React.FC<PitchGridProps> = ({ sampler }) => {
     }
   };
 
-  const renderPitchPads = () => {
-    return gridNotes.flat().map((note, i) => {
-      const samplerObj = samplersRef.current[selectedSampleId];
-      return (
-        <PitchPad
-          key={note + i}
-          note={note + i}
-          sampler={samplerObj?.sampler ?? null}
-        />
-      );
-    });
-  };
-
-  useEffect(() => {
-    sampleDataRef.current = allSampleData[selectedSampleId];
-  }, [allSampleData, selectedSampleId]);
-
   return (
-    <div className="w-1/2 grid grid-cols-5 gap-0 border-2 border-black mt-3">
-      {gridNotes.flat().map((note, i) => {
-        const samplerObj = samplersRef.current[selectedSampleId];
-        return (
-          <PitchPad
-            key={`${note}-${i}`}
-            note={note}
-            sampler={samplerObj?.sampler ?? null}
-          />
-        );
-      })}
-    </div>
+    <button
+      onMouseDown={() => handlePress(note)}
+      onTouchStart={() => handlePress(note)}
+      onDragOver={() => handlePress(note)}
+      onMouseUp={() => handleRelease(note)}
+      onMouseLeave={() => handleRelease(note)}
+      onTouchEnd={() => handleRelease(note)}
+      className={`border border-black text-sm cursor-pointer aspect-square ${note === baseNote ? "bg-slate-400" : "bg-slate-300"}`}
+    >
+      {note}
+    </button>
   );
 };
 
-export default PitchGrid;
+export default PitchPad;

@@ -13,6 +13,7 @@ import Transport from "../components/Audio/Transport";
 import Loop from "../components/Audio/Loop";
 import { useUIContext } from "./contexts/UIContext";
 import { useAuthContext } from "./contexts/AuthContext";
+import { useAudioContext } from "./contexts/AudioContext";
 
 const SampleSettings = dynamic(
   () => import("../components/Audio/SampleSettings"),
@@ -25,10 +26,15 @@ const DrumMachine = dynamic(() => import("../components/Audio/DrumMachine"), {
   ssr: false,
 });
 
+const PitchGrid = dynamic(() => import("../components/Audio/PitchGrid"), {
+  ssr: false,
+});
+
 export default function Home() {
   const [hotKeysActive, setHotKeysActive] = useState<boolean>(true);
   const { showDialog, setShowDialog, confirmActionRef } = useUIContext();
   const { authIsSignup, setAuthIsSignup } = useAuthContext();
+  const { samplersRef, selectedSample } = useAudioContext();
   useHotKeys(hotKeysActive);
 
   return (
@@ -45,8 +51,12 @@ export default function Home() {
             <Loop />
           </div>
         </div>
-
-        <DrumMachine />
+        <div className="flex">
+          <DrumMachine />
+          <PitchGrid
+            sampler={samplersRef.current[selectedSample]?.sampler ?? null}
+          />
+        </div>
       </div>
 
       <p className="text-sm">
