@@ -134,11 +134,11 @@ const SampleSettings = () => {
     };
   }, [selectedSampleId, allSampleData, settings, updateSamplerStateSettings]);
 
-  if (!selectedSampleId) {
-    return (
-      <p className="text-center p-4">Select a sample to modify its settings</p>
-    );
-  }
+  // if (!selectedSampleId) {
+  //   return (
+  //     <p className="text-center p-4">Select a sample to modify its settings</p>
+  //   );
+  // }
 
   if (!settings) {
     return <p>Loading...</p>;
@@ -297,7 +297,7 @@ const SampleSettings = () => {
 
                   <label htmlFor="pitch" className="mt-3 flex justify-between">
                     <span>Pitch</span>
-                    <span>{settings.pitch?.toFixed(1) || "0.0"} dB</span>
+                    <span>{settings.pitch?.toFixed(1) || "0.0"}</span>
                   </label>
                   <input
                     name="pitch"

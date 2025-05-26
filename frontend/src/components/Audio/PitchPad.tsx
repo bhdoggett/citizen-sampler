@@ -1,6 +1,7 @@
 "use client";
-import * as Tone from "tone";
+
 import { useRef } from "react";
+import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { CustomSampler } from "../../types/CustomSampler";
 
@@ -19,7 +20,6 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     isRecording,
     currentLoop,
   } = useAudioContext();
-  const sampleDataRef = useRef(allSampleData[selectedSampleId]);
   const currentEvent = samplersRef.current[selectedSampleId]?.currentEvent;
   const { baseNote } = allSampleData[selectedSampleId].settings;
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -35,7 +35,10 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     }
 
     const now = Tone.now();
-    const { start, end } = sampleDataRef.current.settings;
+    const { start, end } = allSampleData[selectedSampleId].settings;
+    console.log(allSampleData[selectedSampleId]);
+    console.log("From PitchPad: start", start, "end", end);
+    console.log("allSampleData", allSampleData);
 
     hasReleasedRef.current = false;
     sampler.triggerAttack(note, now, start, 1);
@@ -96,10 +99,12 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
           actualReleaseTime;
 
     console.log("currentEvent.duration", currentEvent.duration);
-    sampleDataRef.current.events[currentLoop].push({ ...currentEvent });
+    allSampleData[selectedSampleId].events[currentLoop].push({
+      ...currentEvent,
+    });
     setAllSampleData((prev) => ({
       ...prev,
-      [selectedSampleId]: sampleDataRef.current,
+      [selectedSampleId]: allSampleData[selectedSampleId],
     }));
 
     if (loopIsPlaying && isRecording && currentEvent.duration === 0) {

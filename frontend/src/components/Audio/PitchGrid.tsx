@@ -21,8 +21,6 @@ const PitchGrid: React.FC<PitchGridProps> = ({ sampler }) => {
   const sampleDataRef = useRef(allSampleData[selectedSampleId]);
   const { baseNote } = allSampleData[selectedSampleId].settings;
 
-  console.log("hello from pitch grid");
-
   // test
   useEffect(() => {
     if (sampler) {

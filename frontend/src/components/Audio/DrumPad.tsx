@@ -42,7 +42,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     }
 
     const now = Tone.now();
-    const { start, end } = sampleDataRef.current.settings;
+    const { start, end } = allSampleData[id].settings;
+    console.log("From DrumPad:", allSampleData[id]);
+    console.log("From DrumPad: start", start, "end", end);
 
     hasReleasedRef.current = false;
     sampler.triggerAttack(baseNote, now, start, 1);
@@ -60,6 +62,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         }
       }, duration * 1000);
     }
+    console.log("hi");
 
     if (loopIsPlaying && isRecording) {
       currentEvent.startTime = Tone.getTransport().ticks;
@@ -110,8 +113,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
           actualReleaseTime;
 
     console.log("currentEvent.duration", currentEvent.duration);
-    sampleDataRef.current.events[currentLoop].push({ ...currentEvent });
-    setAllSampleData((prev) => ({ ...prev, [id]: sampleDataRef.current }));
+    allSampleData[id].events[currentLoop].push({ ...currentEvent });
+    setAllSampleData((prev) => ({ ...prev, [id]: allSampleData[id] }));
 
     if (loopIsPlaying && isRecording && currentEvent.duration === 0) {
     }
@@ -165,7 +168,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
     const part = new Tone.Part((time, event) => {
       if (!sampler) return;
-      const { start, end } = sampleDataRef.current.settings;
+      const { start, end } = allSampleData[id].settings;
       if (
         typeof event === "object" &&
         event !== null &&

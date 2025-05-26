@@ -112,7 +112,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
     // Shuffle and return k elements
     const n = workingArray.length;
-    const k = Math.min(8, n);
+    const k = Math.min(12, n);
 
     for (let i = 0; i < k; i++) {
       const j = i + Math.floor(Math.random() * (n - i));
