@@ -5,7 +5,7 @@ type DialogWrapperProps = {
   children: React.ReactNode;
 };
 const DialogWrapper: React.FC<DialogWrapperProps> = ({ children }) => {
-  const { setShowDialog, setApiResponseMessage } = useUIContext();
+  const { setShowDialog, setHotKeysActive } = useUIContext();
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center">
       {/* BACKDROP */}
@@ -13,8 +13,8 @@ const DialogWrapper: React.FC<DialogWrapperProps> = ({ children }) => {
       <div className="absolute left-1/2 transform -translate-x-1/2 top-16 z-30 w-[550px] rounded-sm shadow-lg bg-white ring-1 ring-black ring-opacity-5">
         <button
           onClick={() => {
-            setApiResponseMessage(null);
             setShowDialog(null);
+            setHotKeysActive(true);
           }}
           className="absolute top-5 right-6 text-white hover:text-black"
         >
