@@ -9,7 +9,6 @@ import {
   // useMemo,
 } from "react";
 import * as Tone from "tone";
-import axios from "axios";
 import {
   SampleType,
   SampleSettings,
@@ -23,7 +22,6 @@ import { allUrlsWithCollectionNames } from "frontend/src/lib/sampleSources";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
 import { useAuthContext } from "./AuthContext";
-import { BASE_URL } from "frontend/src/components/Dialogs/AuthDialog";
 // import axios from "axios";
 
 // const API_URL = process.env.NEXT_PUBLIC_API_URL || "localhost:8000";
@@ -310,7 +308,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   );
   const [selectedSampleId, setSelectedSampleId] = useState<string>("loc-1");
   const [solosExist, setSolosExist] = useState<boolean>(false);
-  const { isAuthenticated } = useAuthContext();
 
   // Function to create a sampler with FX chain.
   // If using with Tone.Offline to download WAV stems, the third argument should be "true".
