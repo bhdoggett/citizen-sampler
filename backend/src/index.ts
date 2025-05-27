@@ -49,15 +49,6 @@ app.get("/test", (req, res) => {
   res.send("Hello Test!");
 });
 
-app.post("/temp-song", (req, res) => {
-  req.session.tempSong = req.body;
-  res.json({ message: "Temporary song saved" });
-});
-
-app.get("/temp-song", (req, res) => {
-  res.json(req.session.tempSong || null);
-});
-
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });

@@ -17,6 +17,7 @@ router.post(
   requireJwtAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log("Incoming song data:", req.body.samples);
       const { song, username } = req.body;
 
       if (!song || !username) {

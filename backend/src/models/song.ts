@@ -4,8 +4,8 @@ import { SongType } from "../../../shared/types/audioTypes";
 // SampleEvent
 const SampleEventSchema = new Schema(
   {
-    startTime: { type: Number, required: false },
-    duration: { type: Number, required: false },
+    startTime: { type: Number, required: true },
+    duration: { type: Number, required: true },
     note: { type: String, required: true },
   },
   { _id: false }
@@ -55,7 +55,12 @@ const SampleSchema = new Schema(
     label: { type: String },
     title: { type: String, required: true },
     url: { type: String, required: true },
-    events: { type: [SampleEventSchema], required: true },
+    events: {
+      type: Map,
+      of: [SampleEventSchema],
+      required: true,
+      default: {},
+    },
     settings: { type: SampleSettingsSchema, required: true },
     attribution: { type: String },
   },
@@ -91,7 +96,8 @@ export const SongSchema = new Schema({
     required: true,
   },
   samples: {
-    type: [SampleSchema],
+    type: Map,
+    of: SampleSchema,
     required: true,
   },
 });
