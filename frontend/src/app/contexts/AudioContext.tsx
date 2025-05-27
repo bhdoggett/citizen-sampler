@@ -21,7 +21,6 @@ import { getCollectionArrayFromName, UrlEntry } from "../../lib/collections";
 import { allUrlsWithCollectionNames } from "frontend/src/lib/sampleSources";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
-import { useAuthContext } from "./AuthContext";
 // import axios from "axios";
 
 // const API_URL = process.env.NEXT_PUBLIC_API_URL || "localhost:8000";
