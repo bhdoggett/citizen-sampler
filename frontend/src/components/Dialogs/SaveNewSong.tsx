@@ -1,11 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { useAudioContext } from "../../app/contexts/AudioContext";
-import { BASE_URL } from "./AuthDialog";
-import type { SampleType } from "@shared/types/audioTypes";
-import type { AllLoopSettings } from "@shared/types/audioTypes";
 import { useAuthContext } from "frontend/src/app/contexts/AuthContext";
+import { useUIContext } from "frontend/src/app/contexts/UIContext";
+import { BASE_URL } from "./AuthDialog";
 
 console.log("BASE_URL", BASE_URL);
 
@@ -18,34 +17,43 @@ const SaveNewSong: React.FC<SaveNewSongProps> = ({
   setShowDialog,
   setHotKeysActive,
 }) => {
-  const [formSongTitle, setFormSongTitle] = useState("");
+  const [formSongTitle, setFormSongTitle] = useState<string>("");
   const { setSongTitle, allSampleData, allLoopSettings } = useAudioContext();
-  const { error, setError } = useAuthContext();
+  const { setError, isAuthenticated, token, username } = useAuthContext();
+  const { apiResponseMessage, setApiResponseMessage } = useUIContext();
 
-  const handleSave = async (
-    formSongTitle: string,
-    allSampleData: Record<string, SampleType>,
-    allLoopSettings: AllLoopSettings
-  ) => {
-    try {
-      const result = await axios.post(`${BASE_URL}/me/songs`, {
+  const handleSave = async () => {
+    if (!isAuthenticated) {
+      console.warn("User not authenticated. Song not saved to DB.");
+      return;
+    }
+
+    const songData = {
+      song: {
         title: formSongTitle,
         loops: allLoopSettings,
         samples: allSampleData,
+      },
+      username: username,
+    };
+
+    try {
+      const result = await axios.post(`${BASE_URL}/beats/me/songs`, songData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      console.log("result", result);
-    } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        setError(error.response.data.message);
-      } else {
-        setError("An unexpected error occurred.");
+      if (result.status === 201) {
+        console.log("Song saved to DB:", result.data);
+        setApiResponseMessage(result.data.message);
+        setSongTitle(formSongTitle);
+        setHotKeysActive(true);
+        setShowDialog("api-response");
       }
+    } catch (error) {
+      console.error("Error saving song to DB:", error);
+      setApiResponseMessage("Error saving song to DB");
     }
   };
 
@@ -56,17 +64,11 @@ const SaveNewSong: React.FC<SaveNewSongProps> = ({
     };
   }, []);
 
-  return error ? (
+  return apiResponseMessage ? (
     <>
-      <span className="text-center text-lg font-bold mb-3">{error}</span>
-      <button
-        onClick={() => {
-          setError(null);
-        }}
-        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
-      >
-        Try Again?
-      </button>
+      <span className="text-center text-lg font-bold mb-3">
+        {apiResponseMessage}
+      </span>
     </>
   ) : (
     <>
@@ -85,12 +87,7 @@ const SaveNewSong: React.FC<SaveNewSongProps> = ({
       </div>
 
       <button
-        onClick={async () => {
-          await handleSave(formSongTitle, allSampleData, allLoopSettings);
-          setSongTitle(formSongTitle);
-          setShowDialog(null);
-          setHotKeysActive(true);
-        }}
+        onClick={handleSave}
         className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-1/4"
       >
         Save

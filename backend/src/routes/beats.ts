@@ -1,19 +1,49 @@
-import keys from "../config/keys";
 import express, { Request, Response, NextFunction } from "express";
+
+import requireJwtAuth from "../middleware/requireJwtAuth";
 import User from "../models/user";
-import { UserType } from "../models/user";
-import requireJwtAuth from "src/middleware/requireJwtAuth";
+import Song from "../models/song";
+import { UserType } from "../types/UserType";
+import { SongType } from "../../../shared/types/audioTypes";
 
 const router = express.Router();
 
+/**
+ * POST /me/songs
+ * Add a new song to the authenticated user's list
+ */
 router.post(
   "/me/songs",
   requireJwtAuth,
   async (req: Request, res: Response, next: NextFunction) => {
-    /// Do STUFF HERE
+    try {
+      const { song, username } = req.body;
 
-    res.json({ message: "Hiya" });
-    return;
+      if (!song || !username) {
+        res.status(400).json({ message: "Missing song or username" });
+        return;
+      }
+
+      const user = req.user;
+
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+
+      const newSong = new Song(song);
+
+      await newSong.save(); // Save the song in the Song collection
+
+      user.songs.push(newSong._id); // Push only the song ID into the user's songs array
+
+      await user.save();
+
+      res.status(201).json({ message: "Song added", song: newSong });
+      return;
+    } catch (err) {
+      next(err);
+    }
   }
 );
 

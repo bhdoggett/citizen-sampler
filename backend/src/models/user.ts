@@ -1,4 +1,4 @@
-import { Schema, Document, model } from "mongoose";
+import { Schema, Document, Types, model } from "mongoose";
 import { SongSchema } from "./song";
 import { SongType } from "../../../shared/types/audioTypes";
 
@@ -9,7 +9,7 @@ export type UserType = Document & {
   googleId?: string;
   lastLogin?: Date;
   createdAt?: Date;
-  songs: SongType[];
+  songs: Types.ObjectId[];
 };
 
 export const UserSchema = new Schema<UserType>({
@@ -42,10 +42,12 @@ export const UserSchema = new Schema<UserType>({
     type: Date,
     default: Date.now,
   },
-  songs: {
-    type: [SongSchema],
-    default: [],
-  },
+  songs: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Song",
+    },
+  ],
 });
 
 const User = model("User", UserSchema);

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios, { AxiosError } from "axios";
 import dotenv from "dotenv";
 import { useAuthContext } from "../../app/contexts/AuthContext";
@@ -20,13 +20,13 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   authIsSignup,
   setAuthIsSignup,
 }) => {
-  const [username, setUsername] = useState<string>("");
+  const [formUsername, setFormUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmationPassword, setConfirmationPassword] = useState<string>("");
   const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null);
 
-  const { setToken, setUser, error, setError } = useAuthContext();
+  const { setToken, setUsername, error, setError } = useAuthContext();
 
   const signup = async () => {
     try {
@@ -37,13 +37,13 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       } else {
         setPasswordsMatch(true);
         const result = await axios.post(`${BASE_URL}/auth/signup`, {
-          username,
+          username: formUsername,
           email,
           password,
         });
         if (result.status === 201) {
           setToken(result.data.token);
-          setUser(result.data.user);
+          setUsername(result.data.user);
           setShowDialog(null);
         }
       }
@@ -64,14 +64,14 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   const login = async () => {
     try {
       const result = await axios.post(`${BASE_URL}/auth/login`, {
-        username,
+        username: formUsername,
         password,
       });
 
       if (result.status === 200) {
         console.log("result.data", result.data);
         setToken(result.data.token);
-        setUser(result.data.user);
+        setUsername(result.data.user);
         setShowDialog(null);
       } else {
         setError(result.data.message);
@@ -113,6 +113,12 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
 
     setHotKeysActive(true);
   };
+  // Set error to null when component unmounts
+  useEffect(() => {
+    return () => {
+      setError(null);
+    };
+  }, []);
 
   return error ? (
     <>
@@ -120,7 +126,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       <button
         onClick={() => {
           setError(null);
-          setUsername("");
+          setFormUsername("");
           setEmail("");
           setPassword("");
           setConfirmationPassword("");
@@ -137,14 +143,14 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       </h2>
       <div className="mx-auto relative w-full">
         <div className="flex">
-          <label htmlFor="username" className="w-1/5 flex justify-end mr-2">
+          <label htmlFor="formUsername" className="w-1/5 flex justify-end mr-2">
             Username:
           </label>
           <input
-            name="username"
+            name="formUsername"
             type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={formUsername}
+            onChange={(e) => setFormUsername(e.target.value)}
             className="shadow-inner text-black shadow-slate-700 w-3/4 mb-2"
           />
         </div>
@@ -195,9 +201,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
           </div>
         )}
       </div>
-      <span>
-        {authIsSignup && passwordsMatch === false && "Passwords do not match"}
-      </span>
+
+      <span>{authIsSignup && !passwordsMatch && "Passwords do not match"}</span>
+
       <button
         type="submit"
         className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"

@@ -4,7 +4,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import auth from "./routes/auth";
 import keys from "./config/keys";
-// import beats from "./routes/beats";
+import beats from "./routes/beats";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -24,7 +24,7 @@ const PORT = process.env.PORT || 8000;
 app.use(passport.initialize());
 app.use(express.json());
 app.use("/auth", auth);
-// app.use("/beats", beats);
+app.use("/beats", beats);
 
 if (!keys.MONGO_URI) {
   throw new Error("Missing MONGO_URI in environment variables");

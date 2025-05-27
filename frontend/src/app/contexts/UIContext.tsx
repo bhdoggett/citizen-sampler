@@ -11,6 +11,8 @@ export type ConfirmAction = {
 
 type UIContextType = {
   confirmActionRef: React.RefObject<ConfirmAction>;
+  apiResponseMessage: string | null;
+  setApiResponseMessage: React.Dispatch<React.SetStateAction<string | null>>;
   showDialog: string | null;
   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
 };
@@ -21,10 +23,21 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const confirmActionRef = useRef<ConfirmAction>(null);
+  const [apiResponseMessage, setApiResponseMessage] = useState<string | null>(
+    null
+  );
   const [showDialog, setShowDialog] = useState<string | null>(null);
 
   return (
-    <UIContext.Provider value={{ confirmActionRef, showDialog, setShowDialog }}>
+    <UIContext.Provider
+      value={{
+        confirmActionRef,
+        apiResponseMessage,
+        setApiResponseMessage,
+        showDialog,
+        setShowDialog,
+      }}
+    >
       {children}
     </UIContext.Provider>
   );

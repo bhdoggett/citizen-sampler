@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 type AuthContextType = {
-  user: string | null;
-  setUser: (token: string | null) => void;
+  username: string | null;
+  setUsername: (token: string | null) => void;
   token: string | null;
   setToken: (token: string | null) => void;
   isAuthenticated: boolean;
@@ -24,8 +24,8 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: React.PropsWithChildren) => {
-  const [user, setUserState] = useState<string | null>(() =>
-    localStorage.getItem("user")
+  const [username, setUsernameState] = useState<string | null>(() =>
+    localStorage.getItem("username")
   );
   const [token, setTokenState] = useState<string | null>(() =>
     localStorage.getItem("token")
@@ -42,13 +42,13 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     setTokenState(newToken);
   };
 
-  const setUser = (newUser: string | null) => {
+  const setUsername = (newUser: string | null) => {
     if (newUser) {
-      localStorage.setItem("user", newUser);
+      localStorage.setItem("username", newUser);
     } else {
-      localStorage.removeItem("user");
+      localStorage.removeItem("username");
     }
-    setUserState(newUser);
+    setUsernameState(newUser);
   };
   // const localSignup = async (
   //   username: string,
@@ -92,8 +92,8 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   return (
     <AuthContext.Provider
       value={{
-        user,
-        setUser,
+        username,
+        setUsername,
         token,
         // localSignup,
         // googleSignup,

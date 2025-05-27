@@ -1,9 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
 import * as Tone from "tone";
+import axios from "axios";
+import dotenv from "dotenv";
 import { useAuthContext } from "../app/contexts/AuthContext";
 import { useUIContext } from "../app/contexts/UIContext";
 import useDownloadWavStems from "../app/hooks/useDownloadWavStems";
+import { useAudioContext } from "../app/contexts/AudioContext";
+dotenv.config();
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 type MenuProps = {
   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -17,23 +23,63 @@ export type ConfirmActionRef = {
 
 const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  // const [authIsSignup, setAuthIsSignup] = useState<boolean>(false);
-  // const confirmActionRef = useRef<ConfirmActionRef>(null);
-  const { isAuthenticated, setToken, user, setUser, setAuthIsSignup } =
-    useAuthContext();
-  const { confirmActionRef, showDialog, setShowDialog } = useUIContext();
+  const {
+    isAuthenticated,
+    token,
+    setToken,
+    username,
+    setUsername,
+    setAuthIsSignup,
+  } = useAuthContext();
+  const { songTitle, allLoopSettings, allSampleData } = useAudioContext();
+  const { confirmActionRef, setApiResponseMessage, showDialog, setShowDialog } =
+    useUIContext();
   const downloadWavStems = useDownloadWavStems();
 
   const logout = (): void => {
     localStorage.removeItem("token");
     setToken(null);
-    setUser(null);
+    setUsername(null);
   };
 
   const handleDownloadWavStems = async () => {
-    await downloadWavStems();
+    downloadWavStems();
     Tone.start();
     setMenuOpen(false);
+  };
+
+  const saveNewSong = async () => {
+    if (!isAuthenticated) {
+      console.warn("User not authenticated. Song not saved to DB.");
+      return;
+    }
+
+    const songData = {
+      song: {
+        title: songTitle,
+        loops: allLoopSettings,
+        samples: allSampleData,
+      },
+      username: username,
+    };
+
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/beats/me/songs`,
+        songData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Song saved to DB:", response.data);
+      setApiResponseMessage(response.data.message);
+    } catch (error) {
+      console.error("Error saving song to DB:", error);
+      setApiResponseMessage("Error saving song to DB");
+    }
   };
 
   useEffect(() => {
@@ -45,12 +91,12 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
   }, [showDialog, setHotKeysActive]);
 
   useEffect(() => {
-    console.log("user:", user);
-  }, [user]);
+    console.log("username:", username);
+  }, [username]);
 
   return (
     <div className="relative flex flex-col items-end" id="main-menu">
-      {user && <p className="text-xs font-bold w-full pb-1">{user}</p>}
+      {username && <p className="text-xs font-bold w-full pb-1">{username}</p>}
 
       {/* --Menu Button-- */}
 
@@ -99,12 +145,22 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                 </li>
                 <li
                   className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-                  onClick={() => {
-                    setShowDialog("save-song");
+                  onClick={async () => {
+                    await saveNewSong();
+                    setShowDialog("api-response");
                     setMenuOpen(false);
                   }}
                 >
-                  Save Song
+                  Save
+                </li>
+                <li
+                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                  onClick={() => {
+                    setShowDialog("save-new-song");
+                    setMenuOpen(false);
+                  }}
+                >
+                  Save As
                 </li>
               </>
             ) : (

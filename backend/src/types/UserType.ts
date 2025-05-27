@@ -1,4 +1,4 @@
-import type { SongType } from "./audioTypes";
+import type { SongType } from "../../../shared/types/audioTypes";
 
 export type UserType = {
   _id: string;

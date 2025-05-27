@@ -147,9 +147,12 @@ const SampleSettings = () => {
   return (
     <>
       <div className="relative flex flex-col items-center border-2 shadow-md shadow-slate-500 border-black">
-        <div className="flex shadow-inner shadow-slate-500 border border-black overflow-hidden mx-auto">
+        <div className="flex shadow-inner shadow-slate-500 border-x-2 border-b-2 border-black overflow-hidden mx-auto text-xs">
           <h1 className={"px-2 border-black bg-black text-white"}>
-            {allSampleData[selectedSampleId].title}
+            {`${allSampleData[selectedSampleId].collectionName}`}
+          </h1>
+          <h1 className={"px-2 border-black bg-white text-black"}>
+            {`${allSampleData[selectedSampleId].title}`}
           </h1>
         </div>
 

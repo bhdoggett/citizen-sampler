@@ -7,8 +7,9 @@ import MainMenu from "../components/MainMenu";
 import DialogWrapper from "../components/Dialogs/DialogWrapper";
 import AuthDialog from "../components/Dialogs/AuthDialog";
 import ConfirmActionDialog from "../components/Dialogs/ConfirmActionDialog";
-import SaveNewSong from "../components/Dialogs/SaveNewSong";
+import APIResponseDialog from "../components/Dialogs/APIResponseDialog";
 import CollectionMenu from "../components/Dialogs/CollectionMenu";
+import SaveNewSong from "../components/Signup";
 import Transport from "../components/Audio/Transport";
 import Loop from "../components/Audio/Loop";
 import { useUIContext } from "./contexts/UIContext";
@@ -32,7 +33,8 @@ const PitchGrid = dynamic(() => import("../components/Audio/PitchGrid"), {
 
 export default function Home() {
   const [hotKeysActive, setHotKeysActive] = useState<boolean>(true);
-  const { showDialog, setShowDialog, confirmActionRef } = useUIContext();
+  const { showDialog, setShowDialog, confirmActionRef, apiResponseMessage } =
+    useUIContext();
   const { authIsSignup, setAuthIsSignup } = useAuthContext();
   const { samplersRef, selectedSampleId } = useAudioContext();
   useHotKeys(hotKeysActive);
@@ -90,6 +92,12 @@ export default function Home() {
               setHotKeysActive={setHotKeysActive}
             />
           )}
+          {showDialog === "save-new-song" && (
+            <SaveNewSong
+              setShowDialog={setShowDialog}
+              setHotKeysActive={setHotKeysActive}
+            />
+          )}
           {showDialog === "auth-dialogue" && (
             <AuthDialog
               setShowDialog={setShowDialog}
@@ -104,6 +112,9 @@ export default function Home() {
               setShowDialog={setShowDialog}
               setHotKeysActive={setHotKeysActive}
             />
+          )}
+          {showDialog === "api-response" && (
+            <APIResponseDialog apiResponseMessage={apiResponseMessage} />
           )}
         </DialogWrapper>
       )}

@@ -3,12 +3,12 @@ import React, { useState } from "react";
 import { useAudioContext } from "../app/contexts/AudioContext";
 
 type SignupProps = {
-  setShowDialogue: React.Dispatch<React.SetStateAction<string | null>>;
+  setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const SaveNewSong: React.FC<SignupProps> = ({
-  setShowDialogue,
+  setShowDialog,
   setHotKeysActive,
 }) => {
   const { setSongTitle } = useAudioContext();
@@ -17,7 +17,7 @@ const SaveNewSong: React.FC<SignupProps> = ({
   return (
     <div className="flex flex-col border-2 border-black bg-slate-800 m-3 p-4 shadow-md shadow-slate-800 text-white">
       <button
-        onClick={() => setShowDialogue(null)}
+        onClick={() => setShowDialog(null)}
         className="absolute top-5 right-6 text-white hover:text-black"
       >
         ✖
@@ -39,7 +39,7 @@ const SaveNewSong: React.FC<SignupProps> = ({
         onClick={(e) => {
           e.preventDefault();
           setSongTitle(formSongTitle);
-          setShowDialogue(null);
+          setShowDialog(null);
           setHotKeysActive(true);
         }}
         className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-1/4"

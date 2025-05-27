@@ -30,11 +30,13 @@ const requireJwtAuth = async (
 
     const user = await User.findById(payload.sub);
     if (!user) {
+      console.log("User not found");
       res.status(401).json({ message: "User not found" });
       return;
     }
 
     req.user = user; // Make the user available in request handlers
+    console.log("User found");
     next();
   } catch (err) {
     res.status(401).json({ message: "Invalid or expired token" });
