@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { CustomSampler } from "../../types/CustomSampler";
@@ -20,8 +20,6 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     isRecording,
     currentLoop,
   } = useAudioContext();
-  const currentEvent = samplersRef.current[selectedSampleId]?.currentEvent;
-  const { baseNote } = allSampleData[selectedSampleId].settings;
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
 
@@ -33,6 +31,9 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
       clearTimeout(scheduledReleaseTimeoutRef.current);
       scheduledReleaseTimeoutRef.current = null;
     }
+
+    const currentEvent = samplersRef.current[selectedSampleId]?.currentEvent;
+    if (!currentEvent) return; // safety
 
     const now = Tone.now();
     const { start, end } = allSampleData[selectedSampleId].settings;
@@ -52,17 +53,18 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
         }
       }, duration * 1000);
     }
+    currentEvent.startTime = Tone.getTransport().ticks;
+    currentEvent.duration = 0;
+    currentEvent.note = note;
+    // if (loopIsPlaying && isRecording) {
 
-    if (loopIsPlaying && isRecording) {
-      currentEvent.startTime = Tone.getTransport().ticks;
-      currentEvent.duration = 0;
-      currentEvent.note = note;
-    }
+    // }
   };
 
   const handleRelease = () => {
     if (!sampler) return;
-
+    const currentEvent = samplersRef.current[selectedSampleId]?.currentEvent;
+    if (!currentEvent) return; // safety
     // Stop scheduled release
     if (scheduledReleaseTimeoutRef.current) {
       clearTimeout(scheduledReleaseTimeoutRef.current);
@@ -72,7 +74,7 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     hasReleasedRef.current = true;
     sampler.triggerRelease(note, Tone.now());
 
-    if (!currentEvent.startTime || !loopIsPlaying || !isRecording) return;
+    if (!currentEvent.startTime) return;
 
     const padReleasetime = Tone.getTransport().seconds;
     const sampleEnd = allSampleData[selectedSampleId].settings.end;
@@ -91,8 +93,12 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
         ? actualReleaseTime - startTimeInSeconds
         : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
 
+    console.log("startTime", startTimeInSeconds);
+    console.log("loopEnd", loopEndInSeconds);
+    console.log("actualReleaseTime", actualReleaseTime);
     console.log("currentEvent.duration", currentEvent.duration);
 
+    if (!loopIsPlaying || !isRecording) return;
     setAllSampleData((prev) => ({
       ...prev,
       [selectedSampleId]: {
@@ -113,9 +119,9 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
       onMouseDown={() => handlePress()}
       onTouchStart={() => handlePress()}
       onMouseUp={() => handleRelease()}
-      onMouseLeave={() => handleRelease()}
+      // onMouseLeave={() => handleRelease()}
       onTouchEnd={() => handleRelease()}
-      className={`border border-black text-sm cursor-pointer aspect-square ${note === baseNote ? "bg-slate-400" : "bg-slate-300"}`}
+      className={`border border-black text-sm cursor-pointer aspect-square ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400" : "bg-slate-300"}`}
     >
       {note}
     </button>
