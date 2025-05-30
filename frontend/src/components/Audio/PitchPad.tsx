@@ -40,9 +40,6 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
 
     const now = Tone.now();
     const { start, end } = allSampleData[selectedSampleId].settings;
-    console.log(allSampleData[selectedSampleId]);
-    console.log("From PitchPad: start", start, "end", end);
-    console.log("allSampleData", allSampleData);
 
     hasReleasedRef.current = false;
     sampler.triggerAttack(note, now, start, 1);
@@ -99,11 +96,6 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
       actualReleaseTime > startTimeInSeconds
         ? actualReleaseTime - startTimeInSeconds
         : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
-
-    console.log("startTime", startTimeInSeconds);
-    console.log("loopEnd", loopEndInSeconds);
-    console.log("actualReleaseTime", actualReleaseTime);
-    console.log("currentEvent.duration", currentEvent.duration);
 
     if (!loopIsPlaying || !isRecording) return;
     setAllSampleData((prev) => ({
@@ -173,7 +165,6 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
         setTimeout(() => {
           setPitchIsPlaying(false);
         }, actualDuration * 1000);
-        console.log(event);
       }
     }, events);
 

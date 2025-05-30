@@ -7,24 +7,24 @@ import quantize from "../../app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
 
-const drumKeys = [
-  "q",
-  "w",
-  "e",
-  "r",
-  "a",
-  "s",
-  "d",
-  "f",
-  "z",
-  "x",
-  "c",
-  "v",
-  "ArrowLeft",
-  "ArrowUp",
-  "ArrowDown",
-  "ArrowRight",
-];
+// const drumKeys = [
+//   "q",
+//   "w",
+//   "e",
+//   "r",
+//   "a",
+//   "s",
+//   "d",
+//   "f",
+//   "z",
+//   "x",
+//   "c",
+//   "v",
+//   "ArrowLeft",
+//   "ArrowUp",
+//   "ArrowDown",
+//   "ArrowRight",
+// ];
 
 type DrumPadProps = {
   id: string;
@@ -62,8 +62,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
     const now = Tone.now();
     const { start, end } = allSampleData[id].settings;
-    console.log("From DrumPad:", allSampleData[id]);
-    console.log("From DrumPad: start", start, "end", end);
 
     hasReleasedRef.current = false;
     sampler.triggerAttack(baseNote, now, start, 1);
@@ -122,8 +120,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       actualReleaseTime > startTimeInSeconds
         ? actualReleaseTime - startTimeInSeconds
         : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
-
-    console.log("currentEvent.duration", currentEvent.duration);
 
     setAllSampleData((prev) => ({
       ...prev,
@@ -212,7 +208,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         setTimeout(() => {
           setSampleIsPlaying(false);
         }, actualDuration * 1000);
-        console.log(event);
       }
     }, events);
 
@@ -256,13 +251,14 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     });
   }, [sampler]);
 
+  const padNum = id.split("-")[1];
   return (
     <div
       className={`flex m-auto rounded-sm w-full aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
       onFocus={handleFocus}
     >
       <button
-        id={`pad-${id}`}
+        id={padNum}
         onMouseDown={handlePress}
         onTouchStart={handlePress}
         onMouseUp={handleRelease}
@@ -270,7 +266,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onTouchEnd={() => handleRelease()}
         className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800 w-full aspect-square shadow-md shadow-slate-500  `}
       >
-        <p className="flex top-1 left-0 text-xs">{id}</p>
+        <p className="flex top-1 left-0 text-xs">{padNum}</p>
         <AudioSnippetVisualizer id={id} />
       </button>
     </div>

@@ -9,8 +9,6 @@ import { SongTypeFE } from "@shared/types/audioTypes";
 dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-console.log("BASE_URL", BASE_URL);
-
 const LoadSong: React.FC = () => {
   const [songTitles, setSongTitles] = useState<string[]>([]);
   const [selectedSong, setSelectedSong] = useState<string>("");
@@ -28,7 +26,6 @@ const LoadSong: React.FC = () => {
       });
 
       if (result.status === 200) {
-        console.log(result);
         const titles = result.data;
         setSongTitles(titles);
         setSelectedSong(titles[0]);
@@ -63,7 +60,6 @@ const LoadSong: React.FC = () => {
       );
 
       if (result.status === 200) {
-        console.log("Song loaded from db:", result.data);
         const song: SongTypeFE = result.data.song;
         const { title, samples, loops } = song;
         setSongTitle(title);
@@ -119,7 +115,7 @@ const LoadSong: React.FC = () => {
 
         <button
           type="submit"
-          className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-1/4"
+          className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-fit"
         >
           Load
         </button>

@@ -14,7 +14,7 @@ const ChooseSample: React.FC = () => {
     initLocSampleData,
     cleanupSampler,
     updateSamplerData,
-    makeSampler,
+    makeSamplerWithFX,
     samplersRef,
   } = useAudioContext();
 
@@ -77,7 +77,7 @@ const ChooseSample: React.FC = () => {
 
     updateSamplerData(selectedSampleId, sampleData);
     cleanupSampler(selectedSampleId, samplersRef);
-    samplersRef.current[selectedSampleId] = await makeSampler(
+    samplersRef.current[selectedSampleId] = await makeSamplerWithFX(
       selectedSampleId,
       url,
       false

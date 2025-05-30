@@ -8,8 +8,6 @@ import { useUIContext } from "frontend/src/app/contexts/UIContext";
 dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-console.log("BASE_URL", BASE_URL);
-
 // type SaveNewSongProps = {
 //   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
 //   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -38,7 +36,6 @@ const SaveNewSong: React.FC = () => {
       },
       username: username,
     };
-    console.log("songData", songData);
 
     try {
       const result = await axios.post(`${BASE_URL}/beats/me/songs`, songData, {
@@ -48,7 +45,6 @@ const SaveNewSong: React.FC = () => {
       });
 
       if (result.status === 201) {
-        console.log("Song saved to DB:", result.data);
         localStorage.setItem("songId", result.data.song._id);
         setSongTitle(formSongTitle);
         apiResponseMessageRef.current = result.data.message;

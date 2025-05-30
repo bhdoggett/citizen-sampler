@@ -36,7 +36,6 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   const [error, setError] = useState<string | null>(null);
   const { apiResponseMessageRef, setShowDialog } = useUIContext();
   const searchParams = useSearchParams();
-  console.log(searchParams);
 
   const setToken = (newToken: string | null) => {
     if (newToken) {
@@ -71,7 +70,7 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
       apiResponseMessageRef.current = "Google login failed";
       setShowDialog("api-response");
     }
-  },[]);
+  }, []);
 
   return (
     <AuthContext.Provider

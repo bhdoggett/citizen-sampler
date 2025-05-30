@@ -7,6 +7,7 @@ const SampleEventSchema = new Schema(
     startTime: { type: Number, required: true },
     duration: { type: Number, required: true },
     note: { type: String, required: true },
+    velocity: { type: Number, required: true },
   },
   { _id: false }
 );
@@ -81,10 +82,10 @@ const LoopSchema = new Schema({
     type: Number,
     required: true,
   },
-  // swing: {
-  //   type: Number,
-  //   required: true,
-  // },
+  swing: {
+    type: Number,
+    required: true,
+  },
 });
 
 // Song

@@ -15,11 +15,6 @@ const Loop = () => {
     // handleSelectLoop,
   } = useAudioContext();
 
-  // test currentLoop in state
-  useEffect(() => {
-    console.log("current Loop", currentLoop);
-  }, [currentLoop, setCurrentLoop]);
-
   const updateLoopSetting = <K extends keyof LoopSettings>(
     key: K,
     value: LoopSettings[K]

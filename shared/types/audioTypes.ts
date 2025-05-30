@@ -10,7 +10,7 @@ export type SampleEvent = {
   startTime: Ticks | null;
   duration: number | null;
   note: Frequency;
-  // velocity: number | null;
+  velocity: NormalRange;
 };
 
 export type SampleSettings = {
@@ -33,9 +33,10 @@ export type SampleSettings = {
 
 export type SampleType = {
   id: string;
+  title: string;
+  type: string;
   collectionName: string;
   label?: string;
-  title: string;
   url: string;
   events: Record<string, SampleEvent[]>; // This has sample events indexed by Loop
   settings: SampleSettings;

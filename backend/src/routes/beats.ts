@@ -10,7 +10,6 @@ router.post(
   "/me/songs",
   requireJwtAuth,
   async (req: Request, res: Response, next: NextFunction) => {
-    console.log("Incoming song data:", req.body.song.title);
     const { song, username } = req.body;
 
     if (!song || !username) {

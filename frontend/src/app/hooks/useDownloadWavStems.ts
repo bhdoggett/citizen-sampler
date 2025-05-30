@@ -6,7 +6,7 @@ import toWav from "audiobuffer-to-wav";
 import type { LoopName } from "../../../../shared/types/audioTypes";
 
 const useDownloadWavStems = () => {
-  const { allSampleData, samplersRef, allLoopSettings, makeSampler } =
+  const { allSampleData, samplersRef, allLoopSettings, makeSamplerWithFX } =
     useAudioContext();
   const allIds = Object.keys(samplersRef.current);
   const loops = ["A", "B", "C", "D"];
@@ -47,7 +47,7 @@ const useDownloadWavStems = () => {
       transport.loopStart = 0;
       transport.loopEnd = `${loopSettings.bars}m`;
 
-      const offlineSamplerWithFx = await makeSampler(
+      const offlineSamplerWithFx = await makeSamplerWithFX(
         id,
         allSampleData[id].url,
         true
@@ -63,7 +63,6 @@ const useDownloadWavStems = () => {
           const eventTime = settings.quantize
             ? quantize(startTimeInSeconds, settings.quantVal)
             : startTimeInSeconds;
-          // console.log(`event at index: ${idx}`, event);
           return [
             eventTime,
             {
@@ -91,7 +90,6 @@ const useDownloadWavStems = () => {
           sampler.triggerAttackRelease(event.note, actualDuration, time, start);
 
           setTimeout(() => {}, event.duration * 1000);
-          console.log(event);
         }
       }, toneEvents);
 

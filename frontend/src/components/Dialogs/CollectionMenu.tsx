@@ -15,7 +15,7 @@ const CollectionMenu: React.FC<CollectionMenuProps> = () => {
     cleanupSampler,
     setAllSampleData,
     samplersRef,
-    makeSampler,
+    makeSamplerWithFX,
   } = useAudioContext();
   const { confirmActionRef, setShowDialog } = useUIContext();
   const [c, setC] = useState<string>(collectionNames[0]);
@@ -38,7 +38,7 @@ const CollectionMenu: React.FC<CollectionMenuProps> = () => {
 
     Object.entries(newSamples).forEach(async ([key, sample]) => {
       cleanupSampler(key, samplersRef);
-      samplersRef.current[key] = await makeSampler(sample.id, sample.url);
+      samplersRef.current[key] = await makeSamplerWithFX(sample.id, sample.url);
     });
   };
 

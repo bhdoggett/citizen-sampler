@@ -68,7 +68,6 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       });
 
       if (result.status === 200) {
-        console.log("result.data", result.data);
         setToken(result.data.token);
         setUsername(result.data.user);
         setShowDialog(null);

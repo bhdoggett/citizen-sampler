@@ -5,7 +5,6 @@ import {
   useEffect,
   useState,
   useRef,
-  useCallback,
   // useMemo,
 } from "react";
 import * as Tone from "tone";
@@ -45,7 +44,7 @@ type AudioContextType = {
   setMetronomeActive: React.Dispatch<React.SetStateAction<boolean>>;
   metronome: Tone.Sampler;
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
-  makeSampler: (
+  makeSamplerWithFX: (
     sampleId: string,
     sampleUrl: string,
     offline?: boolean
@@ -88,15 +87,6 @@ type AudioContextType = {
 const AudioContextContext = createContext<AudioContextType | null>(null);
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
-  // /////////////////
-  // const now = new Date();
-  // const nowMilliseconds =
-  //   now.getHours() * 3600 +
-  //   now.getMinutes() * 60 +
-  //   now.getSeconds() +
-  //   now.getMilliseconds() / 1000;
-  // ////////////////
-
   // Select 8 random urls from the allLOCUrls array
   const selectRandomUrlEntries = (
     array: UrlEntry[] | string[],
@@ -133,6 +123,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     return {
       id: id,
       title: getTitle(url),
+      type: "loc",
       collectionName: collection,
       label: getLabel(url),
       url: url,
@@ -167,7 +158,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
       const locSampleData = selectedSamples.reduce(
         (acc, sample, i) => {
-          const key = `loc-${i + 1}`;
+          const key = `pad-${i + 1}`;
           acc[key] = initLocSampleData(key, sample.url, sample.collection);
           return acc;
         },
@@ -189,7 +180,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
       const locSampleData = selectedSamples.reduce(
         (acc, url, i) => {
-          const key = `loc-${i + 1}`;
+          const key = `pad-${i + 1}`;
           acc[key] = initLocSampleData(key, url, collection);
           return acc;
         },
@@ -213,6 +204,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     return {
       id: id,
       title: title,
+      type: "kit",
       collectionName: collection,
       label: label,
       url: url,
@@ -264,7 +256,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
     return samples.reduce(
       (acc, sample, index) => {
-        const id = `kit-${index + 1}`;
+        const id = `pad-${index + 13}`;
         const label = sample.title.split("_").slice(0)[0];
         acc[id] = initKitSampleData(
           id,
@@ -277,6 +269,120 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
       {} as Record<string, SampleType>
     );
+  };
+
+  // Function to create a sampler with FX chain.
+  // If using with Tone.Offline to download WAV stems, the third argument should be "true".
+  const makeSamplerWithFX = async (
+    sampleId: string,
+    sampleUrl: string,
+    offline: boolean = false
+  ): Promise<SamplerWithFX> => {
+    return new Promise((resolve, reject) => {
+      const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
+      const pitch = new Tone.PitchShift(0);
+      const panVol = new Tone.PanVol(0, 0);
+      const highpass = new Tone.Filter(0, "highpass");
+      const lowpass = new Tone.Filter(20000, "lowpass");
+      const sampler = new CustomSampler({
+        urls: { C4: sampleUrl },
+        onload: () => {
+          // Connect the FX chain
+          sampler.connect(gain);
+          gain.connect(pitch);
+          pitch.connect(highpass);
+          highpass.connect(lowpass);
+          lowpass.connect(panVol);
+
+          if (!offline) {
+            panVol.connect(masterGainNode.current).toDestination();
+          } else {
+            panVol.toDestination();
+          }
+          resolve({
+            id: sampleId,
+            sampler,
+            pitch,
+            gain,
+            panVol,
+            highpass,
+            lowpass,
+            currentEvent: {
+              startTime: null,
+              duration: null,
+              note: "C4",
+              velocity: 1,
+            },
+          });
+        },
+        onerror: (err) => {
+          console.error(`Error loading sample: ${sampleId}`, err);
+          reject(err);
+        },
+      });
+    });
+  };
+
+  // Universal cleanup function for samplers
+  const cleanupSampler = (
+    sampleId: string,
+    ref: React.RefObject<Record<string, SamplerWithFX>>
+  ) => {
+    const samplerWithFX = ref.current[sampleId];
+    if (samplerWithFX) {
+      const { sampler, gain, panVol, highpass, lowpass } = samplerWithFX;
+
+      // Dispose of each Tone.js node
+      sampler.dispose();
+      gain.dispose();
+      panVol.dispose();
+      highpass.dispose();
+      lowpass.dispose();
+
+      // Delete the reference
+      delete ref.current[sampleId];
+    }
+  };
+
+  // // Function for loading samplers
+  // const loadSamplers = useCallback(
+  //   async (type: "loc" | "kit") => {
+  //     if (!allSampleData) return;
+  //     // Filter the sample data based on the type
+  //     const samplesArray = Object.entries(allSampleData)
+  //       .filter(([key]) => key.startsWith(`${type}-`))
+  //       .map(([, value]) => value);
+
+  //     const samplers = await Promise.all(
+  //       samplesArray.map(async ({ id, url }) => await makeSamplerWithFX(id, url))
+  //     );
+
+  //     samplers.forEach((sampler, i) => {
+  //       const id = samplesArray[i].id;
+  //       samplersRef.current[id] = sampler;
+  //     });
+  //   },
+  //   [allSampleData]
+  // );
+
+  const loadSamplersToRef = async (
+    allSampleData: Record<string, SampleType>
+  ) => {
+    if (!allSampleData) return;
+    const samplesArray = Object.values(allSampleData).map((value) => {
+      return value;
+    });
+    const samplers = await Promise.all(
+      samplesArray.map(async ({ id, url }) => {
+        const samplerWithFX = await makeSamplerWithFX(id, url);
+        return samplerWithFX;
+      })
+    );
+
+    samplers.forEach((sampler, i) => {
+      const id = samplesArray[i].id;
+      samplersRef.current[id] = sampler;
+    });
   };
 
   const [songTitle, setSongTitle] = useState<string>(() => {
@@ -323,102 +429,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
   );
-  const [selectedSampleId, setSelectedSampleId] = useState<string>("loc-1");
+  const [selectedSampleId, setSelectedSampleId] = useState<string>("pad-1");
   const [solosExist, setSolosExist] = useState<boolean>(false);
-
-  // Function to create a sampler with FX chain.
-  // If using with Tone.Offline to download WAV stems, the third argument should be "true".
-  const makeSampler = async (
-    sampleId: string,
-    sampleUrl: string,
-    offline: boolean = false
-  ): Promise<SamplerWithFX> => {
-    return new Promise((resolve, reject) => {
-      const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
-      const pitch = new Tone.PitchShift(0);
-      const panVol = new Tone.PanVol(0, 0);
-      const highpass = new Tone.Filter(0, "highpass");
-      const lowpass = new Tone.Filter(20000, "lowpass");
-      const sampler = new CustomSampler({
-        urls: { C4: sampleUrl },
-        onload: () => {
-          // Connect the FX chain
-          sampler.connect(gain);
-          gain.connect(pitch);
-          pitch.connect(highpass);
-          highpass.connect(lowpass);
-          lowpass.connect(panVol);
-
-          if (!offline) {
-            panVol.connect(masterGainNode.current).toDestination();
-          } else {
-            panVol.toDestination();
-          }
-          resolve({
-            id: sampleId,
-            sampler,
-            pitch,
-            gain,
-            panVol,
-            highpass,
-            lowpass,
-            currentEvent: {
-              startTime: null,
-              duration: null,
-              note: "C4",
-              // velocity: null,
-            },
-          });
-        },
-        onerror: (err) => {
-          console.error(`Error loading sample: ${sampleId}`, err);
-          reject(err);
-        },
-      });
-    });
-  };
-
-  // Universal cleanup function for samplers
-  const cleanupSampler = (
-    sampleId: string,
-    ref: React.RefObject<Record<string, SamplerWithFX>>
-  ) => {
-    const samplerWithFX = ref.current[sampleId];
-    if (samplerWithFX) {
-      const { sampler, gain, panVol, highpass, lowpass } = samplerWithFX;
-
-      // Dispose of each Tone.js node
-      sampler.dispose();
-      gain.dispose();
-      panVol.dispose();
-      highpass.dispose();
-      lowpass.dispose();
-
-      // Delete the reference
-      delete ref.current[sampleId];
-    }
-  };
-
-  // Function for loading samplers
-  const loadSamplers = useCallback(
-    async (type: "loc" | "kit") => {
-      if (!allSampleData) return;
-      // Filter the sample data based on the type
-      const samplesArray = Object.entries(allSampleData)
-        .filter(([key]) => key.startsWith(`${type}-`))
-        .map(([, value]) => value);
-
-      const samplers = await Promise.all(
-        samplesArray.map(async ({ id, url }) => await makeSampler(id, url))
-      );
-
-      samplers.forEach((sampler, i) => {
-        const id = samplesArray[i].id;
-        samplersRef.current[id] = sampler;
-      });
-    },
-    [allSampleData]
-  );
 
   const updateSamplerStateSettings = (
     id: string,
@@ -438,18 +450,17 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // use axios to post song to db
 
+  // // Load samplers to samplerRef
+  // useEffect(() => {
+  //   loadSamplers("loc");
+  //   loadSamplers("kit");
+  // }, []); // <===== if this empty dependency array is removed, the samplers are loaded with every update in allSampleData state
+
   // Load samplers to samplerRef
   useEffect(() => {
-    loadSamplers("loc");
-    loadSamplers("kit");
+    loadSamplersToRef(allSampleData);
   }, []); // <===== if this empty dependency array is removed, the samplers are loaded with every update in allSampleData state
 
-  // // test allSampleData state
-  // useEffect(() => {
-  //   if (allSampleData) {
-  //     console.log("allSampleData", nowMilliseconds, allSampleData);
-  //   }
-  // }, [allSampleData]);
 
   // Upload allSampleData to localStorage.samples when allSampleData state changes.
   // Changes in state coming from SampleSettings are debounced in that component.
@@ -586,7 +597,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setAllLoopSettings,
         isRecording,
         setIsRecording,
-        makeSampler,
+        makeSamplerWithFX,
         initLocSampleData,
         updateSamplerData,
         allSampleData,

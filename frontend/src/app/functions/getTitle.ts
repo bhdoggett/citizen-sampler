@@ -2,7 +2,6 @@
 
 export const getTitle = (url: string) => {
   const filename = url.split("/").pop();
-  console.log("filename", filename);
   if (!filename) return "";
   const rawTitle = filename.split("_")[0]; // "Joe-Turner-blues-medley"
   const number = filename.split("_")[2]; // 001

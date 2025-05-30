@@ -63,8 +63,6 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
       username: username,
     };
 
-    console.log("songData", songData);
-
     try {
       const result = await axios.put(
         `${BASE_URL}/beats/me/songs/${songId}`,
@@ -77,7 +75,6 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
       );
 
       if (result.status === 201) {
-        console.log("Song saved to DB:", result.data);
         apiResponseMessageRef.current = result.data.message;
         setShowDialog("api-response");
       }
@@ -108,10 +105,6 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
       setHotKeysActive(true);
     }
   }, [showDialog, setHotKeysActive]);
-
-  useEffect(() => {
-    console.log("username:", username);
-  }, [username]);
 
   return (
     <div className="relative flex flex-col items-end" id="main-menu">

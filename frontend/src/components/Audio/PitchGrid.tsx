@@ -16,17 +16,10 @@ type PitchGridProps = {
   sampler: CustomSampler | null;
 };
 
-const PitchGrid: React.FC<PitchGridProps> = ({ sampler }) => {
+const PitchGrid: React.FC<PitchGridProps> = () => {
   const { selectedSampleId, allSampleData, samplersRef } = useAudioContext();
   const sampleDataRef = useRef(allSampleData[selectedSampleId]);
   const { baseNote } = allSampleData[selectedSampleId].settings;
-
-  // test
-  useEffect(() => {
-    if (sampler) {
-      console.log("Sampler loaded and ready to use", sampler);
-    }
-  }, [sampler]);
 
   // Define root position (row 5, col 3, zero-indexed)
   const rootRow = NUM_ROWS - 3; // row 5
@@ -57,7 +50,7 @@ const PitchGrid: React.FC<PitchGridProps> = ({ sampler }) => {
   }, [allSampleData, selectedSampleId]);
 
   return (
-    <div className="flex flex-col text-center w-1/3 ml-3 mt-1">
+    <div className="flex flex-col text-center w-1/2 ml-3 mt-1">
       <h3 className="bg-slate-50 font-bold border-2 border-black shadow-inner shadow-slate-400">{`Pitch Grid: ${selectedSampleId}`}</h3>
       <div className="w-full aspect-square grid grid-cols-5 gap-0 border-2 border-black mt-1 mx-auto">
         {gridNotes.flat().map((note, i) => {
