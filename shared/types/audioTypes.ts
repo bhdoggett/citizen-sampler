@@ -1,12 +1,7 @@
-import * as Tone from "../../frontend/node_modules/tone";
 import {
   Ticks,
   Frequency,
-  //   AudioRange,
-  //   Cents,
-  //   Decibels,
   NormalRange,
-  //   Time,
 } from "../../frontend/node_modules/tone/build/esm/core/type/Units";
 
 export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
