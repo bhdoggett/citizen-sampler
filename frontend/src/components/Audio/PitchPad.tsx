@@ -197,12 +197,17 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
 
   return (
     <button
-      onMouseDown={() => handlePress()}
-      onTouchStart={() => handlePress()}
-      onMouseUp={() => handleRelease()}
-      // onMouseLeave={() => handleRelease()}
-      onTouchEnd={() => handleRelease()}
-      className={`border border-black text-sm cursor-pointer aspect-square ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400" : "bg-slate-300"} ${getActiveStyle()}`}
+      onMouseDown={handlePress}
+      onMouseEnter={(e) => {
+        if (e.buttons === 1) {
+          handlePress();
+        }
+      }}
+      onTouchStart={handlePress}
+      onMouseUp={handleRelease}
+      onMouseLeave={handleRelease}
+      onTouchEnd={handleRelease}
+      className={`border border-black text-sm cursor-pointer aspect-square shadow-inner shadow-slate-600 ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400" : "bg-slate-300"} ${getActiveStyle()}`}
     >
       {note}
     </button>

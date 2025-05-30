@@ -260,6 +260,11 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       <button
         id={padNum}
         onMouseDown={handlePress}
+        onMouseEnter={(e) => {
+          if (e.buttons === 1) {
+            handlePress();
+          }
+        }}
         onTouchStart={handlePress}
         onMouseUp={handleRelease}
         onMouseLeave={() => handleRelease()}
