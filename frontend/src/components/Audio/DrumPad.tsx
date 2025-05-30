@@ -62,7 +62,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         }
       }, duration * 1000);
     }
-    console.log("hi");
 
     if (loopIsPlaying && isRecording) {
       currentEvent.startTime = Tone.getTransport().ticks;
@@ -193,7 +192,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
         setTimeout(() => {
           setSampleIsPlaying(false);
-        }, event.duration * 1000);
+        }, actualDuration * 1000);
         console.log(event);
       }
     }, events);

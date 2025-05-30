@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { CustomSampler } from "../../types/CustomSampler";
+import quantize from "frontend/src/app/functions/quantize";
 
 type PitchPadProps = {
   note: string;
@@ -22,6 +23,7 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
   } = useAudioContext();
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
+  const [pitchIsPlaying, setPitchIsPlaying] = useState<boolean>(false);
 
   const handlePress = () => {
     if (!sampler) return;
@@ -33,7 +35,8 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     }
 
     const currentEvent = samplersRef.current[selectedSampleId]?.currentEvent;
-    if (!currentEvent) return; // safety
+
+    if (!currentEvent) return;
 
     const now = Tone.now();
     const { start, end } = allSampleData[selectedSampleId].settings;
@@ -43,6 +46,7 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
 
     hasReleasedRef.current = false;
     sampler.triggerAttack(note, now, start, 1);
+    setPitchIsPlaying(true);
 
     if (end) {
       const duration = end - start;
@@ -50,6 +54,7 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
           sampler.triggerRelease(note, Tone.now());
+          setPitchIsPlaying(false);
         }
       }, duration * 1000);
     }
@@ -65,6 +70,7 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     if (!sampler) return;
     const currentEvent = samplersRef.current[selectedSampleId]?.currentEvent;
     if (!currentEvent) return; // safety
+
     // Stop scheduled release
     if (scheduledReleaseTimeoutRef.current) {
       clearTimeout(scheduledReleaseTimeoutRef.current);
@@ -72,6 +78,7 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     }
 
     hasReleasedRef.current = true;
+    setPitchIsPlaying(false);
     sampler.triggerRelease(note, Tone.now());
 
     if (!currentEvent.startTime) return;
@@ -114,6 +121,89 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     }));
   };
 
+  const getActiveStyle = () => {
+    return pitchIsPlaying
+      ? "brightness-75 saturate-500 transition-all duration-100"
+      : "brightness-100 saturate-100 transition-all duration-100";
+  };
+
+  // Schedule playback of events, strictly for visual render feedback on the PitchPad
+  useEffect(() => {
+    const sampleData = allSampleData[selectedSampleId];
+
+    if (
+      !loopIsPlaying ||
+      allSampleData[selectedSampleId].events[currentLoop].length === 0
+    )
+      return;
+
+    const events = sampleData.events[currentLoop]
+      .filter((event) => event.note === note)
+      .map((event) => {
+        if (!event.startTime) return;
+        const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
+        const eventTime = sampleData.settings.quantize
+          ? quantize(startTimeInSeconds, sampleData.settings.quantVal)
+          : startTimeInSeconds;
+        return [
+          eventTime,
+          {
+            startTime: eventTime,
+            duration: event.duration,
+          },
+        ];
+      });
+
+    const part = new Tone.Part((time, event) => {
+      if (!sampler) return;
+      const { start, end } = allSampleData[selectedSampleId].settings;
+      if (
+        typeof event === "object" &&
+        event !== null &&
+        "duration" in event &&
+        event.duration !== null
+      ) {
+        const actualDuration = end
+          ? end - start < event.duration
+            ? end - start
+            : event.duration
+          : event.duration;
+
+        setPitchIsPlaying(true);
+        setTimeout(() => {
+          setPitchIsPlaying(false);
+        }, actualDuration * 1000);
+        console.log(event);
+      }
+    }, events);
+
+    part.start(0);
+
+    const disposePart = () => {
+      if (part) {
+        try {
+          if (part.state === "started") {
+            part.stop();
+          }
+          part.dispose();
+        } catch (error) {
+          console.warn("Error disposing part:", error);
+        }
+      }
+    };
+
+    return () => {
+      disposePart();
+    };
+  }, [
+    loopIsPlaying,
+    allSampleData,
+    selectedSampleId,
+    currentLoop,
+    note,
+    sampler,
+  ]);
+
   return (
     <button
       onMouseDown={() => handlePress()}
@@ -121,7 +211,7 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
       onMouseUp={() => handleRelease()}
       // onMouseLeave={() => handleRelease()}
       onTouchEnd={() => handleRelease()}
-      className={`border border-black text-sm cursor-pointer aspect-square ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400" : "bg-slate-300"}`}
+      className={`border border-black text-sm cursor-pointer aspect-square ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400" : "bg-slate-300"} ${getActiveStyle()}`}
     >
       {note}
     </button>
