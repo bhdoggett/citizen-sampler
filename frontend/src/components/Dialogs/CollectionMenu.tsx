@@ -45,7 +45,7 @@ const CollectionMenu: React.FC<CollectionMenuProps> = () => {
   return (
     <>
       <div className="flex flex-col w-full max-w-sm mx-auto">
-        <label htmlFor="collection" className="text-white">
+        <label htmlFor="collection" className="text-white mb-1">
           Choose a Collection:
         </label>
         <select
@@ -77,7 +77,7 @@ const CollectionMenu: React.FC<CollectionMenuProps> = () => {
           };
           setShowDialog("confirm-action");
         }}
-        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-1/3"
+        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
       >
         Load Samples
       </button>

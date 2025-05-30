@@ -1,14 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import * as Tone from "tone";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import dotenv from "dotenv";
 import { useAuthContext } from "../app/contexts/AuthContext";
+import { useAudioContext } from "../app/contexts/AudioContext";
 import { useUIContext } from "../app/contexts/UIContext";
 import useDownloadWavStems from "../app/hooks/useDownloadWavStems";
-import { useAudioContext } from "../app/contexts/AudioContext";
 dotenv.config();
-
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 type MenuProps = {
@@ -31,9 +30,9 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
     setUsername,
     setAuthIsSignup,
   } = useAuthContext();
-  const { songTitle, allLoopSettings, allSampleData } = useAudioContext();
-  const { confirmActionRef, setApiResponseMessage, showDialog, setShowDialog } =
+  const { confirmActionRef, showDialog, setShowDialog, apiResponseMessageRef } =
     useUIContext();
+  const { songTitle, allLoopSettings, allSampleData } = useAudioContext();
   const downloadWavStems = useDownloadWavStems();
 
   const logout = (): void => {
@@ -42,13 +41,14 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
     setUsername(null);
   };
 
-  const handleDownloadWavStems = async () => {
-    downloadWavStems();
-    Tone.start();
-    setMenuOpen(false);
-  };
+  const handleSaveSong = async () => {
+    const songId = localStorage.getItem("songId");
+    if (!songId) {
+      setShowDialog("save-new-song");
+      setMenuOpen(false);
+      return;
+    }
 
-  const saveNewSong = async () => {
     if (!isAuthenticated) {
       console.warn("User not authenticated. Song not saved to DB.");
       return;
@@ -63,9 +63,11 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
       username: username,
     };
 
+    console.log("songData", songData);
+
     try {
-      const response = await axios.post(
-        `${BASE_URL}/beats/me/songs`,
+      const result = await axios.put(
+        `${BASE_URL}/beats/me/songs/${songId}`,
         songData,
         {
           headers: {
@@ -74,12 +76,29 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
         }
       );
 
-      console.log("Song saved to DB:", response.data);
-      setApiResponseMessage(response.data.message);
-    } catch (error) {
-      console.error("Error saving song to DB:", error);
-      setApiResponseMessage("Error saving song to DB");
+      if (result.status === 201) {
+        console.log("Song saved to DB:", result.data);
+        apiResponseMessageRef.current = result.data.message;
+        setShowDialog("api-response");
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        console.error("Error saving song to DB:", error);
+        apiResponseMessageRef.current = error.response.data.message;
+        setShowDialog("api-response");
+      }
     }
+  };
+
+  const handleDownloadWavStems = async () => {
+    downloadWavStems();
+    Tone.start();
+    setMenuOpen(false);
   };
 
   useEffect(() => {
@@ -143,13 +162,19 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                 >
                   Log Out
                 </li>
-                <li
+                {/* <li
                   className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                   onClick={async () => {
-                    await saveNewSong();
+                    await saveSong();
                     setShowDialog("api-response");
                     setMenuOpen(false);
                   }}
+                >
+                  Save
+                </li> */}
+                <li
+                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                  onClick={handleSaveSong}
                 >
                   Save
                 </li>
@@ -161,6 +186,15 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                   }}
                 >
                   Save As
+                </li>
+                <li
+                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                  onClick={() => {
+                    setShowDialog("load-song");
+                    setMenuOpen(false);
+                  }}
+                >
+                  Load Song
                 </li>
               </>
             ) : (

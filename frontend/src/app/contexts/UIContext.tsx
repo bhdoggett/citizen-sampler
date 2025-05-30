@@ -11,6 +11,7 @@ export type ConfirmAction = {
 
 type UIContextType = {
   confirmActionRef: React.RefObject<ConfirmAction>;
+  apiResponseMessageRef: React.RefObject<string | null>;
   showDialog: string | null;
   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
   hotKeysActive: boolean;
@@ -23,6 +24,7 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const confirmActionRef = useRef<ConfirmAction>(null);
+  const apiResponseMessageRef = useRef<string | null>(null);
   const [showDialog, setShowDialog] = useState<string | null>(null);
   const [hotKeysActive, setHotKeysActive] = useState<boolean>(true);
 
@@ -30,6 +32,7 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({
     <UIContext.Provider
       value={{
         confirmActionRef,
+        apiResponseMessageRef,
         showDialog,
         setShowDialog,
         hotKeysActive,

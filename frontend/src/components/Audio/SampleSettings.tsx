@@ -3,7 +3,6 @@ import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useState, useEffect } from "react";
 import type { SampleSettings } from "../../../../shared/types/audioTypes";
 import useMutesAndSolos from "../../app/hooks/useMutesAndSolos";
-import ChooseSample from "./ChooseSample";
 import Waveform from "./Waveform";
 import notes from "../../lib/notes";
 import {
@@ -33,7 +32,6 @@ const SampleSettings = () => {
   );
   const [isSoloed, setIsSoloed] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [sampleMenuOpen, setSampleMenuOpen] = useState<boolean>(false);
 
   // combine local and global state updates into one function for event listener
   const handleToggleSolo = () => {
@@ -158,9 +156,6 @@ const SampleSettings = () => {
 
         <div className="mt-4 w-full">
           <div className="flex flex-col justify-center">
-            {sampleMenuOpen && (
-              <ChooseSample setSampleMenuOpen={setSampleMenuOpen} />
-            )}
             <div className="flex justify-center w-full">
               <Waveform audioUrl={allSampleData[selectedSampleId].url} />
             </div>
@@ -357,7 +352,10 @@ const SampleSettings = () => {
                       S
                     </button>
                     <button
-                      onClick={() => setSampleMenuOpen((prev) => !prev)}
+                      onClick={() => {
+                        setShowDialog("choose-sample");
+                        // setSampleMenuOpen((prev) => !prev)
+                      }}
                       className="border shadow-inner shadow-slate-600 border-black px-1 mx-1"
                     >
                       📂

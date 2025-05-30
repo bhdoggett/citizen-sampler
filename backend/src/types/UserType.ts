@@ -1,4 +1,4 @@
-import type { SongType } from "../../../shared/types/audioTypes";
+import type { SongTypeBE } from "./SongTypeBE";
 
 export type UserType = {
   _id: string;
@@ -8,5 +8,5 @@ export type UserType = {
   googleId?: string;
   lastLogin: Date;
   createdAt: Date;
-  songs: SongType[];
+  songs: SongTypeBE[];
 };

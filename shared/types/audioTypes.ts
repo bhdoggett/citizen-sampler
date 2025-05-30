@@ -60,9 +60,12 @@ export type AllLoopSettings = {
   [key in LoopName]: LoopSettings | null;
 };
 
-export type SongType = {
-  _id?: string;
+export type SongTypeBase = {
   title: string;
   loops: AllLoopSettings;
-  samples: SampleType[];
+  samples: Record<string, SampleType>;
+};
+
+export type SongTypeFE = SongTypeBase & {
+  _id?: string;
 };

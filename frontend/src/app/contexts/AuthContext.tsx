@@ -1,5 +1,7 @@
 "use client";
+import { useSearchParams } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
+import { useUIContext } from "./UIContext";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -32,6 +34,9 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   );
   const [authIsSignup, setAuthIsSignup] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { apiResponseMessageRef, setShowDialog } = useUIContext();
+  const searchParams = useSearchParams();
+  console.log(searchParams);
 
   const setToken = (newToken: string | null) => {
     if (newToken) {
@@ -50,44 +55,23 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     }
     setUsernameState(newUser);
   };
-  // const localSignup = async (
-  //   username: string,
-  //   password: string,
-  //   email?: string
-  // ) => {
-  //   try {
-  //     const response = await axios.post("/auth/signup", {
-  //       username,
-  //       email,
-  //       password,
-  //     });
-  //     console.log("Signup successful:", response.data);
 
-  //     setToken(response.data.token);
-  //     setUser(response.data.user);
-  //   } catch (err) {
-  //     console.error("Signup failed:", err);
-  //   }
-  // };
-
-  // const googleSignup = async (googleId: string) => {
-  //   try {
-  //     const response = await axios.post("/auth/signup/google", {
-  //       googleId,
-  //     });
-  //     console.log("Google Signup successful:", response.data);
-
-  //     setUser(response.data.user);
-  //   } catch (err) {
-  //     console.error("Google Signup failed:", err);
-  //   }
-  // };
-
-  // test isAuthenticated
   useEffect(() => {
-    const isAuthenticated = !!token;
-    console.log("isAuthenticated", isAuthenticated);
-  }, [token]);
+    const token = searchParams.get("token");
+    const username = searchParams.get("username");
+    if (token && username) {
+      setToken(token);
+      setUsername(username);
+    }
+  }, []);
+
+  useEffect(() => {
+    const loginError = searchParams.get("loginError");
+    if (loginError === "google-auth-failed") {
+      apiResponseMessageRef.current = "Google login failed";
+      setShowDialog("api-response");
+    }
+  },[]);
 
   return (
     <AuthContext.Provider
@@ -95,8 +79,6 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
         username,
         setUsername,
         token,
-        // localSignup,
-        // googleSignup,
         setToken,
         isAuthenticated: !!token,
         authIsSignup,

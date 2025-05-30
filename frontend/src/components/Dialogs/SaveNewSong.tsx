@@ -1,9 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
+import dotenv from "dotenv";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useAuthContext } from "frontend/src/app/contexts/AuthContext";
-import { BASE_URL } from "./AuthDialog";
+import { useUIContext } from "frontend/src/app/contexts/UIContext";
+dotenv.config();
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 console.log("BASE_URL", BASE_URL);
 
@@ -14,11 +17,12 @@ console.log("BASE_URL", BASE_URL);
 
 const SaveNewSong: React.FC = () => {
   const [formSongTitle, setFormSongTitle] = useState<string>("");
-  const [apiResponse, setApiResponse] = useState<string | null>(null);
+  // const [apiResponse, setApiResponse] = useState<string | null>(null);
   const { setSongTitle, allSampleData, allLoopSettings } = useAudioContext();
   const { isAuthenticated, token, username } = useAuthContext();
+  const { apiResponseMessageRef, setShowDialog } = useUIContext();
 
-  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveNewSong = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!isAuthenticated) {
@@ -45,28 +49,36 @@ const SaveNewSong: React.FC = () => {
 
       if (result.status === 201) {
         console.log("Song saved to DB:", result.data);
-        setApiResponse(result.data.message);
+        localStorage.setItem("songId", result.data.song._id);
         setSongTitle(formSongTitle);
+        apiResponseMessageRef.current = result.data.message;
+        setShowDialog("api-response");
       }
-    } catch (error) {
-      console.error("Error saving song to DB:", error);
-      setApiResponse("Error saving song to DB");
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        console.error("Error saving song to DB:", error);
+        apiResponseMessageRef.current = error.response.data.message;
+      } else {
+        apiResponseMessageRef.current = "An unexpeced error occurred";
+      }
+      setShowDialog("api-response");
     }
   };
 
   // Set error to null when component unmounts
   useEffect(() => {
     return () => {
-      setApiResponse(null);
+      apiResponseMessageRef.current = null;
     };
   }, []);
 
-  return apiResponse ? (
-    <>
-      <span className="text-center text-lg font-bold mb-3">{apiResponse}</span>
-    </>
-  ) : (
-    <form onSubmit={handleSave}>
+  return (
+    <form onSubmit={handleSaveNewSong}>
       <div>
         <label htmlFor="song-title" className="text-white">
           Song Name:

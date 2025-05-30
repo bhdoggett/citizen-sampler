@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
-import User from "../models/user";
+import User, { UserDoc } from "../models/user";
 import requireJwtAuth from "../middleware/requireJwtAuth";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
@@ -9,9 +9,9 @@ import keys from "../config/keys";
 import "../strategies/jwt";
 import "../strategies/local";
 import "../strategies/google";
-
 dotenv.config();
 
+const FRONTEND_URL = process.env.CORS_FRONTEND_URL;
 const router = express.Router();
 
 // Local signup
@@ -84,10 +84,26 @@ router.get(
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: "/login",
-    successRedirect: "/", // or redirect to frontend route
-  })
+  (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate(
+      "google",
+      { session: false },
+      (err, user: UserDoc, info) => {
+        if (err || !user) {
+          console.error("Google auth failed:", err || info);
+          return res.redirect(`${FRONTEND_URL}/?loginError=google-auth-failed`);
+        }
+
+        const token = jwt.sign({ sub: user._id }, keys.TOKEN_SECRET!, {
+          expiresIn: "1h",
+        });
+
+        res.redirect(
+          `${FRONTEND_URL}/?token=${token}&username=${user.username}`
+        );
+      }
+    )(req, res, next);
+  }
 );
 
 // // Check login status

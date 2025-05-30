@@ -37,6 +37,8 @@ import metronome from "../metronome";
 type AudioContextType = {
   songTitle: string;
   setSongTitle: React.Dispatch<React.SetStateAction<string>>;
+  songId: string;
+  setSongId: React.Dispatch<React.SetStateAction<string>>;
   masterGainNode: React.RefObject<Tone.Gain>;
   setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
   metronomeActive: boolean;
@@ -268,6 +270,10 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [songTitle, setSongTitle] = useState<string>(() => {
     const savedSongTitle = localStorage.getItem("songTitle");
     return savedSongTitle ? JSON.parse(savedSongTitle) : "Song001";
+  });
+  const [songId, setSongId] = useState<string>(() => {
+    const savedSongId = localStorage.getItem("songId");
+    return savedSongId ? savedSongId : "";
   });
   const [allSampleData, setAllSampleData] = useState<
     Record<string, SampleType>
@@ -553,6 +559,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       value={{
         songTitle,
         setSongTitle,
+        songId,
+        setSongId,
         masterGainNode,
         setMasterGainLevel,
         metronomeActive,

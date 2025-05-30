@@ -1,5 +1,5 @@
 import { Schema, model, HydratedDocument } from "mongoose";
-import { SongType } from "../../../shared/types/audioTypes";
+import { SongTypeBE } from "src/types/SongTypeBE";
 
 // SampleEvent
 const SampleEventSchema = new Schema(
@@ -56,7 +56,7 @@ const SampleSchema = new Schema(
     title: { type: String, required: true },
     url: { type: String, required: true },
     events: {
-      type: Map,
+      type: Object,
       of: [SampleEventSchema],
       required: true,
       default: {},
@@ -91,19 +91,18 @@ const LoopSchema = new Schema({
 export const SongSchema = new Schema({
   title: { type: String, required: true },
   loops: {
-    type: Map,
+    type: Object,
     of: LoopSchema,
     required: true,
   },
   samples: {
-    type: Map,
+    type: Object,
     of: SampleSchema,
     required: true,
   },
 });
 
-export type SongDoc = HydratedDocument<SongType>;
-
-const Song = model<SongDoc>("Song", SongSchema);
+const Song = model<SongTypeBE>("Song", SongSchema);
+export type SongDoc = HydratedDocument<SongTypeBE>;
 
 export default Song;

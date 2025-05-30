@@ -1,8 +1,7 @@
-import { Schema, Document, Types, model } from "mongoose";
-import { SongSchema } from "./song";
-import { SongType } from "../../../shared/types/audioTypes";
+import { Schema, Types, model, Document, HydratedDocument } from "mongoose";
+import { SongTypeBE } from "src/types/SongTypeBE";
 
-export type UserType = Document & {
+export type UserType = {
   username?: string;
   email?: string;
   password?: string;
@@ -11,6 +10,9 @@ export type UserType = Document & {
   createdAt?: Date;
   songs: Types.ObjectId[];
 };
+
+// Proper Mongoose schema typing
+export type UserDoc = HydratedDocument<UserType>;
 
 export const UserSchema = new Schema<UserType>({
   username: {
@@ -50,6 +52,6 @@ export const UserSchema = new Schema<UserType>({
   ],
 });
 
-const User = model("User", UserSchema);
+const User = model<UserType>("User", UserSchema);
 
 export default User;

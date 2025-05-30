@@ -25,7 +25,6 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   const [password, setPassword] = useState<string>("");
   const [confirmationPassword, setConfirmationPassword] = useState<string>("");
   const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null);
-
   const { setToken, setUsername, error, setError } = useAuthContext();
 
   const signup = async () => {
@@ -113,6 +112,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
 
     setHotKeysActive(true);
   };
+
   // Set error to null when component unmounts
   useEffect(() => {
     return () => {
@@ -202,7 +202,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         )}
       </div>
 
-      <span>{authIsSignup && !passwordsMatch && "Passwords do not match"}</span>
+      <span>
+        {authIsSignup && passwordsMatch === false && "Passwords do not match"}
+      </span>
 
       <button
         type="submit"
@@ -210,24 +212,27 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       >
         {authIsSignup ? "Create Account" : "Log In"}
       </button>
-      <a href={`${BASE_URL}/auth/google`}>
-        <button
+      <a
+        href={`${BASE_URL}/auth/google`}
+        className="flex mx-auto justify-center text-sm mt-5 hover:text-slate-200"
+      >
+        Continue with Google
+        {/* <button
           type="button"
           className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
         >
-          {authIsSignup ? "Sign Up With Google" : "Sign In With Google"}
-        </button>
+          
+        </button> */}
       </a>
 
-      <button
-        type="button"
+      <span
         onClick={() => {
           setAuthIsSignup(!authIsSignup);
         }}
-        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
+        className="flex mx-auto justify-center text-xs mt-4 hover:text-slate-200 cursor-pointer"
       >
-        {authIsSignup ? "Already have an account?" : "Create a new account"}
-      </button>
+        {authIsSignup ? "Already have an account?" : "Create a new account?"}
+      </span>
     </form>
   );
 };
