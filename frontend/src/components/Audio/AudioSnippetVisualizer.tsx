@@ -31,7 +31,7 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
       waveColor: "#ccc",
       progressColor: "#ccc",
       cursorWidth: 0,
-      height: 50,
+      height: 24,
       normalize: false,
     });
 

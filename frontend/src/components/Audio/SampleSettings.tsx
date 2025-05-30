@@ -159,7 +159,7 @@ const SampleSettings = () => {
             <div className="flex justify-center w-full">
               <Waveform audioUrl={allSampleData[selectedSampleId].url} />
             </div>
-            <div className="p-2 mx-auto mb-3">
+            <div id="settings" className="p-2 mx-auto">
               <div className="flex gap-x-4 md:gap-x-6">
                 <div className="flex flex-col">
                   <label className="mb-2 flex justify-between">
@@ -363,22 +363,21 @@ const SampleSettings = () => {
                   </div>
                 </div>
               </div>
-
-              <button
-                onClick={() => {
-                  confirmActionRef.current = {
-                    message:
-                      "This will clear all recorded play events for this sampler",
-                    buttonText: "Okay",
-                    action: handleClearSampleEvents,
-                  };
-                  setShowDialog("confirm-action");
-                }}
-                className="border border-black px-1 mt-2 bg-slate-400 hover:bg-slate-500 shadow-inner shadow-slate-800 flex mx-auto"
-              >
-                Clear
-              </button>
             </div>
+            <button
+              onClick={() => {
+                confirmActionRef.current = {
+                  message:
+                    "This will clear all recorded play events for this sampler",
+                  buttonText: "Okay",
+                  action: handleClearSampleEvents,
+                };
+                setShowDialog("confirm-action");
+              }}
+              className="border border-black px-1 bg-slate-400 hover:bg-slate-500 shadow-inner shadow-slate-800 flex mx-auto"
+            >
+              Clear
+            </button>
           </div>
         </div>
       </div>

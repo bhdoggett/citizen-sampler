@@ -2,10 +2,14 @@
 
 export const getTitle = (url: string) => {
   const filename = url.split("/").pop();
+  console.log("filename", filename);
   if (!filename) return "";
   const rawTitle = filename.split("_")[0]; // "Joe-Turner-blues-medley"
+  const number = filename.split("_")[2]; // 001
   const title = rawTitle.replace(/-/g, " "); // "Joe Turner blues medley"
-  return title.replace(/\b\w/g, (c) => c.toUpperCase()); // "Joe Turner Blues Medley"
+  const upperCaseTitle = title.replace(/\b\w/g, (c) => c.toUpperCase());
+  const joinedTitle = `${upperCaseTitle} ${number}`; // "Joe Turner Blues Medley 001"
+  return joinedTitle;
 };
 
 export const getLabel = (url: string) =>

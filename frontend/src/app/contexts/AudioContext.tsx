@@ -243,24 +243,36 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       {
         title: "Kick_Bulldog_2",
         url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
-        collection: "kit",
+        collection: "Kit",
       },
       {
         title: "Snare_Astral_1",
         url: "/samples/drums/snares/Snare_Astral_1.wav",
+        collection: "Kit",
       },
       {
         title: "ClosedHH_Alessya_DS",
         url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
+        collection: "Kit",
       },
-      { title: "Clap_Graphite", url: "/samples/drums/claps/Clap_Graphite.wav" },
+      {
+        title: "Clap_Graphite",
+        url: "/samples/drums/claps/Clap_Graphite.wav",
+        collection: "Kit",
+      },
     ];
 
     return samples.reduce(
       (acc, sample, index) => {
         const id = `kit-${index + 1}`;
         const label = sample.title.split("_").slice(0)[0];
-        acc[id] = initKitSampleData(id, sample.url, sample.title, label, "Kit");
+        acc[id] = initKitSampleData(
+          id,
+          sample.url,
+          sample.title,
+          label,
+          sample.collection
+        );
         return acc;
       },
       {} as Record<string, SampleType>

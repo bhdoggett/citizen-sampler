@@ -25,6 +25,7 @@ const useHotKeys = (hotKeysActive: boolean) => {
           handlePlay();
         }
       }
+
       if (e.ctrlKey && e.key.toLowerCase() === "r") {
         e.preventDefault();
         handleRecord();

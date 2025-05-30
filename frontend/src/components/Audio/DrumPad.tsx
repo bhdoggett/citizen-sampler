@@ -7,6 +7,25 @@ import quantize from "../../app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
 
+const drumKeys = [
+  "q",
+  "w",
+  "e",
+  "r",
+  "a",
+  "s",
+  "d",
+  "f",
+  "z",
+  "x",
+  "c",
+  "v",
+  "ArrowLeft",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowRight",
+];
+
 type DrumPadProps = {
   id: string;
   sampler: CustomSampler | null;
@@ -229,18 +248,27 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setIsSelected(selectedSampleId === id);
   }, [selectedSampleId, id]);
 
+  useEffect(() => {
+    window.addEventListener("keydown", (e) => {
+      if (e.key === id) {
+        handlePress();
+      }
+    });
+  }, [sampler]);
+
   return (
     <div
       className={`flex m-auto rounded-sm w-full aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
       onFocus={handleFocus}
     >
       <button
+        id={`pad-${id}`}
         onMouseDown={handlePress}
         onTouchStart={handlePress}
         onMouseUp={handleRelease}
         onMouseLeave={() => handleRelease()}
         onTouchEnd={() => handleRelease()}
-        className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800  focus:border-double w-full aspect-square shadow-md shadow-slate-700  `}
+        className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800 w-full aspect-square shadow-md shadow-slate-500  `}
       >
         <p className="flex top-1 left-0 text-xs">{id}</p>
         <AudioSnippetVisualizer id={id} />

@@ -16,8 +16,11 @@ const DrumMachine = () => {
   };
 
   return (
-    <div className="w-1/2 mt-1">
-      <div className="grid grid-cols-4 gap-0 mt-2 mb-1">
+    <div className="flex flex-col text-center w-1/3 ml-3 mt-1">
+      <h3 className="bg-slate-800 w-full border-2 border-slate-800 text-white font-bold">
+        Sample Pads
+      </h3>
+      <div className="grid grid-cols-4 gap-0 mt-1">
         {renderDrumPads(locPadIds)}
         {renderDrumPads(kitPadIds)}
       </div>
