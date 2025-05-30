@@ -72,13 +72,7 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     hasReleasedRef.current = true;
     sampler.triggerRelease(note, Tone.now());
 
-    if (
-      // !currentEvent ||
-      !currentEvent.startTime ||
-      !loopIsPlaying ||
-      !isRecording
-    )
-      return;
+    if (!currentEvent.startTime || !loopIsPlaying || !isRecording) return;
 
     const padReleasetime = Tone.getTransport().seconds;
     const sampleEnd = allSampleData[selectedSampleId].settings.end;
@@ -90,32 +84,34 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
       : padReleasetime;
 
     const startTimeInSeconds = Tone.Ticks(currentEvent.startTime).toSeconds();
+    const loopEndInSeconds = Tone.Time(Tone.getTransport().loopEnd).toSeconds();
 
     currentEvent.duration =
       actualReleaseTime > startTimeInSeconds
         ? actualReleaseTime - startTimeInSeconds
-        : Tone.Time(Tone.getTransport().loopEnd).toSeconds() -
-          startTimeInSeconds +
-          actualReleaseTime;
+        : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
 
     console.log("currentEvent.duration", currentEvent.duration);
-    allSampleData[selectedSampleId].events[currentLoop].push({
-      ...currentEvent,
-    });
+
     setAllSampleData((prev) => ({
       ...prev,
-      [selectedSampleId]: allSampleData[selectedSampleId],
+      [selectedSampleId]: {
+        ...prev[selectedSampleId],
+        events: {
+          ...prev[selectedSampleId].events,
+          [currentLoop]: [
+            ...(prev[selectedSampleId].events[currentLoop] || []),
+            { ...currentEvent },
+          ],
+        },
+      },
     }));
-
-    if (loopIsPlaying && isRecording && currentEvent.duration === 0) {
-    }
   };
 
   return (
     <button
       onMouseDown={() => handlePress()}
       onTouchStart={() => handlePress()}
-      onDragOver={() => handlePress()}
       onMouseUp={() => handleRelease()}
       onMouseLeave={() => handleRelease()}
       onTouchEnd={() => handleRelease()}

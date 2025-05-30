@@ -23,7 +23,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     samplersRef,
     currentLoop,
   } = useAudioContext();
-  const sampleDataRef = useRef(allSampleData[id]);
+  // const sampleDataRef = useRef(allSampleData[id]);
   const currentEvent = samplersRef.current[id]?.currentEvent;
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
@@ -86,13 +86,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setSampleIsPlaying(false);
     sampler.triggerRelease(baseNote, Tone.now());
 
-    if (
-      // !currentEvent ||
-      !currentEvent.startTime ||
-      !loopIsPlaying ||
-      !isRecording
-    )
-      return;
+    if (!currentEvent.startTime || !loopIsPlaying || !isRecording) return;
 
     const padReleasetime = Tone.getTransport().seconds;
     const sampleEnd = allSampleData[selectedSampleId].settings.end;
@@ -104,20 +98,28 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       : padReleasetime;
 
     const startTimeInSeconds = Tone.Ticks(currentEvent.startTime).toSeconds();
+    const loopEndInSeconds = Tone.Time(Tone.getTransport().loopEnd).toSeconds();
 
     currentEvent.duration =
       actualReleaseTime > startTimeInSeconds
         ? actualReleaseTime - startTimeInSeconds
-        : Tone.Time(Tone.getTransport().loopEnd).toSeconds() -
-          startTimeInSeconds +
-          actualReleaseTime;
+        : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
 
     console.log("currentEvent.duration", currentEvent.duration);
-    allSampleData[id].events[currentLoop].push({ ...currentEvent });
-    setAllSampleData((prev) => ({ ...prev, [id]: allSampleData[id] }));
 
-    if (loopIsPlaying && isRecording && currentEvent.duration === 0) {
-    }
+    setAllSampleData((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        events: {
+          ...prev[id].events,
+          [currentLoop]: [
+            ...(prev[id].events[currentLoop] || []),
+            { ...currentEvent },
+          ],
+        },
+      },
+    }));
   };
 
   const handleFocus = () => {
@@ -137,10 +139,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       : "brightness-100 saturate-100 transition-all duration-300";
   };
 
-  // Update this component's sampleDataRef when allSampleData state changes
-  useEffect(() => {
-    sampleDataRef.current = allSampleData[id];
-  }, [allSampleData, id]);
+  // // Update this component's sampleDataRef when allSampleData state changes
+  // useEffect(() => {
+  //   sampleDataRef.current = allSampleData[id];
+  // }, [allSampleData, id]);
 
   // Schedule playback of sampler play events
   useEffect(() => {
@@ -234,9 +236,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       onFocus={handleFocus}
     >
       <button
-        onMouseDown={() => handlePress()}
-        onTouchStart={() => handlePress()}
-        onMouseUp={() => handleRelease()}
+        onMouseDown={handlePress}
+        onTouchStart={handlePress}
+        onMouseUp={handleRelease}
         onMouseLeave={() => handleRelease()}
         onTouchEnd={() => handleRelease()}
         className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800  focus:border-double w-full aspect-square shadow-md shadow-slate-700  `}
