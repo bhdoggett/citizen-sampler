@@ -20,18 +20,6 @@ import { getCollectionArrayFromName, UrlEntry } from "../../lib/collections";
 import { allUrlsWithCollectionNames } from "frontend/src/lib/sampleSources";
 import { getTitle, getLabel } from "../functions/getTitle";
 import metronome from "../metronome";
-// import axios from "axios";
-
-// const API_URL = process.env.NEXT_PUBLIC_API_URL || "localhost:8000";
-
-// /////////////////
-// const now = new Date();
-// const nowMilliseconds =
-//   now.getHours() * 3600 +
-//   now.getMinutes() * 60 +
-//   now.getSeconds() +
-//   now.getMilliseconds() / 1000;
-// ////////////////
 
 type AudioContextType = {
   songTitle: string;
@@ -460,7 +448,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     loadSamplersToRef(allSampleData);
   }, []); // <===== if this empty dependency array is removed, the samplers are loaded with every update in allSampleData state
-
 
   // Upload allSampleData to localStorage.samples when allSampleData state changes.
   // Changes in state coming from SampleSettings are debounced in that component.
