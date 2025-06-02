@@ -12,12 +12,22 @@ const SampleEventSchema = new Schema(
   { _id: false }
 );
 
+const SampleUiSettingsSchema = new Schema(
+  {
+    zoom: { type: Number, required: true },
+    seekTo: { type: Number, required: true },
+  },
+  { _id: false }
+);
+
 // SampleSettings
 const SampleSettingsSchema = new Schema(
   {
     mute: { type: Boolean, required: true },
     solo: { type: Boolean, required: true },
     reverse: { type: Boolean, required: true },
+    timeStretch: { type: Boolean, required: true },
+    oneShot: { type: Boolean, required: true },
     start: { type: Number, required: true },
     end: { type: Number, required: false },
     volume: { type: Number, required: true },
@@ -27,7 +37,7 @@ const SampleSettingsSchema = new Schema(
     attack: { type: Number, required: true },
     release: { type: Number, required: true },
     quantize: { type: Boolean, required: true },
-    quantVal: { type: Number, required: true },
+    quantVal: { type: Number || String, required: true },
     highpass: {
       type: [Schema.Types.Mixed],
       validate: {
@@ -44,7 +54,9 @@ const SampleSettingsSchema = new Schema(
       },
       required: true,
     },
+    ui: { type: SampleUiSettingsSchema, required: true, default: {} },
   },
+
   { _id: false }
 );
 
