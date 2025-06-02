@@ -162,16 +162,6 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                 >
                   Log Out
                 </li>
-                {/* <li
-                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-                  onClick={async () => {
-                    await saveSong();
-                    setShowDialog("api-response");
-                    setMenuOpen(false);
-                  }}
-                >
-                  Save
-                </li> */}
                 <li
                   className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                   onClick={handleSaveSong}

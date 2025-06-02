@@ -23,9 +23,14 @@ import {
 import { allUrlsWithCollectionNames } from "frontend/src/lib/loc_sample_sources";
 import { getTitle } from "../functions/getTitle";
 import metronome from "../metronome";
-// import { drumMachines, DrumMachine, DrumMachines, DrumMachineId } from "../../lib/drumMachines";
+import { drumMachines, DrumMachineId } from "../../lib/drumMachines";
 // const KITS_BASE_URL = "https://citizen-dj.labs.loc.gov/audio/drum_machines/";
-// console.log(`${KITS_BASE_URL + drumMachines.mpc.samples}`);
+
+import dotenv from "dotenv";
+dotenv.config();
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+console.log(`${BASE_URL}/drums/${drumMachines.mpc.samples}`);
+console.log("drum machines", drumMachines);
 
 type AudioContextType = {
   songTitle: string;
@@ -195,7 +200,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     id: string,
     url: string,
     title: string,
-    label: string,
     collection: string
   ): SampleType => {
     return {
@@ -230,39 +234,37 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   };
 
-  const initKitSamples = () => {
+  const initKitSamples = (machineId: DrumMachineId) => {
+    const formatSampleHeaders = (
+      machineId: DrumMachineId,
+      type: string
+    ): { title: string; url: string; collection: string } => {
+      console.log("machineId", machineId);
+      console.log("drumMachine at machineId", drumMachines[machineId]);
+      const fileName = drumMachines[machineId].samples.find((sample: string) =>
+        sample.includes(`${type}`)
+      );
+      const url = `${BASE_URL}/beats/drums/${fileName}`;
+      const collection = drumMachines[machineId].name;
+      const title = fileName!.split(".")[0].split("__")[1].replace("_", " ");
+
+      return { title, url, collection };
+    };
+
     const samples = [
-      {
-        title: "Kick_Bulldog_2",
-        url: "/samples/drums/kicks/Kick_Bulldog_2.wav",
-        collection: "Kit",
-      },
-      {
-        title: "Snare_Astral_1",
-        url: "/samples/drums/snares/Snare_Astral_1.wav",
-        collection: "Kit",
-      },
-      {
-        title: "ClosedHH_Alessya_DS",
-        url: "/samples/drums/hats/ClosedHH_Alessya_DS.wav",
-        collection: "Kit",
-      },
-      {
-        title: "Clap_Graphite",
-        url: "/samples/drums/claps/Clap_Graphite.wav",
-        collection: "Kit",
-      },
+      formatSampleHeaders(machineId, "kick"),
+      formatSampleHeaders(machineId, "snare"),
+      formatSampleHeaders(machineId, "hat"),
+      formatSampleHeaders(machineId, "rim"),
     ];
 
     return samples.reduce(
       (acc, sample, index) => {
         const id = `pad-${index + 13}`;
-        const label = sample.title.split("_").slice(0)[0];
         acc[id] = initKitSampleData(
           id,
           sample.url,
           sample.title,
-          label,
           sample.collection
         );
         return acc;
@@ -344,27 +346,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
   };
 
-  // // Function for loading samplers
-  // const loadSamplers = useCallback(
-  //   async (type: "loc" | "kit") => {
-  //     if (!allSampleData) return;
-  //     // Filter the sample data based on the type
-  //     const samplesArray = Object.entries(allSampleData)
-  //       .filter(([key]) => key.startsWith(`${type}-`))
-  //       .map(([, value]) => value);
-
-  //     const samplers = await Promise.all(
-  //       samplesArray.map(async ({ id, url }) => await makeSamplerWithFX(id, url))
-  //     );
-
-  //     samplers.forEach((sampler, i) => {
-  //       const id = samplesArray[i].id;
-  //       samplersRef.current[id] = sampler;
-  //     });
-  //   },
-  //   [allSampleData]
-  // );
-
   const loadSamplersToRef = async (
     allSampleData: Record<string, SampleType>
   ) => {
@@ -401,7 +382,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       ? JSON.parse(savedSamples)
       : {
           ...initLocSamplesFromAllCollections(),
-          ...initKitSamples(),
+          ...initKitSamples("mpc"),
         };
   });
   const [allLoopSettings, setAllLoopSettings] = useState<AllLoopSettings>(
@@ -447,14 +428,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     }));
   };
-
-  // use axios to post song to db
-
-  // // Load samplers to samplerRef
-  // useEffect(() => {
-  //   loadSamplers("loc");
-  //   loadSamplers("kit");
-  // }, []); // <===== if this empty dependency array is removed, the samplers are loaded with every update in allSampleData state
 
   // Load samplers to samplerRef
   useEffect(() => {

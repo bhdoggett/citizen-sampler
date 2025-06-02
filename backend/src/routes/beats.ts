@@ -1,7 +1,12 @@
 import express, { Request, Response, NextFunction } from "express";
+import axios, { AxiosError } from "axios";
 import requireJwtAuth from "../middleware/requireJwtAuth";
 import User, { UserDoc } from "../models/user";
 import Song, { SongDoc } from "../models/song";
+import dotenv from "dotenv";
+dotenv.config();
+
+const KIT_AUDIO_BASE_URL = process.env.KIT_AUDIO_BASE_URL;
 
 const router = express.Router();
 
@@ -151,5 +156,25 @@ router.get(
     res.status(200).json({ message: `Loaded Song: ${song.title}`, song });
   }
 );
+
+router.get("/drums/:filename", async (req: Request, res: Response) => {
+  const filename = req.params.filename;
+  console.log("filename", filename);
+
+  const fullUrl = `${KIT_AUDIO_BASE_URL}${encodeURIComponent(filename)}`;
+
+  console.log("fullUrl", fullUrl);
+  try {
+    const audioResponse = await axios.get(fullUrl, { responseType: "stream" });
+
+    res.set("Content-Type", "audio/mpeg");
+
+    audioResponse.data.pipe(res);
+  } catch (err) {
+    const error = err as AxiosError<{ message: string }>;
+    console.error("Error fetching audio:", error.message);
+    res.status(500).send("Error fetching audio file");
+  }
+});
 
 export default router;
