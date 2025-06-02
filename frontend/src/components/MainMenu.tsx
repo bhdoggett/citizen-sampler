@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import * as Tone from "tone";
 import axios, { AxiosError } from "axios";
 import dotenv from "dotenv";
@@ -37,9 +38,11 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
     useUIContext();
   const { songTitle, allLoopSettings, allSampleData } = useAudioContext();
   const downloadWavStems = useDownloadWavStems();
+  const router = useRouter();
 
   const logout = (): void => {
     localStorage.removeItem("token");
+    router.push("/");
     setToken(null);
     setUserId(null);
     setUsername(null);
