@@ -11,6 +11,7 @@ import ConfirmActionDialog from "../components/Dialogs/ConfirmActionDialog";
 import SaveNewSong from "../components/Dialogs/SaveNewSong";
 import LoadSong from "../components/Dialogs/LoadSong";
 import CollectionMenu from "../components/Dialogs/CollectionMenu";
+import KitMenu from "../components/Dialogs/KitMenu";
 import APIResponseDialog from "../components/Dialogs/APIResponseDialog";
 import Transport from "../components/Audio/Transport";
 import Loop from "../components/Audio/Loop";
@@ -86,6 +87,12 @@ export default function Home() {
           {showDialog === "save-new-song" && <SaveNewSong />}
           {showDialog === "collection-menu" && (
             <CollectionMenu
+              setShowDialog={setShowDialog}
+              setHotKeysActive={setHotKeysActive}
+            />
+          )}
+          {showDialog === "kit-menu" && (
+            <KitMenu
               setShowDialog={setShowDialog}
               setHotKeysActive={setHotKeysActive}
             />

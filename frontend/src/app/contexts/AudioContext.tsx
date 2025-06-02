@@ -53,6 +53,7 @@ type AudioContextType = {
     url: string,
     collection: string
   ) => SampleType;
+  initKitSamples: (kitId: DrumMachineId) => Record<string, SampleType>;
   updateSamplerData: (id: string, data: SampleType) => void;
   currentLoop: string;
   setCurrentLoop: React.Dispatch<React.SetStateAction<string>>;
@@ -234,7 +235,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   };
 
-  const initKitSamples = (machineId: DrumMachineId) => {
+  const initKitSamples = (
+    machineId: DrumMachineId
+  ): Record<string, SampleType> => {
     const formatSampleHeaders = (
       machineId: DrumMachineId,
       type: string
@@ -571,6 +574,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setIsRecording,
         makeSamplerWithFX,
         initLocSampleData,
+        initKitSamples,
         updateSamplerData,
         allSampleData,
         updateSamplerStateSettings,

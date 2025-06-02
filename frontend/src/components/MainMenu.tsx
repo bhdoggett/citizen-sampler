@@ -222,7 +222,16 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
                 setMenuOpen(false);
               }}
             >
-              Load from Collection
+              Load Collection
+            </li>
+            <li
+              className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+              onClick={() => {
+                setShowDialog("kit-menu");
+                setMenuOpen(false);
+              }}
+            >
+              Load Drum Kit
             </li>
             <li
               className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"

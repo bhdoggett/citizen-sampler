@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { collectionNames } from "../../lib/loc_collections";
 import { useUIContext } from "frontend/src/app/contexts/UIContext";
+import { SampleType } from "@shared/types/audioTypes";
 
 type CollectionMenuProps = {
   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
@@ -24,9 +25,9 @@ const CollectionMenu: React.FC<CollectionMenuProps> = () => {
     const newSamples = initLocSamplesFromOneCollection(collection);
 
     setAllSampleData((prev) => {
-      // Filter out all keys that start with "loc-"
-      const filteredPrev = Object.fromEntries(
-        Object.entries(prev).filter(([key]) => !key.startsWith("loc-"))
+      // Filter out all samples with with type === "loc"
+      const filteredPrev: Record<string, SampleType> = Object.fromEntries(
+        Object.entries(prev).filter(([, sample]) => sample.type !== "loc")
       );
 
       // Merge in new loc samples
@@ -71,7 +72,7 @@ const CollectionMenu: React.FC<CollectionMenuProps> = () => {
           // e.preventDefault();
           confirmActionRef.current = {
             message:
-              "This will replace all current Library of Congress Samples. Are you sure?",
+              "This will replace pads 1-12 with new Library of Congress Samples. Are you sure?",
             buttonText: "You Betcha",
             action: () => handleSelect(c),
           };
