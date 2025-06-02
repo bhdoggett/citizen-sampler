@@ -24,8 +24,14 @@ router.post(
       return;
     }
 
+    await user.populate("songs");
+
     try {
-      const existingSong = await Song.findOne({ title: song.title });
+      const existingSong = user.songs.find(
+        (existingSong: any) =>
+          existingSong.title.trim().toLowerCase() ===
+          song.title.trim().toLowerCase()
+      );
       if (existingSong) {
         res.status(409).json({ message: "Song already exists" });
         return;
@@ -95,27 +101,22 @@ router.put(
   }
 );
 
-const getPopulatedUser = async (req: Request, res: Response) => {
-  const user = req.user as UserDoc;
-  const userId = user._id;
-  const userWithSongs = User.findById(userId);
-  const populatedUser = await userWithSongs.populate("songs");
-
-  return populatedUser as UserDoc & { songs: SongDoc[] };
-};
-
 // Get Saved Song Titles
 router.get(
   "/me/songs",
   requireJwtAuth,
   async (req: Request, res: Response, next: NextFunction) => {
-    const populatedUser = await getPopulatedUser(req, res);
+    const user = req.user as UserDoc;
+    await user.populate("songs");
 
-    if (!populatedUser) {
+    if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
-    const titles = populatedUser.songs.map((song: SongDoc) => song.title);
+
+    const songs = user.songs as unknown as SongDoc[];
+
+    const titles = songs.map((song: SongDoc) => song.title);
     if (titles.length === 0) {
       res.status(404).json({ message: "No songs found" });
     }
@@ -128,16 +129,19 @@ router.get(
   requireJwtAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     const { title } = req.params;
-    const populatedUser = await getPopulatedUser(req, res);
+    const user = req.user as UserDoc;
 
-    if (!populatedUser) {
+    await user.populate("songs");
+    // const populatedUser = await getPopulatedUser(req, res);
+
+    if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
 
-    const song = populatedUser.songs.find(
-      (song: SongDoc) => song.title === title
-    );
+    const songs = user.songs as unknown as SongDoc[];
+
+    const song = songs.find((song: SongDoc) => song.title === title);
 
     if (!song) {
       res.status(404).json({ message: "Song not found" });

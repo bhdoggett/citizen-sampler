@@ -17,7 +17,7 @@ const SaveNewSong: React.FC = () => {
   const [formSongTitle, setFormSongTitle] = useState<string>("");
   // const [apiResponse, setApiResponse] = useState<string | null>(null);
   const { setSongTitle, allSampleData, allLoopSettings } = useAudioContext();
-  const { isAuthenticated, token, username } = useAuthContext();
+  const { isAuthenticated, token, userId } = useAuthContext();
   const { apiResponseMessageRef, setShowDialog } = useUIContext();
 
   const handleSaveNewSong = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -34,7 +34,7 @@ const SaveNewSong: React.FC = () => {
         loops: allLoopSettings,
         samples: allSampleData,
       },
-      username: username,
+      userId,
     };
 
     try {

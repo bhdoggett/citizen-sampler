@@ -26,7 +26,8 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   const [password, setPassword] = useState<string>("");
   const [confirmationPassword, setConfirmationPassword] = useState<string>("");
   const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null);
-  const { setToken, setUsername, error, setError } = useAuthContext();
+  const { setToken, setUserId, setUsername, setDisplayName, error, setError } =
+    useAuthContext();
 
   const signup = async () => {
     try {
@@ -43,7 +44,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         });
         if (result.status === 201) {
           setToken(result.data.token);
-          setUsername(result.data.user);
+          setUserId(result.data.user._id);
+          setUsername(result.data.user.username);
+          setDisplayName(result.data.user.displayName);
           setShowDialog(null);
         }
       }
@@ -69,8 +72,11 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       });
 
       if (result.status === 200) {
+        console.log("result", result);
         setToken(result.data.token);
-        setUsername(result.data.user);
+        setUserId(result.data.user._id);
+        setUsername(result.data.user.username);
+        setDisplayName(result.data.user.displayName);
         setShowDialog(null);
       } else {
         setError(result.data.message);

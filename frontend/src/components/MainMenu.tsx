@@ -28,7 +28,6 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
     setToken,
     userId,
     setUserId,
-    username,
     setUsername,
     displayName,
     setDisplayName,
@@ -42,6 +41,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
   const logout = (): void => {
     localStorage.removeItem("token");
     setToken(null);
+    setUserId(null);
     setUsername(null);
     setDisplayName(null);
   };
@@ -113,7 +113,9 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
 
   return (
     <div className="relative flex flex-col items-end" id="main-menu">
-      {username && <p className="text-xs font-bold w-full pb-1">{username}</p>}
+      {displayName && (
+        <p className="text-xs font-bold w-full pb-1">{displayName}</p>
+      )}
 
       {/* --Menu Button-- */}
 

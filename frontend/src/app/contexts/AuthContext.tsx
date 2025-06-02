@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     setDisplayNameState(newDisplayName);
   };
 
-  // If 
+  // If
   useEffect(() => {
     const token = searchParams.get("token");
     const userId = searchParams.get("userId");
@@ -108,6 +108,8 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   return (
     <AuthContext.Provider
       value={{
+        userId,
+        setUserId,
         username,
         setUsername,
         displayName,

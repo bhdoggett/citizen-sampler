@@ -11,6 +11,12 @@ import "../strategies/local";
 import "../strategies/google";
 dotenv.config();
 
+const syncIndexes = async () => {
+  await User.syncIndexes();
+};
+
+syncIndexes();
+
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const router = express.Router();
 
@@ -46,7 +52,7 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
       message: "Signup successful",
       token,
       user: {
-        id: newUser._id,
+        _id: newUser._id,
         username: newUser.username,
         displayName: newUser.displayName,
       },
@@ -74,7 +80,15 @@ router.post("/login", async (req, res, next) => {
         expiresIn: "1h",
       });
 
-      res.json({ message: "Login successful", user: user.username, token });
+      res.json({
+        message: "Login successful",
+        token,
+        user: {
+          _id: user._id,
+          username: user.username,
+          displayName: user.displayName,
+        },
+      });
     }
   )(req, res, next);
 });

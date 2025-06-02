@@ -15,7 +15,7 @@ const DialogWrapper: React.FC<DialogWrapperProps> = ({ children }) => {
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center">
       {/* BACKDROP */}
-      <div className="absolute inset-0 bg-slate-300 bg-opacity-20 backdrop-blur-sm z-30" />
+      <div className="absolute inset-0 bg-slate-300 bg-opacity-10 backdrop-blur-sm z-30" />
       <div className="absolute left-1/2 transform -translate-x-1/2 top-16 z-30  rounded-sm shadow-lg bg-white ring-1 ring-black ring-opacity-5">
         <button
           onClick={async () => {
