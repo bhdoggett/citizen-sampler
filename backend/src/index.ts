@@ -10,14 +10,23 @@ dotenv.config();
 
 const app = express();
 
-// CORS setup to allow credentials (cookies) from frontend
-app.use(
-  cors()
-  // {
-  //   origin: process.env.CORS_FRONTEND_URL,
-  //   credentials: true, // Allow cookies
-  // }
-);
+const isDevelopment = process.env.NODE_ENV === "development";
+
+if (isDevelopment) {
+  app.use(
+    cors({
+      origin: "http://localhost:3000",
+      credentials: true,
+    })
+  );
+} else {
+  app.use(
+    cors({
+      origin: "https://www.citizensampler.com",
+      credentials: true,
+    })
+  );
+}
 
 const PORT = process.env.PORT || 8000;
 
@@ -41,14 +50,10 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.get("/debug-session", (req, res) => {
-  res.json(req.session);
-});
-
 app.get("/test", (req, res) => {
   res.send("Hello Test!");
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });

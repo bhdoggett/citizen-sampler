@@ -5,7 +5,7 @@ import { useAudioContext } from "../../app/contexts/AudioContext";
 import {
   getCollectionArrayFromName,
   collectionNames,
-} from "../../lib/collections";
+} from "../../lib/loc_collections";
 import { useUIContext } from "frontend/src/app/contexts/UIContext";
 
 const ChooseSample: React.FC = () => {

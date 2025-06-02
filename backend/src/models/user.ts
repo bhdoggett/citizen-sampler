@@ -3,6 +3,7 @@ import { SongTypeBE } from "src/types/SongTypeBE";
 
 export type UserType = {
   username?: string;
+  displayName?: string;
   email?: string;
   password?: string;
   googleId?: string;
@@ -19,6 +20,10 @@ export const UserSchema = new Schema<UserType>({
     type: String,
     unique: true,
     sparse: true,
+  },
+  displayName: {
+    type: String,
+    unique: false,
   },
   email: {
     type: String,

@@ -10,10 +10,10 @@ router.post(
   "/me/songs",
   requireJwtAuth,
   async (req: Request, res: Response, next: NextFunction) => {
-    const { song, username } = req.body;
+    const { song, userId } = req.body;
 
-    if (!song || !username) {
-      res.status(400).json({ message: "Missing song or username" });
+    if (!song || !userId) {
+      res.status(400).json({ message: "Missing song or userId" });
       return;
     }
 
@@ -57,10 +57,10 @@ router.put(
   "/me/songs/:_id",
   requireJwtAuth,
   async (req: Request, res: Response, next: NextFunction) => {
-    const { song, username } = req.body;
+    const { song, userId } = req.body;
 
-    if (!song || !username) {
-      res.status(400).json({ message: "Missing song or username" });
+    if (!song || !userId) {
+      res.status(400).json({ message: "Missing song or user Id" });
       return;
     }
 

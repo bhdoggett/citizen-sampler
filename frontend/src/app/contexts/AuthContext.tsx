@@ -6,8 +6,12 @@ import dotenv from "dotenv";
 dotenv.config();
 
 type AuthContextType = {
+  userId: string | null;
+  setUserId: (token: string | null) => void;
   username: string | null;
   setUsername: (token: string | null) => void;
+  displayName: string | null;
+  setDisplayName: (token: string | null) => void;
   token: string | null;
   setToken: (token: string | null) => void;
   isAuthenticated: boolean;
@@ -15,19 +19,19 @@ type AuthContextType = {
   setAuthIsSignup: React.Dispatch<React.SetStateAction<boolean>>;
   error: string | null;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
-  // localSignup: (
-  //   username: string,
-  //   password: string,
-  //   email?: string
-  // ) => Promise<void>;
-  // googleSignup: (googleId: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: React.PropsWithChildren) => {
+  const [userId, setUserIdState] = useState<string | null>(() =>
+    localStorage.getItem("userId")
+  );
   const [username, setUsernameState] = useState<string | null>(() =>
     localStorage.getItem("username")
+  );
+  const [displayName, setDisplayNameState] = useState<string | null>(() =>
+    localStorage.getItem("displayName")
   );
   const [token, setTokenState] = useState<string | null>(() =>
     localStorage.getItem("token")
@@ -55,12 +59,41 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     setUsernameState(newUser);
   };
 
+  const setUserId = (newUserId: string | null) => {
+    if (newUserId) {
+      localStorage.setItem("userId", newUserId);
+    } else {
+      localStorage.removeItem("userId");
+    }
+    setUserIdState(newUserId);
+  };
+
+  const setDisplayName = (newDisplayName: string | null) => {
+    if (newDisplayName) {
+      localStorage.setItem("displayName", newDisplayName);
+    } else {
+      localStorage.removeItem("displayName");
+    }
+    setDisplayNameState(newDisplayName);
+  };
+
+  // If 
   useEffect(() => {
     const token = searchParams.get("token");
+    const userId = searchParams.get("userId");
     const username = searchParams.get("username");
-    if (token && username) {
+    const displayName = searchParams.get("displayName");
+    if (userId) {
+      setUserId(userId);
+    }
+    if (token) {
       setToken(token);
+    }
+    if (username) {
       setUsername(username);
+    }
+    if (displayName) {
+      setDisplayName(displayName);
     }
   }, []);
 
@@ -77,6 +110,8 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
       value={{
         username,
         setUsername,
+        displayName,
+        setDisplayName,
         token,
         setToken,
         isAuthenticated: !!token,

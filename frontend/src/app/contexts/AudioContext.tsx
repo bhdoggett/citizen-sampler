@@ -16,10 +16,16 @@ import {
 } from "../../../../shared/types/audioTypes";
 import { SamplerWithFX } from "frontend/src/types/SamplerWithFX";
 import { CustomSampler } from "frontend/src/types/CustomSampler";
-import { getCollectionArrayFromName, UrlEntry } from "../../lib/collections";
-import { allUrlsWithCollectionNames } from "frontend/src/lib/sampleSources";
-import { getTitle, getLabel } from "../functions/getTitle";
+import {
+  getCollectionArrayFromName,
+  UrlEntry,
+} from "../../lib/loc_collections";
+import { allUrlsWithCollectionNames } from "frontend/src/lib/loc_sample_sources";
+import { getTitle } from "../functions/getTitle";
 import metronome from "../metronome";
+// import { drumMachines, DrumMachine, DrumMachines, DrumMachineId } from "../../lib/drumMachines";
+// const KITS_BASE_URL = "https://citizen-dj.labs.loc.gov/audio/drum_machines/";
+// console.log(`${KITS_BASE_URL + drumMachines.mpc.samples}`);
 
 type AudioContextType = {
   songTitle: string;
@@ -113,7 +119,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       title: getTitle(url),
       type: "loc",
       collectionName: collection,
-      label: getLabel(url),
       url: url,
       events: { A: [], B: [], C: [], D: [] },
       settings: {
@@ -194,7 +199,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       title: title,
       type: "kit",
       collectionName: collection,
-      label: label,
       url: url,
       events: { A: [], B: [], C: [], D: [] },
       settings: {

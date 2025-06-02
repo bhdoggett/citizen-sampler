@@ -254,7 +254,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const padNum = id.split("-")[1];
   return (
     <div
-      className={`flex m-auto rounded-sm w-full aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
+      className={`flex m-auto rounded-sm w-full select-none backdrop:aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
       onFocus={handleFocus}
     >
       <button

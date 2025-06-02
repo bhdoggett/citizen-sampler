@@ -11,7 +11,7 @@ import "../strategies/local";
 import "../strategies/google";
 dotenv.config();
 
-const FRONTEND_URL = process.env.CORS_FRONTEND_URL;
+const FRONTEND_URL = process.env.FRONTEND_URL;
 const router = express.Router();
 
 // Local signup
@@ -29,6 +29,7 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
     const newUser = new User({
       username,
       email,
+      displayName: username,
       password: hashedPassword,
       lastLogin: new Date(),
       createdAt: new Date(),
@@ -44,7 +45,11 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
     res.status(201).json({
       message: "Signup successful",
       token,
-      user: newUser.username,
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        displayName: newUser.displayName,
+      },
     });
   } catch (err) {
     console.error("Signup error:", err);
@@ -65,11 +70,9 @@ router.post("/login", async (req, res, next) => {
       user.save();
 
       // Generate JWT
-      const token = jwt.sign(
-        { sub: user._id, username: user.username },
-        keys.TOKEN_SECRET!,
-        { expiresIn: "1h" }
-      );
+      const token = jwt.sign({ sub: user._id }, keys.TOKEN_SECRET!, {
+        expiresIn: "1h",
+      });
 
       res.json({ message: "Login successful", user: user.username, token });
     }
@@ -99,7 +102,7 @@ router.get(
         });
 
         res.redirect(
-          `${FRONTEND_URL}/?token=${token}&username=${user.username}`
+          `${FRONTEND_URL}/?token=${token}&displayName=${user.displayName}&userId=${user._id}`
         );
       }
     )(req, res, next);

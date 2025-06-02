@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
-import { collectionNames } from "../../lib/collections";
+import { collectionNames } from "../../lib/loc_collections";
 import { useUIContext } from "frontend/src/app/contexts/UIContext";
 
 type CollectionMenuProps = {

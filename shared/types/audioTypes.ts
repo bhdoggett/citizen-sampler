@@ -36,7 +36,6 @@ export type SampleType = {
   title: string;
   type: string;
   collectionName: string;
-  label?: string;
   url: string;
   events: Record<string, SampleEvent[]>; // This has sample events indexed by Loop
   settings: SampleSettings;

@@ -6,6 +6,7 @@ import { useAuthContext } from "../../app/contexts/AuthContext";
 dotenv.config();
 
 export const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+console.log("BASE_URL", BASE_URL);
 
 type AuthDialogProps = {
   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;

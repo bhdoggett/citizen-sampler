@@ -26,8 +26,12 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
     isAuthenticated,
     token,
     setToken,
+    userId,
+    setUserId,
     username,
     setUsername,
+    displayName,
+    setDisplayName,
     setAuthIsSignup,
   } = useAuthContext();
   const { confirmActionRef, showDialog, setShowDialog, apiResponseMessageRef } =
@@ -39,6 +43,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
     localStorage.removeItem("token");
     setToken(null);
     setUsername(null);
+    setDisplayName(null);
   };
 
   const handleSaveSong = async () => {
@@ -60,7 +65,7 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
         loops: allLoopSettings,
         samples: allSampleData,
       },
-      username: username,
+      userId,
     };
 
     try {

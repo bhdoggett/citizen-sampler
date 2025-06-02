@@ -13,7 +13,8 @@
     "paths": {
       "@shared/*": ["shared/*"]
     },
-    "typeRoots": ["./types", "./node_modules/@types"]
+    "typeRoots": ["./types", "./node_modules/@types"],
+    "types": ["node"]
   },
   "include": [
     "src/**/*",

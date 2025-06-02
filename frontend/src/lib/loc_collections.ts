@@ -29,7 +29,7 @@ import {
   // VD_njbClassicalMusic,
   njbPopularMusic,
   // VD_njbPopularMusic,
-} from "./sampleSources";
+} from "./loc_sample_sources";
 
 export const collectionNames = [
   "Inventing Entertainment",
