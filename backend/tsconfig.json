@@ -3,7 +3,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
-    "rootDir": "../", // Set rootDir to the project root
+    "rootDir": "../",
     "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
@@ -21,5 +21,5 @@
     "src/**/*",
     "shared/**/*" // Ensure shared types are included
   ],
-  "exclude": ["node_modules", "frontend"]
+  "exclude": ["node_modules", "../frontend"]
 }
