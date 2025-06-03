@@ -12,24 +12,6 @@ const app = express();
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
-<<<<<<< Updated upstream
-app.use(cors());
-// if (isDevelopment) {
-//   app.use(
-//     cors({
-//       origin: "http://localhost:3000",
-//       credentials: true,
-//     })
-//   );
-// } else {
-//   app.use(
-//     cors({
-//       origin: "https://www.citizensampler.com",
-//       credentials: true,
-//     })
-//   );
-// }
-=======
 if (isDevelopment) {
   app.use(
     cors({
@@ -45,7 +27,6 @@ if (isDevelopment) {
     })
   );
 }
->>>>>>> Stashed changes
 
 const PORT = process.env.PORT || 8000;
 
