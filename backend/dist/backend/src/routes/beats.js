@@ -112,7 +112,7 @@ router.get("/me/songs/:title", requireJwtAuth_1.default, async (req, res, next) 
 });
 router.get("/drums/:filename", async (req, res) => {
     const filename = req.params.filename;
-    const fullUrl = `${KIT_AUDIO_BASE_URL}${encodeURIComponent(filename)}`;
+    const fullUrl = `${KIT_AUDIO_BASE_URL}/${encodeURIComponent(filename)}`;
     try {
         const audioResponse = await axios_1.default.get(fullUrl, { responseType: "stream" });
         res.set("Content-Type", "audio/mpeg");

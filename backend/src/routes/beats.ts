@@ -159,7 +159,7 @@ router.get(
 
 router.get("/drums/:filename", async (req: Request, res: Response) => {
   const filename = req.params.filename;
-  const fullUrl = `${KIT_AUDIO_BASE_URL}${encodeURIComponent(filename)}`;
+  const fullUrl = `${KIT_AUDIO_BASE_URL}/${encodeURIComponent(filename)}`;
   try {
     const audioResponse = await axios.get(fullUrl, { responseType: "stream" });
 
