@@ -52,6 +52,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   // Put this and handleRelease in the drum machine and add an "id" or "sampler" parameter.
   const handlePress = () => {
+    console.log(allSampleData);
     if (!sampler) return;
 
     // Stop scheduled release
