@@ -14,22 +14,19 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const isDevelopment = process.env.NODE_ENV === "development";
-app.use((0, cors_1.default)());
-// if (isDevelopment) {
-//   app.use(
-//     cors({
-//       origin: "http://localhost:3000",
-//       credentials: true,
-//     })
-//   );
-// } else {
-//   app.use(
-//     cors({
-//       origin: "https://www.citizensampler.com",
-//       credentials: true,
-//     })
-//   );
-// }
+// app.use(cors());
+if (isDevelopment) {
+    app.use((0, cors_1.default)({
+        origin: "http://localhost:3000",
+        credentials: true,
+    }));
+}
+else {
+    app.use((0, cors_1.default)({
+        origin: "https://www.citizensampler.com",
+        credentials: true,
+    }));
+}
 const PORT = process.env.PORT || 8000;
 app.use(passport_1.default.initialize());
 app.use(express_1.default.json());
