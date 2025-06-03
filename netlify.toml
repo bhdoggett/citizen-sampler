@@ -1,0 +1,9 @@
+[build]
+  base = "backend"                        # Netlify will cd into this
+  publish = ""                           # nothing to publish (no static frontend)
+  functions = "netlify/functions"        # relative to `backend/`
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

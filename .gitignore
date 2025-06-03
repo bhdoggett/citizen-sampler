@@ -42,3 +42,6 @@ next-env.d.ts
 
 todo.txt
 progress.txt
+
+# Local Netlify folder
+.netlify

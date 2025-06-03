@@ -17,6 +17,7 @@
     "types": ["node"]
   },
   "include": [
+    "netlify/functions/**/*",
     "src/**/*",
     "shared/**/*" // Ensure shared types are included
   ],
