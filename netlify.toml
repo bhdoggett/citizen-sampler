@@ -1,7 +1,8 @@
 [build]
-  base = "backend"                        # Netlify will cd into this
-  publish = ""                           # nothing to publish (no static frontend)
-  functions = "netlify/functions"        # relative to `backend/`
+  base = "backend"                        
+  build = "npm run build"
+  publish = ""                           
+  functions = "netlify/functions"        
 
 [[redirects]]
   from = "/api/*"
