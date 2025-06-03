@@ -243,14 +243,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setIsSelected(selectedSampleId === id);
   }, [selectedSampleId, id]);
 
-  useEffect(() => {
-    window.addEventListener("keydown", (e) => {
-      if (e.key === id) {
-        handlePress();
-      }
-    });
-  }, [sampler]);
-
   const padNum = id.split("-")[1];
   return (
     <div
