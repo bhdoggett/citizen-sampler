@@ -23,14 +23,15 @@ import {
 import { allUrlsWithCollectionNames } from "frontend/src/lib/loc_sample_sources";
 import { getTitle } from "../functions/getTitle";
 import metronome from "../metronome";
-import { drumMachines, DrumMachineId } from "../../lib/drumMachines";
-// const KITS_BASE_URL = "https://citizen-dj.labs.loc.gov/audio/drum_machines/";
-
+import {
+  drumMachines,
+  DrumMachineId,
+  getKitSampleTitle,
+} from "../../lib/drumMachines";
 import dotenv from "dotenv";
 dotenv.config();
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-console.log(`${BASE_URL}/drums/${drumMachines.mpc.samples}`);
-console.log("drum machines", drumMachines);
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 type AudioContextType = {
   songTitle: string;
@@ -51,6 +52,12 @@ type AudioContextType = {
   initLocSampleData: (
     id: string,
     url: string,
+    collection: string
+  ) => SampleType;
+  initKitSampleData: (
+    id: string,
+    url: string,
+    title: string,
     collection: string
   ) => SampleType;
   initKitSamples: (kitId: DrumMachineId) => Record<string, SampleType>;
@@ -88,6 +95,7 @@ const AudioContextContext = createContext<AudioContextType | null>(null);
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // Select 8 random urls from the allLOCUrls array
+
   const selectRandomUrlEntries = (
     array: UrlEntry[] | string[],
     collection?: string
@@ -201,13 +209,13 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     id: string,
     url: string,
     title: string,
-    collection: string
+    drumMachine: string
   ): SampleType => {
     return {
       id: id,
       title: title,
       type: "kit",
-      collectionName: collection,
+      collectionName: drumMachine,
       url: url,
       events: { A: [], B: [], C: [], D: [] },
       settings: {
@@ -231,7 +239,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         lowpass: [20000, "lowpass"] as [number, "lowpass"],
         ui: { zoom: 0, seekTo: 0 },
       },
-      attribution: "",
     };
   };
 
@@ -242,14 +249,15 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       machineId: DrumMachineId,
       type: string
     ): { title: string; url: string; collection: string } => {
-      console.log("machineId", machineId);
-      console.log("drumMachine at machineId", drumMachines[machineId]);
       const fileName = drumMachines[machineId].samples.find((sample: string) =>
         sample.includes(`${type}`)
       );
-      const url = `${BASE_URL}/beats/drums/${fileName}`;
+      if (!fileName) {
+        throw new Error(`No ${type} sample found for machine ${machineId}`);
+      }
+      const url = `${API_BASE_URL}/beats/drums/${fileName}`;
       const collection = drumMachines[machineId].name;
-      const title = fileName!.split(".")[0].split("__")[1].replace("_", " ");
+      const title = getKitSampleTitle(fileName);
 
       return { title, url, collection };
     };
@@ -574,6 +582,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setIsRecording,
         makeSamplerWithFX,
         initLocSampleData,
+        initKitSampleData,
         initKitSamples,
         updateSamplerData,
         allSampleData,

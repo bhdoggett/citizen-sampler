@@ -3,7 +3,11 @@ import { useState } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 // import { collectionNames } from "../../lib/loc_collections";
 import { useUIContext } from "frontend/src/app/contexts/UIContext";
-import { DrumMachineId, drumMachines } from "frontend/src/lib/drumMachines";
+import {
+  DrumMachineId,
+  drumMachines,
+  getDrumMachineKeyByName,
+} from "frontend/src/lib/drumMachines";
 
 type KitMenuProps = {
   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
@@ -23,22 +27,11 @@ const KitMenu: React.FC<KitMenuProps> = () => {
   );
   const drumMachineIds = Object.keys(drumMachines) as DrumMachineId[];
   const { confirmActionRef, setShowDialog } = useUIContext();
-  const [name, setName] = useState<string>(drumMachineNames[0]);
   const [id, setId] = useState<DrumMachineId>(
     drumMachineIds[0] as DrumMachineId
   );
 
-  function getDrumMachineKeyByName(name: string): DrumMachineId {
-    for (const [key, value] of Object.entries(drumMachines)) {
-      if (value.name === name) {
-        return key as DrumMachineId;
-      }
-    }
-    throw new Error(`Drum machine with name "${name}" not found.`);
-  }
-
   const handleChooseDrumMachine = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setName(e.target.value);
     const drumMachineId = getDrumMachineKeyByName(e.target.value);
     if (drumMachineId) {
       setId(drumMachineId as DrumMachineId);

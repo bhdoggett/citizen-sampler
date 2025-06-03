@@ -5,8 +5,7 @@ import dotenv from "dotenv";
 import { useAuthContext } from "../../app/contexts/AuthContext";
 dotenv.config();
 
-export const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-console.log("BASE_URL", BASE_URL);
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 type AuthDialogProps = {
   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
@@ -37,7 +36,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         return;
       } else {
         setPasswordsMatch(true);
-        const result = await axios.post(`${BASE_URL}/auth/signup`, {
+        const result = await axios.post(`${API_BASE_URL}/auth/signup`, {
           username: formUsername,
           email,
           password,
@@ -66,13 +65,12 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
 
   const login = async () => {
     try {
-      const result = await axios.post(`${BASE_URL}/auth/login`, {
+      const result = await axios.post(`${API_BASE_URL}/auth/login`, {
         username: formUsername,
         password,
       });
 
       if (result.status === 200) {
-        console.log("result", result);
         setToken(result.data.token);
         setUserId(result.data.user._id);
         setUsername(result.data.user.username);
@@ -219,7 +217,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         {authIsSignup ? "Create Account" : "Log In"}
       </button>
       <a
-        href={`${BASE_URL}/auth/google`}
+        href={`${API_BASE_URL}/auth/google`}
         className="flex mx-auto justify-center text-sm mt-5 hover:text-slate-200"
       >
         Continue with Google
