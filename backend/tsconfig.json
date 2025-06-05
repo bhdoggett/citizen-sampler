@@ -1,25 +1,23 @@
 {
-  "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
-    "rootDir": "../",
-    "outDir": "./dist",
+    "rootDir": "src",
+    "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
     "skipLibCheck": true,
     "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["shared/*"]
+      "@shared/*": ["../shared/*"]
     },
     "typeRoots": ["./types", "./node_modules/@types"],
     "types": ["node"]
   },
-  "include": [
-    "netlify/functions/**/*",
-    "src/**/*",
-    "shared/**/*" // Ensure shared types are included
-  ],
+  "include": ["src/**/*", "../shared/**/*"],
   "exclude": ["node_modules", "../frontend"]
 }
