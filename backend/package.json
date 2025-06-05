@@ -16,7 +16,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/express-session": "^1.18.1",
-    "@types/node": "^22.15.3",
+    "@types/node": "^22.15.29",
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
