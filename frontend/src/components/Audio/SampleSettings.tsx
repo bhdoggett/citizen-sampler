@@ -1,7 +1,7 @@
 "use client";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useState, useEffect } from "react";
-import type { SampleSettings } from "../../../../shared/types/audioTypes";
+import type { SampleSettingsFE } from "src/types/audioTypesFE";
 import useMutesAndSolos from "../../app/hooks/useMutesAndSolos";
 import Waveform from "./Waveform";
 import notes from "../../lib/notes";
@@ -10,6 +10,7 @@ import {
   exponentiateFrequency,
 } from "../../lib/audio/util/frequencyConversion";
 import { useUIContext } from "../../app/contexts/UIContext";
+import { QuantizeValue } from "@shared/types/audioTypes";
 
 const SampleSettings = () => {
   const {
@@ -27,7 +28,7 @@ const SampleSettings = () => {
 
   const { setSampleMute, setSampleSolo } = useMutesAndSolos();
 
-  const [settings, setSettings] = useState<Partial<SampleSettings> | null>(
+  const [settings, setSettings] = useState<Partial<SampleSettingsFE> | null>(
     null
   );
   const [isSoloed, setIsSoloed] = useState<boolean>(false);
@@ -55,9 +56,9 @@ const SampleSettings = () => {
   };
 
   // Update settings in this component's state by setting type
-  const updateSetting = <K extends keyof SampleSettings>(
+  const updateSetting = <K extends keyof SampleSettingsFE>(
     key: K,
-    value: SampleSettings[K]
+    value: SampleSettingsFE[K]
   ) => {
     setSettings((prev) => ({
       ...prev,
@@ -328,7 +329,10 @@ const SampleSettings = () => {
                   <select
                     value={settings.quantVal}
                     onChange={(e) => {
-                      updateSetting("quantVal", Number(e.target.value));
+                      updateSetting(
+                        "quantVal",
+                        Number(e.target.value) as QuantizeValue
+                      );
                     }}
                     className="w-12 mb-3 border flex mx-auto border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
                   >
