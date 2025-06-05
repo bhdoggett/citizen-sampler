@@ -1,13 +1,13 @@
 "useClient";
 import { useAudioContext } from "../contexts/AudioContext";
-import type { SampleType } from "../../../../shared/types/audioTypes";
+import { SampleTypeFE } from "src/types/audioTypesFE";
 
 const useMutesAndSolos = () => {
   const { allSampleData, setAllSampleData, solosExist } = useAudioContext();
 
   // simplify soloed samples state updates
   const setSampleSolo = (id: string, value: boolean) => {
-    setAllSampleData((prev: Record<string, SampleType>) => {
+    setAllSampleData((prev: Record<string, SampleTypeFE>) => {
       return {
         ...prev,
         [id]: {
@@ -23,7 +23,7 @@ const useMutesAndSolos = () => {
 
   // simplify muted samples state updates
   const setSampleMute = (id: string, value: boolean) => {
-    setAllSampleData((prev: Record<string, SampleType>) => {
+    setAllSampleData((prev: Record<string, SampleTypeFE>) => {
       return {
         ...prev,
         [id]: {

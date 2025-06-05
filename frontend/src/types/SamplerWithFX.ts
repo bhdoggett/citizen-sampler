@@ -1,6 +1,6 @@
 import * as Tone from "tone";
 import { CustomSampler } from "./CustomSampler";
-import { SampleEvent } from "@shared/types/audioTypes";
+import { SampleEventFE } from "./audioTypesFE";
 
 export type SamplerWithFX = {
   id: string;
@@ -10,5 +10,5 @@ export type SamplerWithFX = {
   panVol: Tone.PanVol;
   highpass: Tone.Filter;
   lowpass: Tone.Filter;
-  currentEvent: SampleEvent;
+  currentEvent: SampleEventFE;
 };

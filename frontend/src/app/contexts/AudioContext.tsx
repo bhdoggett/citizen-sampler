@@ -9,18 +9,18 @@ import {
 } from "react";
 import * as Tone from "tone";
 import {
-  SampleType,
-  SampleSettings,
-  LoopName,
-  AllLoopSettings,
-} from "../../../../shared/types/audioTypes";
-import { SamplerWithFX } from "frontend/src/types/SamplerWithFX";
-import { CustomSampler } from "frontend/src/types/CustomSampler";
+  SampleTypeFE,
+  SampleSettingsFE,
+  AllLoopSettingsFE,
+} from "src/types/audioTypesFE";
+import { LoopName } from "../../../../shared/types/audioTypes";
+import { SamplerWithFX } from "src/types/SamplerWithFX";
+import { CustomSampler } from "src/types/CustomSampler";
 import {
   getCollectionArrayFromName,
   UrlEntry,
 } from "../../lib/loc_collections";
-import { allUrlsWithCollectionNames } from "frontend/src/lib/loc_sample_sources";
+import { allUrlsWithCollectionNames } from "src/lib/loc_sample_sources";
 import { getTitle } from "../functions/getTitle";
 import metronome from "../metronome";
 import {
@@ -53,38 +53,38 @@ type AudioContextType = {
     id: string,
     url: string,
     collection: string
-  ) => SampleType;
+  ) => SampleTypeFE;
   initKitSampleData: (
     id: string,
     url: string,
     title: string,
     collection: string
-  ) => SampleType;
-  initKitSamples: (kitId: DrumMachineId) => Record<string, SampleType>;
-  updateSamplerData: (id: string, data: SampleType) => void;
+  ) => SampleTypeFE;
+  initKitSamples: (kitId: DrumMachineId) => Record<string, SampleTypeFE>;
+  updateSamplerData: (id: string, data: SampleTypeFE) => void;
   currentLoop: string;
   setCurrentLoop: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
   setLoopIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 
-  allLoopSettings: AllLoopSettings;
-  setAllLoopSettings: React.Dispatch<React.SetStateAction<AllLoopSettings>>;
+  allLoopSettings: AllLoopSettingsFE;
+  setAllLoopSettings: React.Dispatch<React.SetStateAction<AllLoopSettingsFE>>;
   isRecording: boolean;
   setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
-  allSampleData: Record<string, SampleType>;
+  allSampleData: Record<string, SampleTypeFE>;
   setAllSampleData: React.Dispatch<
-    React.SetStateAction<Record<string, SampleType>>
+    React.SetStateAction<Record<string, SampleTypeFE>>
   >;
   updateSamplerStateSettings: (
     id: string,
-    settings: Partial<SampleSettings>
+    settings: Partial<SampleSettingsFE>
   ) => void;
   selectedSampleId: string;
   setSelectedSampleId: React.Dispatch<React.SetStateAction<string>>;
   solosExist: boolean;
   initLocSamplesFromOneCollection: (
     collection: string
-  ) => Record<string, SampleType>;
+  ) => Record<string, SampleTypeFE>;
   cleanupSampler: (
     id: string,
     ref: React.RefObject<Record<string, SamplerWithFX>>
@@ -127,7 +127,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     id: string,
     url: string,
     collection: string
-  ): SampleType => {
+  ): SampleTypeFE => {
     return {
       id: id,
       title: getTitle(url),
@@ -173,7 +173,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           acc[key] = initLocSampleData(key, sample.url, sample.collection);
           return acc;
         },
-        {} as Record<string, SampleType>
+        {} as Record<string, SampleTypeFE>
       );
 
       return locSampleData;
@@ -195,7 +195,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           acc[key] = initLocSampleData(key, url, collection);
           return acc;
         },
-        {} as Record<string, SampleType>
+        {} as Record<string, SampleTypeFE>
       );
 
       return locSampleData;
@@ -210,7 +210,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     url: string,
     title: string,
     drumMachine: string
-  ): SampleType => {
+  ): SampleTypeFE => {
     return {
       id: id,
       title: title,
@@ -244,7 +244,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   const initKitSamples = (
     machineId: DrumMachineId
-  ): Record<string, SampleType> => {
+  ): Record<string, SampleTypeFE> => {
     const formatSampleHeaders = (
       machineId: DrumMachineId,
       type: string
@@ -280,7 +280,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         );
         return acc;
       },
-      {} as Record<string, SampleType>
+      {} as Record<string, SampleTypeFE>
     );
   };
 
@@ -358,7 +358,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   };
 
   const loadSamplersToRef = async (
-    allSampleData: Record<string, SampleType>
+    allSampleData: Record<string, SampleTypeFE>
   ) => {
     if (!allSampleData) return;
     const samplesArray = Object.values(allSampleData).map((value) => {
@@ -386,7 +386,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     return savedSongId ? savedSongId : "";
   });
   const [allSampleData, setAllSampleData] = useState<
-    Record<string, SampleType>
+    Record<string, SampleTypeFE>
   >(() => {
     const savedSamples = localStorage.getItem("samples");
     return savedSamples
@@ -396,7 +396,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           ...initKitSamples("mpc"),
         };
   });
-  const [allLoopSettings, setAllLoopSettings] = useState<AllLoopSettings>(
+  const [allLoopSettings, setAllLoopSettings] = useState<AllLoopSettingsFE>(
     () => {
       const savedLoops = localStorage.getItem("loops");
       return savedLoops
@@ -426,7 +426,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   const updateSamplerStateSettings = (
     id: string,
-    settings: Partial<SampleSettings>
+    settings: Partial<SampleSettingsFE>
   ): void => {
     setAllSampleData((prev) => ({
       ...prev,
@@ -446,7 +446,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   }, []); // <===== if this empty dependency array is removed, the samplers are loaded with every update in allSampleData state
 
   // Upload allSampleData to localStorage.samples when allSampleData state changes.
-  // Changes in state coming from SampleSettings are debounced in that component.
+  // Changes in state coming from SampleSettingsFE are debounced in that component.
   useEffect(() => {
     localStorage.setItem("samples", JSON.stringify(allSampleData));
   }, [allSampleData]);
@@ -529,7 +529,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   }, []);
 
   // Update one sampler's data (entire) whenever anything inside that sampler's data changes
-  const updateSamplerData = (id: string, data: SampleType): void => {
+  const updateSamplerData = (id: string, data: SampleTypeFE): void => {
     setAllSampleData((prev) => ({
       ...prev,
       [id]: data,

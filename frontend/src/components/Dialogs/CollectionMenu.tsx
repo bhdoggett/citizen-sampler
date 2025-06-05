@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
-import { useAudioContext } from "../../app/contexts/AudioContext";
-import { collectionNames } from "../../lib/loc_collections";
-import { useUIContext } from "frontend/src/app/contexts/UIContext";
-import { SampleType } from "@shared/types/audioTypes";
+import { useAudioContext } from "src/app/contexts/AudioContext";
+import { collectionNames } from "src/lib/loc_collections";
+import { useUIContext } from "src/app/contexts/UIContext";
+import { SampleTypeFE } from "src/types/audioTypesFE";
 
 type CollectionMenuProps = {
   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
@@ -26,7 +26,7 @@ const CollectionMenu: React.FC<CollectionMenuProps> = () => {
 
     setAllSampleData((prev) => {
       // Filter out all samples with with type === "loc"
-      const filteredPrev: Record<string, SampleType> = Object.fromEntries(
+      const filteredPrev: Record<string, SampleTypeFE> = Object.fromEntries(
         Object.entries(prev).filter(([, sample]) => sample.type !== "loc")
       );
 
