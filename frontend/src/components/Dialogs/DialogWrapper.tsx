@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useUIContext } from "frontend/src/app/contexts/UIContext";
+import { useUIContext } from "src/app/contexts/UIContext";
 
 type DialogWrapperProps = {
   children: React.ReactNode;

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { useAudioContext } from "frontend/src/app/contexts/AudioContext";
-import { CustomSampler } from "frontend/src/types/CustomSampler";
+import { useAudioContext } from "src/app/contexts/AudioContext";
+import { CustomSampler } from "src/types/CustomSampler";
 import * as Tone from "tone";
 import PitchPad from "./PitchPad";
 

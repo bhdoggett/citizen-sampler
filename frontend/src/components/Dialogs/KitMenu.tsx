@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
-import { useUIContext } from "frontend/src/app/contexts/UIContext";
+import { useUIContext } from "src/app/contexts/UIContext";
 import {
   DrumMachineId,
   drumMachines,
   getDrumMachineKeyByName,
-} from "frontend/src/lib/drumMachines";
+} from "src/lib/drumMachines";
 
 type KitMenuProps = {
   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;

@@ -12,8 +12,8 @@ import {
   drumMachineNames,
   getDrumMachineKeyByName,
   getKitSampleTitle,
-} from "frontend/src/lib/drumMachines";
-import { useUIContext } from "frontend/src/app/contexts/UIContext";
+} from "src/lib/drumMachines";
+import { useUIContext } from "src/app/contexts/UIContext";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 

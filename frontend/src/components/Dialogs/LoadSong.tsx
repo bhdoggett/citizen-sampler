@@ -3,9 +3,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios, { AxiosError } from "axios";
 import dotenv from "dotenv";
 import { useAudioContext } from "../../app/contexts/AudioContext";
-import { useAuthContext } from "frontend/src/app/contexts/AuthContext";
-import { useUIContext } from "frontend/src/app/contexts/UIContext";
-import { SongTypeFE } from "@shared/types/audioTypes";
+import { useAuthContext } from "src/app/contexts/AuthContext";
+import { useUIContext } from "src/app/contexts/UIContext";
+import { SongTypeFE } from "src/types/audioTypesFE";
+
 dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
