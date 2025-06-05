@@ -1,19 +1,13 @@
-import {
-  Ticks,
-  Frequency,
-  NormalRange,
-} from "../../frontend/node_modules/tone/build/esm/core/type/Units";
-
 export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
 
 export type SampleEvent = {
-  startTime: Ticks | null;
+  startTime: number | null; // formerly Ticks
   duration: number | null;
-  note: Frequency;
-  velocity: NormalRange;
+  note: string; // formerly Frequency
+  velocity: number; // formerly NormalRange (0–1 range)
 };
 
-type SampleUISettings = {
+export type SampleUISettings = {
   zoom: number;
   seekTo: number;
 };
@@ -29,12 +23,12 @@ export type SampleSettings = {
   end: number | null;
   volume: number;
   pan: number;
-  baseNote: Frequency;
+  baseNote: string; // formerly Frequency
   pitch: number;
   attack: number;
   release: number;
   quantize: boolean;
-  quantVal: number;
+  quantVal: QuantizeValue;
   highpass: [number, "highpass", number?];
   lowpass: [number, "lowpass", number?];
   ui: SampleUISettings;
@@ -46,7 +40,7 @@ export type SampleType = {
   type: string;
   collectionName: string;
   url: string;
-  events: Record<string, SampleEvent[]>; // This has sample events indexed by Loop
+  events: Record<string, SampleEvent[]>; // Indexed by loop name
   settings: SampleSettings;
   attribution?: string;
 };
@@ -57,7 +51,7 @@ export type LoopSettings = {
   beats: number;
   bars: number;
   bpm: number;
-  swing: NormalRange;
+  swing: number;
 };
 
 export type AllLoopSettings = {
@@ -68,8 +62,4 @@ export type SongTypeBase = {
   title: string;
   loops: AllLoopSettings;
   samples: Record<string, SampleType>;
-};
-
-export type SongTypeFE = SongTypeBase & {
-  _id?: string;
 };
