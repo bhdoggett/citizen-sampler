@@ -1,8 +1,6 @@
 "use client";
-import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import useTransportHotKeys from "./hooks/useTransportHotKeys";
 import MainMenu from "../components/MainMenu";
 import DialogWrapper from "../components/Dialogs/DialogWrapper";
 import ChooseSample from "../components/Dialogs/ChooseSample";
