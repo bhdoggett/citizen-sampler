@@ -18,6 +18,7 @@ const useDrumPadHotKeys = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey) return;
+      if (e.repeat) return;
       if (e.key === padKey) {
         e.preventDefault();
         onPress();
