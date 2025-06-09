@@ -42,7 +42,6 @@ type AudioContextType = {
   setMasterGainLevel: React.Dispatch<React.SetStateAction<number>>;
   metronomeActive: boolean;
   setMetronomeActive: React.Dispatch<React.SetStateAction<boolean>>;
-  metronome: Tone.Sampler;
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
   makeSamplerWithFX: (
     sampleId: string,
@@ -477,33 +476,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     init();
   }, []);
 
-  // Schedule metronome playback based on time signature
-  useEffect(() => {
-    // beatsCount will increment to keep track of when down-beat or off-beat should play
-    let beatCount = 0;
-
-    const metronomeLoop = Tone.getTransport().scheduleRepeat((time) => {
-      if (!loopIsPlaying || !metronomeActive) return;
-
-      const [, beats] = (Tone.getTransport().position as string)
-        .split(":")
-        .map(Number);
-      beatCount = beats % allLoopSettings[currentLoop as LoopName]!.beats;
-
-      if (beatCount === 0) {
-        metronome.triggerAttackRelease("C6", "8n", time);
-      } else {
-        metronome.triggerAttackRelease("G5", "8n", time);
-      }
-    }, "4n");
-
-    const transportForCleanup = Tone.getTransport();
-
-    return () => {
-      transportForCleanup.clear(metronomeLoop);
-    };
-  }, [loopIsPlaying, metronomeActive, allLoopSettings, currentLoop]);
-
   // Update ToneJS Transport when currentLoop changes
   useEffect(() => {
     const transport = Tone.getTransport();
@@ -571,7 +543,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setMasterGainLevel,
         metronomeActive,
         setMetronomeActive,
-        metronome,
         currentLoop,
         setCurrentLoop,
         loopIsPlaying,
