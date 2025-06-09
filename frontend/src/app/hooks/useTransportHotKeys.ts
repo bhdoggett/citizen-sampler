@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import useTransportControls from "./useTransportControls";
 import { useAudioContext } from "../contexts/AudioContext";
 
-const useHotKeys = (hotKeysActive: boolean) => {
+const useTransportHotKeys = (hotKeysActive: boolean) => {
   const { loopIsPlaying } = useAudioContext();
 
   const { handlePlay, handleStop, handleRecord, handleToggleMetronome } =
@@ -50,4 +50,4 @@ const useHotKeys = (hotKeysActive: boolean) => {
   ]);
 };
 
-export default useHotKeys;
+export default useTransportHotKeys;

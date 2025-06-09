@@ -2,7 +2,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import useHotKeys from "./hooks/useHotKeys";
+import useTransportHotKeys from "./hooks/useTransportHotKeys";
 import MainMenu from "../components/MainMenu";
 import DialogWrapper from "../components/Dialogs/DialogWrapper";
 import ChooseSample from "../components/Dialogs/ChooseSample";
@@ -40,7 +40,7 @@ export default function Home() {
   const { showDialog, setShowDialog, confirmActionRef } = useUIContext();
   const { authIsSignup, setAuthIsSignup } = useAuthContext();
   const { samplersRef, selectedSampleId } = useAudioContext();
-  useHotKeys(hotKeysActive);
+  useTransportHotKeys(hotKeysActive);
 
   return (
     <div className="flex flex-col justify-center items-center my-5">

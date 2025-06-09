@@ -1,30 +1,14 @@
 "use client";
 import { useRef, useEffect, useState } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
+import { useUIContext } from "src/app/contexts/UIContext";
+import useDrumPadHotKeys from "src/app/hooks/useDrumPadHotKeys";
 import * as Tone from "tone";
 import { Frequency } from "tone/build/esm/core/type/Units";
 import quantize from "../../app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
-
-// const drumKeys = [
-//   "q",
-//   "w",
-//   "e",
-//   "r",
-//   "a",
-//   "s",
-//   "d",
-//   "f",
-//   "z",
-//   "x",
-//   "c",
-//   "v",
-//   "ArrowLeft",
-//   "ArrowUp",
-//   "ArrowDown",
-//   "ArrowRight",
-// ];
+import { drumKeys } from "src/lib/constants/drumKeys";
 
 type DrumPadProps = {
   id: string;
@@ -49,6 +33,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
   const baseNote: Frequency = allSampleData[id]?.settings.baseNote;
+  const { hotKeysActive } = useUIContext();
+  const padNum = id.split("-")[1];
+  const padKey = drumKeys[Number(padNum) - 1];
 
   // Put this and handleRelease in the drum machine and add an "id" or "sampler" parameter.
   const handlePress = () => {
@@ -140,6 +127,12 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const handleFocus = () => {
     setSelectedSampleId(id);
   };
+
+  useDrumPadHotKeys({
+    padKey,
+    onPress: handlePress,
+    onRelease: handleRelease,
+  });
 
   const getPadColor = () => {
     if (!allSampleData[id] || !allSampleData[id].settings) return;
@@ -244,7 +237,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setIsSelected(selectedSampleId === id);
   }, [selectedSampleId, id]);
 
-  const padNum = id.split("-")[1];
   return (
     <div
       className={`flex m-auto rounded-sm w-full select-none backdrop:aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
@@ -257,6 +249,14 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
           if (e.buttons === 1) {
             handlePress();
           }
+        }}
+        onKeyDown={(e) => {
+          if (!hotKeysActive) return;
+          if (e.key === drumKeys[Number(padNum) - 1]) handlePress();
+        }}
+        onKeyUp={(e) => {
+          if (!hotKeysActive) return;
+          if (e.key === drumKeys[Number(padNum) - 1]) handleRelease();
         }}
         onTouchStart={handlePress}
         onMouseUp={handleRelease}
