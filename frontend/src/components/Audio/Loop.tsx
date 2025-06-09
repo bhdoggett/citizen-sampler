@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
+import LoopProgressBar from "./LoopProgress";
 
 import type { LoopName, LoopSettings } from "@shared/types/audioTypes";
 import useTransportControls from "src/app/hooks/useTransportControls";
@@ -137,6 +138,7 @@ const Loop = () => {
             />
           </div>
         </div>
+        <LoopProgressBar />
       </div>
     </div>
   );
