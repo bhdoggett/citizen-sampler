@@ -36,7 +36,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const padNum = id.split("-")[1];
   const padKey = drumKeys[Number(padNum) - 1];
 
-  // Put this and handleRelease in the drum machine and add an "id" or "sampler" parameter.
   const handlePress = useCallback(() => {
     console.log(allSampleData);
     if (!sampler) return;
@@ -148,18 +147,12 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setSelectedSampleId(id);
   };
 
-  // useDrumPadHotKeys({
-  //   hotKeysActive,
-  //   padKey,
-  //   onPress: handlePress,
-  //   onRelease: handleRelease,
-  // });
-
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (!hotKeysActive || e.metaKey || e.repeat) return;
       if (e.key === padKey) {
         e.preventDefault();
+        // keyIsDownRef.current = true;
         handlePress();
       }
     },
@@ -176,25 +169,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     },
     [hotKeysActive, handleRelease, padKey]
   );
-
-  useEffect(() => {
-    console.log("hotkeys active?", hotKeysActive);
-  }, [hotKeysActive]);
-
-  useEffect(() => {
-    if (hotKeysActive) {
-      window.addEventListener("keydown", handleKeyDown);
-      window.addEventListener("keyup", handleKeyUp);
-    } else {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    }
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, [hotKeysActive, handleKeyDown, handleKeyUp]);
 
   const getPadColor = () => {
     if (!allSampleData[id] || !allSampleData[id].settings) return;
@@ -219,10 +193,20 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     return arrowMap[key] || key;
   };
 
-  // // Update this component's sampleDataRef when allSampleData state changes
-  // useEffect(() => {
-  //   sampleDataRef.current = allSampleData[id];
-  // }, [allSampleData, id]);
+  useEffect(() => {
+    if (hotKeysActive) {
+      window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener("keyup", handleKeyUp);
+    } else {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [hotKeysActive, handleKeyDown, handleKeyUp]);
 
   // Schedule playback of sampler play events
   useEffect(() => {
@@ -321,14 +305,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
           if (e.buttons === 1) {
             handlePress();
           }
-        }}
-        onKeyDown={(e) => {
-          if (!hotKeysActive) return;
-          if (e.key === drumKeys[Number(padNum) - 1]) handlePress();
-        }}
-        onKeyUp={(e) => {
-          if (!hotKeysActive) return;
-          if (e.key === drumKeys[Number(padNum) - 1]) handleRelease();
         }}
         onTouchStart={handlePress}
         onMouseUp={handleRelease}
