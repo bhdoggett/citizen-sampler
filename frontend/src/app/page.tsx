@@ -13,6 +13,7 @@ import LoadSong from "../components/Dialogs/LoadSong";
 import CollectionMenu from "../components/Dialogs/CollectionMenu";
 import KitMenu from "../components/Dialogs/KitMenu";
 import APIResponseDialog from "../components/Dialogs/APIResponseDialog";
+import UIWarning from "../components/Dialogs/UIWarning";
 import Transport from "../components/Audio/Transport";
 import Loop from "../components/Audio/Loop";
 import { useUIContext } from "./contexts/UIContext";
@@ -64,7 +65,7 @@ export default function Home() {
       </div>
 
       <p className="text-sm">
-        Inspired by and built on
+        Inspired and made possible by
         <Link
           className="m-1 text-sm text-blue-700"
           href="https://citizen-dj.labs.loc.gov/"
@@ -73,7 +74,7 @@ export default function Home() {
         </Link>
       </p>
       <p className="text-sm">
-        Samples curated and made available by the
+        and the
         <Link className="m-1 text-sm text-blue-700" href="https://loc.gov/">
           Library of Congress
         </Link>
@@ -113,6 +114,7 @@ export default function Home() {
             />
           )}
           {showDialog === "api-response" && <APIResponseDialog />}
+          {showDialog === "ui-warning" && <UIWarning />}
         </DialogWrapper>
       )}
     </div>

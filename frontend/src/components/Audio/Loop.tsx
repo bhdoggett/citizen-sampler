@@ -1,8 +1,11 @@
 "use client";
 import { useEffect } from "react";
-import { useAudioContext } from "../../app/contexts/AudioContext";
 import * as Tone from "tone";
+import { useAudioContext } from "../../app/contexts/AudioContext";
+import { useUIContext } from "src/app/contexts/UIContext";
+
 import type { LoopName, LoopSettings } from "@shared/types/audioTypes";
+import useTransportControls from "src/app/hooks/useTransportControls";
 
 const loops = ["A", "B", "C", "D"];
 
@@ -12,13 +15,21 @@ const Loop = () => {
     setAllLoopSettings,
     currentLoop,
     setCurrentLoop,
-    // handleSelectLoop,
+    loopIsPlaying,
   } = useAudioContext();
+  const { setShowDialog, uiWarningMessageRef } = useUIContext();
+  const { handleStop } = useTransportControls();
 
   const updateLoopSetting = <K extends keyof LoopSettings>(
     key: K,
     value: LoopSettings[K]
   ) => {
+    if (loopIsPlaying) {
+      uiWarningMessageRef.current = "Stop loop before updating settings";
+      setShowDialog("ui-warning");
+      handleStop();
+      return;
+    }
     setAllLoopSettings((prev) => ({
       ...prev,
       [currentLoop as LoopName]: {

@@ -57,9 +57,9 @@ const useTransportControls = () => {
 
   useEffect(() => {
     if (!metronomeActive) {
-      metronomeRef.current.gainNode.gain.rampTo(0, 0.1);
+      metronomeRef.current.gainNode.gain.setValueAtTime(0, Tone.now());
     } else {
-      metronomeRef.current.gainNode.gain.rampTo(1, 0.1);
+      metronomeRef.current.gainNode.gain.setValueAtTime(1, Tone.now());
     }
   }, [metronomeActive]);
 
@@ -68,7 +68,7 @@ const useTransportControls = () => {
     let beatCount = 0;
 
     const metronomeLoop = Tone.getTransport().scheduleRepeat((time) => {
-      if (!loopIsPlaying || !metronomeActive) return;
+      if (!loopIsPlaying) return;
 
       const [, beats] = (Tone.getTransport().position as string)
         .split(":")
@@ -95,7 +95,7 @@ const useTransportControls = () => {
     return () => {
       transportForCleanup.clear(metronomeLoop);
     };
-  }, [loopIsPlaying, metronomeActive, allLoopSettings, currentLoop]);
+  }, [loopIsPlaying, allLoopSettings, currentLoop]);
 
   return { handlePlay, handleStop, handleRecord, handleToggleMetronome };
 };

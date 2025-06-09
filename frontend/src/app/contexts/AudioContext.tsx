@@ -22,7 +22,6 @@ import {
 } from "../../lib/loc_collections";
 import { allUrlsWithCollectionNames } from "src/lib/loc_sample_sources";
 import { getTitle } from "../functions/getTitle";
-import metronome from "../metronome";
 import {
   drumMachines,
   DrumMachineId,
@@ -487,7 +486,26 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     transport.loop = true;
     transport.loopStart = "0:0:0";
     transport.loopEnd = `${settings.bars}:0:0`;
+
+    // if (transport.state === "started") {
+    //   transport.stop();
+    //   transport.position = "0:0:0";
+    //   transport.start();
+    // }
   }, [allLoopSettings, currentLoop]);
+
+  useEffect(() => {
+    const transport = Tone.getTransport();
+    const wasPlaying = transport.state === "started";
+
+    if (wasPlaying) {
+      transport.stop();
+      transport.position = "0:0:0";
+      transport.start();
+    } else {
+      transport.position = "0:0:0"; // reset for next play
+    }
+  }, [allLoopSettings]);
 
   // Cleanup effect for samplers when component unmounts
   useEffect(() => {
