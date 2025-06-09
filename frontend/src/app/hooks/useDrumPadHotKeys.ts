@@ -1,24 +1,20 @@
 "use client";
 import { useEffect } from "react";
-import { useUIContext } from "../contexts/UIContext";
 
 const useDrumPadHotKeys = ({
+  hotKeysActive,
   padKey,
   onPress,
   onRelease,
 }: {
+  hotKeysActive: boolean;
   padKey: string;
   onPress: () => void;
   onRelease: () => void;
 }) => {
-  const { hotKeysActive } = useUIContext();
-
   useEffect(() => {
-    if (!hotKeysActive) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.metaKey) return;
-      if (e.repeat) return;
+      if (!hotKeysActive || e.metaKey || e.repeat) return;
       if (e.key === padKey) {
         e.preventDefault();
         onPress();
@@ -26,6 +22,7 @@ const useDrumPadHotKeys = ({
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      if (!hotKeysActive) return;
       if (e.key === padKey) {
         e.preventDefault();
         onRelease();

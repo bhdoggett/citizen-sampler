@@ -36,11 +36,16 @@ const PitchGrid = dynamic(() => import("../components/Audio/PitchGrid"), {
 });
 
 export default function Home() {
-  const [hotKeysActive, setHotKeysActive] = useState<boolean>(true);
-  const { showDialog, setShowDialog, confirmActionRef } = useUIContext();
+  const {
+    showDialog,
+    setShowDialog,
+    confirmActionRef,
+    // hotKeysActive,
+    setHotKeysActive,
+  } = useUIContext();
   const { authIsSignup, setAuthIsSignup } = useAuthContext();
   const { samplersRef, selectedSampleId } = useAudioContext();
-  useTransportHotKeys(hotKeysActive);
+  // useTransportHotKeys(hotKeysActive);
 
   return (
     <div className="flex flex-col justify-center items-center my-5">

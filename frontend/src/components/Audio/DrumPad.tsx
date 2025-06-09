@@ -1,8 +1,7 @@
 "use client";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
-import useDrumPadHotKeys from "src/app/hooks/useDrumPadHotKeys";
 import * as Tone from "tone";
 import { Frequency } from "tone/build/esm/core/type/Units";
 import quantize from "../../app/functions/quantize";
@@ -38,7 +37,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const padKey = drumKeys[Number(padNum) - 1];
 
   // Put this and handleRelease in the drum machine and add an "id" or "sampler" parameter.
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     console.log(allSampleData);
     if (!sampler) return;
 
@@ -73,9 +72,18 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       currentEvent.duration = 0;
       currentEvent.note = baseNote;
     }
-  };
+  }, [
+    allSampleData,
+    baseNote,
+    currentEvent,
+    id,
+    isRecording,
+    loopIsPlaying,
+    sampler,
+    setSelectedSampleId,
+  ]);
 
-  const handleRelease = () => {
+  const handleRelease = useCallback(() => {
     if (!sampler) return;
 
     if (!sampleIsPlaying) return;
@@ -122,17 +130,71 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         },
       },
     }));
-  };
+  }, [
+    allSampleData,
+    baseNote,
+    currentEvent,
+    id,
+    isRecording,
+    loopIsPlaying,
+    sampler,
+    currentLoop,
+    sampleIsPlaying,
+    selectedSampleId,
+    setAllSampleData,
+  ]);
 
   const handleFocus = () => {
     setSelectedSampleId(id);
   };
 
-  useDrumPadHotKeys({
-    padKey,
-    onPress: handlePress,
-    onRelease: handleRelease,
-  });
+  // useDrumPadHotKeys({
+  //   hotKeysActive,
+  //   padKey,
+  //   onPress: handlePress,
+  //   onRelease: handleRelease,
+  // });
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (!hotKeysActive || e.metaKey || e.repeat) return;
+      if (e.key === padKey) {
+        e.preventDefault();
+        handlePress();
+      }
+    },
+    [hotKeysActive, handlePress, padKey]
+  );
+
+  const handleKeyUp = useCallback(
+    (e: KeyboardEvent) => {
+      if (!hotKeysActive) return;
+      if (e.key === padKey) {
+        e.preventDefault();
+        handleRelease();
+      }
+    },
+    [hotKeysActive, handleRelease, padKey]
+  );
+
+  useEffect(() => {
+    console.log("hotkeys active?", hotKeysActive);
+  }, [hotKeysActive]);
+
+  useEffect(() => {
+    if (hotKeysActive) {
+      window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener("keyup", handleKeyUp);
+    } else {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [hotKeysActive, handleKeyDown, handleKeyUp]);
 
   const getPadColor = () => {
     if (!allSampleData[id] || !allSampleData[id].settings) return;
@@ -145,6 +207,16 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     return sampleIsPlaying
       ? "brightness-75 saturate-150 transition-all duration-100"
       : "brightness-100 saturate-100 transition-all duration-300";
+  };
+
+  const getKeySymbol = (key: string): string => {
+    const arrowMap: Record<string, string> = {
+      ArrowLeft: "←",
+      ArrowUp: "↑",
+      ArrowRight: "→",
+      ArrowDown: "↓",
+    };
+    return arrowMap[key] || key;
   };
 
   // // Update this component's sampleDataRef when allSampleData state changes
@@ -264,7 +336,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onTouchEnd={() => handleRelease()}
         className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800 w-full aspect-square shadow-md shadow-slate-500  `}
       >
-        <p className="flex top-1 left-0 text-xs">{padNum}</p>
+        <div className="mx-0.5 flex justify-between">
+          <span className="flex top-1 left-0 text-sm font-bold">{padNum}</span>
+          <span className="flex top-1 left-0 text-xs italic">
+            {hotKeysActive ? getKeySymbol(padKey) : ""}
+          </span>
+        </div>
+
         <AudioSnippetVisualizer id={id} />
       </button>
     </div>

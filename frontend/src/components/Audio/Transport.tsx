@@ -1,13 +1,17 @@
 "use client";
 import { Circle, Music3 } from "lucide-react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
+import useTransportHotKeys from "src/app/hooks/useTransportHotKeys";
 import useTransportControls from "../../app/hooks/useTransportControls";
+import { useUIContext } from "src/app/contexts/UIContext";
 
 const Transport = () => {
   const { loopIsPlaying, isRecording, metronomeActive } = useAudioContext();
 
   const { handlePlay, handleStop, handleRecord, handleToggleMetronome } =
     useTransportControls();
+  const { hotKeysActive } = useUIContext();
+  useTransportHotKeys(hotKeysActive);
 
   return (
     <div className="ml-2 mb-2 w-fit flex justify-between items-center border-2 gap-1 border-black p-2 shadow-inner shadow-slate-500 bg-slate-200">
