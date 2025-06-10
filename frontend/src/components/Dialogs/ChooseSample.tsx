@@ -88,7 +88,8 @@ const ChooseSample: React.FC = () => {
   };
 
   // Update allSampleData and samplersRef when a new sample is chosen
-  const handleChooseSample = async () => {
+  const handleChooseSample = async (e) => {
+    e.preventDefault();
     if (
       selectedIndex === null ||
       !sampleGroup ||
@@ -162,97 +163,100 @@ const ChooseSample: React.FC = () => {
             </button>
           </>
         )}
-
-        {type === "loc" && (
-          <>
-            <label htmlFor="collection" className="mb-1">
-              Collection:
-            </label>
-            <select
-              name="collection"
-              id="collection"
-              onChange={(e) => handleSelectSampleGroup(e.target.value)}
-              className="mb-4 text-black"
-            >
-              {collectionNames.map((collection) => (
-                <option key={collection} value={collection}>
-                  {collection}
-                </option>
-              ))}
-            </select>
-          </>
-        )}
-
-        {type === "kit" && (
-          <>
-            <label htmlFor="kit" className="mb-1">
-              Drum Machine:
-            </label>
-            <select
-              name="kit"
-              id="kit"
-              onChange={(e) => setSampleGroup(e.target.value)}
-              className="mb-4 text-black"
-            >
-              {drumMachineNames.map((dm) => (
-                <option key={dm} value={dm}>
-                  {dm}
-                </option>
-              ))}
-            </select>
-          </>
-        )}
       </div>
-
-      {type && (
-        <>
-          <div className="flex flex-col w-full max-w-sm mx-auto">
-            <label className="mb-1">Samples:</label>
-            <div className="position:fixed flex flex-col bg-slate-700 p-1 max-h-36 overflow-y-auto space-y-1 focus:outline-none">
-              {type &&
-                samplesArray.map((sample, index) => (
-                  <label
-                    key={index}
-                    className={`cursor-pointer pl-1 ${
-                      selectedIndex === index
-                        ? "bg-slate-700 text-white"
-                        : "bg-white text-black"
-                    }`}
-                  >
-                    <input
-                      name="samples"
-                      type="radio"
-                      className="opacity-0 absolute"
-                      value={sample}
-                      onChange={(e) => {
-                        setSelectedIndex(index);
-                        playSample(e.target.value);
-                      }}
-                      onBlur={() => {
-                        stopAndDisposePlayer();
-                      }}
-                    />
-                    {type === "loc"
-                      ? formatLocSampleName(sample)
-                      : sample.split(".")[0].split("__")[1]}
-                  </label>
+      <form action="submit" onSubmit={handleChooseSample}>
+        <div>
+          {type === "loc" && (
+            <>
+              <label htmlFor="collection" className="mb-1">
+                Collection:
+              </label>
+              <select
+                name="collection"
+                id="collection"
+                onChange={(e) => handleSelectSampleGroup(e.target.value)}
+                className="mb-4 text-black"
+              >
+                {collectionNames.map((collection) => (
+                  <option key={collection} value={collection}>
+                    {collection}
+                  </option>
                 ))}
+              </select>
+            </>
+          )}
+
+          {type === "kit" && (
+            <>
+              <label htmlFor="kit" className="mb-1">
+                Drum Machine:
+              </label>
+              <select
+                name="kit"
+                id="kit"
+                onChange={(e) => setSampleGroup(e.target.value)}
+                className="mb-4 text-black"
+              >
+                {drumMachineNames.map((dm) => (
+                  <option key={dm} value={dm}>
+                    {dm}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
+        </div>
+
+        {type && (
+          <>
+            <div className="flex flex-col w-full max-w-sm mx-auto">
+              <label className="mb-1">Samples:</label>
+              <div className="position:fixed flex flex-col bg-slate-700 p-1 max-h-36 overflow-y-auto space-y-1 focus:outline-none">
+                {type &&
+                  samplesArray.map((sample, index) => (
+                    <label
+                      key={index}
+                      className={`cursor-pointer pl-1 ${
+                        selectedIndex === index
+                          ? "bg-slate-700 text-white"
+                          : "bg-white text-black"
+                      }`}
+                    >
+                      <input
+                        name="samples"
+                        type="radio"
+                        className="opacity-0 absolute"
+                        value={sample}
+                        onChange={(e) => {
+                          setSelectedIndex(index);
+                          playSample(e.target.value);
+                        }}
+                        onBlur={() => {
+                          stopAndDisposePlayer();
+                        }}
+                      />
+                      {type === "loc"
+                        ? formatLocSampleName(sample)
+                        : sample.split(".")[0].split("__")[1]}
+                    </label>
+                  ))}
+              </div>
             </div>
-          </div>
-          <span
-            className="absolute bottom-9 left-10 text-3xl font-bold hover:text-slate-400 hover:cursor-default"
-            onClick={() => setType(null)}
-          >
-            ←
-          </span>
-          <button
-            onClick={handleChooseSample}
-            className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
-          >
-            Choose Sample
-          </button>
-        </>
-      )}
+            <span
+              className="absolute bottom-9 left-10 text-3xl font-bold hover:text-slate-400 hover:cursor-default"
+              onClick={() => setType(null)}
+            >
+              ←
+            </span>
+            <button
+              type="submit"
+              className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
+            >
+              Choose Sample
+            </button>
+          </>
+        )}
+      </form>
     </>
   );
 };
