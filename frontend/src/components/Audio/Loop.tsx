@@ -6,7 +6,6 @@ import { useUIContext } from "src/app/contexts/UIContext";
 import LoopProgressBar from "./LoopProgress";
 
 import type { LoopName, LoopSettings } from "@shared/types/audioTypes";
-import useTransportControls from "src/app/hooks/useTransportControls";
 
 const loops = ["A", "B", "C", "D"];
 
@@ -21,14 +20,23 @@ const Loop = () => {
   const { setShowDialog, uiWarningMessageRef } = useUIContext();
   // const { handleStop } = useTransportControls();
 
+  const handleSelectLoop = (loop: LoopName) => {
+    if (loopIsPlaying) {
+      uiWarningMessageRef.current =
+        "Stop playback before selecting a different loop";
+      setShowDialog("ui-warning");
+      return;
+    }
+    setCurrentLoop(loop);
+  };
+
   const updateLoopSetting = <K extends keyof LoopSettings>(
     key: K,
     value: LoopSettings[K]
   ) => {
     if (loopIsPlaying) {
-      uiWarningMessageRef.current = "Stop loop before updating settings";
+      uiWarningMessageRef.current = "Stop playback before updating settings";
       setShowDialog("ui-warning");
-      // handleStop();
       return;
     }
     setAllLoopSettings((prev) => ({
@@ -66,7 +74,7 @@ const Loop = () => {
               className={`flex-1 hover:bg-slate-400 font-bold ${
                 loop !== "D" ? "border-r border-black" : ""
               } ${loop === currentLoop ? "bg-slate-400 shadow-inner shadow-black" : "bg-slate-300"}`}
-              onClick={() => setCurrentLoop(loop as LoopName)}
+              onClick={() => handleSelectLoop(loop as LoopName)}
             >
               {loop}
             </button>

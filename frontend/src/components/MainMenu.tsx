@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import * as Tone from "tone";
 import axios, { AxiosError } from "axios";
@@ -40,6 +40,7 @@ const Menu: React.FC = () => {
   const { songTitle, allLoopSettings, allSampleData } = useAudioContext();
   const downloadWavStems = useDownloadWavStems();
   const router = useRouter();
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const logout = (): void => {
     localStorage.removeItem("token");
@@ -115,6 +116,22 @@ const Menu: React.FC = () => {
     }
   }, [showDialog, setHotKeysActive]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="relative flex flex-col items-end" id="main-menu">
       {displayName && (
@@ -148,7 +165,10 @@ const Menu: React.FC = () => {
       {/* --Menu Options-- */}
 
       {menuOpen && (
-        <div className="absolute right-0 mt-12 bg-white border rounded-sm shadow-lg z-10 min-w-[150px]">
+        <div
+          ref={menuRef}
+          className="absolute right-0 mt-12 bg-white border rounded-sm shadow-lg z-10 min-w-[150px]"
+        >
           <ul className="relative flex flex-col main-menu text-sm">
             {isAuthenticated ? (
               <>
