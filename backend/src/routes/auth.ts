@@ -2,7 +2,6 @@ import express, { Request, Response, NextFunction } from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import User, { UserDoc } from "../models/user";
-import requireJwtAuth from "../middleware/requireJwtAuth";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import keys from "../config/keys";
