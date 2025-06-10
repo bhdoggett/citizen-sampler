@@ -14,7 +14,7 @@ const Transport = () => {
   useTransportHotKeys(hotKeysActive);
 
   return (
-    <div className="flex flex-col pl-1 mb-1">
+    <div className="pl-1 mb-1">
       <div className="flex flex-col w-full mx-auto  shadow-md shadow-slate-500">
         <div className=" w-full flex justify-between items-center border-2 gap-1 border-black p-2 shadow-inner shadow-slate-500 bg-slate-200">
           <svg
