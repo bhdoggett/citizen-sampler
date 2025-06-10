@@ -12,6 +12,7 @@ type CollectionMenuProps = {
 
 const CollectionMenu: React.FC<CollectionMenuProps> = () => {
   const {
+    initLocSamplesFromAllCollections,
     initLocSamplesFromOneCollection,
     cleanupSampler,
     setAllSampleData,
@@ -21,8 +22,10 @@ const CollectionMenu: React.FC<CollectionMenuProps> = () => {
   const { confirmActionRef, setShowDialog } = useUIContext();
   const [c, setC] = useState<string>(collectionNames[0]);
 
-  const handleSelect = (collection: string) => {
-    const newSamples = initLocSamplesFromOneCollection(collection);
+  const handleSelect = (collection?: string) => {
+    const newSamples = collection
+      ? initLocSamplesFromOneCollection(collection)
+      : initLocSamplesFromAllCollections();
 
     setAllSampleData((prev) => {
       // Filter out all samples with with type === "loc"
@@ -74,7 +77,7 @@ const CollectionMenu: React.FC<CollectionMenuProps> = () => {
             message:
               "This will replace pads 1-12 with new Library of Congress Samples. Are you sure?",
             buttonText: "You Betcha",
-            action: () => handleSelect(c),
+            action: c === "All" ? () => handleSelect() : () => handleSelect(c),
           };
           setShowDialog("confirm-action");
         }}

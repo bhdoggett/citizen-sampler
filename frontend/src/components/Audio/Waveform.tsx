@@ -160,13 +160,13 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   // }, [waveformIsPlaying, allSampleData, selectedSampleId]);
 
   return (
-    <div className="flex w-[650px] justify-center mb-2">
+    <div className="flex w-full px-3 justify-center mb-2">
       {/* Border wrapper */}
-      <div className="border border-slate-600 w-[575px] " ref={scrollRef}>
-        <div className="w-[600px]">
+      <div className="border border-slate-600 w-full" ref={scrollRef}>
+        <div className="w-full">
           <div
             ref={containerRef}
-            className="cursor-pointer bg-stone-50 shadow-inner shadow-slate-700 w-[573px] box-border"
+            className="cursor-pointer bg-stone-50 shadow-inner shadow-slate-700 w-full box-border"
           />
         </div>
       </div>

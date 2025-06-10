@@ -19,7 +19,7 @@ const Loop = () => {
     loopIsPlaying,
   } = useAudioContext();
   const { setShowDialog, uiWarningMessageRef } = useUIContext();
-  const { handleStop } = useTransportControls();
+  // const { handleStop } = useTransportControls();
 
   const updateLoopSetting = <K extends keyof LoopSettings>(
     key: K,
@@ -28,7 +28,7 @@ const Loop = () => {
     if (loopIsPlaying) {
       uiWarningMessageRef.current = "Stop loop before updating settings";
       setShowDialog("ui-warning");
-      handleStop();
+      // handleStop();
       return;
     }
     setAllLoopSettings((prev) => ({

@@ -54,6 +54,8 @@ const useDownloadWavStems = () => {
       );
 
       const { sampler } = offlineSamplerWithFx;
+      await sampler.loaded;
+      if (sampler.loaded) console.log("sampler loaded");
 
       const toneEvents = events
         .filter((event) => event.startTime !== null)
@@ -69,10 +71,11 @@ const useDownloadWavStems = () => {
               startTime: eventTime,
               duration: event.duration,
               note: event.note,
-              // velocity: event.velocity,
+              velocity: event.velocity,
             },
           ];
         });
+      console.log("offline tone events:", toneEvents);
 
       const part = new Tone.Part((time, event) => {
         const { start, end } = settings;
@@ -87,9 +90,13 @@ const useDownloadWavStems = () => {
               ? end - start
               : event.duration
             : event.duration;
-          sampler.triggerAttackRelease(event.note, actualDuration, time, start);
-
-          setTimeout(() => {}, event.duration * 1000);
+          sampler.triggerAttackRelease(
+            event.note,
+            actualDuration,
+            time,
+            start,
+            event.velocity
+          );
         }
       }, toneEvents);
 

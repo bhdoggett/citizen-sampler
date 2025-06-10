@@ -313,18 +313,14 @@ const SampleSettings = () => {
                 </div>
                 <div className="flex flex-col">
                   <div className="w-full max-w-2xl flex items-center gap-1 mb-2">
-                    <label htmlFor="quantize-active" className="">
+                    <button
+                      onClick={() =>
+                        updateSetting("quantize", !settings.quantize)
+                      }
+                      className={`border-2 border-black px-2 py-1 ${settings.quantize ? "bg-slate-600 text-white font-bold shadow-inner shadow-black" : "bg-slate-200 text-black shadow-sm shadow-slate-500"}`}
+                    >
                       Quantize
-                    </label>
-                    <input
-                      type="checkbox"
-                      name="quantize-active"
-                      id="quantize-active"
-                      checked={settings.quantize}
-                      onChange={(e) => {
-                        updateSetting("quantize", e.target.checked);
-                      }}
-                    />
+                    </button>
                   </div>
                   <select
                     value={settings.quantVal}

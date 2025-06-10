@@ -45,7 +45,7 @@ type AudioContextType = {
   makeSamplerWithFX: (
     sampleId: string,
     sampleUrl: string,
-    offline?: boolean
+    stems?: boolean
   ) => Promise<SamplerWithFX>;
   initLocSampleData: (
     id: string,
@@ -83,6 +83,7 @@ type AudioContextType = {
   initLocSamplesFromOneCollection: (
     collection: string
   ) => Record<string, SampleTypeFE>;
+  initLocSamplesFromAllCollections: () => Record<string, SampleTypeFE>;
   cleanupSampler: (
     id: string,
     ref: React.RefObject<Record<string, SamplerWithFX>>
@@ -287,7 +288,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const makeSamplerWithFX = async (
     sampleId: string,
     sampleUrl: string,
-    offline: boolean = false
+    stems: boolean = false
   ): Promise<SamplerWithFX> => {
     return new Promise((resolve, reject) => {
       const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
@@ -305,7 +306,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
           highpass.connect(lowpass);
           lowpass.connect(panVol);
 
-          if (!offline) {
+          if (!stems) {
             panVol.connect(masterGainNode.current).toDestination();
           } else {
             panVol.toDestination();
@@ -572,6 +573,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         makeSamplerWithFX,
         initLocSampleData,
         initKitSampleData,
+        initLocSamplesFromOneCollection,
+        initLocSamplesFromAllCollections,
         initKitSamples,
         updateSamplerData,
         allSampleData,
@@ -581,7 +584,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setSelectedSampleId,
         samplersRef,
         solosExist,
-        initLocSamplesFromOneCollection,
+
         cleanupSampler,
       }}
     >

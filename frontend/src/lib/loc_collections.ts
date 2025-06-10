@@ -32,6 +32,7 @@ import {
 } from "./loc_sample_sources";
 
 export const collectionNames = [
+  "All",
   "Inventing Entertainment",
   "Variety State Sound Recordngs and Motion Pictures",
   "The Joe Smith Collection",
