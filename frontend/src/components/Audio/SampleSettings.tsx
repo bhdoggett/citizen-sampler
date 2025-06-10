@@ -145,7 +145,7 @@ const SampleSettings = () => {
 
   return (
     <>
-      <div className="relative flex flex-col items-center border-2 shadow-md shadow-slate-500 border-black">
+      <div className="relative flex flex-col items-center border-2 shadow-md shadow-slate-500 border-black w-5/6">
         <div className="flex shadow-inner shadow-slate-500 border-x-2 border-b-2 border-black overflow-hidden mx-auto text-xs">
           <h1 className={"px-2 border-black bg-black text-white"}>
             {`${allSampleData[selectedSampleId].collectionName}`}
@@ -202,7 +202,7 @@ const SampleSettings = () => {
                   <input
                     type="range"
                     min="0"
-                    max="5"
+                    max="2"
                     step="0.01"
                     value={settings.attack || 0}
                     onChange={(e) =>
@@ -218,7 +218,7 @@ const SampleSettings = () => {
                   <input
                     type="range"
                     min="0"
-                    max="5"
+                    max="2"
                     step="0.01"
                     value={settings.release || 0}
                     onChange={(e) =>

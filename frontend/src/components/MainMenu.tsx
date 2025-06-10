@@ -11,17 +11,13 @@ import useDownloadWavStems from "../app/hooks/useDownloadWavStems";
 dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-type MenuProps = {
-  setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
 export type ConfirmActionRef = {
   message: string;
   buttonText: string;
   action: () => void;
 } | null;
 
-const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
+const Menu: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const {
     isAuthenticated,
@@ -34,8 +30,13 @@ const Menu: React.FC<MenuProps> = ({ setHotKeysActive }) => {
     setDisplayName,
     setAuthIsSignup,
   } = useAuthContext();
-  const { confirmActionRef, showDialog, setShowDialog, apiResponseMessageRef } =
-    useUIContext();
+  const {
+    confirmActionRef,
+    showDialog,
+    setShowDialog,
+    apiResponseMessageRef,
+    setHotKeysActive,
+  } = useUIContext();
   const { songTitle, allLoopSettings, allSampleData } = useAudioContext();
   const downloadWavStems = useDownloadWavStems();
   const router = useRouter();

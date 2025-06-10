@@ -54,8 +54,8 @@ const Loop = () => {
   }, [allLoopSettings, currentLoop]);
 
   return (
-    <div className="px-2 pb-2 flex flex-col items-center space-y-4">
-      <div className="flex flex-col w-full mx-auto  border-2 border-black">
+    <div className="flex flex-col pl-1">
+      <div className="flex flex-col w-full mx-auto  border-2 border-black shadow-md shadow-slate-500">
         <h1 className="w-full border-b border-black bg-slate-800 text-white text-center">
           Loop
         </h1>

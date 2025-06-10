@@ -34,92 +34,92 @@ const PitchGrid = dynamic(() => import("../components/Audio/PitchGrid"), {
 });
 
 export default function Home() {
-  const {
-    showDialog,
-    setShowDialog,
-    confirmActionRef,
-    // hotKeysActive,
-    setHotKeysActive,
-  } = useUIContext();
+  const { showDialog, setShowDialog, confirmActionRef, setHotKeysActive } =
+    useUIContext();
   const { authIsSignup, setAuthIsSignup } = useAuthContext();
   const { samplersRef, selectedSampleId } = useAudioContext();
   // useTransportHotKeys(hotKeysActive);
 
   return (
-    <div className="flex flex-col justify-center items-center my-5">
-      <div className="w-[1000px] p-1 xs:w-full sm:w-full md:w-[800px]">
-        <div className="flex justify-between">
-          <h1 className="text-6xl font-bold block">Citizen Sampler</h1>
-          <MainMenu setHotKeysActive={setHotKeysActive} />
-        </div>
-        <div className="flex">
-          <SampleSettings />
-          <div className="flex flex-col">
-            <Transport />
-            <Loop />
+    <>
+      <div className="flex flex-col justify-center items-center my-5">
+        <div className="w-[600px] lg:w-[800px] md:w-[800px] sm:w-[700px] xs:w-[600px]">
+          <div className="flex justify-between">
+            <h1 className="text-6xl font-bold block">Citizen Sampler</h1>
+            <MainMenu />
+          </div>
+          <div className="flex">
+            <SampleSettings />
+            <div className="flex flex-col w-1/6">
+              <Transport />
+              <Loop />
+            </div>
+          </div>
+          <div className="flex">
+            <DrumMachine />
+            <PitchGrid
+              sampler={samplersRef.current[selectedSampleId]?.sampler ?? null}
+            />
           </div>
         </div>
-        <div className="flex">
-          <DrumMachine />
-          <PitchGrid
-            sampler={samplersRef.current[selectedSampleId]?.sampler ?? null}
-          />
+        <div className="flex flex-col items-center mt-2">
+          <p className="text-sm">
+            Inspired and made possible by
+            <Link
+              className="m-1 text-sm text-blue-700"
+              href="https://citizen-dj.labs.loc.gov/"
+            >
+              Citizen DJ
+            </Link>
+          </p>
+          <p className="text-sm">
+            and the
+            <Link className="m-1 text-sm text-blue-700" href="https://loc.gov/">
+              Library of Congress
+            </Link>
+          </p>
         </div>
       </div>
+      <div>
+        {/* --Menu Dialogues-- */}
 
-      <p className="text-sm">
-        Inspired and made possible by
-        <Link
-          className="m-1 text-sm text-blue-700"
-          href="https://citizen-dj.labs.loc.gov/"
-        >
-          Citizen DJ
-        </Link>
-      </p>
-      <p className="text-sm">
-        and the
-        <Link className="m-1 text-sm text-blue-700" href="https://loc.gov/">
-          Library of Congress
-        </Link>
-      </p>
-      {/* --Menu Dialogues-- */}
-
-      {showDialog && (
-        <DialogWrapper>
-          {showDialog === "choose-sample" && <ChooseSample />}
-          {showDialog === "load-song" && <LoadSong />}
-          {showDialog === "save-new-song" && <SaveNewSong />}
-          {showDialog === "collection-menu" && (
-            <CollectionMenu
-              setShowDialog={setShowDialog}
-              setHotKeysActive={setHotKeysActive}
-            />
-          )}
-          {showDialog === "kit-menu" && (
-            <KitMenu
-              setShowDialog={setShowDialog}
-              setHotKeysActive={setHotKeysActive}
-            />
-          )}
-          {showDialog === "auth-dialogue" && (
-            <AuthDialog
-              setShowDialog={setShowDialog}
-              setHotKeysActive={setHotKeysActive}
-              authIsSignup={authIsSignup}
-              setAuthIsSignup={setAuthIsSignup}
-            />
-          )}
-          {showDialog === "confirm-action" && (
-            <ConfirmActionDialog
-              confirmActionRef={confirmActionRef}
-              setShowDialog={setShowDialog}
-              setHotKeysActive={setHotKeysActive}
-            />
-          )}
-          {showDialog === "api-response" && <APIResponseDialog />}
-          {showDialog === "ui-warning" && <UIWarning />}
-        </DialogWrapper>
-      )}
-    </div>
+        {showDialog && (
+          <DialogWrapper>
+            {showDialog === "choose-sample" && <ChooseSample />}
+            {showDialog === "load-song" && <LoadSong />}
+            {showDialog === "save-new-song" && <SaveNewSong />}
+            {showDialog === "collection-menu" && (
+              <CollectionMenu
+                setShowDialog={setShowDialog}
+                setHotKeysActive={setHotKeysActive}
+              />
+            )}
+            {showDialog === "kit-menu" && (
+              <KitMenu
+                setShowDialog={setShowDialog}
+                setHotKeysActive={setHotKeysActive}
+              />
+            )}
+            {showDialog === "auth-dialogue" && (
+              <AuthDialog
+                setShowDialog={setShowDialog}
+                setHotKeysActive={setHotKeysActive}
+                authIsSignup={authIsSignup}
+                setAuthIsSignup={setAuthIsSignup}
+              />
+            )}
+            {showDialog === "confirm-action" && (
+              <ConfirmActionDialog
+                confirmActionRef={confirmActionRef}
+                setShowDialog={setShowDialog}
+                setHotKeysActive={setHotKeysActive}
+              />
+            )}
+            {showDialog === "api-response" && <APIResponseDialog />}
+            {showDialog === "ui-warning" && <UIWarning />}
+          </DialogWrapper>
+        )}
+      </div>
+    </>
   );
 }

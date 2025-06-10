@@ -9,7 +9,7 @@ const DrumMachine = () => {
   const allPadIds = Array.from({ length: 16 }, (_, i) => `pad-${i + 1}`);
 
   return (
-    <div className="flex flex-col text-center w-1/2 ml-3 mt-1">
+    <div className="flex flex-col text-center w-1/2 mt-1">
       <h3 className="bg-slate-800 w-full border-2 border-slate-800 text-white font-bold">
         Sample Pads
       </h3>
