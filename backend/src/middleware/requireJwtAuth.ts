@@ -34,7 +34,7 @@ const requireJwtAuth = async (
       return;
     }
 
-    req.user = user; // Make the user available in request handlers
+    req.user = user;
     next();
   } catch (err) {
     res.status(401).json({ message: "Invalid or expired token" });

@@ -88,7 +88,7 @@ const ChooseSample: React.FC = () => {
   };
 
   // Update allSampleData and samplersRef when a new sample is chosen
-  const handleChooseSample = async (e) => {
+  const handleChooseSample = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (
       selectedIndex === null ||

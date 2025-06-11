@@ -16,6 +16,13 @@
     "ts-node-dev": "^2.0.0"
   },
   "dependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/express-session": "^1.18.1",
+    "@types/node": "^22.15.29",
+    "@types/passport-google-oauth20": "^2.0.16",
+    "@types/passport-jwt": "^4.0.1",
+    "@types/passport-local": "^1.0.38",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -28,13 +35,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
-    "typescript": "^5.8.3",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.1",
-    "@types/express-session": "^1.18.1",
-    "@types/node": "^22.15.29",
-    "@types/passport-google-oauth20": "^2.0.16",
-    "@types/passport-jwt": "^4.0.1",
-    "@types/passport-local": "^1.0.38"
+    "resend": "^4.5.2",
+    "typescript": "^5.8.3"
   }
 }

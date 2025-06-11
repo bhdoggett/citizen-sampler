@@ -3,6 +3,8 @@ import passport from "passport";
 import jwt from "jsonwebtoken";
 import User, { UserDoc } from "../models/user";
 import bcrypt from "bcryptjs";
+import requireJwtAuth from "src/middleware/requireJwtAuth";
+import { Resend } from "resend";
 import dotenv from "dotenv";
 import keys from "../config/keys";
 import "../strategies/jwt";
@@ -18,6 +20,7 @@ syncIndexes();
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const router = express.Router();
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Local signup
 router.post("/signup", async (req: Request, res: Response): Promise<void> => {
@@ -39,13 +42,31 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
       lastLogin: new Date(),
       createdAt: new Date(),
       songs: [],
+      confirmed: false,
     });
 
     await newUser.save();
 
     const token = jwt.sign({ id: newUser._id }, keys.TOKEN_SECRET!, {
-      expiresIn: "7d",
+      expiresIn: "1hr",
     });
+
+    const sendConfirmationLink = async () => {
+      const { data, error } = await resend.emails.send({
+        from: "CitizenSampler <no-reply@citizensampler.com>",
+        to: [`${newUser.email}`],
+        subject: "Confirm Email",
+        html: `Click this link to confirm your email address: ${FRONTEND_URL}/confirm?token=${token}.`,
+      });
+
+      if (error) {
+        return console.error({ error });
+      }
+
+      console.log({ data });
+    };
+
+    sendConfirmationLink();
 
     res.status(201).json({
       message: "Signup successful",
@@ -59,6 +80,35 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// in /api/confirm-email route:
+router.get("/confirm-email", async (req, res) => {
+  const { token } = req.query;
+  if (!token) return;
+  if (typeof token !== "string") {
+    res.status(400).send("Invalid or missing token");
+    return;
+  }
+
+  try {
+    const payload = jwt.verify(token, keys.TOKEN_SECRET!) as { userId: string };
+    console.log("payload", payload);
+    const user = await User.findById(payload.userId);
+    if (!user) {
+      res.status(404).send("User not found");
+      return;
+    }
+
+    user.confirmed = true;
+    await user.save();
+
+    res.redirect(
+      `${FRONTEND_URL}/?token=${token}&displayName=${user.displayName}&userId=${user._id}`
+    );
+  } catch (err) {
+    res.status(400).send("Invalid or expired confirmation link");
   }
 });
 

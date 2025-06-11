@@ -10,6 +10,7 @@ export type UserType = {
   lastLogin?: Date;
   createdAt?: Date;
   songs: Types.ObjectId[];
+  confirmed?: boolean;
 };
 
 // Proper Mongoose schema typing
@@ -55,6 +56,7 @@ export const UserSchema = new Schema<UserType>({
       ref: "Song",
     },
   ],
+  confirmed: { type: Boolean },
 });
 
 const User = model<UserType>("User", UserSchema);
