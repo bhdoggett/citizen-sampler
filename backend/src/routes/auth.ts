@@ -18,7 +18,7 @@ const syncIndexes = async () => {
 
 syncIndexes();
 
-const FRONTEND_URL = process.env.FRONTEND_URL;
+const FRONTEND_URL = process.env.FRONTEND_URL || "localhost:3000";
 const router = express.Router();
 const resend = new Resend(process.env.RESEND_API_KEY);
 

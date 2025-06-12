@@ -48,6 +48,7 @@ router.post("/me/songs", requireJwtAuth_1.default, async (req, res, next) => {
         next(err);
     }
 });
+// Save existing song
 router.put("/me/songs/:_id", requireJwtAuth_1.default, async (req, res, next) => {
     const { song, userId } = req.body;
     if (!song || !userId) {

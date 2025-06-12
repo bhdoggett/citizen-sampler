@@ -8,6 +8,7 @@ const passport_1 = __importDefault(require("passport"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = __importDefault(require("../models/user"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const resend_1 = require("resend");
 const dotenv_1 = __importDefault(require("dotenv"));
 const keys_1 = __importDefault(require("../config/keys"));
 require("../strategies/jwt");
@@ -20,6 +21,7 @@ const syncIndexes = async () => {
 syncIndexes();
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const router = express_1.default.Router();
+const resend = new resend_1.Resend(process.env.RESEND_API_KEY);
 // Local signup
 router.post("/signup", async (req, res) => {
     const { username, email, password } = req.body;
@@ -38,24 +40,71 @@ router.post("/signup", async (req, res) => {
             lastLogin: new Date(),
             createdAt: new Date(),
             songs: [],
+            confirmed: false,
         });
         await newUser.save();
-        const token = jsonwebtoken_1.default.sign({ id: newUser._id }, keys_1.default.TOKEN_SECRET, {
-            expiresIn: "7d",
+        const emailToken = jsonwebtoken_1.default.sign({ id: newUser._id }, keys_1.default.EMAIL_TOKEN_SECRET, {
+            expiresIn: "15m",
         });
+        const sendConfirmationLink = async () => {
+            const { data, error } = await resend.emails.send({
+                from: "CitizenSampler <no-reply@citizensampler.com>",
+                to: [`${newUser.email}`],
+                subject: "Confirm Email",
+                html: `Click this link to confirm your email address: ${FRONTEND_URL}/confirm?token=${emailToken}.`,
+            });
+            if (error) {
+                return console.error({ error });
+            }
+            console.log({ data });
+        };
+        sendConfirmationLink();
         res.status(201).json({
-            message: "Signup successful",
-            token,
-            user: {
-                _id: newUser._id,
-                username: newUser.username,
-                displayName: newUser.displayName,
-            },
+            message: "Confirmation email sent. Check your inbox.",
         });
     }
     catch (err) {
         console.error("Signup error:", err);
         res.status(500).json({ message: "Internal server error" });
+    }
+});
+// in /api/confirm-email route:
+router.get("/confirm-email", async (req, res) => {
+    const { confirmToken } = req.query;
+    if (!confirmToken) {
+        res.status(400).json({ message: "Missing confirmation token" });
+        return;
+    }
+    console.log("confirmToken", confirmToken);
+    if (typeof confirmToken !== "string") {
+        res.status(400).json({ message: "Invalid or missing token" });
+        return;
+    }
+    try {
+        const payload = jsonwebtoken_1.default.verify(confirmToken, keys_1.default.EMAIL_TOKEN_SECRET);
+        console.log("payload", payload);
+        const user = await user_1.default.findById(payload.id);
+        if (!user) {
+            res.status(404).send("User not found");
+            return;
+        }
+        user.confirmed = true;
+        await user.save();
+        const token = jsonwebtoken_1.default.sign({ id: user._id }, keys_1.default.TOKEN_SECRET, {
+            expiresIn: "1hr",
+        });
+        res.status(200).json({
+            message: "Email Confirmed. Signup Successful.",
+            token,
+            user: {
+                _id: user._id,
+                username: user.username,
+                displayName: user.displayName,
+            },
+        });
+    }
+    catch (err) {
+        res.status(400).send("Invalid or expired confirmation link");
     }
 });
 // Local login

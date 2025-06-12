@@ -25,7 +25,7 @@ const requireJwtAuth = async (req, res, next) => {
             res.status(401).json({ message: "User not found" });
             return;
         }
-        req.user = user; // Make the user available in request handlers
+        req.user = user;
         next();
     }
     catch (err) {

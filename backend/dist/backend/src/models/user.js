@@ -42,6 +42,7 @@ exports.UserSchema = new mongoose_1.Schema({
             ref: "Song",
         },
     ],
+    confirmed: { type: Boolean },
 });
 const User = (0, mongoose_1.model)("User", exports.UserSchema);
 exports.default = User;

@@ -52,7 +52,7 @@ const Confirm = () => {
         onClick={() => router.push("/")}
         className="border-2 border-black py-2 px-1 mt-3 bg-slate-600 text-white font-bold shadow-sm shadow-slate-700"
       >
-        Go Make Music
+        {status === "error" ? "Back to Page" : "Go Make Music"}
       </button>
     </div>
   );
