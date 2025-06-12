@@ -3,20 +3,17 @@ import { useState, useEffect } from "react";
 import axios, { AxiosError } from "axios";
 import dotenv from "dotenv";
 import { useAuthContext } from "../../app/contexts/AuthContext";
+import { useUIContext } from "src/app/contexts/UIContext";
 dotenv.config();
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 type AuthDialogProps = {
-  setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
-  setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
   authIsSignup: boolean;
   setAuthIsSignup: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const AuthDialog: React.FC<AuthDialogProps> = ({
-  setShowDialog,
-  setHotKeysActive,
   authIsSignup,
   setAuthIsSignup,
 }) => {
@@ -27,6 +24,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null);
   const { setToken, setUserId, setUsername, setDisplayName, error, setError } =
     useAuthContext();
+  const { apiResponseMessageRef, setShowDialog } = useUIContext();
 
   const signup = async () => {
     try {
@@ -42,11 +40,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
           password,
         });
         if (result.status === 201) {
-          setToken(result.data.token);
-          setUserId(result.data.user._id);
-          setUsername(result.data.user.username);
-          setDisplayName(result.data.user.displayName);
-          setShowDialog(null);
+          console.log("result.data", result.data);
+          apiResponseMessageRef.current = result.data.message;
+          setShowDialog("api-response");
         }
       }
     } catch (err) {
@@ -113,8 +109,6 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         setError("An unexpected error occurred.");
       }
     }
-
-    setHotKeysActive(true);
   };
 
   // Set error to null when component unmounts

@@ -47,8 +47,8 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
 
     await newUser.save();
 
-    const token = jwt.sign({ id: newUser._id }, keys.TOKEN_SECRET!, {
-      expiresIn: "1hr",
+    const emailToken = jwt.sign({ id: newUser._id }, keys.EMAIL_TOKEN_SECRET!, {
+      expiresIn: "15m",
     });
 
     const sendConfirmationLink = async () => {
@@ -56,7 +56,7 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
         from: "CitizenSampler <no-reply@citizensampler.com>",
         to: [`${newUser.email}`],
         subject: "Confirm Email",
-        html: `Click this link to confirm your email address: ${FRONTEND_URL}/confirm?token=${token}.`,
+        html: `Click this link to confirm your email address: ${FRONTEND_URL}/confirm?token=${emailToken}.`,
       });
 
       if (error) {
@@ -69,13 +69,7 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
     sendConfirmationLink();
 
     res.status(201).json({
-      message: "Signup successful",
-      token,
-      user: {
-        _id: newUser._id,
-        username: newUser.username,
-        displayName: newUser.displayName,
-      },
+      message: "Confirmation email sent. Check your inbox.",
     });
   } catch (err) {
     console.error("Signup error:", err);
@@ -85,17 +79,24 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
 
 // in /api/confirm-email route:
 router.get("/confirm-email", async (req, res) => {
-  const { token } = req.query;
-  if (!token) return;
-  if (typeof token !== "string") {
-    res.status(400).send("Invalid or missing token");
+  const { confirmToken } = req.query;
+  if (!confirmToken) {
+    res.status(400).json({ message: "Missing confirmation token" });
+    return;
+  }
+
+  console.log("confirmToken", confirmToken);
+  if (typeof confirmToken !== "string") {
+    res.status(400).json({ message: "Invalid or missing token" });
     return;
   }
 
   try {
-    const payload = jwt.verify(token, keys.TOKEN_SECRET!) as { userId: string };
+    const payload = jwt.verify(confirmToken, keys.EMAIL_TOKEN_SECRET!) as {
+      id: string;
+    };
     console.log("payload", payload);
-    const user = await User.findById(payload.userId);
+    const user = await User.findById(payload.id);
     if (!user) {
       res.status(404).send("User not found");
       return;
@@ -104,9 +105,19 @@ router.get("/confirm-email", async (req, res) => {
     user.confirmed = true;
     await user.save();
 
-    res.redirect(
-      `${FRONTEND_URL}/?token=${token}&displayName=${user.displayName}&userId=${user._id}`
-    );
+    const token = jwt.sign({ id: user._id }, keys.TOKEN_SECRET!, {
+      expiresIn: "1hr",
+    });
+
+    res.status(200).json({
+      message: "Email Confirmed. Signup Successful.",
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        displayName: user.displayName,
+      },
+    });
   } catch (err) {
     res.status(400).send("Invalid or expired confirmation link");
   }
