@@ -62,8 +62,6 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
       if (error) {
         return console.error({ error });
       }
-
-      console.log({ data });
     };
 
     sendConfirmationLink();
@@ -85,7 +83,6 @@ router.get("/confirm-email", async (req, res) => {
     return;
   }
 
-  console.log("confirmToken", confirmToken);
   if (typeof confirmToken !== "string") {
     res.status(400).json({ message: "Invalid or missing token" });
     return;
@@ -95,7 +92,7 @@ router.get("/confirm-email", async (req, res) => {
     const payload = jwt.verify(confirmToken, keys.EMAIL_TOKEN_SECRET!) as {
       id: string;
     };
-    console.log("payload", payload);
+
     const user = await User.findById(payload.id);
     if (!user) {
       res.status(404).send("User not found");
@@ -105,13 +102,13 @@ router.get("/confirm-email", async (req, res) => {
     user.confirmed = true;
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, keys.TOKEN_SECRET!, {
+    const accessToken = jwt.sign({ id: user._id }, keys.TOKEN_SECRET!, {
       expiresIn: "1hr",
     });
 
     res.status(200).json({
-      message: "Email Confirmed. Signup Successful.",
-      token,
+      message: "Email Confirmed. You can now log in.",
+      token: accessToken,
       user: {
         _id: user._id,
         username: user.username,
@@ -130,6 +127,11 @@ router.post("/login", async (req, res, next) => {
     (err: any, user: any, info: { message: string }) => {
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: info.message });
+      if (!user.confirmed) {
+        return res.status(403).json({
+          message: "Please confirm your email before logging in.",
+        });
+      }
 
       // Update lastLogin
       user.lastLogin = new Date();

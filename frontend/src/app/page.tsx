@@ -100,7 +100,7 @@ export default function Home() {
                 setHotKeysActive={setHotKeysActive}
               />
             )}
-            {showDialog === "auth-dialogue" && (
+            {showDialog === "auth-dialog" && (
               <AuthDialog
                 authIsSignup={authIsSignup}
                 setAuthIsSignup={setAuthIsSignup}

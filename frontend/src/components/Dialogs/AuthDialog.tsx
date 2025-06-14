@@ -126,6 +126,8 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
       <span className="text-center text-lg font-bold mb-3">{error}</span>
       <button
         onClick={() => {
+          setIsLoading(false);
+          setPasswordsMatch(null);
           setError(null);
           setFormUsername("");
           setEmail("");
