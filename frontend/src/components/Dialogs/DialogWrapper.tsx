@@ -14,7 +14,7 @@ const DialogWrapper: React.FC<DialogWrapperProps> = ({ children }) => {
   const router = useRouter();
   const loginError = searchParams.get("loginError");
 
-  const handleCloseDialog = async () => {
+  const handleCloseDialog = () => {
     {
       if (loginError) {
         router.push("/");

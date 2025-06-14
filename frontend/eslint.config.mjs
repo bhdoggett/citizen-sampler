@@ -11,6 +11,17 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  // add require-await rule
+  {
+    rules: {
+      "require-await": "error",
+      "no-unused-vars": "off", // Disable no-unused-vars to avoid conflicts with TypeScript
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

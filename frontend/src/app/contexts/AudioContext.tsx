@@ -94,7 +94,6 @@ const AudioContextContext = createContext<AudioContextType | null>(null);
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // Select 8 random urls from the allLOCUrls array
-
   const selectRandomUrlEntries = (
     array: UrlEntry[] | string[],
     collection?: string
@@ -159,49 +158,40 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   };
 
-  //
+  // i removed try/catch
   const initLocSamplesFromAllCollections = () => {
-    try {
-      const selectedSamples = selectRandomUrlEntries(
-        allUrlsWithCollectionNames
-      ) as UrlEntry[];
+    const selectedSamples = selectRandomUrlEntries(
+      allUrlsWithCollectionNames
+    ) as UrlEntry[];
 
-      const locSampleData = selectedSamples.reduce(
-        (acc, sample, i) => {
-          const key = `pad-${i + 1}`;
-          acc[key] = initLocSampleData(key, sample.url, sample.collection);
-          return acc;
-        },
-        {} as Record<string, SampleTypeFE>
-      );
+    const locSampleData = selectedSamples.reduce(
+      (acc, sample, i) => {
+        const key = `pad-${i + 1}`;
+        acc[key] = initLocSampleData(key, sample.url, sample.collection);
+        return acc;
+      },
+      {} as Record<string, SampleTypeFE>
+    );
 
-      return locSampleData;
-    } catch (error) {
-      console.error("Error fetching samples:", error);
-      return {};
-    }
+    return locSampleData;
   };
 
+  // i removed try/catch
   const initLocSamplesFromOneCollection = (collection: string) => {
-    try {
-      const selectedSamples = selectRandomUrlEntries(
-        getCollectionArrayFromName(collection)
-      ) as string[];
+    const selectedSamples = selectRandomUrlEntries(
+      getCollectionArrayFromName(collection)
+    ) as string[];
 
-      const locSampleData = selectedSamples.reduce(
-        (acc, url, i) => {
-          const key = `pad-${i + 1}`;
-          acc[key] = initLocSampleData(key, url, collection);
-          return acc;
-        },
-        {} as Record<string, SampleTypeFE>
-      );
+    const locSampleData = selectedSamples.reduce(
+      (acc, url, i) => {
+        const key = `pad-${i + 1}`;
+        acc[key] = initLocSampleData(key, url, collection);
+        return acc;
+      },
+      {} as Record<string, SampleTypeFE>
+    );
 
-      return locSampleData;
-    } catch (error) {
-      console.error("Error fetching samples:", error);
-      return {};
-    }
+    return locSampleData;
   };
 
   const initKitSampleData = (
@@ -285,7 +275,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // Function to create a sampler with FX chain.
   // If using with Tone.Offline to download WAV stems, the third argument should be "true".
-  const makeSamplerWithFX = async (
+  const makeSamplerWithFX = (
     sampleId: string,
     sampleUrl: string,
     stems: boolean = false
@@ -445,7 +435,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   }, []); // <===== if this empty dependency array is removed, the samplers are loaded with every update in allSampleData state
 
   // Upload allSampleData to localStorage.samples when allSampleData state changes.
-  // Changes in state coming from SampleSettingsFE are debounced in that component.
+  // Changes in state coming from SampleSettings are debounced in that component.
   useEffect(() => {
     localStorage.setItem("samples", JSON.stringify(allSampleData));
   }, [allSampleData]);

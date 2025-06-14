@@ -62,7 +62,7 @@ export default function Home() {
             />
           </div>
         </div>
-        <div className="flex flex-col items-center mt-2">
+        <footer className="flex flex-col items-center mt-2">
           <p className="text-sm">
             Inspired and made possible by
             <Link
@@ -78,7 +78,7 @@ export default function Home() {
               Library of Congress
             </Link>
           </p>
-        </div>
+        </footer>
       </div>
       <div>
         {/* --Menu Dialogues-- */}

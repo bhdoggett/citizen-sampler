@@ -10,7 +10,7 @@ type WaveformProps = {
 const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const waveSurferRef = useRef<WaveSurfer | null>(null);
-  const regionsPluginRef = useRef(RegionsPlugin.create());
+  const regionsPluginRef = useRef<RegionsPlugin | null>(null);
   const {
     // waveformIsPlaying,
     selectedSampleId,
@@ -26,9 +26,14 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       waveSurferRef.current.destroy();
     }
 
+    if (regionsPluginRef.current) {
+      regionsPluginRef.current.destroy();
+    }
+
+    regionsPluginRef.current = RegionsPlugin.create();
+
     if (!containerRef.current) return;
 
-    const regionsPlugin = regionsPluginRef.current;
     const wavesurfer = WaveSurfer.create({
       container: containerRef.current,
       waveColor: "blue",
@@ -37,7 +42,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       barWidth: NaN,
       backend: "WebAudio",
       normalize: true,
-      plugins: [regionsPlugin],
+      plugins: [regionsPluginRef.current],
     });
 
     wavesurfer.load(audioUrl);
@@ -50,9 +55,10 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       waveSurferRef.current = wavesurfer;
 
       // Clear any preexisting region
-      regionsPlugin.clearRegions();
+      if (!regionsPluginRef.current) return;
+      regionsPluginRef.current.clearRegions();
 
-      const region = regionsPlugin.addRegion({
+      const region = regionsPluginRef.current.addRegion({
         start: regionStart,
         end: regionEnd,
         drag: true,
@@ -70,8 +76,9 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     });
 
     // Ensure only one region can exist at a time
-    regionsPlugin.on("region-created", (newRegion) => {
-      regionsPlugin.getRegions().forEach((region) => {
+    regionsPluginRef.current.on("region-created", (newRegion) => {
+      if (!regionsPluginRef.current) return;
+      regionsPluginRef.current.getRegions().forEach((region) => {
         if (region.id !== newRegion.id) {
           region.remove();
         }
@@ -91,7 +98,12 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
 
   // Zoom functionality
   useEffect(() => {
-    if (!waveSurferRef.current || !scrollRef.current) return;
+    if (
+      !waveSurferRef.current ||
+      !scrollRef.current ||
+      !regionsPluginRef.current
+    )
+      return;
 
     const ws = waveSurferRef.current;
     const scrollContainer = scrollRef.current;

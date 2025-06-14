@@ -58,15 +58,12 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     currentEvent.startTime = Tone.getTransport().ticks;
     currentEvent.duration = 0;
     currentEvent.note = note;
-    // if (loopIsPlaying && isRecording) {
-
-    // }
   };
 
   const handleRelease = () => {
     if (!sampler) return;
     const currentEvent = samplersRef.current[selectedSampleId]?.currentEvent;
-    if (!currentEvent) return; // safety
+    if (!currentEvent) return;
 
     // Stop scheduled release
     if (scheduledReleaseTimeoutRef.current) {

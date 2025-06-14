@@ -54,8 +54,38 @@ const useDownloadWavStems = () => {
       );
 
       const { sampler } = offlineSamplerWithFx;
-      await sampler.loaded;
-      if (sampler.loaded) console.log("sampler loaded");
+
+      // // Wait for sampler to be fully loaded
+      // if (!sampler.loaded) {
+      //   await new Promise<void>((resolve) => {
+      //     const checkLoaded = () => {
+      //       if (sampler.loaded) {
+      //         resolve();
+      //       } else {
+      //         setTimeout(checkLoaded, 10);
+      //       }
+      //     };
+      //     checkLoaded();
+      //   });
+      // }
+
+      // await new Promise<void>((resolve, reject) => {
+      //   const timeout = setTimeout(
+      //     () => reject(new Error("Sampler load timeout")),
+      //     5000
+      //   );
+      //   const checkLoaded = () => {
+      //     if (sampler.loaded) {
+      //       clearTimeout(timeout);
+      //       resolve();
+      //     } else {
+      //       setTimeout(checkLoaded, 10);
+      //     }
+      //   };
+      //   checkLoaded();
+      // });
+
+      console.log("sampler loaded", sampler.loaded, id);
 
       const toneEvents = events
         .filter((event) => event.startTime !== null)
@@ -74,7 +104,9 @@ const useDownloadWavStems = () => {
               velocity: event.velocity,
             },
           ];
-        });
+        })
+        .filter(Boolean);
+
       console.log("offline tone events:", toneEvents);
 
       const part = new Tone.Part((time, event) => {
@@ -101,6 +133,7 @@ const useDownloadWavStems = () => {
       }, toneEvents);
 
       part.start(0);
+
       transport.start();
     }, renderDuration);
 
@@ -109,7 +142,7 @@ const useDownloadWavStems = () => {
 
   // Translate audio buffer into a downloadable wave file
   const translateBufferToWavUrl = async (toneBuffer: Tone.ToneAudioBuffer) => {
-    const wavData = toWav(toneBuffer);
+    const wavData = await toWav(toneBuffer);
     const blob = new Blob([wavData], { type: "audio/wav" });
     const url = URL.createObjectURL(blob);
     return url;
@@ -123,14 +156,16 @@ const useDownloadWavStems = () => {
       return;
     }
 
-    const wavUrl = translateBufferToWavUrl(toneBuffer as Tone.ToneAudioBuffer);
+    const wavUrl = await translateBufferToWavUrl(
+      toneBuffer as Tone.ToneAudioBuffer
+    );
     if (!wavUrl) {
       console.warn(`No WAV URL generated for for ID ${id} at loop ${loop}`);
       return;
     }
     const link = document.createElement("a");
 
-    link.href = await wavUrl;
+    link.href = wavUrl;
     link.download = `${id}-${loop}.wav`;
     document.body.appendChild(link);
     link.click();
@@ -138,12 +173,27 @@ const useDownloadWavStems = () => {
   };
 
   // Download all wav files - grouped in one function for button click
-  const downloadAllWavs = () => {
-    allIds.forEach((id) => {
-      loops.forEach((loop) => {
-        downloadWav(id, loop as LoopName);
-      });
-    });
+  // const downloadAllWavs = async () => {
+  //   const downloadPromises = allIds.flatMap((id) =>
+  //     loops.flatMap((loop) => downloadWav(id, loop as LoopName))
+  //   );
+  //   await Promise.all(downloadPromises);
+  //   Tone.start();
+  // };
+  const downloadAllWavs = async () => {
+    // Process each ID one at a time
+    for (const id of allIds) {
+      // Process each loop one at a time for this ID
+      for (const loop of loops) {
+        try {
+          await downloadWav(id, loop as LoopName);
+          // Optional: add a small delay between renders
+          // await new Promise((resolve) => setTimeout(resolve, 100));
+        } catch (error) {
+          console.error(`Failed to download ${id}-${loop}:`, error);
+        }
+      }
+    }
     Tone.start();
   };
 

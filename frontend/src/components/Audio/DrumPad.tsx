@@ -26,7 +26,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     currentLoop,
   } = useAudioContext();
   // const sampleDataRef = useRef(allSampleData[id]);
-  const currentEvent = samplersRef.current[id]?.currentEvent;
+
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -35,9 +35,13 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const { hotKeysActive } = useUIContext();
   const padNum = id.split("-")[1];
   const padKey = drumKeys[Number(padNum) - 1];
+  const getCurrentEvent = useCallback(
+    () => samplersRef.current[id]?.currentEvent,
+    [id, samplersRef]
+  );
 
   const handlePress = useCallback(() => {
-    console.log(allSampleData);
+    const currentEvent = getCurrentEvent();
     if (!sampler) return;
 
     // Stop scheduled release
@@ -74,7 +78,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   }, [
     allSampleData,
     baseNote,
-    currentEvent,
+    getCurrentEvent,
     id,
     isRecording,
     loopIsPlaying,
@@ -83,6 +87,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   ]);
 
   const handleRelease = useCallback(() => {
+    const currentEvent = getCurrentEvent();
     if (!sampler) return;
 
     if (!sampleIsPlaying) return;
@@ -132,7 +137,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   }, [
     allSampleData,
     baseNote,
-    currentEvent,
+    getCurrentEvent,
     id,
     isRecording,
     loopIsPlaying,
@@ -152,7 +157,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       if (!hotKeysActive || e.metaKey || e.repeat) return;
       if (e.key === padKey) {
         e.preventDefault();
-        // keyIsDownRef.current = true;
         handlePress();
       }
     },
@@ -193,6 +197,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     return arrowMap[key] || key;
   };
 
+  // Activate hotkeys for pad interaction
+  // Add event listeners for keydown and keyup events
+  // and clean up on unmount or when hotKeysActive changes
   useEffect(() => {
     if (hotKeysActive) {
       window.addEventListener("keydown", handleKeyDown);
@@ -227,7 +234,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
           startTime: eventTime,
           duration: event.duration,
           note: event.note,
-          // velocity: event.velocity,
+          velocity: event.velocity,
         },
       ];
     });

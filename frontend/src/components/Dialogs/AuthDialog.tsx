@@ -4,6 +4,7 @@ import axios, { AxiosError } from "axios";
 import dotenv from "dotenv";
 import { useAuthContext } from "../../app/contexts/AuthContext";
 import { useUIContext } from "src/app/contexts/UIContext";
+import Spinner from "../Spinner";
 dotenv.config();
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -22,6 +23,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   const [password, setPassword] = useState<string>("");
   const [confirmationPassword, setConfirmationPassword] = useState<string>("");
   const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { setToken, setUserId, setUsername, setDisplayName, error, setError } =
     useAuthContext();
   const { apiResponseMessageRef, setShowDialog } = useUIContext();
@@ -92,6 +94,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
+      setIsLoading(true);
       if (authIsSignup) {
         await signup();
       } else {
@@ -204,12 +207,16 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         {authIsSignup && passwordsMatch === false && "Passwords do not match"}
       </span>
 
-      <button
-        type="submit"
-        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
-      >
-        {authIsSignup ? "Create Account" : "Log In"}
-      </button>
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <button
+          type="submit"
+          className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
+        >
+          {authIsSignup ? "Create Account" : "Log In"}
+        </button>
+      )}
       <a
         href={`${API_BASE_URL}/auth/google`}
         className="flex mx-auto justify-center text-sm mt-5 hover:text-slate-200"

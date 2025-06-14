@@ -38,7 +38,7 @@ const Menu: React.FC = () => {
     setHotKeysActive,
   } = useUIContext();
   const { songTitle, allLoopSettings, allSampleData } = useAudioContext();
-  const downloadWavStems = useDownloadWavStems();
+  const downloadAllWavStems = useDownloadWavStems();
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -103,7 +103,7 @@ const Menu: React.FC = () => {
   };
 
   const handleDownloadWavStems = async () => {
-    downloadWavStems();
+    await downloadAllWavStems();
     Tone.start();
     setMenuOpen(false);
   };
@@ -139,7 +139,6 @@ const Menu: React.FC = () => {
       )}
 
       {/* --Menu Button-- */}
-
       <button
         className="absolute top-4 flex items-center justify-center w-8 h-8 bg-slate-500 text-white border border-slate-700 hover:bg-slate-700 transition-colors"
         onClick={() => setMenuOpen((prev) => !prev)}
