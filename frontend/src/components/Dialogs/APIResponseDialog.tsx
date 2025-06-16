@@ -5,11 +5,11 @@ const APIResponseDialog: React.FC = () => {
   const { apiResponseMessageRef } = useUIContext();
 
   return (
-    <>
-      <h2 className="text-center text-lg font-bold mb-3">
+    <div className="mr-3">
+      <h2 className="text-center text-lg font-bold">
         {apiResponseMessageRef.current}
       </h2>
-    </>
+    </div>
   );
 };
 

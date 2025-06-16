@@ -13,6 +13,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const LoadSong: React.FC = () => {
   const [songTitles, setSongTitles] = useState<string[]>([]);
   const [selectedSong, setSelectedSong] = useState<string>("");
+  const [hasCheckedForSongs, setHasCheckedForSongs] = useState<boolean>(false);
   const { setSongTitle, setAllSampleData, setAllLoopSettings } =
     useAudioContext();
   const { isAuthenticated, token } = useAuthContext();
@@ -26,21 +27,35 @@ const LoadSong: React.FC = () => {
         },
       });
 
+      // If no songs are found, set songTitles to an empty array and show a message
+      if (result.data.message === "No songs found") {
+        console.warn(result.data.message);
+        setSongTitles([]);
+        setSelectedSong("");
+        apiResponseMessageRef.current = result.data.message;
+        setShowDialog("api-response");
+        return;
+      }
+
+      // If we have songs, set the song titles and select the first one
       if (result.status === 200) {
         const titles = result.data;
+
         setSongTitles(titles);
         setSelectedSong(titles[0]);
       }
     } catch (error) {
       console.error("Error fetching song titles:", error);
+    } finally {
+      setHasCheckedForSongs(true);
     }
-  }, [setSongTitles, setSelectedSong, token]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      getSongtitles();
-    }
-  }, [isAuthenticated, getSongtitles]);
+  }, [
+    setSongTitles,
+    setSelectedSong,
+    token,
+    setShowDialog,
+    apiResponseMessageRef,
+  ]);
 
   const handleLoadSong = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -85,6 +100,12 @@ const LoadSong: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      getSongtitles();
+    }
+  }, [getSongtitles, isAuthenticated]);
+
   // Set error to null when component unmounts
   useEffect(() => {
     return () => {
@@ -92,6 +113,12 @@ const LoadSong: React.FC = () => {
     };
   }, []);
 
+  // Don't render anything until we've checked for songs
+  if (!hasCheckedForSongs) {
+    return null;
+  }
+
+  // Only render the form if there are songs
   return (
     songTitles.length > 0 && (
       <form onSubmit={handleLoadSong}>
@@ -116,7 +143,7 @@ const LoadSong: React.FC = () => {
 
         <button
           type="submit"
-          className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-fit"
+          className="flex mx-auto justify-center border border-black mt-4 px-2 py-1 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-fit"
         >
           Load
         </button>

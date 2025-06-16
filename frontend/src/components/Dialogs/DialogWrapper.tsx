@@ -57,7 +57,7 @@ const DialogWrapper: React.FC<DialogWrapperProps> = ({ children }) => {
         >
           ✖
         </button>
-        <div className="flex flex-col items-center border-2 border-black bg-slate-800 m-3 p-4 shadow-md shadow-slate-800 text-white min-w-[400px]">
+        <div className="flex flex-col items-center border-2 border-black bg-slate-800 m-3 p-5 shadow-md shadow-slate-800 text-white min-w-[400px]">
           {children}
         </div>
       </div>

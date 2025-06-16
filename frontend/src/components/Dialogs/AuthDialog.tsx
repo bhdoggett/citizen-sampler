@@ -109,8 +109,8 @@ const AuthDialog: React.FC = () => {
   }, []);
 
   return error ? (
-    <>
-      <span className="text-center text-lg font-bold mb-3">{error}</span>
+    <div className="mx-3">
+      <span className="text-center text-lg font-bold">{error}</span>
       {error === "Please confirm your email before logging in." ? (
         <button
           onClick={() => {
@@ -143,7 +143,7 @@ const AuthDialog: React.FC = () => {
           Try Again?
         </button>
       )}
-    </>
+    </div>
   ) : (
     <form onSubmit={handleSubmit}>
       <h2 className="text-center text-lg font-bold mb-3">

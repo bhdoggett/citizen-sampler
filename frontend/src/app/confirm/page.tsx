@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 // import { useAuthContext } from "../contexts/AuthContext";
 import { useUIContext } from "../contexts/UIContext";
 import Spinner from "src/components/Spinner";
+import ResendConfirmation from "src/components/Dialogs/ResendConfirmation";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -17,6 +18,8 @@ const Confirm = () => {
   );
   // const { setToken, setUserId, setUsername, setDisplayName, setAuthIsSignup } =
   //   useAuthContext();
+  const [showResendConfirmation, setShowResendConfirmation] =
+    useState<boolean>(false);
   const { setShowDialog } = useUIContext();
   const router = useRouter();
 
@@ -48,10 +51,9 @@ const Confirm = () => {
         setMessage(result.data.message);
         setStatus("success");
         setShowDialog("auth-dialog");
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
-        setMessage("Confirmation failed. The link may be invalid or expired.");
+        const error = err as AxiosError<{ message: string }>;
+        setMessage(error.response?.data.message || "Confirmation failed.");
         setStatus("error");
       }
     };
@@ -59,24 +61,48 @@ const Confirm = () => {
     confirmEmail();
   }, []);
 
+  useEffect(() => {
+    if (status === "success") {
+      // If confirmation is successful, redirect to home page after a delay
+      const timer = setTimeout(() => {
+        router.push("/");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    if (message === "Confirmation link expired") {
+      setShowResendConfirmation(true);
+    } else {
+      setShowResendConfirmation(false);
+    }
+  }, [message]);
+
   return (
-    <div className="flex p-4 max-w-md mx-auto text-center">
+    <div className="flex flex-col p-4 max-w-md mx-auto text-center">
       <h1 className="text-xl font-semibold mb-2">
         {status === "loading" ? (
           <Spinner />
         ) : status === "success" ? (
           "🙌 Success 🙌"
         ) : (
-          "Error ❌"
+          "❌ Error ❌"
         )}
       </h1>
-      <p>{message}</p>
-      <button
-        onClick={() => router.push("/")}
-        className="border-2 border-black py-2 px-1 mt-3 bg-slate-600 text-white font-bold shadow-sm shadow-slate-700"
-      >
-        {status === "error" ? "Back to Page" : "Go Make Music"}
-      </button>
+      <p className="mb-3">{message}</p>
+      {showResendConfirmation ? (
+        <div className="flex flex-col items-center border-2 border-black bg-slate-800 pt-5 pb-4 shadow-md shadow-slate-800 text-white">
+          <ResendConfirmation />
+        </div>
+      ) : (
+        <button
+          onClick={() => router.push("/")}
+          className="border-2 border-black py-2 px-1 bg-slate-600 text-white font-bold shadow-sm shadow-slate-700"
+        >
+          {status === "error" ? "Back to Page" : "Login"}
+        </button>
+      )}
     </div>
   );
 };

@@ -121,11 +121,13 @@ router.get(
     }
 
     const songs = user.songs as unknown as SongDoc[];
+    if (!songs || songs.length === 0) {
+      res.status(200).json({ message: "No songs found" });
+      return;
+    }
 
     const titles = songs.map((song: SongDoc) => song.title);
-    if (titles.length === 0) {
-      res.status(404).json({ message: "No songs found" });
-    }
+
     res.status(200).json(titles);
   }
 );
