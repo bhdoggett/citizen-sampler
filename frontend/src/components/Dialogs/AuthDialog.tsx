@@ -9,15 +9,7 @@ dotenv.config();
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-type AuthDialogProps = {
-  authIsSignup: boolean;
-  setAuthIsSignup: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-const AuthDialog: React.FC<AuthDialogProps> = ({
-  authIsSignup,
-  setAuthIsSignup,
-}) => {
+const AuthDialog: React.FC = () => {
   const [formUsername, setFormUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -26,6 +18,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { setToken, setUserId, setUsername, setDisplayName, error, setError } =
     useAuthContext();
+  const { authIsSignup, setAuthIsSignup } = useAuthContext();
   const { apiResponseMessageRef, setShowDialog } = useUIContext();
 
   const signup = async () => {
@@ -74,8 +67,6 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         setUsername(result.data.user.username);
         setDisplayName(result.data.user.displayName);
         setShowDialog(null);
-      } else {
-        setError(result.data.message);
       }
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
@@ -84,7 +75,13 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
         error.response.data &&
         error.response.data.message
       ) {
-        setError(error.response.data.message);
+        // Check for expired confirmation specifically
+        if (error.response.data.message === "Confirmation link expired") {
+          setShowDialog("resend-confirmation");
+          return;
+        } else {
+          setError(error.response.data.message);
+        }
       } else {
         setError("An unexpected error occurred.");
       }
@@ -93,25 +90,15 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    try {
-      setIsLoading(true);
-      if (authIsSignup) {
-        await signup();
-      } else {
-        await login();
-      }
-    } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        setError(error.response.data.message);
-      } else {
-        setError("An unexpected error occurred.");
-      }
+    setIsLoading(true);
+
+    if (authIsSignup) {
+      await signup();
+    } else {
+      await login();
     }
+
+    setIsLoading(false);
   };
 
   // Set error to null when component unmounts
@@ -124,20 +111,38 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   return error ? (
     <>
       <span className="text-center text-lg font-bold mb-3">{error}</span>
-      <button
-        onClick={() => {
-          setIsLoading(false);
-          setPasswordsMatch(null);
-          setError(null);
-          setFormUsername("");
-          setEmail("");
-          setPassword("");
-          setConfirmationPassword("");
-        }}
-        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
-      >
-        Try Again?
-      </button>
+      {error === "Please confirm your email before logging in." ? (
+        <button
+          onClick={() => {
+            setShowDialog("resend-confirmation");
+            setIsLoading(false);
+            setPasswordsMatch(null);
+            setError(null);
+            setFormUsername("");
+            setEmail("");
+            setPassword("");
+            setConfirmationPassword("");
+          }}
+          className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
+        >
+          Resend Confirmation Email
+        </button>
+      ) : (
+        <button
+          onClick={() => {
+            setIsLoading(false);
+            setPasswordsMatch(null);
+            setError(null);
+            setFormUsername("");
+            setEmail("");
+            setPassword("");
+            setConfirmationPassword("");
+          }}
+          className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
+        >
+          Try Again?
+        </button>
+      )}
     </>
   ) : (
     <form onSubmit={handleSubmit}>

@@ -15,8 +15,9 @@ import UIWarning from "../components/Dialogs/UIWarning";
 import Transport from "../components/Audio/Transport";
 import Loop from "../components/Audio/Loop";
 import { useUIContext } from "./contexts/UIContext";
-import { useAuthContext } from "./contexts/AuthContext";
+
 import { useAudioContext } from "./contexts/AudioContext";
+import ResendConfirmation from "src/components/Dialogs/ResendConfirmation";
 
 const SampleSettings = dynamic(
   () => import("../components/Audio/SampleSettings"),
@@ -34,9 +35,7 @@ const PitchGrid = dynamic(() => import("../components/Audio/PitchGrid"), {
 });
 
 export default function Home() {
-  const { showDialog, setShowDialog, confirmActionRef, setHotKeysActive } =
-    useUIContext();
-  const { authIsSignup, setAuthIsSignup } = useAuthContext();
+  const { showDialog } = useUIContext();
   const { samplersRef, selectedSampleId } = useAudioContext();
   // useTransportHotKeys(hotKeysActive);
 
@@ -88,31 +87,11 @@ export default function Home() {
             {showDialog === "choose-sample" && <ChooseSample />}
             {showDialog === "load-song" && <LoadSong />}
             {showDialog === "save-new-song" && <SaveNewSong />}
-            {showDialog === "collection-menu" && (
-              <CollectionMenu
-                setShowDialog={setShowDialog}
-                setHotKeysActive={setHotKeysActive}
-              />
-            )}
-            {showDialog === "kit-menu" && (
-              <KitMenu
-                setShowDialog={setShowDialog}
-                setHotKeysActive={setHotKeysActive}
-              />
-            )}
-            {showDialog === "auth-dialog" && (
-              <AuthDialog
-                authIsSignup={authIsSignup}
-                setAuthIsSignup={setAuthIsSignup}
-              />
-            )}
-            {showDialog === "confirm-action" && (
-              <ConfirmActionDialog
-                confirmActionRef={confirmActionRef}
-                setShowDialog={setShowDialog}
-                setHotKeysActive={setHotKeysActive}
-              />
-            )}
+            {showDialog === "collection-menu" && <CollectionMenu />}
+            {showDialog === "kit-menu" && <KitMenu />}
+            {showDialog === "auth-dialog" && <AuthDialog />}
+            {showDialog === "resend-confirmation" && <ResendConfirmation />}
+            {showDialog === "confirm-action" && <ConfirmActionDialog />}
             {showDialog === "api-response" && <APIResponseDialog />}
             {showDialog === "ui-warning" && <UIWarning />}
           </DialogWrapper>

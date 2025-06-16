@@ -5,12 +5,7 @@ import { collectionNames } from "src/lib/loc_collections";
 import { useUIContext } from "src/app/contexts/UIContext";
 import { SampleTypeFE } from "src/types/audioTypesFE";
 
-type CollectionMenuProps = {
-  setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
-  setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-const CollectionMenu: React.FC<CollectionMenuProps> = () => {
+const CollectionMenu: React.FC = () => {
   const {
     initLocSamplesFromAllCollections,
     initLocSamplesFromOneCollection,

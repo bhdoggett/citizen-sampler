@@ -8,12 +8,7 @@ import {
   getDrumMachineKeyByName,
 } from "src/lib/drumMachines";
 
-type KitMenuProps = {
-  setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
-  setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-const KitMenu: React.FC<KitMenuProps> = () => {
+const KitMenu: React.FC = () => {
   const {
     initKitSamples,
     cleanupSampler,

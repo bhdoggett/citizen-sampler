@@ -32,6 +32,19 @@ const Confirm = () => {
           `${API_BASE_URL}/auth/confirm-email?confirmToken=${confirmToken}`
         );
         // router.push(`/confirm?token=${result.data.token}`);
+        if (result.status !== 200) {
+          if (result.data.message === "Confirmation link expired") {
+            setStatus("error");
+            setMessage(
+              "Confirmation link expired. Please request a new confirmation link."
+            );
+            setShowDialog("resend-confirmation");
+            return;
+          }
+          setMessage(result.data.message || "Confirmation failed.");
+
+          return;
+        }
         setMessage(result.data.message);
         setStatus("success");
         setShowDialog("auth-dialog");

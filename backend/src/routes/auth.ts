@@ -3,7 +3,7 @@ import passport from "passport";
 import jwt from "jsonwebtoken";
 import User, { UserDoc } from "../models/user";
 import bcrypt from "bcryptjs";
-import requireJwtAuth from "src/middleware/requireJwtAuth";
+// import requireJwtAuth from "src/middleware/requireJwtAuth";
 import { Resend } from "resend";
 import dotenv from "dotenv";
 import keys from "../config/keys";
@@ -21,6 +21,19 @@ syncIndexes();
 const FRONTEND_URL = process.env.FRONTEND_URL || "localhost:3000";
 const router = express.Router();
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+const sendConfirmationLink = async (user: UserDoc, token: string) => {
+  const { data, error } = await resend.emails.send({
+    from: "CitizenSampler <no-reply@citizensampler.com>",
+    to: [`${user.email}`],
+    subject: "Confirm Email",
+    html: `Click this link to confirm your email address: ${FRONTEND_URL}/confirm?token=${token}.`,
+  });
+
+  if (error) {
+    return console.error({ error });
+  }
+};
 
 // Local signup
 router.post("/signup", async (req: Request, res: Response): Promise<void> => {
@@ -48,23 +61,10 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
     await newUser.save();
 
     const emailToken = jwt.sign({ id: newUser._id }, keys.EMAIL_TOKEN_SECRET!, {
-      expiresIn: "15m",
+      expiresIn: "10s",
     });
 
-    const sendConfirmationLink = async () => {
-      const { data, error } = await resend.emails.send({
-        from: "CitizenSampler <no-reply@citizensampler.com>",
-        to: [`${newUser.email}`],
-        subject: "Confirm Email",
-        html: `Click this link to confirm your email address: ${FRONTEND_URL}/confirm?token=${emailToken}.`,
-      });
-
-      if (error) {
-        return console.error({ error });
-      }
-    };
-
-    sendConfirmationLink();
+    sendConfirmationLink(newUser, emailToken);
 
     res.status(201).json({
       message: "Confirmation email sent. Check your inbox.",
@@ -75,7 +75,7 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// in /api/confirm-email route:
+// Confirm email
 router.get("/confirm-email", async (req, res) => {
   const { confirmToken } = req.query;
   if (!confirmToken) {
@@ -83,16 +83,24 @@ router.get("/confirm-email", async (req, res) => {
     return;
   }
 
+  // Ensure confirmToken is a string
   if (typeof confirmToken !== "string") {
     res.status(400).json({ message: "Invalid or missing token" });
     return;
   }
 
+  if (!keys.EMAIL_TOKEN_SECRET) {
+    res.status(500).json({ message: "Email token secret not configured" });
+    return;
+  }
+
+  // Verify the token
   try {
     const payload = jwt.verify(confirmToken, keys.EMAIL_TOKEN_SECRET!) as {
       id: string;
     };
 
+    // Find the user by ID
     const user = await User.findById(payload.id);
     if (!user) {
       res.status(404).send("User not found");
@@ -116,7 +124,55 @@ router.get("/confirm-email", async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(400).send("Invalid or expired confirmation link");
+    const error = err as Error;
+    if (error.name === "TokenExpiredError") {
+      res.status(400).json({ message: "Confirmation link expired" });
+      return;
+    }
+    // Make this consistent with JSON format too
+    return res
+      .status(400)
+      .json({ message: "Invalid or expired confirmation link" });
+  }
+});
+
+// Resend confirmation email
+router.post("/resend-confirmation", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    res.status(400).json({ message: "Email is required" });
+    return;
+  }
+
+  try {
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    // Check if user is already confirmed
+    if (user.confirmed) {
+      res.status(400).json({ message: "Email already confirmed" });
+      return;
+    }
+
+    // Generate new confirmation token
+    const confirmToken = jwt.sign({ id: user._id }, keys.EMAIL_TOKEN_SECRET!, {
+      expiresIn: "15m",
+    });
+
+    // Send confirmation email (implement your email sending logic)
+    await sendConfirmationLink(user, confirmToken);
+
+    res.status(200).json({
+      message: "Confirmation email resent successfully",
+    });
+  } catch (err) {
+    console.error("Error resending confirmation:", err);
+    res.status(500).json({ message: "Failed to resend confirmation email" });
   }
 });
 

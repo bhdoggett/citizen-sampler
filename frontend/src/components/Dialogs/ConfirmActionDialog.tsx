@@ -1,17 +1,9 @@
 "use client";
-import type { ConfirmAction } from "../../app/contexts/UIContext";
+import { useUIContext } from "../../app/contexts/UIContext";
 
-type ConfirmActionDialogProps = {
-  confirmActionRef: React.RefObject<ConfirmAction>;
-  setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
-  setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
-};
+const ConfirmActionDialog: React.FC = () => {
+  const { setShowDialog, confirmActionRef, setHotKeysActive } = useUIContext();
 
-const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
-  confirmActionRef,
-  setShowDialog,
-  setHotKeysActive,
-}) => {
   if (!confirmActionRef.current) return null;
 
   return (
