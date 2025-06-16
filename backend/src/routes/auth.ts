@@ -31,7 +31,8 @@ const sendConfirmationLink = async (user: UserDoc, token: string) => {
   });
 
   if (error) {
-    return console.error({ error });
+    console.error({ error });
+    return;
   }
 };
 
@@ -130,9 +131,8 @@ router.get("/confirm-email", async (req, res) => {
       return;
     }
     // Make this consistent with JSON format too
-    return res
-      .status(400)
-      .json({ message: "Invalid or expired confirmation link" });
+    res.status(400).json({ message: "Invalid or expired confirmation link" });
+    return;
   }
 });
 
@@ -240,22 +240,5 @@ router.get(
     )(req, res, next);
   }
 );
-
-// // Check login status
-// router.get("/me", requireJwtAuth, (req, res) => {
-//   if (req.isAuthenticated()) {
-//     res.json(req.user);
-//   } else {
-//     res.status(401).json({ message: "Not logged in" });
-//   }
-// });
-
-// I DON"T THINK I NEED THIS?? Logging out on frontend by deleteing jwt
-// Logout
-router.post("/logout", (req, res) => {
-  req.logout(() => {
-    res.json({ message: "Logged out" });
-  });
-});
 
 export default router;

@@ -123,7 +123,7 @@ const AuthDialog: React.FC = () => {
             setPassword("");
             setConfirmationPassword("");
           }}
-          className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
+          className="flex mx-auto w-fit justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
         >
           Resend Confirmation Email
         </button>
