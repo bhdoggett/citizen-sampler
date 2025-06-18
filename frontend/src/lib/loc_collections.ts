@@ -34,7 +34,7 @@ import {
 export const collectionNames = [
   "All",
   "Inventing Entertainment",
-  "Variety State Sound Recordngs and Motion Pictures",
+  "Variety State Sound Recordings and Motion Pictures",
   "The Joe Smith Collection",
   "Free Music Archive",
   "MusicBox Project",
@@ -54,7 +54,7 @@ export const getCollectionArrayFromName = (collection: string) => {
   switch (collection) {
     case "Inventing Entertainment":
       return inventingEntertainment;
-    case "Variety State Sound Recordngs and Motion Pictures":
+    case "Variety State Sound Recordings and Motion Pictures":
       return varietyStageSoundRecordingsAndMotionPictures;
     case "The Joe Smith Collection":
       return theJoeSmithCollection;
@@ -90,7 +90,7 @@ export const getCollectionArrayFromName = (collection: string) => {
 export const getCollectionNameFromArray = (array: string[]): string => {
   if (array === inventingEntertainment) return "Inventing Entertainment";
   if (array === varietyStageSoundRecordingsAndMotionPictures)
-    return "Variety State Sound Recordngs and Motion Pictures";
+    return "Variety State Sound Recordings and Motion Pictures";
   if (array === theJoeSmithCollection) return "The Joe Smith Collection";
   if (array === freeMusicArchive) return "Free Music Archive";
   if (array === musicBoxProject) return "MusicBox Project";

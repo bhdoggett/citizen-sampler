@@ -4,11 +4,42 @@ import requireJwtAuth from "../middleware/requireJwtAuth";
 import User, { UserDoc } from "../models/user";
 import Song, { SongDoc } from "../models/song";
 import dotenv from "dotenv";
+import keys from "../config/keys";
+import fs from "fs";
+import { google } from "googleapis";
 dotenv.config();
+
+const router = express.Router();
 
 const KIT_AUDIO_BASE_URL = process.env.KIT_AUDIO_BASE_URL;
 
-const router = express.Router();
+const { GOOGLE_APPLICATION_CREDENTIALS_BASE64, GOOGLE_DRIVE_DRUMS_FOLDER_ID } =
+  keys;
+
+if (!GOOGLE_APPLICATION_CREDENTIALS_BASE64) {
+  console.error("Missing GOOGLE_APPLICATION_CREDENTIALS_BASE64");
+  process.exit(1); // Exit early if the env variable isn't set
+}
+
+if (!GOOGLE_DRIVE_DRUMS_FOLDER_ID) {
+  console.error("Missing GOOGLE_DRIVE_DRUMS_FOLDER_ID");
+  process.exit(1); // Exit early if the env variable isn't set
+}
+
+const credentials = Buffer.from(
+  GOOGLE_APPLICATION_CREDENTIALS_BASE64,
+  "base64"
+).toString("utf-8");
+
+// Write the credentials to a temporary file
+fs.writeFileSync("/tmp/credentials.json", credentials);
+
+const auth = new google.auth.GoogleAuth({
+  keyFile: "/tmp/credentials.json",
+  scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+});
+
+const drive = google.drive({ version: "v3", auth });
 
 // Save New Song
 router.post(
@@ -160,19 +191,33 @@ router.get(
   }
 );
 
+// Get drumMachine audio from Google Drive
 router.get("/drums/:filename", async (req: Request, res: Response) => {
-  const filename = req.params.filename;
-  const fullUrl = `${KIT_AUDIO_BASE_URL}/${encodeURIComponent(filename)}`;
+  const { filename } = req.params;
+
   try {
-    const audioResponse = await axios.get(fullUrl, { responseType: "stream" });
+    const list = await drive.files.list({
+      q: `name='${filename}' and mimeType='audio/mpeg'`,
+      fields: "files(id, name)",
+      pageSize: 1,
+    });
+
+    const file = list.data.files?.[0];
+    if (!file?.id) {
+      res.status(404).send("File not found or missing ID");
+      return;
+    }
+
+    const driveRes = await drive.files.get(
+      { fileId: file.id, alt: "media" },
+      { responseType: "stream" }
+    );
 
     res.set("Content-Type", "audio/mpeg");
-
-    audioResponse.data.pipe(res);
+    driveRes.data.pipe(res);
   } catch (err) {
-    const error = err as AxiosError<{ message: string }>;
-    console.error("Error fetching audio:", error.message);
-    res.status(500).send("Error fetching audio file");
+    console.error("Drive error", err);
+    res.status(500).send("Error fetching file");
   }
 });
 

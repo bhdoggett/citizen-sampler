@@ -18,9 +18,9 @@ const syncIndexes = async () => {
 
 syncIndexes();
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "localhost:3000";
+const { FRONTEND_URL, RESEND_API_KEY } = keys;
 const router = express.Router();
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(RESEND_API_KEY);
 
 const sendConfirmationLink = async (user: UserDoc, token: string) => {
   const { data, error } = await resend.emails.send({

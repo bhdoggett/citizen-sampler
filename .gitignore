@@ -45,3 +45,6 @@ progress.txt
 
 # Local Netlify folder
 .netlify
+
+#Google Cloud Functions
+citizensampler-29d8a100ae41.json

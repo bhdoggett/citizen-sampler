@@ -1066,311 +1066,311 @@ export const allUrlsWithCollectionNames = [
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/A-study-in-mimicry--vaudeville-sketch_00694051_001_00-00-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/A-study-in-mimicry--vaudeville-sketch_00694051_002_00-00-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/A-study-in-mimicry--vaudeville-sketch_00694051_003_00-01-01.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/A-study-in-mimicry--vaudeville-sketch_00694051_004_00-01-35.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/A-study-in-mimicry--vaudeville-sketch_00694051_005_00-01-49.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/A-study-in-mimicry--vaudeville-sketch_00694051_006_00-02-21.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/A-study-in-mimicry--vaudeville-sketch_00694051_007_00-02-51.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/A-study-in-mimicry--vaudeville-sketch_00694051_008_00-03-21.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Good-bye-Broadway-hello-France--baritone-and-chorus-with-orchestra_2018619095_001_00-00-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Good-bye-Broadway-hello-France--baritone-and-chorus-with-orchestra_2018619095_002_00-00-30.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Good-bye-Broadway-hello-France--baritone-and-chorus-with-orchestra_2018619095_003_00-01-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Good-bye-Broadway-hello-France--baritone-and-chorus-with-orchestra_2018619095_004_00-01-30.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Good-bye-Broadway-hello-France--baritone-and-chorus-with-orchestra_2018619095_005_00-02-01.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Good-bye-Broadway-hello-France--baritone-and-chorus-with-orchestra_2018619095_006_00-02-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Good-bye-Broadway-hello-France--baritone-and-chorus-with-orchestra_2018619095_007_00-03-01.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Gunga-Din_00694068_001_00-00-02.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Gunga-Din_00694068_002_00-00-32.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Gunga-Din_00694068_003_00-01-02.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Gunga-Din_00694068_004_00-02-02.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Gunga-Din_00694068_005_00-02-32.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Gunga-Din_00694068_006_00-03-02.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Gunga-Din_00694068_007_00-03-32.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Gunga-Din_00694068_008_00-04-03.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Happy-tho-married--monologue--Desperate-Desmond--drama--rehearsing-the-orchestra--vaudeville-specialty_2018620420_001_00-00-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Happy-tho-married--monologue--Desperate-Desmond--drama--rehearsing-the-orchestra--vaudeville-specialty_2018620420_002_00-00-30.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Happy-tho-married--monologue--Desperate-Desmond--drama--rehearsing-the-orchestra--vaudeville-specialty_2018620420_003_00-01-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Happy-tho-married--monologue--Desperate-Desmond--drama--rehearsing-the-orchestra--vaudeville-specialty_2018620420_004_00-01-30.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Happy-tho-married--monologue--Desperate-Desmond--drama--rehearsing-the-orchestra--vaudeville-specialty_2018620420_005_00-02-30.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Happy-tho-married--monologue--Desperate-Desmond--drama--rehearsing-the-orchestra--vaudeville-specialty_2018620420_006_00-03-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Happy-tho-married--monologue--Desperate-Desmond--drama--rehearsing-the-orchestra--vaudeville-specialty_2018620420_007_00-04-01.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Happy-tho-married--monologue--Desperate-Desmond--drama--rehearsing-the-orchestra--vaudeville-specialty_2018620420_008_00-04-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/I-love-the-name-of-Mary--tenor-and-chorus-with-orchestra_2018620419_001_00-00-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/I-love-the-name-of-Mary--tenor-and-chorus-with-orchestra_2018620419_002_00-00-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/I-love-the-name-of-Mary--tenor-and-chorus-with-orchestra_2018620419_003_00-01-01.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/I-love-the-name-of-Mary--tenor-and-chorus-with-orchestra_2018620419_004_00-01-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/I-love-the-name-of-Mary--tenor-and-chorus-with-orchestra_2018620419_005_00-02-02.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/I-love-the-name-of-Mary--tenor-and-chorus-with-orchestra_2018620419_006_00-02-32.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/I-love-the-name-of-Mary--tenor-and-chorus-with-orchestra_2018620419_007_00-03-02.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/I-love-the-name-of-Mary--tenor-and-chorus-with-orchestra_2018620419_008_00-03-32.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/In-Siam--Wars-of-the-world--NY-Hippodrome--tenor-and-chorus-orchestra-accompaniment_2018620417_001_00-00-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/In-Siam--Wars-of-the-world--NY-Hippodrome--tenor-and-chorus-orchestra-accompaniment_2018620417_002_00-00-30.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/In-Siam--Wars-of-the-world--NY-Hippodrome--tenor-and-chorus-orchestra-accompaniment_2018620417_003_00-01-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/In-Siam--Wars-of-the-world--NY-Hippodrome--tenor-and-chorus-orchestra-accompaniment_2018620417_004_00-01-30.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/In-Siam--Wars-of-the-world--NY-Hippodrome--tenor-and-chorus-orchestra-accompaniment_2018620417_005_00-02-01.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/In-Siam--Wars-of-the-world--NY-Hippodrome--tenor-and-chorus-orchestra-accompaniment_2018620417_006_00-02-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/In-Siam--Wars-of-the-world--NY-Hippodrome--tenor-and-chorus-orchestra-accompaniment_2018620417_007_00-03-01.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/In-Siam--Wars-of-the-world--NY-Hippodrome--tenor-and-chorus-orchestra-accompaniment_2018620417_008_00-03-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Laughing-record--Henrys-music-lesson-Porters-on-a-Pullman-train_2018620416_001_00-00-05.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Laughing-record--Henrys-music-lesson-Porters-on-a-Pullman-train_2018620416_002_00-00-35.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Laughing-record--Henrys-music-lesson-Porters-on-a-Pullman-train_2018620416_003_00-01-06.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Laughing-record--Henrys-music-lesson-Porters-on-a-Pullman-train_2018620416_004_00-01-36.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Laughing-record--Henrys-music-lesson-Porters-on-a-Pullman-train_2018620416_005_00-02-06.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Laughing-record--Henrys-music-lesson-Porters-on-a-Pullman-train_2018620416_006_00-02-36.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Laughing-record--Henrys-music-lesson-Porters-on-a-Pullman-train_2018620416_007_00-03-06.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Recollections-of-1861-65--trumpet-solo-with-orchestra-Loves-old-sweet-song--saxophone-with-orchestra_2018620418_001_00-00-01.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Recollections-of-1861-65--trumpet-solo-with-orchestra-Loves-old-sweet-song--saxophone-with-orchestra_2018620418_002_00-00-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Recollections-of-1861-65--trumpet-solo-with-orchestra-Loves-old-sweet-song--saxophone-with-orchestra_2018620418_003_00-01-03.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Recollections-of-1861-65--trumpet-solo-with-orchestra-Loves-old-sweet-song--saxophone-with-orchestra_2018620418_004_00-01-34.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Recollections-of-1861-65--trumpet-solo-with-orchestra-Loves-old-sweet-song--saxophone-with-orchestra_2018620418_005_00-02-06.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Recollections-of-1861-65--trumpet-solo-with-orchestra-Loves-old-sweet-song--saxophone-with-orchestra_2018620418_006_00-02-37.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Recollections-of-1861-65--trumpet-solo-with-orchestra-Loves-old-sweet-song--saxophone-with-orchestra_2018620418_007_00-03-08.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Recollections-of-1861-65--trumpet-solo-with-orchestra-Loves-old-sweet-song--saxophone-with-orchestra_2018620418_008_00-03-39.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Saxophone-sobs--saxophone-with-orchestra_2018620426_001_00-00-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Saxophone-sobs--saxophone-with-orchestra_2018620426_002_00-00-30.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Saxophone-sobs--saxophone-with-orchestra_2018620426_003_00-01-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Saxophone-sobs--saxophone-with-orchestra_2018620426_004_00-01-30.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Saxophone-sobs--saxophone-with-orchestra_2018620426_005_00-02-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Saxophone-sobs--saxophone-with-orchestra_2018620426_006_00-02-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/Saxophone-sobs--saxophone-with-orchestra_2018620426_007_00-03-01.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/The-Arkansas-traveler-descriptive-scene--Flanagans-troubles-in-a-restaurant--vaudeville-specialty_2018620415_001_00-00-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/The-Arkansas-traveler-descriptive-scene--Flanagans-troubles-in-a-restaurant--vaudeville-specialty_2018620415_002_00-00-30.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/The-Arkansas-traveler-descriptive-scene--Flanagans-troubles-in-a-restaurant--vaudeville-specialty_2018620415_003_00-01-00.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/The-Arkansas-traveler-descriptive-scene--Flanagans-troubles-in-a-restaurant--vaudeville-specialty_2018620415_004_00-01-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/The-Arkansas-traveler-descriptive-scene--Flanagans-troubles-in-a-restaurant--vaudeville-specialty_2018620415_005_00-02-01.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/The-Arkansas-traveler-descriptive-scene--Flanagans-troubles-in-a-restaurant--vaudeville-specialty_2018620415_006_00-02-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/The-Arkansas-traveler-descriptive-scene--Flanagans-troubles-in-a-restaurant--vaudeville-specialty_2018620415_007_00-03-01.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-variety-stage/The-Arkansas-traveler-descriptive-scene--Flanagans-troubles-in-a-restaurant--vaudeville-specialty_2018620415_008_00-03-31.wav",
-    collection: "Variety State Sound Recordngs and Motion Pictures",
+    collection: "Variety State Sound Recordings and Motion Pictures",
   },
   {
     url: "https://s3.amazonaws.com/citizen-dj-assets.labs.loc.gov/audio/samplepacks/loc-joe-smith/Off-the-record-interview-with-Abe-Somer-1986-07-31_jsmith000001_001_00-34-33.wav",
