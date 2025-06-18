@@ -4,10 +4,11 @@ import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import * as Tone from "tone";
 import { Frequency } from "tone/build/esm/core/type/Units";
-import quantize from "../../app/functions/quantize";
+// import quantize from "../../app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
 import { drumKeys } from "src/lib/constants/drumKeys";
+import getScheduleEvents from "src/app/functions/getScheduleEvents";
 
 type DrumPadProps = {
   id: string;
@@ -174,6 +175,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     [hotKeysActive, handleRelease, padKey]
   );
 
+  // Get the color of the pad based on its mute/solo settings
   const getPadColor = () => {
     if (!allSampleData[id] || !allSampleData[id].settings) return;
     if (allSampleData[id].settings.mute) return "bg-red-400";
@@ -181,12 +183,14 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     return "bg-slate-400";
   };
 
+  // Get the active style based on whether the sample is playing
   const getActiveStyle = () => {
     return sampleIsPlaying
       ? "brightness-75 saturate-150 transition-all duration-100"
       : "brightness-100 saturate-100 transition-all duration-300";
   };
 
+  // Convert arrow keys to symbols for display
   const getKeySymbol = (key: string): string => {
     const arrowMap: Record<string, string> = {
       ArrowLeft: "←",
@@ -215,29 +219,49 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     };
   }, [hotKeysActive, handleKeyDown, handleKeyUp]);
 
-  // Schedule playback of sampler play events
+  // **** Schedule playback of sampler play events ****
   useEffect(() => {
-    const sampleData = allSampleData[id];
-
     if (!loopIsPlaying || allSampleData[id].events[currentLoop].length === 0)
       return;
 
-    const events = sampleData.events[currentLoop].map((event) => {
-      if (!event.startTime) return;
-      const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
-      const eventTime = sampleData.settings.quantize
-        ? quantize(startTimeInSeconds, sampleData.settings.quantVal)
-        : startTimeInSeconds;
-      return [
-        eventTime,
-        {
-          startTime: eventTime,
-          duration: event.duration,
-          note: event.note,
-          velocity: event.velocity,
-        },
-      ];
-    });
+    // const sampleData = allSampleData[id];
+
+    // const events = sampleData.events[currentLoop].map((event) => {
+    //   if (!event.startTime) return;
+
+    //   // Convert startTime from ticks to seconds
+    //   const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
+
+    //   // If quantize === true, quantize the start time
+    //   // Otherwise, use the start time as is
+    //   let eventTime = sampleData.settings.quantize
+    //     ? quantize(startTimeInSeconds, sampleData.settings.quantVal)
+    //     : startTimeInSeconds;
+
+    //   // If an event is quantied to the loop end, wrap it to the loop start
+    //   if (eventTime === Tone.Time(Tone.getTransport().loopEnd).toSeconds()) {
+    //     eventTime = Tone.Time(Tone.getTransport().loopStart).toSeconds();
+    //   }
+
+    //   return [
+    //     eventTime,
+    //     {
+    //       startTime: eventTime,
+    //       duration: event.duration,
+    //       note: event.note,
+    //       velocity: event.velocity,
+    //     },
+    //   ];
+    // });
+
+    // // Filter out undefined events and remove events that occur at the same start time
+    // // This is a common issue with quantization
+    // const eventsNoDuplicates = events.filter((event, index) => {
+    //   if (event?.[0] === events[index - 1]?.[0]) return false;
+    //   return true;
+    // });
+
+    const scheduleEvents = getScheduleEvents(allSampleData, id, currentLoop);
 
     const part = new Tone.Part((time, event) => {
       if (!sampler) return;
@@ -266,7 +290,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
           setSampleIsPlaying(false);
         }, actualDuration * 1000);
       }
-    }, events);
+    }, scheduleEvents);
 
     part.start(0);
 

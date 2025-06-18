@@ -2,6 +2,7 @@
 import * as Tone from "tone";
 import { useAudioContext } from "../contexts/AudioContext";
 import quantize from "../functions/quantize";
+import getScheduleEvents from "../functions/getScheduleEvents";
 import toWav from "audiobuffer-to-wav";
 import type { LoopName } from "../../../../shared/types/audioTypes";
 
@@ -21,15 +22,19 @@ const useDownloadWavStems = () => {
 
     if (events.length === 0) return null;
 
-    // Find max end time for this sample
+    // Format schedule events for Tone.Part
+    const scheduleEvents = getScheduleEvents(allSampleData, id, loop);
+
+    // Find max end time of the rendered audio based on duration of scheduled events
     let maxEndTime = 0;
-    for (const event of events) {
-      if (event.startTime !== null && event.duration !== null) {
-        const eventStart = Tone.Ticks(event.startTime).toSeconds();
+
+    for (const event of scheduleEvents) {
+      if (event[1].startTime !== null && event[1].duration !== null) {
+        const eventStart = Tone.Ticks(event[1].startTime).toSeconds();
         const quantizedStart = settings.quantize
           ? quantize(eventStart, settings.quantVal as number)
           : eventStart;
-        const eventEnd = quantizedStart + event.duration;
+        const eventEnd = quantizedStart + event[1].duration;
         if (eventEnd > maxEndTime) {
           maxEndTime = eventEnd;
         }
@@ -55,59 +60,7 @@ const useDownloadWavStems = () => {
 
       const { sampler } = offlineSamplerWithFx;
 
-      // // Wait for sampler to be fully loaded
-      // if (!sampler.loaded) {
-      //   await new Promise<void>((resolve) => {
-      //     const checkLoaded = () => {
-      //       if (sampler.loaded) {
-      //         resolve();
-      //       } else {
-      //         setTimeout(checkLoaded, 10);
-      //       }
-      //     };
-      //     checkLoaded();
-      //   });
-      // }
-
-      // await new Promise<void>((resolve, reject) => {
-      //   const timeout = setTimeout(
-      //     () => reject(new Error("Sampler load timeout")),
-      //     5000
-      //   );
-      //   const checkLoaded = () => {
-      //     if (sampler.loaded) {
-      //       clearTimeout(timeout);
-      //       resolve();
-      //     } else {
-      //       setTimeout(checkLoaded, 10);
-      //     }
-      //   };
-      //   checkLoaded();
-      // });
-
       console.log("sampler loaded", sampler.loaded, id);
-
-      const toneEvents = events
-        .filter((event) => event.startTime !== null)
-        .map((event) => {
-          if (!event.startTime) return;
-          const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
-          const eventTime = settings.quantize
-            ? quantize(startTimeInSeconds, settings.quantVal)
-            : startTimeInSeconds;
-          return [
-            eventTime,
-            {
-              startTime: eventTime,
-              duration: event.duration,
-              note: event.note,
-              velocity: event.velocity,
-            },
-          ];
-        })
-        .filter(Boolean);
-
-      console.log("offline tone events:", toneEvents);
 
       const part = new Tone.Part((time, event) => {
         const { start, end } = settings;
@@ -130,7 +83,7 @@ const useDownloadWavStems = () => {
             event.velocity
           );
         }
-      }, toneEvents);
+      }, scheduleEvents);
 
       part.start(0);
 
