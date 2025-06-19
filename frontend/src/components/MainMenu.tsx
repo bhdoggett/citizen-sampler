@@ -138,12 +138,12 @@ const Menu: React.FC = () => {
 
       {/* Info Section */}
       {isAuthenticated && (
-        <div className="flex justify-between bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-2 border-slate-600 shadow-lg overflow-hidden">
-          <div className="flex items-center divide-x divide-slate-500 h-7">
+        <div className="flex justify-between h-8 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-300 border-2 border-black shadow-inner shadow-slate-600 overflow-hidden ">
+          <div className="flex items-center divide-x-2 divide-black h-full">
             {displayName && (
               <div className="px-1 py-1 max-w-24 relative group">
                 <p
-                  className="text-xs font-bold text-white tracking-wide truncate"
+                  className="text-xs font-bold tracking-wide truncate"
                   title={displayName}
                 >
                   {displayName}
@@ -158,10 +158,7 @@ const Menu: React.FC = () => {
 
             {songTitle && (
               <div className="px-1 py-1 max-w-32 relative group">
-                <p
-                  className="text-xs font-semibold text-slate-200 truncate"
-                  title={songTitle}
-                >
+                <p className="text-xs font-semibold truncate" title={songTitle}>
                   {songTitle}
                 </p>
                 {/* Tooltip */}
@@ -178,7 +175,7 @@ const Menu: React.FC = () => {
       <div ref={menuRef}>
         {/* Menu Button */}
         <button
-          className="group relative flex items-center ml-1 justify-center w-8 h-8 bg-slate-600 hover:bg-slate-500 text-white border border-slate-500 hover:border-slate-400 transition-all duration-200 shadow-md hover:shadow-lg "
+          className="group relative flex items-center ml-1 justify-center w-8 h-8 bg-slate-500 hover:bg-slate-600 text-white border border-black  transition-all duration-200 shadow-sm shadow-slate-500 hover:shadow-md hover:shadow-slate-500 "
           onClick={() => setMenuOpen((prev) => !prev)}
           aria-label="Menu"
         >

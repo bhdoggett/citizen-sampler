@@ -27,7 +27,8 @@ const ChooseSample: React.FC = () => {
     makeSamplerWithFX,
     samplersRef,
   } = useAudioContext();
-  const { setShowDialog } = useUIContext();
+  const { setShowDialog, makeBeatsButtonPressed, setMakeBeatsButtonPressed } =
+    useUIContext();
   const [type, setType] = useState<"loc" | "kit" | null>(null);
   const [sampleGroup, setSampleGroup] = useState<string | null>(null);
   const [samplesArray, setSamplesArray] = useState<string[]>([]);
@@ -122,7 +123,7 @@ const ChooseSample: React.FC = () => {
       url,
       false
     );
-
+    if (!makeBeatsButtonPressed) setMakeBeatsButtonPressed(false);
     setShowDialog(null);
   };
 

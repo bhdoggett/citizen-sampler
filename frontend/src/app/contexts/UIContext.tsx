@@ -10,6 +10,8 @@ export type ConfirmAction = {
 } | null;
 
 type UIContextType = {
+  makeBeatsButtonPressed: boolean;
+  setMakeBeatsButtonPressed: React.Dispatch<React.SetStateAction<boolean>>;
   confirmActionRef: React.RefObject<ConfirmAction>;
   apiResponseMessageRef: React.RefObject<string | null>;
   uiWarningMessageRef: React.RefObject<string | null>;
@@ -29,10 +31,14 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({
   const uiWarningMessageRef = useRef<string | null>(null);
   const [showDialog, setShowDialog] = useState<string | null>(null);
   const [hotKeysActive, setHotKeysActive] = useState<boolean>(true);
+  const [makeBeatsButtonPressed, setMakeBeatsButtonPressed] =
+    useState<boolean>(false);
 
   return (
     <UIContext.Provider
       value={{
+        makeBeatsButtonPressed,
+        setMakeBeatsButtonPressed,
         confirmActionRef,
         apiResponseMessageRef,
         uiWarningMessageRef,

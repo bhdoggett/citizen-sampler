@@ -13,6 +13,7 @@ import {
   SampleSettingsFE,
   AllLoopSettingsFE,
 } from "src/types/audioTypesFE";
+import { useUIContext } from "./UIContext";
 import { LoopName } from "../../../../shared/types/audioTypes";
 import { SamplerWithFX } from "src/types/SamplerWithFX";
 import { CustomSampler } from "src/types/CustomSampler";
@@ -158,7 +159,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   };
 
-  // i removed try/catch
+  // Initialize loc samples data from all collections
   const initLocSamplesFromAllCollections = () => {
     const selectedSamples = selectRandomUrlEntries(
       allUrlsWithCollectionNames
@@ -176,7 +177,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     return locSampleData;
   };
 
-  // i removed try/catch
+  // Initialize loc samples data from one collection
   const initLocSamplesFromOneCollection = (collection: string) => {
     const selectedSamples = selectRandomUrlEntries(
       getCollectionArrayFromName(collection)
@@ -194,6 +195,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     return locSampleData;
   };
 
+  // Format state data for a given kit sample
   const initKitSampleData = (
     id: string,
     url: string,
@@ -231,6 +233,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     };
   };
 
+  // Initialize kit samples data for a given drum machine
   const initKitSamples = (
     machineId: DrumMachineId
   ): Record<string, SampleTypeFE> => {
@@ -272,6 +275,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       {} as Record<string, SampleTypeFE>
     );
   };
+
+  const { makeBeatsButtonPressed, setMakeBeatsButtonPressed } = useUIContext();
 
   // Function to create a sampler with FX chain.
   // If using with Tone.Offline to download WAV stems, the third argument should be "true".
@@ -316,6 +321,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
               velocity: 1,
             },
           });
+          if (makeBeatsButtonPressed) {
+            setMakeBeatsButtonPressed(false);
+          }
         },
         onerror: (err) => {
           console.error(`Error loading sample: ${sampleId}`, err);

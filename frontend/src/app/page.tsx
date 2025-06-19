@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import MainMenu from "../components/MainMenu";
@@ -35,10 +34,9 @@ const PitchGrid = dynamic(() => import("../components/Audio/PitchGrid"), {
 });
 
 export default function Home() {
-  const { showDialog } = useUIContext();
+  const { showDialog, makeBeatsButtonPressed, setMakeBeatsButtonPressed } =
+    useUIContext();
   const { samplersRef, selectedSampleId } = useAudioContext();
-  const [makeBeatsPressed, setMakeBeatsPressed] = useState<boolean>(false);
-  // useTransportHotKeys(hotKeysActive);
 
   return (
     <>
@@ -52,7 +50,7 @@ export default function Home() {
 
           {/* Audio Components Container - This gets blurred */}
           <div className="relative">
-            <div className={`${!makeBeatsPressed ? "blur-sm" : ""}`}>
+            <div className={`${!makeBeatsButtonPressed ? "blur-sm" : ""}`}>
               <div className="flex">
                 <SampleSettings />
                 <div className="flex flex-col w-1/6">
@@ -71,10 +69,10 @@ export default function Home() {
             </div>
 
             {/* Make Beats Button - Positioned over the blurred content but NOT blurred */}
-            {!makeBeatsPressed && (
+            {!makeBeatsButtonPressed && (
               <div className="absolute inset-0 flex items-center justify-center z-10">
                 <button
-                  onClick={() => setMakeBeatsPressed(true)}
+                  onClick={() => setMakeBeatsButtonPressed(true)}
                   className="border-2 border-black px-2 py-1 bg-slate-600 hover:bg-slate-700 shadow-md shadow-slate-700 text-white font-bold transition-colors"
                 >
                   Make Beats
