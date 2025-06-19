@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import MainMenu from "../components/MainMenu";
@@ -15,7 +16,6 @@ import UIWarning from "../components/Dialogs/UIWarning";
 import Transport from "../components/Audio/Transport";
 import Loop from "../components/Audio/Loop";
 import { useUIContext } from "./contexts/UIContext";
-
 import { useAudioContext } from "./contexts/AudioContext";
 import ResendConfirmation from "src/components/Dialogs/ResendConfirmation";
 
@@ -37,10 +37,12 @@ const PitchGrid = dynamic(() => import("../components/Audio/PitchGrid"), {
 export default function Home() {
   const { showDialog } = useUIContext();
   const { samplersRef, selectedSampleId } = useAudioContext();
+  const [makeBeatsPressed, setMakeBeatsPressed] = useState<boolean>(false);
   // useTransportHotKeys(hotKeysActive);
 
   return (
     <>
+      {/* Main Content */}
       <div className="flex flex-col justify-center items-center my-5">
         <div className="w-[600px] lg:w-[800px] md:w-[800px] sm:w-[700px] xs:w-[600px]">
           <div className="flex justify-between">
@@ -79,9 +81,25 @@ export default function Home() {
           </p>
         </footer>
       </div>
-      <div>
-        {/* --Menu Dialogues-- */}
 
+      {/* Blur Overlay and Button - Only show when makeBeatsPressed is false */}
+      {!makeBeatsPressed && (
+        <div className="fixed inset-0 z-30 flex items-center justify-center">
+          {/* BACKDROP */}
+          <div className="absolute inset-0 bg-slate-300 bg-opacity-10 backdrop-blur-sm z-30" />
+
+          {/* BUTTON */}
+          <button
+            onClick={() => setMakeBeatsPressed(true)}
+            className="relative z-40 px-6 py-3 border border-black shadow-md shadow-slate-800 bg-slate-400 text-white hover:bg-slate-600 rounded"
+          >
+            Make Beats
+          </button>
+        </div>
+      )}
+
+      {/* Menu Dialogues */}
+      <div>
         {showDialog && (
           <DialogWrapper>
             {showDialog === "choose-sample" && <ChooseSample />}
