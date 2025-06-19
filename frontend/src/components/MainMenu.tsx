@@ -172,135 +172,131 @@ const Menu: React.FC = () => {
         </div>
       </div>
 
-      {/* Menu Button */}
-      <button
-        className="group relative flex items-center ml-1 justify-center w-8 h-8 bg-slate-600 hover:bg-slate-500 text-white border border-slate-500 hover:border-slate-400 transition-all duration-200 shadow-md hover:shadow-lg "
-        onClick={() => setMenuOpen((prev) => !prev)}
-        aria-label="Menu"
-      >
-        <div className="relative w-5 h-4">
-          <span
-            className={`absolute left-0 h-0.5 w-5 bg-white transform transition-all duration-300 ease-in-out ${
-              menuOpen ? "top-2 rotate-45" : "top-0"
-            }`}
-          />
-          <span
-            className={`absolute left-0 top-2 h-0.5 w-5 bg-white  transition-all duration-200 ease-in-out ${
-              menuOpen ? "opacity-0 scale-75" : "opacity-100 scale-100"
-            }`}
-          />
-          <span
-            className={`absolute left-0 h-0.5 w-5 bg-white  transform transition-all duration-300 ease-in-out ${
-              menuOpen ? "top-2 -rotate-45" : "top-4"
-            }`}
-          />
-        </div>
-      </button>
-
-      {/* Optional: Subtle bottom border for extra definition */}
-      <div className="h-0.5 bg-gradient-to-r from-transparent via-slate-400 to-transparent opacity-50"></div>
-
-      {/* --Menu Options-- */}
-
-      {menuOpen && (
-        <div
-          ref={menuRef}
-          className="absolute right-0 top-0 mt-12 bg-white border  shadow-lg z-20 min-w-[150px]"
+      <div ref={menuRef}>
+        {/* Menu Button */}
+        <button
+          className="group relative flex items-center ml-1 justify-center w-8 h-8 bg-slate-600 hover:bg-slate-500 text-white border border-slate-500 hover:border-slate-400 transition-all duration-200 shadow-md hover:shadow-lg "
+          onClick={() => setMenuOpen((prev) => !prev)}
+          aria-label="Menu"
         >
-          <ul className="relative flex flex-col main-menu text-sm">
-            {isAuthenticated ? (
-              <>
-                <li
-                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-                  onClick={() => {
-                    confirmActionRef.current = {
-                      message: "Are you sure you want to log out?",
-                      buttonText: "See Ya!",
-                      action: logout,
-                    };
-                    setShowDialog("confirm-action");
-                    setMenuOpen(false);
-                  }}
-                >
-                  Log Out
-                </li>
-                <li
-                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-                  onClick={handleSaveSong}
-                >
-                  Save
-                </li>
-                <li
-                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-                  onClick={() => {
-                    setShowDialog("save-new-song");
-                    setMenuOpen(false);
-                  }}
-                >
-                  Save As
-                </li>
-                <li
-                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-                  onClick={() => {
-                    setShowDialog("load-song");
-                    setMenuOpen(false);
-                  }}
-                >
-                  Load Song
-                </li>
-              </>
-            ) : (
-              <>
-                <li
-                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-                  onClick={() => {
-                    setAuthIsSignup(true);
-                    setShowDialog("auth-dialog");
-                    setMenuOpen(false);
-                  }}
-                >
-                  Sign Up
-                </li>
-                <li
-                  className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-                  onClick={() => {
-                    setAuthIsSignup(false);
-                    setShowDialog("auth-dialog");
-                    setMenuOpen(false);
-                  }}
-                >
-                  Login
-                </li>
-              </>
-            )}
+          <div className="relative w-5 h-4">
+            <span
+              className={`absolute left-0 h-0.5 w-5 bg-white transform transition-all duration-300 ease-in-out ${
+                menuOpen ? "top-2 rotate-45" : "top-0"
+              }`}
+            />
+            <span
+              className={`absolute left-0 top-2 h-0.5 w-5 bg-white  transition-all duration-200 ease-in-out ${
+                menuOpen ? "opacity-0 scale-75" : "opacity-100 scale-100"
+              }`}
+            />
+            <span
+              className={`absolute left-0 h-0.5 w-5 bg-white  transform transition-all duration-300 ease-in-out ${
+                menuOpen ? "top-2 -rotate-45" : "top-4"
+              }`}
+            />
+          </div>
+        </button>
 
-            <li
-              className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-              onClick={() => {
-                setShowDialog("collection-menu");
-                setMenuOpen(false);
-              }}
-            >
-              Load Collection
-            </li>
-            <li
-              className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-              onClick={() => {
-                setShowDialog("kit-menu");
-                setMenuOpen(false);
-              }}
-            >
-              Load Drum Kit
-            </li>
-            <li
-              className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-              onClick={handleDownloadWavStems}
-            >
-              Download Stems
-            </li>
-          </ul>
-        </div>
-      )}
+        {/* --Menu Options-- */}
+
+        {menuOpen && (
+          <div className="absolute right-0 top-0 mt-12 bg-white border  shadow-md shadow-slate-500 z-20 min-w-[150px]">
+            <ul className="relative flex flex-col main-menu text-sm">
+              {isAuthenticated ? (
+                <>
+                  <li
+                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    onClick={() => {
+                      confirmActionRef.current = {
+                        message: "Are you sure you want to log out?",
+                        buttonText: "See Ya!",
+                        action: logout,
+                      };
+                      setShowDialog("confirm-action");
+                      setMenuOpen(false);
+                    }}
+                  >
+                    Log Out
+                  </li>
+                  <li
+                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    onClick={handleSaveSong}
+                  >
+                    Save
+                  </li>
+                  <li
+                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    onClick={() => {
+                      setShowDialog("save-new-song");
+                      setMenuOpen(false);
+                    }}
+                  >
+                    Save As
+                  </li>
+                  <li
+                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    onClick={() => {
+                      setShowDialog("load-song");
+                      setMenuOpen(false);
+                    }}
+                  >
+                    Load Song
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li
+                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    onClick={() => {
+                      setAuthIsSignup(true);
+                      setShowDialog("auth-dialog");
+                      setMenuOpen(false);
+                    }}
+                  >
+                    Sign Up
+                  </li>
+                  <li
+                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    onClick={() => {
+                      setAuthIsSignup(false);
+                      setShowDialog("auth-dialog");
+                      setMenuOpen(false);
+                    }}
+                  >
+                    Login
+                  </li>
+                </>
+              )}
+
+              <li
+                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                onClick={() => {
+                  setShowDialog("collection-menu");
+                  setMenuOpen(false);
+                }}
+              >
+                Load Collection
+              </li>
+              <li
+                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                onClick={() => {
+                  setShowDialog("kit-menu");
+                  setMenuOpen(false);
+                }}
+              >
+                Load Drum Kit
+              </li>
+              <li
+                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                onClick={handleDownloadWavStems}
+              >
+                Download Stems
+              </li>
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

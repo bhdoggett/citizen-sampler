@@ -46,7 +46,7 @@ export default function Home() {
         <div className="w-[600px] lg:w-[800px] md:w-[800px] sm:w-[700px] xs:w-[600px]">
           {/* Header - NOT blurred */}
           <div className="flex justify-between">
-            <h1 className="text-5xl font-bold block mb-2">Citizen Sampler</h1>
+            <h1 className="text-5xl font-bold block mb-1">Citizen Sampler</h1>
             <MainMenu />
           </div>
 
