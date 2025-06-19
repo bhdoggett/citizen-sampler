@@ -21,7 +21,7 @@ import {
   UrlEntry,
 } from "../../lib/loc_collections";
 import { allUrlsWithCollectionNames } from "src/lib/loc_sample_sources";
-import { getTitle } from "../functions/getTitle";
+import { getTitle } from "../../lib/getTitle";
 import {
   drumMachines,
   DrumMachineId,

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { CustomSampler } from "../../types/CustomSampler";
-import quantize from "src/app/functions/quantize";
+import quantize from "src/lib/audio/util/quantize";
 
 type PitchPadProps = {
   note: string;

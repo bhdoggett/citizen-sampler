@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
 import { useAudioContext } from "../../app/contexts/AudioContext";
+// import Spinner from "../Spinner";
 
 type AudioSnippetVisualizerProps = {
   id: string;
@@ -17,6 +18,7 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
   const waveformRef = useRef<HTMLDivElement | null>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const [duration, setDuration] = useState(0);
+  // const [isLoading, setIsLoading] = useState(true);
 
   // (Re)load waveform on URL change
   useEffect(() => {
@@ -40,8 +42,9 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
 
     wave.on("ready", () => {
       setDuration(wave.getDuration());
+      // setIsLoading(false);
     });
-
+    // setIsLoading(false);
     return () => {
       wave.destroy();
     };
@@ -56,6 +59,10 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
   const fadeOutPct =
     actualEnd - start > 0 ? (release / (actualEnd - start)) * 100 : 0;
 
+  // if (isLoading) {
+  //   return <Spinner />;
+  // }
+
   return (
     <div className="relative">
       <div ref={waveformRef} />
@@ -66,12 +73,12 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
             left: `${snippetStartPct}%`,
             width: `${snippetEndPct - snippetStartPct}%`,
             background: `linear-gradient(
-              to right,
-              rgba(255, 255, 255, 0) 0%,
-              rgba(255, 255, 255, 1) ${fadeInPct}%,
-              rgba(255, 255, 255, 1) ${100 - fadeOutPct}%,
-              rgba(255, 255, 255, 0) 100%
-            )`,
+            to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 1) ${fadeInPct}%,
+            rgba(255, 255, 255, 1) ${100 - fadeOutPct}%,
+            rgba(255, 255, 255, 0) 100%
+          )`,
           }}
         />
       )}

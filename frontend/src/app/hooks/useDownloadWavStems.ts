@@ -1,8 +1,8 @@
 // import Recorder from "recorder-js";
 import * as Tone from "tone";
 import { useAudioContext } from "../contexts/AudioContext";
-import quantize from "../functions/quantize";
-import getScheduleEvents from "../functions/getScheduleEvents";
+import quantize from "../../lib/audio/util/quantize";
+import getScheduleEvents from "../../lib/audio/util/getScheduleEvents";
 import toWav from "audiobuffer-to-wav";
 import type { LoopName } from "../../../../shared/types/audioTypes";
 

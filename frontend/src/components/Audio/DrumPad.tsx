@@ -8,7 +8,7 @@ import { Frequency } from "tone/build/esm/core/type/Units";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
 import { drumKeys } from "src/lib/constants/drumKeys";
-import getScheduleEvents from "src/app/functions/getScheduleEvents";
+import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
 
 type DrumPadProps = {
   id: string;
