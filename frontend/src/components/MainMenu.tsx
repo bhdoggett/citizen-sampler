@@ -135,42 +135,45 @@ const Menu: React.FC = () => {
   return (
     <div className="relative flex justify-between items-center" id="main-menu">
       {/* Main Header Container */}
-      <div className="flex justify-between bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-2 border-slate-600 shadow-lg overflow-hidden">
-        {/* Info Section */}
-        <div className="flex items-center divide-x divide-slate-500 h-7">
-          {displayName && (
-            <div className="px-1 py-1 max-w-24 relative group">
-              <p
-                className="text-xs font-bold text-white tracking-wide truncate"
-                title={displayName}
-              >
-                {displayName}
-              </p>
-              {/* Tooltip */}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
-                {displayName}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black"></div>
-              </div>
-            </div>
-          )}
 
-          {songTitle && (
-            <div className="px-1 py-1 max-w-32 relative group">
-              <p
-                className="text-xs font-semibold text-slate-200 truncate"
-                title={songTitle}
-              >
-                {songTitle}
-              </p>
-              {/* Tooltip */}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
-                {songTitle}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black"></div>
+      {/* Info Section */}
+      {isAuthenticated && (
+        <div className="flex justify-between bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-2 border-slate-600 shadow-lg overflow-hidden">
+          <div className="flex items-center divide-x divide-slate-500 h-7">
+            {displayName && (
+              <div className="px-1 py-1 max-w-24 relative group">
+                <p
+                  className="text-xs font-bold text-white tracking-wide truncate"
+                  title={displayName}
+                >
+                  {displayName}
+                </p>
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
+                  {displayName}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black"></div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {songTitle && (
+              <div className="px-1 py-1 max-w-32 relative group">
+                <p
+                  className="text-xs font-semibold text-slate-200 truncate"
+                  title={songTitle}
+                >
+                  {songTitle}
+                </p>
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
+                  {songTitle}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black"></div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div ref={menuRef}>
         {/* Menu Button */}

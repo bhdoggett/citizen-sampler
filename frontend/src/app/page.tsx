@@ -75,7 +75,7 @@ export default function Home() {
               <div className="absolute inset-0 flex items-center justify-center z-10">
                 <button
                   onClick={() => setMakeBeatsPressed(true)}
-                  className="border-2 border-black px-2 py-1 bg-slate-600 hover:bg-slate-700 text-white font-bold transition-colors"
+                  className="border-2 border-black px-2 py-1 bg-slate-600 hover:bg-slate-700 shadow-md shadow-slate-700 text-white font-bold transition-colors"
                 >
                   Make Beats
                 </button>
