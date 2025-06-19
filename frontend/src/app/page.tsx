@@ -42,27 +42,49 @@ export default function Home() {
 
   return (
     <>
-      {/* Main Content */}
       <div className="flex flex-col justify-center items-center my-5">
         <div className="w-[600px] lg:w-[800px] md:w-[800px] sm:w-[700px] xs:w-[600px]">
+          {/* Header - NOT blurred */}
           <div className="flex justify-between">
-            <h1 className="text-6xl font-bold block">Citizen Sampler</h1>
+            <h1 className="text-5xl font-bold block mb-2">Citizen Sampler</h1>
             <MainMenu />
           </div>
-          <div className="flex">
-            <SampleSettings />
-            <div className="flex flex-col w-1/6">
-              <Transport />
-              <Loop />
+
+          {/* Audio Components Container - This gets blurred */}
+          <div className="relative">
+            <div className={`${!makeBeatsPressed ? "blur-sm" : ""}`}>
+              <div className="flex">
+                <SampleSettings />
+                <div className="flex flex-col w-1/6">
+                  <Transport />
+                  <Loop />
+                </div>
+              </div>
+              <div className="flex">
+                <DrumMachine />
+                <PitchGrid
+                  sampler={
+                    samplersRef.current[selectedSampleId]?.sampler ?? null
+                  }
+                />
+              </div>
             </div>
-          </div>
-          <div className="flex">
-            <DrumMachine />
-            <PitchGrid
-              sampler={samplersRef.current[selectedSampleId]?.sampler ?? null}
-            />
+
+            {/* Make Beats Button - Positioned over the blurred content but NOT blurred */}
+            {!makeBeatsPressed && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <button
+                  onClick={() => setMakeBeatsPressed(true)}
+                  className="border-2 border-black px-2 py-1 bg-slate-600 hover:bg-slate-700 text-white font-bold transition-colors"
+                >
+                  Make Beats
+                </button>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Footer - NOT blurred */}
         <footer className="flex flex-col items-center mt-2">
           <p className="text-sm">
             Inspired and made possible by
@@ -81,22 +103,6 @@ export default function Home() {
           </p>
         </footer>
       </div>
-
-      {/* Blur Overlay and Button - Only show when makeBeatsPressed is false */}
-      {!makeBeatsPressed && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center">
-          {/* BACKDROP */}
-          <div className="absolute inset-0 bg-slate-300 bg-opacity-10 backdrop-blur-sm z-30" />
-
-          {/* BUTTON */}
-          <button
-            onClick={() => setMakeBeatsPressed(true)}
-            className="relative z-40 px-6 py-3 border border-black shadow-md shadow-slate-800 bg-slate-400 text-white hover:bg-slate-600 rounded"
-          >
-            Make Beats
-          </button>
-        </div>
-      )}
 
       {/* Menu Dialogues */}
       <div>

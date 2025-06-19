@@ -133,40 +133,79 @@ const Menu: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative flex flex-col items-end" id="main-menu">
-      {displayName && (
-        <p className="text-xs font-bold w-full pb-1">{displayName}</p>
-      )}
+    <div className="relative flex justify-between items-center" id="main-menu">
+      {/* Main Header Container */}
+      <div className="flex justify-between bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-2 border-slate-600 shadow-lg overflow-hidden">
+        {/* Info Section */}
+        <div className="flex items-center divide-x divide-slate-500 h-7">
+          {displayName && (
+            <div className="px-1 py-1 max-w-24 relative group">
+              <p
+                className="text-xs font-bold text-white tracking-wide truncate"
+                title={displayName}
+              >
+                {displayName}
+              </p>
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
+                {displayName}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black"></div>
+              </div>
+            </div>
+          )}
 
-      {/* --Menu Button-- */}
+          {songTitle && (
+            <div className="px-1 py-1 max-w-32 relative group">
+              <p
+                className="text-xs font-semibold text-slate-200 truncate"
+                title={songTitle}
+              >
+                {songTitle}
+              </p>
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
+                {songTitle}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black"></div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Menu Button */}
       <button
-        className="absolute top-4 flex items-center justify-center w-8 h-8 bg-slate-500 text-white border border-slate-700 hover:bg-slate-700 transition-colors"
+        className="group relative flex items-center ml-1 justify-center w-8 h-8 bg-slate-600 hover:bg-slate-500 text-white border border-slate-500 hover:border-slate-400 transition-all duration-200 shadow-md hover:shadow-lg "
         onClick={() => setMenuOpen((prev) => !prev)}
         aria-label="Menu"
       >
-        <span
-          className={`absolute h-0.5 w-5 bg-white transform transition-transform duration-200 ease-in-out ${
-            menuOpen ? "rotate-45" : "-translate-y-1.5"
-          }`}
-        />
-        <span
-          className={`absolute h-0.5 w-5 bg-white transition-all duration-100 ease-in-out ${
-            menuOpen ? "opacity-0" : "opacity-100"
-          }`}
-        />
-        <span
-          className={`absolute h-0.5 w-5 bg-white transform transition-transform duration-200 ease-in-out ${
-            menuOpen ? "-rotate-45" : "translate-y-1.5"
-          }`}
-        />
+        <div className="relative w-5 h-4">
+          <span
+            className={`absolute left-0 h-0.5 w-5 bg-white transform transition-all duration-300 ease-in-out ${
+              menuOpen ? "top-2 rotate-45" : "top-0"
+            }`}
+          />
+          <span
+            className={`absolute left-0 top-2 h-0.5 w-5 bg-white  transition-all duration-200 ease-in-out ${
+              menuOpen ? "opacity-0 scale-75" : "opacity-100 scale-100"
+            }`}
+          />
+          <span
+            className={`absolute left-0 h-0.5 w-5 bg-white  transform transition-all duration-300 ease-in-out ${
+              menuOpen ? "top-2 -rotate-45" : "top-4"
+            }`}
+          />
+        </div>
       </button>
+
+      {/* Optional: Subtle bottom border for extra definition */}
+      <div className="h-0.5 bg-gradient-to-r from-transparent via-slate-400 to-transparent opacity-50"></div>
 
       {/* --Menu Options-- */}
 
       {menuOpen && (
         <div
           ref={menuRef}
-          className="absolute right-0 mt-12 bg-white border rounded-sm shadow-lg z-10 min-w-[150px]"
+          className="absolute right-0 top-0 mt-12 bg-white border  shadow-lg z-20 min-w-[150px]"
         >
           <ul className="relative flex flex-col main-menu text-sm">
             {isAuthenticated ? (
