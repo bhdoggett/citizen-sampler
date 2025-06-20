@@ -32,7 +32,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
-  const baseNote: Frequency = allSampleData[id]?.settings.baseNote;
+  const { baseNote, pitch } = allSampleData[id]?.settings;
   const { hotKeysActive } = useUIContext();
   const padNum = id.split("-")[1];
   const padKey = drumKeys[Number(padNum) - 1];
@@ -40,6 +40,12 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     () => samplersRef.current[id]?.currentEvent,
     [id, samplersRef]
   );
+
+  const semitonesToRate = (semitones: number) => {
+    return Math.pow(2, semitones / 12);
+  };
+
+  const playbackRate = semitonesToRate(pitch);
 
   const handlePress = useCallback(() => {
     const currentEvent = getCurrentEvent();
@@ -148,6 +154,11 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     selectedSampleId,
     setAllSampleData,
   ]);
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    handleRelease();
+  };
 
   const handleFocus = () => {
     setSelectedSampleId(id);
@@ -266,6 +277,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     const part = new Tone.Part((time, event) => {
       if (!sampler) return;
       const { start, end } = allSampleData[id].settings;
+
       if (
         typeof event === "object" &&
         event !== null &&
@@ -340,7 +352,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onTouchStart={handlePress}
         onMouseUp={handleRelease}
         onMouseLeave={() => handleRelease()}
-        onTouchEnd={() => handleRelease()}
+        onTouchEnd={handleTouchEnd}
         className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800 w-full aspect-square shadow-md shadow-slate-500  `}
       >
         <div className="flex ml-0.5 justify-between w-[95%]">

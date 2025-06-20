@@ -199,13 +199,17 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
   /**
    * @param  notes	The note to play, or an array of notes.
    * @param  time     When to play the note
+   * @param  offset   The offset into the sample to start playback.
    * @param  velocity The velocity to play the sample back.
+   * @param  playbackRateOverride The playback rate to override the sample's default.
+   *                            If not provided, the sample will be played back at its default rate.
    */
-  triggerAttack(
+  override triggerAttack(
     notes: Frequency | Frequency[],
     time?: Time,
     offset?: Time,
-    velocity: NormalRange = 1
+    velocity?: NormalRange,
+    playbackRateOverride?: number
   ): this {
     this.log("triggerAttack", notes, time, offset, velocity);
     if (!Array.isArray(notes)) {
@@ -221,7 +225,9 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
       const difference = this._findClosest(midi);
       const closestNote = midi - difference;
       const buffer = this._buffers.get(closestNote);
-      const playbackRate = intervalToFrequencyRatio(difference + remainder);
+      const playbackRate =
+        playbackRateOverride ??
+        intervalToFrequencyRatio(difference + remainder);
       // play that note
       const source = new ToneBufferSource({
         url: buffer,
@@ -314,10 +320,17 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
     duration: Time | Time[],
     time?: Time,
     offset?: Time,
-    velocity: NormalRange = 1
+    velocity: NormalRange = 1,
+    playbackRateOverride?: number
   ): this {
     const computedTime = this.toSeconds(time);
-    this.triggerAttack(notes, computedTime, offset, velocity);
+    this.triggerAttack(
+      notes,
+      computedTime,
+      offset,
+      velocity,
+      playbackRateOverride
+    );
     if (isArray(duration)) {
       assert(isArray(notes), "notes must be an array when duration is array");
       (notes as Frequency[]).forEach((note, index) => {

@@ -110,6 +110,11 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     }));
   };
 
+  const handleTouchEnd = (e: React.TouchEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    handleRelease();
+  };
+
   const getActiveStyle = () => {
     return pitchIsPlaying
       ? "brightness-75 saturate-500 transition-all duration-100"
@@ -203,7 +208,7 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
       onTouchStart={handlePress}
       onMouseUp={handleRelease}
       onMouseLeave={handleRelease}
-      onTouchEnd={handleRelease}
+      onTouchEnd={handleTouchEnd}
       className={`border border-black text-sm cursor-pointer aspect-square shadow-inner shadow-slate-600 ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400" : "bg-slate-300"} ${getActiveStyle()}`}
     >
       {note}
