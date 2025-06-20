@@ -326,7 +326,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   return (
     <div
-      className={`flex m-auto rounded-sm w-full select-none backdrop:aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
+      className={`flex m-auto rounded-sm w-full select-none aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
       onFocus={handleFocus}
     >
       <button
@@ -343,9 +343,9 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onTouchEnd={() => handleRelease()}
         className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800 w-full aspect-square shadow-md shadow-slate-500  `}
       >
-        <div className="mx-0.5 flex justify-between">
-          <span className="flex top-1 left-0 text-sm font-bold">{padNum}</span>
-          <span className="flex top-1 left-0 text-xs italic">
+        <div className="flex ml-0.5 justify-between w-[95%]">
+          <span className="flex text-sm font-bold">{padNum}</span>
+          <span className="flex text-xs italic">
             {hotKeysActive ? getKeySymbol(padKey) : ""}
           </span>
         </div>

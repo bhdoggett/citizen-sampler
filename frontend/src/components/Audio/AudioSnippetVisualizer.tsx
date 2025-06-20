@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
 import { useAudioContext } from "../../app/contexts/AudioContext";
-// import Spinner from "../Spinner";
 
 type AudioSnippetVisualizerProps = {
   id: string;
@@ -12,13 +11,10 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
 }) => {
   const { allSampleData } = useAudioContext();
   const url = allSampleData[id]?.url;
-  const settings = allSampleData[id]?.settings;
-  const { start, end, attack, release } = settings;
 
   const waveformRef = useRef<HTMLDivElement | null>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const [duration, setDuration] = useState(0);
-  // const [isLoading, setIsLoading] = useState(true);
 
   // (Re)load waveform on URL change
   useEffect(() => {
@@ -42,44 +38,28 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
 
     wave.on("ready", () => {
       setDuration(wave.getDuration());
-      // setIsLoading(false);
     });
-    // setIsLoading(false);
+
     return () => {
       wave.destroy();
     };
   }, [url]);
 
-  // Compute overlay based on start/end/etc.
-  const actualEnd = end ?? duration;
-  const snippetStartPct = duration ? (start / duration) * 100 : 0;
-  const snippetEndPct = duration ? (actualEnd / duration) * 100 : 100;
-  const fadeInPct =
-    actualEnd - start > 0 ? (attack / (actualEnd - start)) * 100 : 0;
-  const fadeOutPct =
-    actualEnd - start > 0 ? (release / (actualEnd - start)) * 100 : 0;
-
-  // if (isLoading) {
-  //   return <Spinner />;
-  // }
-
   return (
-    <div className="relative">
-      <div ref={waveformRef} />
+    <div className="relative w-full" style={{ minHeight: "1px" }}>
+      <div ref={waveformRef} className="w-full" />
       {duration > 0 && (
         <div
-          className="absolute top-0 pointer-events-none mix-blend-multiply transition-all"
-          style={{
-            left: `${snippetStartPct}%`,
-            width: `${snippetEndPct - snippetStartPct}%`,
-            background: `linear-gradient(
-            to right,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 1) ${fadeInPct}%,
-            rgba(255, 255, 255, 1) ${100 - fadeOutPct}%,
-            rgba(255, 255, 255, 0) 100%
-          )`,
-          }}
+          className="absolute top-0 pointer-events-none transition-all"
+          style={
+            {
+              height: "100%",
+              mixBlendMode: "multiply",
+              WebkitMixBlendMode: "multiply",
+              transform: "translateZ(0)", // Force hardware acceleration on Safari
+              WebkitTransform: "translateZ(0)",
+            } as React.CSSProperties
+          }
         />
       )}
     </div>
