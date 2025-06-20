@@ -3,8 +3,6 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import * as Tone from "tone";
-import { Frequency } from "tone/build/esm/core/type/Units";
-// import quantize from "../../app/functions/quantize";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
 import { drumKeys } from "src/lib/constants/drumKeys";
@@ -32,7 +30,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
-  const { baseNote, pitch } = allSampleData[id]?.settings;
+  const { baseNote } = allSampleData[id]?.settings;
   const { hotKeysActive } = useUIContext();
   const padNum = id.split("-")[1];
   const padKey = drumKeys[Number(padNum) - 1];
@@ -41,11 +39,11 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     [id, samplersRef]
   );
 
-  const semitonesToRate = (semitones: number) => {
-    return Math.pow(2, semitones / 12);
-  };
+  // const semitonesToRate = (semitones: number) => {
+  //   return Math.pow(2, semitones / 12);
+  // };
 
-  const playbackRate = semitonesToRate(pitch);
+  // const playbackRate = semitonesToRate(pitch);
 
   const handlePress = useCallback(() => {
     const currentEvent = getCurrentEvent();
