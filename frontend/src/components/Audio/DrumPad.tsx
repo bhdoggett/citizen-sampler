@@ -351,7 +351,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onMouseUp={handleRelease}
         onMouseLeave={() => handleRelease()}
         onTouchEnd={handleTouchEnd}
-        className={`flex flex-col select-none ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800 w-full aspect-square shadow-md shadow-slate-500  `}
+        className={`flex flex-col select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-user-select:none] [-webkit-tap-highlight-color:transparent] ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800 w-full aspect-square shadow-md shadow-slate-500`}
       >
         <div className="flex ml-0.5 justify-between w-[95%]">
           <span className="flex text-sm font-bold">{padNum}</span>
