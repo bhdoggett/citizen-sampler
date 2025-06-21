@@ -43,6 +43,8 @@ type AudioContextType = {
   metronomeActive: boolean;
   setMetronomeActive: React.Dispatch<React.SetStateAction<boolean>>;
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
+  samplersLoading: boolean;
+  setSamplersLoading: React.Dispatch<React.SetStateAction<boolean>>;
   makeSamplerWithFX: (
     sampleId: string,
     sampleUrl: string,
@@ -278,6 +280,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   const { makeBeatsButtonPressed, setMakeBeatsButtonPressed } = useUIContext();
 
+  const [samplersLoading, setSamplersLoading] = useState<boolean>(true);
+
   // Function to create a sampler with FX chain.
   // If using with Tone.Offline to download WAV stems, the third argument should be "true".
   const makeSamplerWithFX = (
@@ -286,6 +290,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     stems: boolean = false
   ): Promise<SamplerWithFX> => {
     return new Promise((resolve, reject) => {
+      setSamplersLoading(true);
       const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
       const pitch = new Tone.PitchShift(0);
       const panVol = new Tone.PanVol(0, 0);
@@ -358,12 +363,17 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   };
 
   const loadSamplersToRef = async (
-    allSampleData: Record<string, SampleTypeFE>
+    sampleData: Record<string, SampleTypeFE>
   ) => {
+    Object.entries(sampleData).forEach(([key,sample]) => {
+      cleanupSampler(key, samplersRef);
     if (!allSampleData) return;
-    const samplesArray = Object.values(allSampleData).map((value) => {
+    const samplesArray = Object.values(sampleData).map((value) => {
       return value;
     });
+
+    samplersRef.current[key] = await makeSamplerWithFX(sample.id, sample.url);
+    
     const samplers = await Promise.all(
       samplesArray.map(async ({ id, url }) => {
         const samplerWithFX = await makeSamplerWithFX(id, url);
@@ -601,6 +611,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setAllLoopSettings,
         isRecording,
         setIsRecording,
+        samplersLoading,
+        setSamplersLoading,
         makeSamplerWithFX,
         initLocSampleData,
         initKitSampleData,
