@@ -280,12 +280,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // Function to create a sampler with FX chain.
   // If using with Tone.Offline to download WAV stems, the third argument should be "true".
-  const makeSamplerWithFX = (
+  const makeSamplerWithFX = async (
     sampleId: string,
     sampleUrl: string,
     stems: boolean = false
   ): Promise<SamplerWithFX> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
       const pitch = new Tone.PitchShift(0);
       const panVol = new Tone.PanVol(0, 0);
@@ -293,7 +293,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       const lowpass = new Tone.Filter(20000, "lowpass");
       const sampler = new CustomSampler({
         urls: { C4: sampleUrl },
-        onload: () => {
+        onload: async () => {
           // Connect the FX chain
           sampler.connect(gain);
           gain.connect(pitch);
@@ -321,6 +321,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
               velocity: 1,
             },
           });
+          await Tone.loaded();
+
           if (makeBeatsButtonPressed) {
             setMakeBeatsButtonPressed(false);
           }
@@ -328,6 +330,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         onerror: (err) => {
           console.error(`Error loading sample: ${sampleId}`, err);
           reject(err);
+          // Wait for all samples to load
         },
       });
     });
@@ -436,6 +439,36 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     }));
   };
+
+  // Listen for user interaction to start the audio context
+  useEffect(() => {
+    const initializeAudio = async () => {
+      // Initialize on ANY user interaction, not just your buttons
+      const handleFirstInteraction = async () => {
+        if (Tone.getContext().state !== "running") {
+          await Tone.start();
+          console.log("Audio context started");
+        }
+        // Remove listeners after first successful start
+        document.removeEventListener("click", handleFirstInteraction);
+        document.removeEventListener("touchstart", handleFirstInteraction);
+        document.removeEventListener("keydown", handleFirstInteraction);
+      };
+
+      // Listen for ANY user interaction
+      document.addEventListener("click", handleFirstInteraction, {
+        passive: true,
+      });
+      document.addEventListener("touchstart", handleFirstInteraction, {
+        passive: true,
+      });
+      document.addEventListener("keydown", handleFirstInteraction, {
+        passive: true,
+      });
+    };
+
+    initializeAudio();
+  }, []);
 
   // Load samplers to samplerRef
   useEffect(() => {

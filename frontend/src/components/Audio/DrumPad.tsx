@@ -45,7 +45,20 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   // const playbackRate = semitonesToRate(pitch);
 
-  const handlePress = useCallback(() => {
+  const handlePress = useCallback(async () => {
+    // Ensure audio context is running
+    const audioContext = Tone.getContext();
+    if (audioContext.state !== "running") {
+      try {
+        await Tone.start();
+        // Wait a tiny bit to ensure context is truly ready
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      } catch (error) {
+        console.error("Failed to start audio context:", error);
+        return;
+      }
+    }
+
     const currentEvent = getCurrentEvent();
     if (!sampler) return;
 

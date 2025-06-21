@@ -146,16 +146,20 @@ const SampleSettings = () => {
   return (
     <>
       <div className="relative flex flex-col items-center border-2 shadow-md shadow-slate-500 border-black w-5/6">
-        <div className="flex shadow-inner shadow-slate-500 border-x-2 border-b-2 border-black overflow-hidden mx-auto text-xs">
-          <h1 className={"px-2 border-black bg-black text-white"}>
+        <div className="absolute flex shadow-inner shadow-slate-500 overflow-hidden text-xs -mx-0.5">
+          <h1 className={"px-2 bg-black text-white"}>
             {`${allSampleData[selectedSampleId].collectionName}`}
           </h1>
-          <h1 className={"px-2 border-black bg-white text-black"}>
+          <h1
+            className={
+              "px-2 border-b-2  shadow-inner shadow-slate-500 border-r-2 border-black text-black"
+            }
+          >
             {`${allSampleData[selectedSampleId].title}`}
           </h1>
         </div>
 
-        <div className="mt-4 w-full">
+        <div className="mt-12 w-full">
           <div className="flex flex-col justify-center">
             <div className="flex justify-center w-full">
               <Waveform audioUrl={allSampleData[selectedSampleId].url} />
@@ -374,9 +378,9 @@ const SampleSettings = () => {
                 };
                 setShowDialog("confirm-action");
               }}
-              className="border border-black px-1 bg-slate-400 hover:bg-slate-500 shadow-inner shadow-slate-800 flex mx-auto"
+              className="border border-black px-1 bg-slate-100 hover:bg-slate-300 shadow-inner shadow-slate-800 flex mx-auto text-xs"
             >
-              Clear
+              Clear Recorded Events
             </button>
           </div>
         </div>

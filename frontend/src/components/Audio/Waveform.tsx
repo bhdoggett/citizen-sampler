@@ -174,7 +174,10 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   return (
     <div className="flex w-full px-3 justify-center mb-2">
       {/* Border wrapper */}
-      <div className="border border-slate-600 w-full" ref={scrollRef}>
+      <div
+        className="border border-slate-600 w-full overflow-hidden"
+        ref={scrollRef}
+      >
         <div className="w-full">
           <div
             ref={containerRef}
@@ -189,7 +192,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
           onClick={() => {
             let zoomDiff;
             if (zoom === 0) {
-              zoomDiff = 60;
+              zoomDiff = 100;
             } else {
               zoomDiff = 20;
             }
