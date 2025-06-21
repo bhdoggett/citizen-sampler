@@ -34,10 +34,6 @@ const CollectionMenu: React.FC = () => {
     });
 
     loadSamplersToRef(newSamples);
-    // Object.entries(newSamples).forEach(async ([key, sample]) => {
-    //   cleanupSampler(key, samplersRef);
-    //   samplersRef.current[key] = await makeSamplerWithFX(sample.id, sample.url);
-    // });
   };
 
   return (

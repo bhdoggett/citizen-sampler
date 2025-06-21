@@ -11,11 +11,12 @@ import {
 const KitMenu: React.FC = () => {
   const { initKitSamples, loadSamplersToRef, setAllSampleData } =
     useAudioContext();
+  const { confirmActionRef, setShowDialog } = useUIContext();
   const drumMachineNames: string[] = Object.values(drumMachines).map(
     (drumMachine) => drumMachine.name
   );
   const drumMachineIds = Object.keys(drumMachines) as DrumMachineId[];
-  const { confirmActionRef, setShowDialog } = useUIContext();
+
   const [id, setId] = useState<DrumMachineId>(
     drumMachineIds[0] as DrumMachineId
   );
@@ -44,10 +45,6 @@ const KitMenu: React.FC = () => {
     });
 
     loadSamplersToRef(newSamples);
-    // Object.entries(newSamples).forEach(async ([key, sample]) => {
-    //   cleanupSampler(key, samplersRef);
-    //   samplersRef.current[key] = await makeSamplerWithFX(sample.id, sample.url);
-    // });
   };
 
   return (
