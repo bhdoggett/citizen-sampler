@@ -166,3 +166,11 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ```bash
 npm run dev
 ```
+
+---
+
+## License
+
+- Code: [MIT License](./LICENSE)
+- Drum kit samples: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- Library of Congress samples: Public domain
