@@ -442,7 +442,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // Listen for user interaction to start the audio context
   useEffect(() => {
-    const initializeAudio = async () => {
+    const initializeAudio = () => {
       // Initialize on ANY user interaction, not just your buttons
       const handleFirstInteraction = async () => {
         if (Tone.getContext().state !== "running") {
