@@ -1,5 +1,9 @@
 # Citizen Sampler
 
+![App Screenshot](screenshot.png)
+
+See it live: https://citizensampler.com
+
 **Citizen Sampler** is an MPC-style instrument web app inspired by—and made possible by—the [Citizen DJ project](https://citizen-dj.labs.loc.gov/) at the Library of Congress.
 
 As a musician, when I came across Citizen DJ, I was immediately excited by the expansive catalog of public-domain audio samples and inspired by the creative potential of combining them. While Citizen DJ provides a sequencer for programming audio playback by beat subdivision, I wanted to build something playable like a real-time instrument.
