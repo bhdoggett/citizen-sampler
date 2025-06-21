@@ -1,7 +1,9 @@
 "use client";
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import MainMenu from "../components/MainMenu";
+import Spinner from "../components/Spinner";
 import DialogWrapper from "../components/Dialogs/DialogWrapper";
 import ChooseSample from "../components/Dialogs/ChooseSample";
 import AuthDialog from "../components/Dialogs/AuthDialog";
@@ -36,7 +38,14 @@ const PitchGrid = dynamic(() => import("../components/Audio/PitchGrid"), {
 export default function Home() {
   const { showDialog, makeBeatsButtonPressed, setMakeBeatsButtonPressed } =
     useUIContext();
-  const { samplersRef, selectedSampleId } = useAudioContext();
+  const { samplersRef, selectedSampleId, samplersLoading } = useAudioContext();
+
+  useEffect(() => {
+    if (samplersLoading) {
+      // Reset the makeBeatsButtonPressed state when samplers are loading
+      setMakeBeatsButtonPressed(false);
+    }
+  });
 
   return (
     <>
@@ -50,7 +59,9 @@ export default function Home() {
 
           {/* Audio Components Container - This gets blurred */}
           <div className="relative">
-            <div className={`${!makeBeatsButtonPressed ? "blur-sm" : ""}`}>
+            <div
+              className={`${samplersLoading || !makeBeatsButtonPressed ? "blur-sm" : ""}`}
+            >
               <div className="flex">
                 <SampleSettings />
                 <div className="flex flex-col w-1/6">
@@ -68,15 +79,23 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Make Beats Button - Positioned over the blurred content but NOT blurred */}
-            {!makeBeatsButtonPressed && (
+            {/* Overlay when content should be blurred */}
+            {(samplersLoading || !makeBeatsButtonPressed) && (
               <div className="absolute inset-0 flex items-center justify-center z-10">
-                <button
-                  onClick={() => setMakeBeatsButtonPressed(true)}
-                  className="border-2 border-black px-2 py-1 bg-slate-600 hover:bg-slate-700 shadow-md shadow-slate-700 text-white font-bold transition-colors"
-                >
-                  Make Beats
-                </button>
+                {samplersLoading ? (
+                  // Show spinner when samplers are loading
+                  <div className="flex items-center justify-center">
+                    <Spinner />
+                  </div>
+                ) : (
+                  // Show button when samplers are loaded but button not pressed
+                  <button
+                    onClick={() => setMakeBeatsButtonPressed(true)}
+                    className="border-2 border-black px-2 py-1 bg-slate-600 hover:bg-slate-700 shadow-md shadow-slate-700 text-white font-bold transition-colors"
+                  >
+                    Make Beats
+                  </button>
+                )}
               </div>
             )}
           </div>

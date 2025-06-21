@@ -24,7 +24,6 @@ const ChooseSample: React.FC = () => {
     initKitSampleData,
     cleanupSampler,
     updateSamplerData,
-    setSamplersLoading,
     makeSamplerWithFX,
     samplersRef,
   } = useAudioContext();
@@ -119,24 +118,13 @@ const ChooseSample: React.FC = () => {
 
     updateSamplerData(selectedSampleId, sampleData);
     cleanupSampler(selectedSampleId, samplersRef);
-
-    const loadSampler = async () => {
-      setSamplersLoading(true);
-      try {
-        samplersRef.current[selectedSampleId] = await makeSamplerWithFX(
-          selectedSampleId,
-          url,
-          false
-        );
-        if (!makeBeatsButtonPressed) setMakeBeatsButtonPressed(false);
-        setShowDialog(null);
-      } catch (error) {
-        console.error("Error loading sampler:", error);
-        // Handle error (e.g., show a notification)
-      } finally {
-        setSamplersLoading(false);
-      }
-    };
+    samplersRef.current[selectedSampleId] = await makeSamplerWithFX(
+      selectedSampleId,
+      url,
+      false
+    );
+    if (!makeBeatsButtonPressed) setMakeBeatsButtonPressed(false);
+    setShowDialog(null);
   };
 
   useEffect(() => {

@@ -9,10 +9,8 @@ const CollectionMenu: React.FC = () => {
   const {
     initLocSamplesFromAllCollections,
     initLocSamplesFromOneCollection,
-    cleanupSampler,
+    loadSamplersToRef,
     setAllSampleData,
-    samplersRef,
-    makeSamplerWithFX,
   } = useAudioContext();
   const { confirmActionRef, setShowDialog } = useUIContext();
   const [c, setC] = useState<string>(collectionNames[0]);
@@ -35,25 +33,11 @@ const CollectionMenu: React.FC = () => {
       };
     });
 
-    Object.entries(newSamples).forEach(async (
-    allSampleData: Record<string, SampleTypeFE>
-  ) => {
-    if (!allSampleData) return;
-    const samplesArray = Object.values(allSampleData).map((value) => {
-      return value;
-    });
-    const samplers = await Promise.all(
-      samplesArray.map(async ({ id, url }) => {
-        const samplerWithFX = await makeSamplerWithFX(id, url);
-        return samplerWithFX;
-      })
-    );
-
-    samplers.forEach((sampler, i) => {
-      const id = samplesArray[i].id;
-      samplersRef.current[id] = sampler;
-    });
-  };);
+    loadSamplersToRef(newSamples);
+    // Object.entries(newSamples).forEach(async ([key, sample]) => {
+    //   cleanupSampler(key, samplersRef);
+    //   samplersRef.current[key] = await makeSamplerWithFX(sample.id, sample.url);
+    // });
   };
 
   return (

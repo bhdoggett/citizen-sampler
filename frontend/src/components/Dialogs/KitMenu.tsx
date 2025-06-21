@@ -9,13 +9,8 @@ import {
 } from "src/lib/drumMachines";
 
 const KitMenu: React.FC = () => {
-  const {
-    initKitSamples,
-    cleanupSampler,
-    setAllSampleData,
-    samplersRef,
-    makeSamplerWithFX,
-  } = useAudioContext();
+  const { initKitSamples, loadSamplersToRef, setAllSampleData } =
+    useAudioContext();
   const drumMachineNames: string[] = Object.values(drumMachines).map(
     (drumMachine) => drumMachine.name
   );
@@ -48,10 +43,11 @@ const KitMenu: React.FC = () => {
       };
     });
 
-    Object.entries(newSamples).forEach(async ([key, sample]) => {
-      cleanupSampler(key, samplersRef);
-      samplersRef.current[key] = await makeSamplerWithFX(sample.id, sample.url);
-    });
+    loadSamplersToRef(newSamples);
+    // Object.entries(newSamples).forEach(async ([key, sample]) => {
+    //   cleanupSampler(key, samplersRef);
+    //   samplersRef.current[key] = await makeSamplerWithFX(sample.id, sample.url);
+    // });
   };
 
   return (

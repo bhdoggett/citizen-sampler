@@ -63,6 +63,9 @@ type AudioContextType = {
   ) => SampleTypeFE;
   initKitSamples: (kitId: DrumMachineId) => Record<string, SampleTypeFE>;
   updateSamplerData: (id: string, data: SampleTypeFE) => void;
+  loadSamplersToRef: (
+    sampleData: Record<string, SampleTypeFE>
+  ) => Promise<void>;
   currentLoop: string;
   setCurrentLoop: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
@@ -365,26 +368,35 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const loadSamplersToRef = async (
     sampleData: Record<string, SampleTypeFE>
   ) => {
-    Object.entries(sampleData).forEach(([key,sample]) => {
-      cleanupSampler(key, samplersRef);
-    if (!allSampleData) return;
-    const samplesArray = Object.values(sampleData).map((value) => {
-      return value;
-    });
+    setSamplersLoading(true);
 
-    samplersRef.current[key] = await makeSamplerWithFX(sample.id, sample.url);
-    
-    const samplers = await Promise.all(
-      samplesArray.map(async ({ id, url }) => {
-        const samplerWithFX = await makeSamplerWithFX(id, url);
-        return samplerWithFX;
-      })
-    );
+    try {
+      // Clean up existing samplers first
+      Object.keys(sampleData).forEach((key) => {
+        cleanupSampler(key, samplersRef);
+      });
 
-    samplers.forEach((sampler, i) => {
-      const id = samplesArray[i].id;
-      samplersRef.current[id] = sampler;
-    });
+      // Create all samplers concurrently
+      const samplerPromises = Object.entries(sampleData).map(
+        async ([key, sample]) => {
+          const sampler = await makeSamplerWithFX(sample.id, sample.url);
+          return { key, sampler };
+        }
+      );
+
+      // Wait for all samplers to be created
+      const samplers = await Promise.all(samplerPromises);
+
+      // Assign samplers to ref
+      samplers.forEach(({ key, sampler }) => {
+        samplersRef.current[key] = sampler;
+      });
+    } catch (error) {
+      console.error("Failed to load samplers:", error);
+      // Handle error as needed (e.g., show user notification)
+    } finally {
+      setSamplersLoading(false);
+    }
   };
 
   const [songTitle, setSongTitle] = useState<string>(() => {
@@ -613,6 +625,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setIsRecording,
         samplersLoading,
         setSamplersLoading,
+        loadSamplersToRef,
         makeSamplerWithFX,
         initLocSampleData,
         initKitSampleData,
