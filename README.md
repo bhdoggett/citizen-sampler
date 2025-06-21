@@ -4,13 +4,11 @@
 
 See it live: https://citizensampler.com
 
-**Citizen Sampler** is an MPC-style instrument web app inspired by—and made possible by—the [Citizen DJ project](https://citizen-dj.labs.loc.gov/) at the Library of Congress.
+**Citizen Sampler** is an MPC-style web instrument inspired by—and made possible by—the [Citizen DJ project](https://citizen-dj.labs.loc.gov/) at the Library of Congress.
 
-As a musician, when I came across Citizen DJ, I was immediately excited by the expansive catalog of public-domain audio samples and inspired by the creative potential of combining them. While Citizen DJ provides a sequencer for programming audio playback by beat subdivision, I wanted to build something playable like a real-time instrument.
+As a musician, when I came across Citizen DJ, I was immediately excited by the expansive catalog of public-domain audio samples and inspired by the creative potential of combining them in new and unique ways. While Citizen DJ provides a sequencer for programming audio playback by beat subdivision, I wanted to build something playable like a real-time instrument.
 
-Early in building Citizen Sampler, I discovered [Tone.js](https://tonejs.dev/), a powerful library built on the Web Audio API. It provided a rich set of tools for creating playable interfaces and scheduling audio playback. All sample pads on the page are linked to a custom sampler, forked from Tone's built-in Sampler instrument, to allow adjustment of the playback offset of a sample. Tone.js is also used for managing effects nodes per sampler, loop settings, and recording/playback scheduling of performed events.
-
----
+Early in building Citizen Sampler, I discovered [Tone.js](https://tonejs.dev/), a powerful library built on the Web Audio API. It provided a rich set of tools for creating playable interfaces and scheduling audio playback. All sample pads on the page are linked to a custom sampler, forked from Tone's built-in Sampler instrument, to allow offset of the samples start position. Tone.js is also used for managing effects nodes per sampler, loop settings, and recording/playback scheduling of recorded events.
 
 ## Audio Sources
 
@@ -22,20 +20,6 @@ There are two main categories of audio samples:
 2. **Drum Kit Samples**  
    The kit samples (identical to those on Citizen DJ’s Remix page) were generated from drum kits provided by Slackermedia Multimedia Sprint v2. These are available under a [Creative Commons Attribution-ShareAlike 3.0 license](https://creativecommons.org/licenses/by-sa/3.0/us/).  
    The processed audio files used by Citizen DJ can be downloaded from [GitHub](https://github.com/LibraryOfCongress/citizen-dj/tree/master/audio/drum_machines) and are available under a [Creative Commons Attribution-ShareAlike 4.0 International license](https://creativecommons.org/licenses/by-sa/4.0/).
-
----
-
-## Backend
-
-The backend is built with **Node.js** and **Express**. It uses **MongoDB** for data storage and **Mongoose** for querying.
-
----
-
-## Frontend
-
-The frontend is built with React and Next.JS. Styling is done with Tailwind CSS. Some key dependencies, other than Tone.JS are Wavesurfer for displaying and interacting with the sample waveform image
-
----
 
 ## Playing Citizen Sampler
 
@@ -55,14 +39,14 @@ Play and record the selected sample at various pitches—an octave up or down fr
 
 ### Sample Settings
 
-This section shows a zoomable waveform and lets you define playback start and end points.
+This section shows a zoomable waveform where lets you define playback start and end points.
 
 Zooming:
 
 - **Quick Zoom**: `Ctrl + scroll`
 - **Precise Zoom**: `+` and `–` buttons
 
-Adjust:
+Additionally in this window you can adjust the following settings:
 
 - Volume, pan, attack, release
 - Filter settings: high-pass, low-pass
@@ -75,19 +59,21 @@ Adjust:
 
 Includes:
 
-- **Play** - `Spacebar`
-- **Record** - `Ctrl + R`
-- **Stop** - `Spacebar`
-- **Metronome** - `M`
+- **Play** - `Spacebar` - This will start the loop
+- **Record** - `Ctrl + R` - If the loop has not already been started, Record will start the loop immediedly and all samples played on the Sample Pads or Pitch Grid will be recorded to the current loop. Turning record off will not stop the loop.
+- **Stop** - `Spacebar` - Stop the loop
+- **Metronome** - `M` - Toggle metronome
 
 ### Loop Section
 
 Each of the four loop patterns (A, B, C, D) can have unique settings:
 
 - **BPM**: Tempo in beats per minute
-- **Swing**: Shifts eighth notes toward the next beat
+- **Swing**: Increasing this value shifts eighth notes toward the next beat
 - **Beats**: Beats per measure
 - **Bars**: Number of measures
+
+**Note**: Adjustments cannot be made to loop settings while the loop is playing.
 
 ### Main Menu
 
@@ -99,9 +85,19 @@ Each of the four loop patterns (A, B, C, D) can have unique settings:
 
 - **Download Stems:** Export one audio file for each drum pad with existing recorded play events—organized per loop—to the user’s default download location.
 
----
-
 # Developers
+
+## Tech Stack & Structure
+
+This is a monorepo project built with:
+
+- TypeScript across both frontend and backend
+- React / Next.js for the frontend
+- Node.js / Express for the backend
+- MongoDB with Mongoose for data persistence
+- Tone.js for audio synthesis and scheduling
+- Wavesurfer.js for waveform imaging and interaction
+- Tailwind CSS for styling
 
 ## Getting Started
 
