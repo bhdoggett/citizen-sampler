@@ -280,12 +280,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // Function to create a sampler with FX chain.
   // If using with Tone.Offline to download WAV stems, the third argument should be "true".
-  const makeSamplerWithFX = async (
+  const makeSamplerWithFX = (
     sampleId: string,
     sampleUrl: string,
     stems: boolean = false
   ): Promise<SamplerWithFX> => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
       const pitch = new Tone.PitchShift(0);
       const panVol = new Tone.PanVol(0, 0);
