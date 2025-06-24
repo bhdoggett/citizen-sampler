@@ -81,6 +81,13 @@ const SampleSettings = () => {
     }));
   };
 
+  // Render Hz or kHz based on value
+  const formatFrequency = (value: number | undefined) => {
+    if (typeof value !== "number") return "20000 Hz";
+    if (value > 9999) return `${(value / 1000).toFixed(1)} kHz`;
+    return `${value.toFixed(0)} Hz`;
+  };
+
   // initialize settings with selected sample's settings
   useEffect(() => {
     if (selectedSampleId && allSampleData[selectedSampleId]) {
@@ -234,7 +241,7 @@ const SampleSettings = () => {
                 <div className="flex flex-col">
                   <label className="mb-2 flex justify-between">
                     <span>HP</span>
-                    <span>{settings.highpass?.[0].toFixed(0) || "0"} Hz</span>
+                    <span>{formatFrequency(settings.highpass?.[0])}</span>
                   </label>
                   <input
                     type="range"
@@ -258,16 +265,14 @@ const SampleSettings = () => {
                     className="mt-3 mb-2 flex justify-between"
                   >
                     <span>LP</span>
-                    <span>
-                      {settings.lowpass?.[0].toFixed(0) || "20000"} Hz
-                    </span>
+                    <span>{formatFrequency(settings.lowpass?.[0])}</span>
                   </label>
                   <input
                     type="range"
                     name="lowpass"
                     min="0"
                     max="1"
-                    step="0.01"
+                    step="0.001"
                     value={linearizeFrequency(settings.lowpass?.[0] || 0)}
                     onChange={(e) =>
                       updateSetting("lowpass", [

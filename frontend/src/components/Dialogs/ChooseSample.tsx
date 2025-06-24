@@ -22,13 +22,10 @@ const ChooseSample: React.FC = () => {
     selectedSampleId,
     initLocSampleData,
     initKitSampleData,
-    cleanupSampler,
+    loadSamplersToRef,
     updateSamplerData,
-    makeSamplerWithFX,
-    samplersRef,
   } = useAudioContext();
-  const { setShowDialog, makeBeatsButtonPressed, setMakeBeatsButtonPressed } =
-    useUIContext();
+  const { setShowDialog } = useUIContext();
   const [type, setType] = useState<"loc" | "kit" | null>(null);
   const [sampleGroup, setSampleGroup] = useState<string | null>(null);
   const [samplesArray, setSamplesArray] = useState<string[]>([]);
@@ -89,7 +86,7 @@ const ChooseSample: React.FC = () => {
   };
 
   // Update allSampleData and samplersRef when a new sample is chosen
-  const handleChooseSample = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleChooseSample = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (
       selectedIndex === null ||
@@ -115,15 +112,15 @@ const ChooseSample: React.FC = () => {
             getKitSampleTitle(sampleSource),
             sampleGroup
           );
-
     updateSamplerData(selectedSampleId, sampleData);
-    cleanupSampler(selectedSampleId, samplersRef);
-    samplersRef.current[selectedSampleId] = await makeSamplerWithFX(
-      selectedSampleId,
-      url,
-      false
-    );
-    if (!makeBeatsButtonPressed) setMakeBeatsButtonPressed(false);
+    loadSamplersToRef({ [selectedSampleId]: sampleData });
+    // cleanupSampler(selectedSampleId, samplersRef);
+    // samplersRef.current[selectedSampleId] = await makeSamplerWithFX(
+    //   selectedSampleId,
+    //   url,
+    //   false
+    // );
+    // if (!makeBeatsButtonPressed) setMakeBeatsButtonPressed(false);
     setShowDialog(null);
   };
 

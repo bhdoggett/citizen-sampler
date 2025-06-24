@@ -1,5 +1,5 @@
 const minFreq = 20; // Typical low end for audio
-const maxFreq = 2000; // Your desired max
+const maxFreq = 20000; // Your desired max
 
 // Convert frequency (Hz) to slider value (0-1) using logarithmic scale
 export const linearizeFrequency = (frequency: number): number => {
