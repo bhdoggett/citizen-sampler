@@ -293,6 +293,15 @@ const Menu: React.FC = () => {
               >
                 Download Stems
               </li>
+              <li
+                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                onClick={() => {
+                  setShowDialog("about");
+                  setMenuOpen(false);
+                }}
+              >
+                About
+              </li>
             </ul>
           </div>
         )}

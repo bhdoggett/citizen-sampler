@@ -19,6 +19,7 @@ import Loop from "../components/Audio/Loop";
 import { useUIContext } from "./contexts/UIContext";
 import { useAudioContext } from "./contexts/AudioContext";
 import ResendConfirmation from "src/components/Dialogs/ResendConfirmation";
+import About from "src/components/Dialogs/About";
 
 const SampleSettings = dynamic(
   () => import("../components/Audio/SampleSettings"),
@@ -160,6 +161,7 @@ export default function Home() {
                 {showDialog === "confirm-action" && <ConfirmActionDialog />}
                 {showDialog === "api-response" && <APIResponseDialog />}
                 {showDialog === "ui-warning" && <UIWarning />}
+                {showDialog === "about" && <About />}
               </DialogWrapper>
             )}
           </div>
