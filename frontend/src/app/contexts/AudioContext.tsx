@@ -338,7 +338,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         onerror: (err) => {
           console.error(`Error loading sample: ${sampleId}`, err);
           reject(err);
-          // Wait for all samples to load
         },
       });
     });
@@ -395,6 +394,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       console.error("Failed to load samplers:", error);
       // Handle error as needed (e.g., show user notification)
     } finally {
+      console.log("finally ran");
       setSamplersLoading(false);
     }
   };

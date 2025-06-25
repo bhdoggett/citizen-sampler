@@ -1,8 +1,13 @@
 "use client";
+import { useEffect } from "react";
 import { useUIContext } from "src/app/contexts/UIContext";
 
 const APIResponseDialog: React.FC = () => {
   const { apiResponseMessageRef } = useUIContext();
+
+  useEffect(() => {
+    console.log(apiResponseMessageRef.current);
+  }, []);
 
   return (
     <div className="mr-3">

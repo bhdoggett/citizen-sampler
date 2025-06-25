@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+// import { useEffect, useRef } from "react";
 import { useAudioContext } from "src/app/contexts/AudioContext";
 import { CustomSampler } from "src/types/CustomSampler";
 import * as Tone from "tone";
@@ -8,8 +8,7 @@ import PitchPad from "./PitchPad";
 const NUM_ROWS = 5;
 const NUM_COLS = 5;
 
-// MIDI note numbers for C4 to C6 = 60 to 84
-
+// Convert MIDI number to note name
 const midiToNoteName = (midi: number) => Tone.Frequency(midi, "midi").toNote();
 
 type PitchGridProps = {
@@ -18,7 +17,7 @@ type PitchGridProps = {
 
 const PitchGrid: React.FC<PitchGridProps> = () => {
   const { selectedSampleId, allSampleData, samplersRef } = useAudioContext();
-  const sampleDataRef = useRef(allSampleData[selectedSampleId]);
+  // const sampleDataRef = useRef(allSampleData[selectedSampleId]);
   const { baseNote } = allSampleData[selectedSampleId].settings;
 
   // Define root position (row 5, col 3, zero-indexed)
@@ -45,9 +44,9 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
 
   const gridNotes = generateNotes();
 
-  useEffect(() => {
-    sampleDataRef.current = allSampleData[selectedSampleId];
-  }, [allSampleData, selectedSampleId]);
+  // useEffect(() => {
+  //   sampleDataRef.current = allSampleData[selectedSampleId];
+  // }, [allSampleData, selectedSampleId]);
 
   return (
     <div className="flex flex-col text-center w-1/2 ml-3 mt-1">

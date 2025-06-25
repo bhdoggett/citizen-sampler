@@ -6,6 +6,7 @@ import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useAuthContext } from "src/app/contexts/AuthContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import { SongTypeFE } from "src/types/audioTypesFE";
+import Spinner from "../Spinner";
 
 dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -14,10 +15,15 @@ const LoadSong: React.FC = () => {
   const [songTitles, setSongTitles] = useState<string[]>([]);
   const [selectedSong, setSelectedSong] = useState<string>("");
   const [hasCheckedForSongs, setHasCheckedForSongs] = useState<boolean>(false);
-  const { setSongTitle, setAllSampleData, setAllLoopSettings } =
-    useAudioContext();
+  const {
+    setSongTitle,
+    setAllSampleData,
+    setAllLoopSettings,
+    loadSamplersToRef,
+  } = useAudioContext();
   const { isAuthenticated, token } = useAuthContext();
   const { apiResponseMessageRef, setShowDialog } = useUIContext();
+  const [loading, setLoading] = useState<boolean>(false);
 
   const getSongtitles = useCallback(async () => {
     try {
@@ -59,7 +65,9 @@ const LoadSong: React.FC = () => {
 
   const handleLoadSong = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // setLoading(true);
 
+    let showDialogAfter = false;
     if (!isAuthenticated) {
       console.warn("User not authenticated. Song not saved to DB.");
       return;
@@ -81,8 +89,10 @@ const LoadSong: React.FC = () => {
         setSongTitle(title);
         setAllSampleData(samples);
         setAllLoopSettings(loops);
+
+        await loadSamplersToRef(samples);
         apiResponseMessageRef.current = result.data.message;
-        setShowDialog("api-response");
+        showDialogAfter = true;
       }
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
@@ -97,6 +107,11 @@ const LoadSong: React.FC = () => {
         apiResponseMessageRef.current = "An unexpected error occured";
       }
       setShowDialog("api-response");
+    } finally {
+      setLoading(false);
+      if (showDialogAfter) {
+        setShowDialog("api-response");
+      }
     }
   };
 
@@ -106,12 +121,13 @@ const LoadSong: React.FC = () => {
     }
   }, [getSongtitles, isAuthenticated]);
 
-  // Set error to null when component unmounts
-  useEffect(() => {
-    return () => {
-      apiResponseMessageRef.current = null;
-    };
-  }, []);
+  // // Set error to null when component unmounts
+  // useEffect(() => {
+  //   return () => {
+  //     // setShowDialog(null);
+  //     apiResponseMessageRef.current = null;
+  //   };
+  // }, []);
 
   // Don't render anything until we've checked for songs
   if (!hasCheckedForSongs) {
@@ -141,12 +157,18 @@ const LoadSong: React.FC = () => {
           </select>
         </div>
 
-        <button
-          type="submit"
-          className="flex mx-auto justify-center border border-black mt-4 px-2 py-1 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-fit"
-        >
-          Load
-        </button>
+        {loading ? (
+          <div className="mt-3">
+            <Spinner />
+          </div>
+        ) : (
+          <button
+            type="submit"
+            className="flex mx-auto justify-center border border-black mt-4 px-2 py-1 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-fit"
+          >
+            Load
+          </button>
+        )}
       </form>
     )
   );

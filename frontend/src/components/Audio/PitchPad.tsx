@@ -5,6 +5,7 @@ import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { CustomSampler } from "../../types/CustomSampler";
 import quantize from "src/lib/audio/util/quantize";
+import { SampleEventFE } from "src/types/audioTypesFE";
 
 type PitchPadProps = {
   note: string;
@@ -16,11 +17,16 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     selectedSampleId,
     allSampleData,
     setAllSampleData,
-    samplersRef,
     loopIsPlaying,
     isRecording,
     currentLoop,
   } = useAudioContext();
+  const currentEvent = useRef<SampleEventFE>({
+    startTime: null,
+    duration: 0,
+    note: "",
+    velocity: 1,
+  });
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
   const [pitchIsPlaying, setPitchIsPlaying] = useState<boolean>(false);
@@ -47,10 +53,6 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
       scheduledReleaseTimeoutRef.current = null;
     }
 
-    const currentEvent = samplersRef.current[selectedSampleId]?.currentEvent;
-
-    if (!currentEvent) return;
-
     const now = Tone.now();
     const { start, end } = allSampleData[selectedSampleId].settings;
 
@@ -68,15 +70,17 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
         }
       }, duration * 1000);
     }
-    currentEvent.startTime = Tone.getTransport().ticks;
-    currentEvent.duration = 0;
-    currentEvent.note = note;
+    // If recording, create a new event for this note
+    if (loopIsPlaying && isRecording) {
+      currentEvent.current.startTime = Tone.getTransport().ticks;
+      currentEvent.current.duration = 0;
+      currentEvent.current.note = note;
+      currentEvent.current.velocity = 1;
+    }
   };
 
   const handleRelease = () => {
     if (!sampler) return;
-    const currentEvent = samplersRef.current[selectedSampleId]?.currentEvent;
-    if (!currentEvent) return;
 
     // Stop scheduled release
     if (scheduledReleaseTimeoutRef.current) {
@@ -88,39 +92,44 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     setPitchIsPlaying(false);
     sampler.triggerRelease(note, Tone.now());
 
-    if (!currentEvent.startTime) return;
+    if (!currentEvent.current?.startTime) return;
 
-    const padReleasetime = Tone.getTransport().seconds;
-    const sampleEnd = allSampleData[selectedSampleId].settings.end;
+    if (isRecording) {
+      const padReleasetime = Tone.getTransport().seconds;
+      const sampleEnd = allSampleData[selectedSampleId].settings.end;
 
-    const actualReleaseTime = sampleEnd
-      ? padReleasetime < sampleEnd
-        ? padReleasetime
-        : sampleEnd
-      : padReleasetime;
+      const actualReleaseTime = sampleEnd
+        ? padReleasetime < sampleEnd
+          ? padReleasetime
+          : sampleEnd
+        : padReleasetime;
 
-    const startTimeInSeconds = Tone.Ticks(currentEvent.startTime).toSeconds();
-    const loopEndInSeconds = Tone.Time(Tone.getTransport().loopEnd).toSeconds();
+      const startTimeInSeconds = Tone.Ticks(
+        currentEvent.current.startTime
+      ).toSeconds();
+      const loopEndInSeconds = Tone.Time(
+        Tone.getTransport().loopEnd
+      ).toSeconds();
 
-    currentEvent.duration =
-      actualReleaseTime > startTimeInSeconds
-        ? actualReleaseTime - startTimeInSeconds
-        : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
+      currentEvent.current.duration =
+        actualReleaseTime > startTimeInSeconds
+          ? actualReleaseTime - startTimeInSeconds
+          : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
 
-    if (!loopIsPlaying || !isRecording) return;
-    setAllSampleData((prev) => ({
-      ...prev,
-      [selectedSampleId]: {
-        ...prev[selectedSampleId],
-        events: {
-          ...prev[selectedSampleId].events,
-          [currentLoop]: [
-            ...(prev[selectedSampleId].events[currentLoop] || []),
-            { ...currentEvent },
-          ],
+      setAllSampleData((prev) => ({
+        ...prev,
+        [selectedSampleId]: {
+          ...prev[selectedSampleId],
+          events: {
+            ...prev[selectedSampleId].events,
+            [currentLoop]: [
+              ...(prev[selectedSampleId].events[currentLoop] || []),
+              { ...currentEvent.current! },
+            ],
+          },
         },
-      },
-    }));
+      }));
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent<HTMLButtonElement>) => {

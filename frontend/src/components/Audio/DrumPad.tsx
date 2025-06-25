@@ -7,6 +7,7 @@ import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
 import { drumKeys } from "src/lib/constants/drumKeys";
 import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
+import type { SampleEventFE } from "src/types/audioTypesFE";
 
 type DrumPadProps = {
   id: string;
@@ -21,7 +22,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setAllSampleData,
     setSelectedSampleId,
     selectedSampleId,
-    samplersRef,
     currentLoop,
   } = useAudioContext();
   // const sampleDataRef = useRef(allSampleData[id]);
@@ -34,10 +34,16 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   const { hotKeysActive } = useUIContext();
   const padNum = id.split("-")[1];
   const padKey = drumKeys[Number(padNum) - 1];
-  const getCurrentEvent = useCallback(
-    () => samplersRef.current[id]?.currentEvent,
-    [id, samplersRef]
-  );
+  const currentEvent = useRef<SampleEventFE>({
+    startTime: null,
+    duration: 0,
+    note: "",
+    velocity: 1,
+  });
+  // const getCurrentEvent = useCallback(
+  //   () => samplersRef.current[id]?.currentEvent,
+  //   [id, samplersRef]
+  // );
 
   // const semitonesToRate = (semitones: number) => {
   //   return Math.pow(2, semitones / 12);
@@ -45,21 +51,21 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   // const playbackRate = semitonesToRate(pitch);
 
-  const handlePress = useCallback(async () => {
-    // Ensure audio context is running
-    const audioContext = Tone.getContext();
-    if (audioContext.state !== "running") {
-      try {
-        await Tone.start();
-        // Wait a tiny bit to ensure context is truly ready
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      } catch (error) {
-        console.error("Failed to start audio context:", error);
-        return;
-      }
-    }
+  const handlePress = useCallback(() => {
+    // // Ensure audio context is running
+    // const audioContext = Tone.getContext();
+    // if (audioContext.state !== "running") {
+    //   try {
+    //     await Tone.start();
+    //     // Wait a tiny bit to ensure context is truly ready
+    //     await new Promise((resolve) => setTimeout(resolve, 10));
+    //   } catch (error) {
+    //     console.error("Failed to start audio context:", error);
+    //     return;
+    //   }
+    // }
 
-    const currentEvent = getCurrentEvent();
+    // const currentEvent = getCurrentEvent();
     if (!sampler) return;
 
     // Stop scheduled release
@@ -89,14 +95,15 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     }
 
     if (loopIsPlaying && isRecording) {
-      currentEvent.startTime = Tone.getTransport().ticks;
-      currentEvent.duration = 0;
-      currentEvent.note = baseNote;
+      currentEvent.current.startTime = Tone.getTransport().ticks;
+      currentEvent.current.duration = 0;
+      currentEvent.current.note = baseNote;
+      currentEvent.current.velocity = 1;
     }
   }, [
     allSampleData,
     baseNote,
-    getCurrentEvent,
+    // getCurrentEvent,
     id,
     isRecording,
     loopIsPlaying,
@@ -105,7 +112,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   ]);
 
   const handleRelease = useCallback(() => {
-    const currentEvent = getCurrentEvent();
+    // const currentEvent = getCurrentEvent();
     if (!sampler) return;
 
     if (!sampleIsPlaying) return;
@@ -120,7 +127,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     setSampleIsPlaying(false);
     sampler.triggerRelease(baseNote, Tone.now());
 
-    if (!currentEvent.startTime || !loopIsPlaying || !isRecording) return;
+    if (!currentEvent.current.startTime || !loopIsPlaying || !isRecording)
+      return;
 
     const padReleasetime = Tone.getTransport().seconds;
     const sampleEnd = allSampleData[selectedSampleId].settings.end;
@@ -131,10 +139,12 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         : sampleEnd
       : padReleasetime;
 
-    const startTimeInSeconds = Tone.Ticks(currentEvent.startTime).toSeconds();
+    const startTimeInSeconds = Tone.Ticks(
+      currentEvent.current.startTime
+    ).toSeconds();
     const loopEndInSeconds = Tone.Time(Tone.getTransport().loopEnd).toSeconds();
 
-    currentEvent.duration =
+    currentEvent.current.duration =
       actualReleaseTime > startTimeInSeconds
         ? actualReleaseTime - startTimeInSeconds
         : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
@@ -147,7 +157,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
           ...prev[id].events,
           [currentLoop]: [
             ...(prev[id].events[currentLoop] || []),
-            { ...currentEvent },
+            { ...currentEvent.current! },
           ],
         },
       },
@@ -155,7 +165,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   }, [
     allSampleData,
     baseNote,
-    getCurrentEvent,
+    // getCurrentEvent,
     id,
     isRecording,
     loopIsPlaying,
