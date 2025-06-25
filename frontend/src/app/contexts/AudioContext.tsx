@@ -401,7 +401,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   const [songTitle, setSongTitle] = useState<string>(() => {
     const savedSongTitle = localStorage.getItem("songTitle");
-    return savedSongTitle ? JSON.parse(savedSongTitle) : "Song001";
+    return savedSongTitle ?? "Song001";
   });
   const [songId, setSongId] = useState<string>(() => {
     const savedSongId = localStorage.getItem("songId");
@@ -505,7 +505,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // Upload songTitle to localStorage.songTitle when songTitle state changes
   useEffect(() => {
-    localStorage.setItem("songTitle", JSON.stringify(songTitle));
+    localStorage.setItem("songTitle", songTitle);
   }, [songTitle]);
 
   // Upload allLoopSettings with debounce to localStorage.loops when allLoopSettings state changes.

@@ -170,7 +170,11 @@ export default function Home() {
       {showRotateNotice && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-90 text-white flex items-center justify-center text-center p-4">
           <p className="text-xl sm:text-2xl font-semibold">
-            To Make Awesome Music \n Please rotate your device to landscape mode
+            To make awesome music,
+            <br />
+            please rotate your device
+            <br />
+            to landscape mode
           </p>
         </div>
       )}
