@@ -228,7 +228,6 @@ router.get(
           console.error("Google auth failed:", err || info);
           return res.redirect(`${FRONTEND_URL}/?loginError=google-auth-failed`);
         }
-
         const token = jwt.sign({ sub: user._id }, keys.TOKEN_SECRET!, {
           expiresIn: "1h",
         });
