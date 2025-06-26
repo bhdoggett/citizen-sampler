@@ -8,8 +8,15 @@ passport.use(
     try {
       const user = await User.findOne({ username });
       if (!user) return done(null, false, { message: "Incorrect username" });
+
       if (!user.password)
         return done(null, false, { message: "No password set" });
+
+      if (user.googleId)
+        return done(null, false, {
+          message:
+            "This account is linked to Google. Please log in with Google.",
+        });
 
       const match = await bcrypt.compare(password, user.password);
       if (!match) return done(null, false, { message: "Incorrect password" });

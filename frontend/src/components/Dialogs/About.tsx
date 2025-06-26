@@ -21,19 +21,24 @@ const About: React.FC = () => {
       </p>
 
       <p className="mb-4">
-        Pads 1–12 are loaded with samples from curated Library of Congress
-        collections, while pads 13–16 are reserved for classic drum machine
-        sounds. You can customize any pad, adjust pitch and playback settings,
+        By default, Drum Pads 1–12 are loaded with samples from curated Library
+        of Congress collections, and Pads 13–16 are loaded with sounds from
+        classic drum machines. But any sample can be individually loaded to any
+        pad. You can customize each sample, adjust pitch and playback settings,
         and record loops in real-time. Drum Pads can be triggered with your
         mouse, touch, or by the keyboard keys indicated in the top right corner
         of each pad.
       </p>
 
       <p className="mb-4">
-        Use the <strong>Pitch Grid</strong> to play samples melodically across
-        two octaves. In the <strong>Sample Settings</strong> section, zoom in on
-        waveforms, tweak start and end points, and shape your sound with
-        filters, volume, pan, attack, and release.
+        Use the <strong>Pitch Grid</strong> to play and records samples
+        repitched across two octaves.
+      </p>
+
+      <p className="mb-4">
+        In the <strong>Sample Settings</strong> section, zoom in on waveforms,
+        tweak start and end points, and shape your sound with filters, volume,
+        pan, attack, and release.
       </p>
 
       <p className="mb-4">

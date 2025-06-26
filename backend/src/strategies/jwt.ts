@@ -5,6 +5,9 @@ import keys from "../config/keys";
 import dotenv from "dotenv";
 dotenv.config();
 
+// JWT strategy for authenticating users via JSON Web Tokens
+
+console.log("JWT strategy initialized with secret:", keys.TOKEN_SECRET);
 passport.use(
   new JWTStrategy(
     {
