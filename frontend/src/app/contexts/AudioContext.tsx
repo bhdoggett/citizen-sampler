@@ -1,12 +1,5 @@
 "use client";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useRef,
-  // useMemo,
-} from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import * as Tone from "tone";
 import {
   SampleTypeFE,
@@ -364,41 +357,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
   };
 
-  const loadSamplersToRef = async (
-    sampleData: Record<string, SampleTypeFE>
-  ) => {
-    setSamplersLoading(true);
-
-    try {
-      // Clean up existing samplers first
-      Object.keys(sampleData).forEach((key) => {
-        cleanupSampler(key, samplersRef);
-      });
-
-      // Create all samplers concurrently
-      const samplerPromises = Object.entries(sampleData).map(
-        async ([key, sample]) => {
-          const sampler = await makeSamplerWithFX(sample.id, sample.url);
-          return { key, sampler };
-        }
-      );
-
-      // Wait for all samplers to be created
-      const samplers = await Promise.all(samplerPromises);
-
-      // Assign samplers to ref
-      samplers.forEach(({ key, sampler }) => {
-        samplersRef.current[key] = sampler;
-      });
-    } catch (error) {
-      console.error("Failed to load samplers:", error);
-      // Handle error as needed (e.g., show user notification)
-    } finally {
-      console.log("finally ran");
-      setSamplersLoading(false);
-    }
-  };
-
   const [songTitle, setSongTitle] = useState<string>(() => {
     const savedSongTitle = localStorage.getItem("songTitle");
     return savedSongTitle ?? "Song001";
@@ -433,6 +391,60 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   );
 
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
+
+  const loadSamplerRefSettings = (
+    id: string,
+    samplesData: Record<string, SampleTypeFE>
+  ) => {
+    const settings = samplesData[id]?.settings; // Use passed data instead of allSampleData
+    const samplerWithFX = samplersRef.current[id];
+    if (!samplerWithFX || !settings) return;
+
+    const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
+    sampler.attack = settings?.attack || 0;
+    sampler.release = settings?.release || 0;
+    pitch.pitch = settings?.pitch || 0;
+    panVol.volume.value = settings?.volume || 0;
+    panVol.pan.value = settings?.pan || 0;
+    highpass.frequency.value = settings?.highpass?.[0] || 0;
+    lowpass.frequency.value = settings?.lowpass?.[0] || 200;
+  };
+
+  const loadSamplersToRef = async (
+    sampleData: Record<string, SampleTypeFE>
+  ) => {
+    setSamplersLoading(true);
+
+    try {
+      // Clean up existing samplers first
+      Object.keys(sampleData).forEach((key) => {
+        cleanupSampler(key, samplersRef);
+      });
+
+      // Create all samplers concurrently
+      const samplerPromises = Object.entries(sampleData).map(
+        async ([key, sample]) => {
+          const sampler = await makeSamplerWithFX(sample.id, sample.url);
+          return { key, sampler };
+        }
+      );
+
+      // Wait for all samplers to be created
+      const samplers = await Promise.all(samplerPromises);
+
+      // Assign samplers to ref
+      samplers.forEach(({ key, sampler }) => {
+        samplersRef.current[key] = sampler;
+        loadSamplerRefSettings(key, sampleData); // Pass sampleData directly
+      });
+    } catch (error) {
+      console.error("Failed to load samplers:", error);
+    } finally {
+      console.log("finally ran");
+      setSamplersLoading(false);
+    }
+  };
+
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [metronomeActive, setMetronomeActive] = useState(false);

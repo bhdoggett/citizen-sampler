@@ -36,6 +36,7 @@ const Menu: React.FC = () => {
     setShowDialog,
     apiResponseMessageRef,
     setHotKeysActive,
+    setMakeBeatsButtonPressed,
   } = useUIContext();
   const { songTitle, allLoopSettings, allSampleData } = useAudioContext();
   const downloadAllWavStems = useDownloadWavStems();
@@ -104,6 +105,7 @@ const Menu: React.FC = () => {
 
   const handleDownloadWavStems = async () => {
     await downloadAllWavStems();
+    setMakeBeatsButtonPressed(false);
     Tone.start();
     setMenuOpen(false);
   };

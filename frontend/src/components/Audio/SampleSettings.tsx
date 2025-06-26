@@ -1,6 +1,6 @@
 "use client";
 import { useAudioContext } from "../../app/contexts/AudioContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { SampleSettingsFE } from "src/types/audioTypesFE";
 import useMutesAndSolos from "../../app/hooks/useMutesAndSolos";
 import Waveform from "./Waveform";
@@ -95,22 +95,42 @@ const SampleSettings = () => {
     }
   }, [selectedSampleId, allSampleData]);
 
+  const updateSamplerRefSettings = useCallback(
+    (id: string) => {
+      if (!samplersRef.current[id]) return;
+      const samplerWithFX = samplersRef.current[id];
+      if (!samplerWithFX) return;
+      const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
+      sampler.attack = settings?.attack || 0;
+      sampler.release = settings?.release || 0;
+      pitch.pitch = settings?.pitch || 0;
+      panVol.volume.value = settings?.volume || 0;
+      panVol.pan.value = settings?.pan || 0;
+      highpass.frequency.value = settings?.highpass?.[0] || 0;
+      lowpass.frequency.value = settings?.lowpass?.[0] || 200;
+    },
+    [samplersRef, settings]
+  );
+
   // Keep samplersRef settings in sync with UI
   useEffect(() => {
     if (!settings) return;
 
-    const samplerWithFX = samplersRef.current[selectedSampleId];
-    if (samplerWithFX) {
-      const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
-      pitch.pitch = settings.pitch || 0;
-      panVol.volume.value = settings.volume || 0;
-      panVol.pan.value = settings.pan || 0;
-      highpass.frequency.value = settings.highpass?.[0] || 0;
-      lowpass.frequency.value = settings.lowpass?.[0] || 20000;
-      sampler.attack = settings.attack || 0;
-      sampler.release = settings.release || 0;
-    }
-  }, [samplersRef, selectedSampleId, settings]);
+    if (!selectedSampleId || !samplersRef.current[selectedSampleId]) return;
+    updateSamplerRefSettings(selectedSampleId);
+
+    // const samplerWithFX = samplersRef.current[selectedSampleId];
+    // if (samplerWithFX) {
+    //   const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
+    //   pitch.pitch = settings.pitch || 0;
+    //   panVol.volume.value = settings.volume || 0;
+    //   panVol.pan.value = settings.pan || 0;
+    //   highpass.frequency.value = settings.highpass?.[0] || 0;
+    //   lowpass.frequency.value = settings.lowpass?.[0] || 20000;
+    //   sampler.attack = settings.attack || 0;
+    //   sampler.release = settings.release || 0;
+    // }
+  }, [samplersRef, selectedSampleId, settings, updateSamplerRefSettings]);
 
   // Keep mute and solo rendering in sync with global state
   useEffect(() => {

@@ -65,7 +65,7 @@ const LoadSong: React.FC = () => {
 
   const handleLoadSong = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // setLoading(true);
+    setLoading(true);
 
     let showDialogAfter = false;
     if (!isAuthenticated) {
