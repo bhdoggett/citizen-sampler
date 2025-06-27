@@ -13,6 +13,7 @@ const useDownloadWavStems = () => {
     allLoopSettings,
     makeSamplerWithFX,
     applySamplerSettings,
+    songTitle,
   } = useAudioContext();
   const allIds = Object.keys(samplersRef.current);
   const loops = ["A", "B", "C", "D"];
@@ -124,7 +125,7 @@ const useDownloadWavStems = () => {
     const link = document.createElement("a");
 
     link.href = wavUrl;
-    link.download = `${id}-${loop}.wav`;
+    link.download = `${songTitle}-${id.split("-")[1]}-${loop}.wav`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
