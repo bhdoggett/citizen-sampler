@@ -37,7 +37,8 @@ const Menu: React.FC = () => {
     apiResponseMessageRef,
     setHotKeysActive,
   } = useUIContext();
-  const { songTitle, allLoopSettings, allSampleData } = useAudioContext();
+  const { songTitle, allLoopSettings, allSampleData, setSongTitle, setSongId } =
+    useAudioContext();
   const downloadAllWavStems = useDownloadWavStems();
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -126,6 +127,10 @@ const Menu: React.FC = () => {
 
       if (result.status === 200) {
         apiResponseMessageRef.current = result.data.message;
+        localStorage.removeItem("songTitle");
+        localStorage.removeItem("songId");
+        setSongId("");
+        setSongTitle("");
         setShowDialog("api-response");
       }
     } catch (err) {
