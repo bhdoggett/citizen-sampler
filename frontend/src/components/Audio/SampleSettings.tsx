@@ -21,7 +21,7 @@ const SampleSettings = () => {
     updateSamplerStateSettings,
     currentLoop,
   } = useAudioContext();
-  const { confirmActionRef, setShowDialog } = useUIContext();
+  const { confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
 
   // // Need Frequency Params for translating frequency filters from exponential to linear inputs
   // const maxFreq = 20000;
@@ -79,6 +79,8 @@ const SampleSettings = () => {
         },
       },
     }));
+    setShowDialog(null);
+    setHotKeysActive(true);
   };
 
   // Render Hz or kHz based on value
@@ -383,7 +385,6 @@ const SampleSettings = () => {
                     <button
                       onClick={() => {
                         setShowDialog("choose-sample");
-                        // setSampleMenuOpen((prev) => !prev)
                       }}
                       className="border shadow-inner shadow-slate-600 border-black px-1 mx-1"
                     >

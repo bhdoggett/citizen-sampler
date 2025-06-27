@@ -86,6 +86,7 @@ const LoadSong: React.FC = () => {
       if (result.status === 200) {
         const song: SongTypeFE = result.data.song;
         const { title, samples, loops } = song;
+        localStorage.setItem("songId", song._id!);
         setSongTitle(title);
         setAllSampleData(samples);
         setAllLoopSettings(loops);

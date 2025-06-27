@@ -11,8 +11,6 @@ dotenv.config();
 
 const router = express.Router();
 
-const KIT_AUDIO_BASE_URL = process.env.KIT_AUDIO_BASE_URL;
-
 const { GOOGLE_APPLICATION_CREDENTIALS_BASE64, GOOGLE_DRIVE_DRUMS_FOLDER_ID } =
   keys;
 
@@ -138,6 +136,40 @@ router.put(
   }
 );
 
+router.delete(
+  "/me/songs/:_id",
+  requireJwtAuth,
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user as UserDoc;
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    try {
+      const { _id } = req.params;
+
+      const existingSong = await Song.findOne({ _id: _id });
+
+      if (!existingSong) {
+        res.status(404).json({ message: "Song not found" });
+        return;
+      }
+
+      await Song.deleteOne({ _id: _id });
+
+      // Remove the song ID from user's songs array
+      await User.updateOne({ _id: user._id }, { $pull: { songs: _id } });
+
+      res.status(200).json({ message: "Song successfully deleted" });
+      return;
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // Get Saved Song Titles
 router.get(
   "/me/songs",
@@ -171,7 +203,6 @@ router.get(
     const user = req.user as UserDoc;
 
     await user.populate("songs");
-    // const populatedUser = await getPopulatedUser(req, res);
 
     if (!user) {
       res.status(404).json({ message: "User not found" });
@@ -197,7 +228,7 @@ router.get("/drums/:filename", async (req: Request, res: Response) => {
 
   try {
     const list = await drive.files.list({
-      q: `name='${filename}' and mimeType='audio/mpeg'`,
+      q: `name='${filename}' and '${GOOGLE_DRIVE_DRUMS_FOLDER_ID}' in parents and mimeType='audio/mpeg' `,
       fields: "files(id, name)",
       pageSize: 1,
     });

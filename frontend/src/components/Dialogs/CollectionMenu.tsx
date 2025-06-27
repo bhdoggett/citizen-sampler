@@ -12,10 +12,10 @@ const CollectionMenu: React.FC = () => {
     loadSamplersToRef,
     setAllSampleData,
   } = useAudioContext();
-  const { confirmActionRef, setShowDialog } = useUIContext();
+  const { confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
   const [c, setC] = useState<string>(collectionNames[0]);
 
-  const handleSelect = (collection?: string) => {
+  const handleSelect = async (collection?: string) => {
     const newSamples = collection
       ? initLocSamplesFromOneCollection(collection)
       : initLocSamplesFromAllCollections();
@@ -33,7 +33,9 @@ const CollectionMenu: React.FC = () => {
       };
     });
 
-    loadSamplersToRef(newSamples);
+    await loadSamplersToRef(newSamples);
+    setShowDialog(null);
+    setHotKeysActive(true);
   };
 
   return (
@@ -62,7 +64,6 @@ const CollectionMenu: React.FC = () => {
 
       <button
         onClick={() => {
-          // e.preventDefault();
           confirmActionRef.current = {
             message:
               "This will replace pads 1-12 with new Library of Congress Samples. Are you sure?",

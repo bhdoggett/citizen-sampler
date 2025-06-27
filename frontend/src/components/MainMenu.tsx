@@ -61,7 +61,7 @@ const Menu: React.FC = () => {
     }
 
     if (!isAuthenticated) {
-      console.warn("User not authenticated. Song not saved to DB.");
+      console.warn("User not authenticated. Song not saved.");
       return;
     }
 
@@ -97,6 +97,46 @@ const Menu: React.FC = () => {
         error.response.data.message
       ) {
         console.error("Error saving song to DB:", error);
+        apiResponseMessageRef.current = error.response.data.message;
+        setShowDialog("api-response");
+      }
+    }
+  };
+  const handleDeleteSong = async () => {
+    const songId = localStorage.getItem("songId");
+    // if (!songId) {
+    //   setShowDialog("save-new-song");
+    //   setMenuOpen(false);
+    //   return;
+    // }
+
+    if (!isAuthenticated) {
+      console.warn("User not authenticated. Song not deleted.");
+      return;
+    }
+
+    try {
+      const result = await axios.delete(
+        `${BASE_URL}/beats/me/songs/${songId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (result.status === 200) {
+        apiResponseMessageRef.current = result.data.message;
+        setShowDialog("api-response");
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        console.error("Error deleting song from DB:", error);
         apiResponseMessageRef.current = error.response.data.message;
         setShowDialog("api-response");
       }
@@ -225,7 +265,7 @@ const Menu: React.FC = () => {
                     className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                     onClick={handleSaveSong}
                   >
-                    Save
+                    Save Song
                   </li>
                   <li
                     className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
@@ -235,6 +275,20 @@ const Menu: React.FC = () => {
                     }}
                   >
                     Save As
+                  </li>
+                  <li
+                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    onClick={() => {
+                      confirmActionRef.current = {
+                        message: "Are you sure you want to delete this song?",
+                        buttonText: "100!",
+                        action: handleDeleteSong,
+                      };
+                      setShowDialog("confirm-action");
+                      setMenuOpen(false);
+                    }}
+                  >
+                    Delete Song
                   </li>
                   <li
                     className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"

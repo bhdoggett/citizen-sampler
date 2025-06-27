@@ -25,7 +25,7 @@ const ChooseSample: React.FC = () => {
     loadSamplersToRef,
     updateSamplerData,
   } = useAudioContext();
-  const { setShowDialog } = useUIContext();
+  const { setShowDialog, confirmActionRef } = useUIContext();
   const [type, setType] = useState<"loc" | "kit" | null>(null);
   const [sampleGroup, setSampleGroup] = useState<string | null>(null);
   const [samplesArray, setSamplesArray] = useState<string[]>([]);
@@ -86,8 +86,7 @@ const ChooseSample: React.FC = () => {
   };
 
   // Update allSampleData and samplersRef when a new sample is chosen
-  const handleChooseSample = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleChooseSample = () => {
     if (
       selectedIndex === null ||
       !sampleGroup ||
@@ -162,7 +161,7 @@ const ChooseSample: React.FC = () => {
           </>
         )}
       </div>
-      <form action="submit" onSubmit={handleChooseSample}>
+      <div>
         <div>
           {type === "loc" && (
             <>
@@ -247,14 +246,22 @@ const ChooseSample: React.FC = () => {
               ←
             </span>
             <button
-              type="submit"
               className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
+              onClick={() => {
+                confirmActionRef.current = {
+                  message:
+                    "Replace the current sample and all it's settings with your new sample?",
+                  buttonText: "Yep",
+                  action: handleChooseSample,
+                };
+                setShowDialog("confirm-action");
+              }}
             >
               Choose Sample
             </button>
           </>
         )}
-      </form>
+      </div>
     </>
   );
 };
