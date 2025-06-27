@@ -7,8 +7,13 @@ import toWav from "audiobuffer-to-wav";
 import type { LoopName } from "../../../../shared/types/audioTypes";
 
 const useDownloadWavStems = () => {
-  const { allSampleData, samplersRef, allLoopSettings, makeSamplerWithFX } =
-    useAudioContext();
+  const {
+    allSampleData,
+    samplersRef,
+    allLoopSettings,
+    makeSamplerWithFX,
+    applySamplerSettings,
+  } = useAudioContext();
   const allIds = Object.keys(samplersRef.current);
   const loops = ["A", "B", "C", "D"];
 
@@ -58,9 +63,9 @@ const useDownloadWavStems = () => {
         true
       );
 
-      const { sampler } = offlineSamplerWithFx;
+      applySamplerSettings(sampleData, offlineSamplerWithFx);
 
-      console.log("sampler loaded", sampler.loaded, id);
+      const { sampler } = offlineSamplerWithFx;
 
       const part = new Tone.Part((time, event) => {
         const { start, end } = settings;
