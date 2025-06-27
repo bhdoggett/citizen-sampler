@@ -291,7 +291,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     stems: boolean = false
   ): Promise<SamplerWithFX> => {
     return new Promise((resolve, reject) => {
-      setSamplersLoading(true);
+      // Only set loading state for non-stems (UI) samplers
+      if (!stems) {
+        setSamplersLoading(true);
+      }
+
       const gain = new Tone.Gain(1); // Strictly for the purpose of controlling muting or soloing tracks
       const pitch = new Tone.PitchShift(0);
       const panVol = new Tone.PanVol(0, 0);
@@ -300,41 +304,62 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       const sampler = new CustomSampler({
         urls: { C4: sampleUrl },
         onload: async () => {
-          // Connect the FX chain
-          sampler.connect(gain);
-          gain.connect(pitch);
-          pitch.connect(highpass);
-          highpass.connect(lowpass);
-          lowpass.connect(panVol);
+          try {
+            // Connect the FX chain
+            sampler.connect(gain);
+            gain.connect(pitch);
+            pitch.connect(highpass);
+            highpass.connect(lowpass);
+            lowpass.connect(panVol);
 
-          if (!stems) {
-            panVol.connect(masterGainNode.current).toDestination();
-          } else {
-            panVol.toDestination();
-          }
-          resolve({
-            id: sampleId,
-            sampler,
-            pitch,
-            gain,
-            panVol,
-            highpass,
-            lowpass,
-            currentEvent: {
-              startTime: null,
-              duration: null,
-              note: "C4",
-              velocity: 1,
-            },
-          });
-          await Tone.loaded();
+            if (!stems) {
+              panVol.connect(masterGainNode.current).toDestination();
+            } else {
+              panVol.toDestination();
+            }
 
-          if (makeBeatsButtonPressed) {
-            setMakeBeatsButtonPressed(false);
+            const samplerWithFX = {
+              id: sampleId,
+              sampler,
+              pitch,
+              gain,
+              panVol,
+              highpass,
+              lowpass,
+              currentEvent: {
+                startTime: null,
+                duration: null,
+                note: "C4",
+                velocity: 1,
+              },
+            };
+
+            await Tone.loaded();
+
+            if (makeBeatsButtonPressed) {
+              setMakeBeatsButtonPressed(false);
+            }
+
+            // Clear loading state for UI samplers
+            if (!stems) {
+              setSamplersLoading(false);
+            }
+
+            resolve(samplerWithFX);
+          } catch (error) {
+            // Clear loading state on error for UI samplers
+            if (!stems) {
+              setSamplersLoading(false);
+            }
+            reject(error);
           }
         },
         onerror: (err) => {
           console.error(`Error loading sample: ${sampleId}`, err);
+          // Clear loading state on error for UI samplers
+          if (!stems) {
+            setSamplersLoading(false);
+          }
           reject(err);
         },
       });
