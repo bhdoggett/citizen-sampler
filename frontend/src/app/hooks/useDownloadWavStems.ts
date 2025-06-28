@@ -131,14 +131,6 @@ const useDownloadWavStems = () => {
     document.body.removeChild(link);
   };
 
-  // Download all wav files - grouped in one function for button click
-  // const downloadAllWavs = async () => {
-  //   const downloadPromises = allIds.flatMap((id) =>
-  //     loops.flatMap((loop) => downloadWav(id, loop as LoopName))
-  //   );
-  //   await Promise.all(downloadPromises);
-  //   Tone.start();
-  // };
   const downloadAllWavs = async () => {
     // Process each ID one at a time
     for (const id of allIds) {

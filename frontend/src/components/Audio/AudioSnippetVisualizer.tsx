@@ -1,17 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
-import { useAudioContext } from "../../app/contexts/AudioContext";
 
 type AudioSnippetVisualizerProps = {
-  id: string;
+  url: string;
 };
 
 const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
-  id,
+  url,
 }) => {
-  const { allSampleData } = useAudioContext();
-  const url = allSampleData[id]?.url;
-
   const waveformRef = useRef<HTMLDivElement | null>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const [duration, setDuration] = useState(0);
@@ -34,14 +30,24 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
     });
 
     wavesurferRef.current = wave;
-    wave.load(url);
+    // Load with promise handling
+    wave.load(url).catch((error) => {
+      if (error.name === "AbortError") {
+        console.log("Audio load aborted - component unmounted or URL changed");
+      } else {
+        console.warn("Error loading audio:", error);
+      }
+    });
 
     wave.on("ready", () => {
       setDuration(wave.getDuration());
     });
 
     return () => {
-      wave.destroy();
+      // Add null check before calling destroy
+      if (wavesurferRef.current) {
+        wavesurferRef.current.destroy();
+      }
     };
   }, [url]);
 

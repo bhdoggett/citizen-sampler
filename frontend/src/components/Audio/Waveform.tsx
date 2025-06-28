@@ -24,10 +24,12 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   useEffect(() => {
     if (waveSurferRef.current) {
       waveSurferRef.current.destroy();
+      waveSurferRef.current = null;
     }
 
     if (regionsPluginRef.current) {
       regionsPluginRef.current.destroy();
+      regionsPluginRef.current = null;
     }
 
     regionsPluginRef.current = RegionsPlugin.create();
@@ -45,7 +47,14 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       plugins: [regionsPluginRef.current],
     });
 
-    wavesurfer.load(audioUrl);
+    // Load with promise handling
+    wavesurfer.load(audioUrl).catch((error) => {
+      if (error.name === "AbortError") {
+        console.log("Audio load aborted - component unmounted or URL changed");
+      } else {
+        console.warn("Error loading audio:", error);
+      }
+    });
 
     // When ready, add a region
     wavesurfer.on("ready", () => {

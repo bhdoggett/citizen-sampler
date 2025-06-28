@@ -112,7 +112,7 @@ router.get("/confirm-email", async (req, res) => {
     await user.save();
 
     const accessToken = jwt.sign({ id: user._id }, keys.TOKEN_SECRET!, {
-      expiresIn: "1hr",
+      expiresIn: "1d",
     });
 
     res.status(200).json({

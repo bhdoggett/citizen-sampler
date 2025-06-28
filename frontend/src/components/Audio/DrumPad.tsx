@@ -24,8 +24,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     selectedSampleId,
     currentLoop,
   } = useAudioContext();
-  // const sampleDataRef = useRef(allSampleData[id]);
-
+  const partRef = useRef<Tone.Part | null>(null);
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -52,20 +51,10 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   // const playbackRate = semitonesToRate(pitch);
 
   const handlePress = useCallback(() => {
-    // // Ensure audio context is running
-    // const audioContext = Tone.getContext();
-    // if (audioContext.state !== "running") {
-    //   try {
-    //     await Tone.start();
-    //     // Wait a tiny bit to ensure context is truly ready
-    //     await new Promise((resolve) => setTimeout(resolve, 10));
-    //   } catch (error) {
-    //     console.error("Failed to start audio context:", error);
-    //     return;
-    //   }
-    // }
-
-    // const currentEvent = getCurrentEvent();
+    console.log(
+      "events for this sampler:",
+      allSampleData[selectedSampleId].events
+    );
     if (!sampler) return;
 
     // Stop scheduled release
@@ -103,7 +92,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   }, [
     allSampleData,
     baseNote,
-    // getCurrentEvent,
     id,
     isRecording,
     loopIsPlaying,
@@ -165,7 +153,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   }, [
     allSampleData,
     baseNote,
-    // getCurrentEvent,
     id,
     isRecording,
     loopIsPlaying,
@@ -253,49 +240,35 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   // **** Schedule playback of sampler play events ****
   useEffect(() => {
-    if (!loopIsPlaying || allSampleData[id].events[currentLoop].length === 0)
+    // Clean up any existing part first
+    if (partRef.current) {
+      try {
+        if (partRef.current.state === "started") {
+          partRef.current.stop();
+          console.log("Stopping existing part at top of UseEffect", id);
+        }
+        partRef.current.dispose();
+      } catch (error) {
+        console.warn("Error disposing existing part:", error);
+      }
+      partRef.current = null;
+    }
+
+    if (!loopIsPlaying || allSampleData[id].events[currentLoop].length === 0) {
       return;
-
-    // const sampleData = allSampleData[id];
-
-    // const events = sampleData.events[currentLoop].map((event) => {
-    //   if (!event.startTime) return;
-
-    //   // Convert startTime from ticks to seconds
-    //   const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
-
-    //   // If quantize === true, quantize the start time
-    //   // Otherwise, use the start time as is
-    //   let eventTime = sampleData.settings.quantize
-    //     ? quantize(startTimeInSeconds, sampleData.settings.quantVal)
-    //     : startTimeInSeconds;
-
-    //   // If an event is quantied to the loop end, wrap it to the loop start
-    //   if (eventTime === Tone.Time(Tone.getTransport().loopEnd).toSeconds()) {
-    //     eventTime = Tone.Time(Tone.getTransport().loopStart).toSeconds();
-    //   }
-
-    //   return [
-    //     eventTime,
-    //     {
-    //       startTime: eventTime,
-    //       duration: event.duration,
-    //       note: event.note,
-    //       velocity: event.velocity,
-    //     },
-    //   ];
-    // });
-
-    // // Filter out undefined events and remove events that occur at the same start time
-    // // This is a common issue with quantization
-    // const eventsNoDuplicates = events.filter((event, index) => {
-    //   if (event?.[0] === events[index - 1]?.[0]) return false;
-    //   return true;
-    // });
+    }
 
     const scheduleEvents = getScheduleEvents(allSampleData, id, currentLoop);
 
-    const part = new Tone.Part((time, event) => {
+    partRef.current = new Tone.Part((time, event) => {
+      console.log(
+        "creating part for",
+        id,
+        "at time",
+        time,
+        "with event",
+        event
+      );
       if (!sampler) return;
       const { start, end } = allSampleData[id].settings;
 
@@ -310,6 +283,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
             ? end - start
             : event.duration
           : event.duration;
+
         sampler.triggerAttackRelease(
           event.note,
           actualDuration,
@@ -325,23 +299,22 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       }
     }, scheduleEvents);
 
-    part.start(0);
+    partRef.current.start(0);
 
-    const disposePart = () => {
-      if (part) {
+    // Cleanup function
+    return () => {
+      if (partRef.current) {
         try {
-          if (part.state === "started") {
-            part.stop();
+          if (partRef.current.state === "started") {
+            partRef.current.stop();
+            console.log("Stopping part at cleanup for", id);
           }
-          part.dispose();
+          partRef.current.dispose();
         } catch (error) {
           console.warn("Error disposing part:", error);
         }
+        partRef.current = null;
       }
-    };
-
-    return () => {
-      disposePart();
     };
   }, [
     loopIsPlaying,
@@ -383,7 +356,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
           </span>
         </div>
 
-        <AudioSnippetVisualizer id={id} />
+        <AudioSnippetVisualizer url={allSampleData[id].url} />
       </button>
     </div>
   );

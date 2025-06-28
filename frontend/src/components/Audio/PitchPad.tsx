@@ -1,11 +1,10 @@
 "use client";
-
 import { useState, useEffect, useRef } from "react";
 import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { CustomSampler } from "../../types/CustomSampler";
-import quantize from "src/lib/audio/util/quantize";
 import { SampleEventFE } from "src/types/audioTypesFE";
+import quantize from "../../lib/audio/util/quantize";
 
 type PitchPadProps = {
   note: string;
@@ -21,17 +20,19 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     isRecording,
     currentLoop,
   } = useAudioContext();
-  const currentEvent = useRef<SampleEventFE>({
-    startTime: null,
-    duration: 0,
-    note: "",
-    velocity: 1,
-  });
+  const currentEvent = useRef<SampleEventFE | null>(null);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
   const [pitchIsPlaying, setPitchIsPlaying] = useState<boolean>(false);
 
   const handlePress = async () => {
+    console.log("handlePress called!", new Error().stack);
+    console.log(
+      "events for this sampler:",
+      allSampleData[selectedSampleId].events
+    );
+    // your original handlePress logic
+
     // Ensure audio context is running
     const audioContext = Tone.getContext();
     if (audioContext.state !== "running") {
@@ -72,6 +73,12 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     }
     // If recording, create a new event for this note
     if (loopIsPlaying && isRecording) {
+      currentEvent.current = {
+        startTime: null,
+        duration: 0,
+        note: "",
+        velocity: 1,
+      };
       currentEvent.current.startTime = Tone.getTransport().ticks;
       currentEvent.current.duration = 0;
       currentEvent.current.note = note;
@@ -219,15 +226,33 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
     sampler,
   ]);
 
+  // clear currentEvent when selectedSampleId changes
+  useEffect(() => {
+    currentEvent.current = {
+      startTime: null,
+      duration: 0,
+      note: "",
+      velocity: 1,
+    };
+  }, [selectedSampleId]);
+
   return (
     <button
-      onMouseDown={handlePress}
+      onMouseDown={(e) => {
+        console.log("🖱️ MOUSEDOWN triggered handlePress", e.type, e.target);
+        handlePress();
+      }}
       onMouseEnter={(e) => {
+        console.log("🖱️ MOUSEENTER - buttons:", e.buttons);
         if (e.buttons === 1) {
+          console.log("🖱️ MOUSEENTER triggered handlePress", e.type, e.target);
           handlePress();
         }
       }}
-      onTouchStart={handlePress}
+      onTouchStart={(e) => {
+        console.log("📱 TOUCHSTART triggered handlePress", e.type, e.target);
+        handlePress();
+      }}
       onMouseUp={handleRelease}
       onMouseLeave={handleRelease}
       onTouchEnd={handleTouchEnd}

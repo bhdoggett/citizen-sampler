@@ -229,12 +229,6 @@ const AuthDialog: React.FC = () => {
         className="flex mx-auto justify-center text-sm mt-5 hover:text-slate-200"
       >
         Continue with Google
-        {/* <button
-          type="button"
-          className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
-        >
-          
-        </button> */}
       </a>
 
       <span

@@ -1,5 +1,5 @@
 "use client";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useUIContext } from "./UIContext";
 import dotenv from "dotenv";
@@ -39,6 +39,7 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   const [authIsSignup, setAuthIsSignup] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { apiResponseMessageRef, setShowDialog } = useUIContext();
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   const setToken = (newToken: string | null) => {
@@ -77,7 +78,6 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     setDisplayNameState(newDisplayName);
   };
 
-  // If
   useEffect(() => {
     const token = searchParams.get("token");
     const userId = searchParams.get("userId");
@@ -95,6 +95,10 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     if (displayName) {
       setDisplayName(displayName);
     }
+
+    if (token || userId || username || displayName) {
+      router.replace("/");
+    }
   }, []);
 
   useEffect(() => {
@@ -103,6 +107,8 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
       apiResponseMessageRef.current = "Google login failed";
       setShowDialog("api-response");
     }
+
+    if (loginError) router.replace("/");
   }, []);
 
   return (
