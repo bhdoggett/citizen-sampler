@@ -22,8 +22,10 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
   } = useAudioContext();
   const currentEvent = useRef<SampleEventFE | null>(null);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const hasReleasedRef = useRef(false);
+  const hasReleasedRef = useRef<boolean>(false);
+  const lastPressTimeRef = useRef<number>(0);
   const [pitchIsPlaying, setPitchIsPlaying] = useState<boolean>(false);
+  // const debounceDelay = 0.01; // 10ms debounce delay
 
   const handlePress = async () => {
     console.log("handlePress called!", new Error().stack);
@@ -31,7 +33,12 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
       "events for this sampler:",
       allSampleData[selectedSampleId].events
     );
-    // your original handlePress logic
+
+    const now = Tone.now();
+    // Check if enough time has passed since last press
+    if (now - lastPressTimeRef.current < 0.01) {
+      return; // Ignore this press (debounced)
+    }
 
     // Ensure audio context is running
     const audioContext = Tone.getContext();
@@ -54,7 +61,6 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
       scheduledReleaseTimeoutRef.current = null;
     }
 
-    const now = Tone.now();
     const { start, end } = allSampleData[selectedSampleId].settings;
 
     hasReleasedRef.current = false;
