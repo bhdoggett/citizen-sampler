@@ -30,7 +30,13 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
     });
 
     wavesurferRef.current = wave;
-    wave.load(url);
+    wave.load(url).catch((error) => {
+      if (error.name === "AbortError") {
+        console.log("Audio load aborted - component unmounted or URL changed");
+      } else {
+        console.warn("Error loading audio:", error);
+      }
+    });
 
     wave.on("ready", () => {
       setDuration(wave.getDuration());
