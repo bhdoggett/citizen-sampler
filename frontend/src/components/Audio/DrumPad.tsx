@@ -201,7 +201,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   // Get the active style based on whether the sample is playing
   const getActiveStyle = () => {
     return sampleIsPlaying
-      ? "brightness-75 saturate-150 translate-x-[2px] translate-y-[1px] shadow-[0_0_0_rgba(0,0,0,0)] transition-all duration-25 border-cyan-400"
+      ? "brightness-75 saturate-150 translate-x-[2px] translate-y-[1px] shadow-cyan-200 transition-all duration-25 border-cyan-400"
       : "brightness-100 saturate-100 shadow-md shadow-slate-500 translate-x-0 translate-y-0 transition-all duration-25 border-gray-600";
   };
 

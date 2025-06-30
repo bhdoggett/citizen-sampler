@@ -238,14 +238,13 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
 
   return (
     <button
-      onMouseDown={() => {}}
+      onMouseDown={handlePress}
       onMouseEnter={(e) => {
         if (e.buttons === 1) {
+          handlePress();
         }
       }}
-      onTouchStart={() => {
-        handlePress();
-      }}
+      onTouchStart={handlePress}
       onMouseUp={handleRelease}
       onMouseLeave={handleRelease}
       onTouchEnd={handleTouchEnd}
