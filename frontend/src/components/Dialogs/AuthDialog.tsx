@@ -35,7 +35,6 @@ const AuthDialog: React.FC = () => {
           password,
         });
         if (result.status === 201) {
-          console.log("result.data", result.data);
           apiResponseMessageRef.current = result.data.message;
           setShowDialog("api-response");
         }

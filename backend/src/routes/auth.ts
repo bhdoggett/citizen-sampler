@@ -62,7 +62,7 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
     await newUser.save();
 
     const emailToken = jwt.sign({ id: newUser._id }, keys.EMAIL_TOKEN_SECRET!, {
-      expiresIn: "10s",
+      expiresIn: "15m",
     });
 
     sendConfirmationLink(newUser, emailToken);

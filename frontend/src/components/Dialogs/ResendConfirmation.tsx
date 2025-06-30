@@ -32,8 +32,6 @@ const ResendConfirmation: React.FC = () => {
         }
       );
       if (result.status === 200) {
-        console.log("Confirmation link sent successfully.");
-
         apiResponseMessageRef.current = result.data.message;
         setShowDialog("api-response");
       }

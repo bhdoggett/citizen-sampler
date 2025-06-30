@@ -423,10 +423,10 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
 
   const applySamplerSettings = (
-    samplesData: SampleTypeFE,
+    sampleData: SampleTypeFE,
     samplerWithFX: SamplerWithFX
   ) => {
-    const settings = samplesData.settings;
+    const settings = sampleData.settings;
     if (!samplerWithFX || !settings) return;
 
     const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
@@ -464,12 +464,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       // Assign samplers to ref
       samplers.forEach(({ key, sampler }) => {
         samplersRef.current[key] = sampler;
-        applySamplerSettings(allSampleData[key], samplersRef.current[key]); // Pass sampleData directly
+        applySamplerSettings(sampleData[key], sampler);
       });
     } catch (error) {
       console.error("Failed to load samplers:", error);
     } finally {
-      console.log("finally ran");
       setSamplersLoading(false);
     }
   };

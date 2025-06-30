@@ -51,10 +51,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   // const playbackRate = semitonesToRate(pitch);
 
   const handlePress = useCallback(() => {
-    console.log(
-      "events for this sampler:",
-      allSampleData[selectedSampleId].events
-    );
     if (!sampler) return;
 
     // Stop scheduled release
@@ -205,8 +201,8 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
   // Get the active style based on whether the sample is playing
   const getActiveStyle = () => {
     return sampleIsPlaying
-      ? "brightness-75 saturate-150 transition-all duration-100"
-      : "brightness-100 saturate-100 transition-all duration-300";
+      ? "brightness-75 saturate-150 translate-x-[2px] translate-y-[1px] shadow-[0_0_0_rgba(0,0,0,0)] transition-all duration-25 border-cyan-400"
+      : "brightness-100 saturate-100 shadow-md shadow-slate-500 translate-x-0 translate-y-0 transition-all duration-25 border-gray-600";
   };
 
   // Convert arrow keys to symbols for display
@@ -245,7 +241,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
       try {
         if (partRef.current.state === "started") {
           partRef.current.stop();
-          console.log("Stopping existing part at top of UseEffect", id);
         }
         partRef.current.dispose();
       } catch (error) {
@@ -261,14 +256,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
     const scheduleEvents = getScheduleEvents(allSampleData, id, currentLoop);
 
     partRef.current = new Tone.Part((time, event) => {
-      console.log(
-        "creating part for",
-        id,
-        "at time",
-        time,
-        "with event",
-        event
-      );
       if (!sampler) return;
       const { start, end } = allSampleData[id].settings;
 
@@ -307,7 +294,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         try {
           if (partRef.current.state === "started") {
             partRef.current.stop();
-            console.log("Stopping part at cleanup for", id);
           }
           partRef.current.dispose();
         } catch (error) {
@@ -332,7 +318,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
 
   return (
     <div
-      className={`flex m-auto rounded-sm w-full select-none aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
+      className={`relative flex m-auto rounded-sm w-full select-none aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
       onFocus={handleFocus}
     >
       <button
@@ -347,7 +333,7 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
         onMouseUp={handleRelease}
         onMouseLeave={() => handleRelease()}
         onTouchEnd={handleTouchEnd}
-        className={`flex flex-col select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-user-select:none] [-webkit-tap-highlight-color:transparent] ${getActiveStyle()} ${getPadColor()} m-1 border-4 border-slate-800 w-full aspect-square shadow-md shadow-slate-500`}
+        className={`relative flex flex-col select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-user-select:none] [-webkit-tap-highlight-color:transparent]  ${getActiveStyle()} ${getPadColor()} m-1  w-full aspect-square shadow-md shadow-slate-500 className="bg-gray-800 border-2  rounded-lg hover:shadow-lg hover:shadow-cyan-400/50 hover:border-cyan-400 transition-all duration-200 cursor-pointer"`}
       >
         <div className="flex ml-0.5 justify-between w-[95%]">
           <span className="flex text-sm font-bold">{padNum}</span>
@@ -355,7 +341,6 @@ const DrumPad: React.FC<DrumPadProps> = ({ id, sampler }) => {
             {hotKeysActive ? getKeySymbol(padKey) : ""}
           </span>
         </div>
-
         <AudioSnippetVisualizer url={allSampleData[id].url} />
       </button>
     </div>

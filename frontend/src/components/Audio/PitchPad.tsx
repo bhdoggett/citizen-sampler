@@ -28,12 +28,6 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
   // const debounceDelay = 0.01; // 10ms debounce delay
 
   const handlePress = async () => {
-    console.log("handlePress called!", new Error().stack);
-    console.log(
-      "events for this sampler:",
-      allSampleData[selectedSampleId].events
-    );
-
     const now = Tone.now();
     // Check if enough time has passed since last press
     if (now - lastPressTimeRef.current < 0.01) {
@@ -244,25 +238,18 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
 
   return (
     <button
-      onMouseDown={(e) => {
-        console.log("🖱️ MOUSEDOWN triggered handlePress", e.type, e.target);
-        handlePress();
-      }}
+      onMouseDown={() => {}}
       onMouseEnter={(e) => {
-        console.log("🖱️ MOUSEENTER - buttons:", e.buttons);
         if (e.buttons === 1) {
-          console.log("🖱️ MOUSEENTER triggered handlePress", e.type, e.target);
-          handlePress();
         }
       }}
-      onTouchStart={(e) => {
-        console.log("📱 TOUCHSTART triggered handlePress", e.type, e.target);
+      onTouchStart={() => {
         handlePress();
       }}
       onMouseUp={handleRelease}
       onMouseLeave={handleRelease}
       onTouchEnd={handleTouchEnd}
-      className={`border border-black text-sm cursor-pointer aspect-square shadow-inner shadow-slate-600 select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-user-select:none] [-webkit-tap-highlight-color:transparent] ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400" : "bg-slate-300"} ${getActiveStyle()}`}
+      className={`border border-black text-sm cursor-pointer aspect-square shadow-inner shadow-slate-600 select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-user-select:none] [-webkit-tap-highlight-color:transparent] ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400 " : "bg-slate-300"} ${getActiveStyle()}`}
     >
       {note}
     </button>

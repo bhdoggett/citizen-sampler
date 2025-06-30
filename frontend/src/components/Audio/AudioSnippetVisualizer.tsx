@@ -30,29 +30,19 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
     });
 
     wavesurferRef.current = wave;
-    // Load with promise handling
-    wave.load(url).catch((error) => {
-      if (error.name === "AbortError") {
-        console.log("Audio load aborted - component unmounted or URL changed");
-      } else {
-        console.warn("Error loading audio:", error);
-      }
-    });
+    wave.load(url);
 
     wave.on("ready", () => {
       setDuration(wave.getDuration());
     });
 
     return () => {
-      // Add null check before calling destroy
-      if (wavesurferRef.current) {
-        wavesurferRef.current.destroy();
-      }
+      wave.destroy();
     };
   }, [url]);
 
   return (
-    <div className="relative w-full" style={{ minHeight: "1px" }}>
+    <div className="relative w-full mt-2" style={{ minHeight: "1px" }}>
       <div ref={waveformRef} className="w-full" />
       {duration > 0 && (
         <div
