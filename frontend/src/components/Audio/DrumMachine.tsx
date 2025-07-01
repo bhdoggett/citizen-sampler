@@ -13,7 +13,7 @@ const DrumMachine = () => {
       <h3 className="bg-slate-800 w-full border-2 border-slate-800 text-white font-bold">
         Sample Pads
       </h3>
-      <div className="grid grid-cols-4 gap-0 mt-1">
+      <div className="grid grid-cols-4 gap-0 mt-1 touch-none select-none">
         {allPadIds.map((id) => {
           const samplerObj = samplersRef.current[id];
           return (

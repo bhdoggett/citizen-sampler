@@ -51,7 +51,7 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
   return (
     <div className="flex flex-col text-center w-1/2 ml-3 mt-1">
       <h3 className="bg-slate-50 font-bold border-2 border-black shadow-inner shadow-slate-400">{`Pitch Grid: ${selectedSampleId}`}</h3>
-      <div className="w-full aspect-square grid grid-cols-5 gap-0 border-2 border-black mt-1 mx-auto">
+      <div className="w-full aspect-square grid grid-cols-5 gap-0 border-2 border-black mt-1 mx-auto touch-none select-none">
         {gridNotes.flat().map((note, i) => {
           const samplerObj = samplersRef.current[selectedSampleId];
           return (
