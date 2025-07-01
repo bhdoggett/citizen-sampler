@@ -94,6 +94,11 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     waveSurferIsReady,
   ]);
 
+  // Reset zoom to zero when selectedSampleId changes
+  useEffect(() => {
+    setZoom(0);
+  }, [selectedSampleId]);
+
   // Zoom functionality
   useEffect(() => {
     if (
@@ -131,6 +136,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     }
   }, [zoom, waveSurferIsReady]);
 
+  // Handle pinch/zoom with two-finger gesture
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       // Check for two-finger pinch/zoom gesture
