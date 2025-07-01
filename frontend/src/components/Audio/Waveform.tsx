@@ -11,27 +11,20 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const waveSurferRef = useRef<WaveSurfer | null>(null);
   const regionsPluginRef = useRef<RegionsPlugin | null>(null);
+  const [waveSurferIsReady, setWaveSurferIsReady] = useState<boolean>(false);
   const { selectedSampleId, allSampleData, updateSamplerStateSettings } =
     useAudioContext();
   const [zoom, setZoom] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { settings } = allSampleData[selectedSampleId];
 
+  // Initialize WaveSurfer
   useEffect(() => {
-    if (waveSurferRef.current) {
-      waveSurferRef.current.destroy();
-      waveSurferRef.current = null;
-    }
+    if (!containerRef.current || !audioUrl) return;
 
-    if (regionsPluginRef.current) {
-      regionsPluginRef.current.destroy();
-      regionsPluginRef.current = null;
-    }
+    waveSurferRef.current?.destroy();
 
     regionsPluginRef.current = RegionsPlugin.create();
-
-    if (!containerRef.current) return;
-
     const wavesurfer = WaveSurfer.create({
       container: containerRef.current,
       waveColor: "blue",
@@ -43,62 +36,62 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       plugins: [regionsPluginRef.current],
     });
 
-    // Load with promise handling
+    waveSurferRef.current = wavesurfer;
+
     wavesurfer.load(audioUrl).catch((error) => {
-      if (error.name === "AbortError") {
-        console.log("Audio load aborted - component unmounted or URL changed");
-      } else {
+      if (error.name !== "AbortError") {
         console.warn("Error loading audio:", error);
       }
     });
 
-    // When ready, add a region
     wavesurfer.on("ready", () => {
-      const regionStart = settings.start ?? 0;
-      const regionEnd = settings.end ?? wavesurfer.getDuration();
-
-      waveSurferRef.current = wavesurfer;
-
-      // Clear any preexisting region
-      if (!regionsPluginRef.current) return;
-      regionsPluginRef.current.clearRegions();
-
-      const region = regionsPluginRef.current.addRegion({
-        start: regionStart,
-        end: regionEnd,
-        drag: true,
-        resize: true,
-        color: "rgba(255, 0, 0, 0.2)",
-      });
-
-      // Update global state when region is updated
-      region.on("update-end", () => {
-        updateSamplerStateSettings(selectedSampleId, {
-          start: region.start,
-          end: region.end,
-        });
-      });
-    });
-
-    // Ensure only one region can exist at a time
-    regionsPluginRef.current.on("region-created", (newRegion) => {
-      if (!regionsPluginRef.current) return;
-      regionsPluginRef.current.getRegions().forEach((region) => {
-        if (region.id !== newRegion.id) {
-          region.remove();
-        }
-      });
+      setWaveSurferIsReady(true);
     });
 
     return () => {
+      setWaveSurferIsReady(false);
       wavesurfer.destroy();
     };
+  }, [audioUrl, containerRef]);
+
+  // Update Region settings change
+  useEffect(() => {
+    const wavesurfer = waveSurferRef.current;
+    if (!wavesurfer) return;
+
+    let plugin = regionsPluginRef.current;
+
+    if (!plugin) {
+      plugin = RegionsPlugin.create();
+      regionsPluginRef.current = plugin;
+    }
+
+    const region = plugin.addRegion({
+      start: settings.start ?? 0,
+      end: settings.end ?? wavesurfer.getDuration(),
+      drag: true,
+      resize: true,
+      color: "rgba(255, 0, 0, 0.2)",
+    });
+
+    region.on("update-end", () => {
+      updateSamplerStateSettings(selectedSampleId, {
+        start: region.start,
+        end: region.end,
+      });
+    });
+
+    plugin.on("region-created", (newRegion) => {
+      plugin.getRegions().forEach((r) => {
+        if (r.id !== newRegion.id) r.remove();
+      });
+    });
   }, [
-    audioUrl,
     settings.start,
     settings.end,
     selectedSampleId,
     updateSamplerStateSettings,
+    waveSurferIsReady,
   ]);
 
   // Zoom functionality
@@ -106,14 +99,15 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     if (
       !waveSurferRef.current ||
       !scrollRef.current ||
-      !regionsPluginRef.current
-    )
+      !regionsPluginRef.current ||
+      !waveSurferIsReady
+    ) {
       return;
+    }
 
     const ws = waveSurferRef.current;
     const scrollContainer = scrollRef.current;
 
-    // Apply zoom level
     ws.zoom(zoom);
 
     const regions = regionsPluginRef.current.getRegions();
@@ -127,7 +121,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       const containerWidth = scrollContainer.clientWidth;
       scrollContainer.scrollLeft = Math.max(centerX - containerWidth / 2, 0);
     }
-  }, [zoom]);
+  }, [zoom, waveSurferIsReady]);
 
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
