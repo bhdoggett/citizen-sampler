@@ -40,12 +40,10 @@ const About: React.FC = () => {
         In the <strong>Sample Settings</strong> section, zoom in on waveforms,
         tweak start and end points, alter the sample&#39;s base note and
         finetune the pitch. Shape your sound with filters, volume, pan, attack,
-        and release. Enable <strong>Quantize</strong>
-        and choose a beat subdivision if you need your samples locked to the
-        time signature. And finally, use <strong>
-          Clear Recorded Events
-        </strong>{" "}
-        to start fresh or to remove any mistakes made while recording.
+        and release. Enable <strong>Quantize</strong> and choose a beat
+        subdivision if you need your samples locked to the time signature. And
+        finally, use <strong>Clear Recorded Events</strong> to start fresh or to
+        remove any mistakes made while recording.
       </p>
 
       <p className="mb-4">
@@ -74,14 +72,21 @@ const About: React.FC = () => {
         sample-based music.
       </p>
 
-      <a
-        href="https://github.com/bhdoggett/citizen-sampler"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-400 underline"
-      >
-        View on GitHub
-      </a>
+      <p className="flex justify-center mx-auto text-blue-400 underline text-sm">
+        <a
+          href="mailto:citizensampler@gmail.com?subject=Feedback"
+          className="border-r pr-2 mr-2"
+        >
+          Feedback
+        </a>
+        <a
+          href="https://github.com/bhdoggett/citizen-sampler"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View on GitHub
+        </a>
+      </p>
     </section>
   );
 };
