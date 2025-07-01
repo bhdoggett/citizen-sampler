@@ -40,6 +40,8 @@ const Menu: React.FC = () => {
   const {
     songTitle,
     allLoopSettings,
+    setAllLoopSettings,
+    setCurrentLoop,
     allSampleData,
     setSongTitle,
     setSongId,
@@ -62,14 +64,22 @@ const Menu: React.FC = () => {
   };
 
   const handleReset = async () => {
+    // Clear persistent localStorage copies
+    localStorage.removeItem("loops");
+    localStorage.removeItem("samples");
+
+    setAllLoopSettings({
+      A: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: true },
+      B: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
+      C: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
+      D: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
+    });
+    setCurrentLoop("A");
     const locSamples = initLocSamplesFromAllCollections();
     const kitSamples = initKitSamples("mpc");
-
     setAllSampleData({ ...locSamples, ...kitSamples });
 
     await loadSamplersToRef({ ...locSamples, ...kitSamples });
-    setShowDialog(null);
-    setHotKeysActive(true);
   };
 
   const handleSaveSong = async () => {
@@ -378,7 +388,7 @@ const Menu: React.FC = () => {
                 onClick={() => {
                   confirmActionRef.current = {
                     message:
-                      "This action will reset all samples and loops to their default state. Are you sure?",
+                      "This action will replace all current samples and reset the sampler to default values. Are you sure?",
                     buttonText: "Fresh Start",
                     action: handleReset,
                   };
