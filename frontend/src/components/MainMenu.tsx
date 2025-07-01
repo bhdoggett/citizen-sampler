@@ -37,8 +37,17 @@ const Menu: React.FC = () => {
     apiResponseMessageRef,
     setHotKeysActive,
   } = useUIContext();
-  const { songTitle, allLoopSettings, allSampleData, setSongTitle, setSongId } =
-    useAudioContext();
+  const {
+    songTitle,
+    allLoopSettings,
+    allSampleData,
+    setSongTitle,
+    setSongId,
+    initLocSamplesFromAllCollections,
+    initKitSamples,
+    setAllSampleData,
+    loadSamplersToRef,
+  } = useAudioContext();
   const downloadAllWavStems = useDownloadWavStems();
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -50,6 +59,17 @@ const Menu: React.FC = () => {
     setUserId(null);
     setUsername(null);
     setDisplayName(null);
+  };
+
+  const handleReset = async () => {
+    const locSamples = initLocSamplesFromAllCollections();
+    const kitSamples = initKitSamples("mpc");
+
+    setAllSampleData({ ...locSamples, ...kitSamples });
+
+    await loadSamplersToRef({ ...locSamples, ...kitSamples });
+    setShowDialog(null);
+    setHotKeysActive(true);
   };
 
   const handleSaveSong = async () => {
@@ -102,6 +122,7 @@ const Menu: React.FC = () => {
       }
     }
   };
+
   const handleDeleteSong = async () => {
     const songId = localStorage.getItem("songId");
     // if (!songId) {
@@ -351,6 +372,21 @@ const Menu: React.FC = () => {
                 onClick={handleDownloadWavStems}
               >
                 Download Stems
+              </li>
+              <li
+                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                onClick={() => {
+                  confirmActionRef.current = {
+                    message:
+                      "This action will reset all samples and loops to their default state. Are you sure?",
+                    buttonText: "Fresh Start",
+                    action: handleReset,
+                  };
+                  setShowDialog("confirm-action");
+                  setMenuOpen(false);
+                }}
+              >
+                Reset All
               </li>
               <li
                 className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"

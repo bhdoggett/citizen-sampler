@@ -107,6 +107,14 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
 
     const ws = waveSurferRef.current;
     const scrollContainer = scrollRef.current;
+    const plugin = regionsPluginRef.current;
+
+    // 🛡 Safeguard against race condition
+    if (!ws || !plugin || !scrollContainer || !waveSurferIsReady) return;
+
+    // ✅ NEW GUARD: Only zoom if audio is loaded
+    const duration = ws.getDuration();
+    if (!duration || duration === 0 || isNaN(duration)) return;
 
     ws.zoom(zoom);
 
