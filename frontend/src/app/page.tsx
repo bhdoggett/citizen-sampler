@@ -70,11 +70,11 @@ export default function Home() {
     <>
       {!showRotateNotice && (
         <>
-          <div className="flex flex-col justify-center items-center my-5">
-            <div className="w-[600px] lg:w-[800px] md:w-[800px] sm:w-[700px] xs:w-[600px]">
+          <div className="flex flex-col justify-center items-center mt-4 mb-6">
+            <div className="w-[600px] lg:w-[800px] md:w-[800px] sm:w-[700px] xs:w-[600px] border-[3px] border-black bg-white p-3 rounded-lg shadow-lg shadow-black">
               {/* Header - NOT blurred */}
               <div className="flex justify-between">
-                <h1 className="text-5xl font-bold block mb-1">
+                <h1 className="text-5xl font-bold block mb-3">
                   Citizen Sampler
                 </h1>
                 <MainMenu />
@@ -125,11 +125,11 @@ export default function Home() {
             </div>
 
             {/* Footer - NOT blurred */}
-            <footer className="flex flex-col items-center mt-2">
+            <footer className="flex flex-col items-center mt-2 text-white">
               <p className="text-sm">
                 Inspired and made possible by
                 <Link
-                  className="m-1 text-sm text-blue-700"
+                  className="m-1 text-sm text-blue-500 font-bold"
                   href="https://citizen-dj.labs.loc.gov/"
                 >
                   Citizen DJ
@@ -138,7 +138,7 @@ export default function Home() {
               <p className="text-sm">
                 and the
                 <Link
-                  className="m-1 text-sm text-blue-700"
+                  className="m-1 text-sm text-blue-500 font-bold"
                   href="https://loc.gov/"
                 >
                   Library of Congress
