@@ -98,6 +98,10 @@ const LoopSchema = new Schema({
     type: Number,
     required: true,
   },
+  isInitialized: {
+    type: Boolean,
+    required: true,
+  },
 });
 
 // Song

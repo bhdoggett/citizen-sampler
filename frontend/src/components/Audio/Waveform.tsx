@@ -11,12 +11,8 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const waveSurferRef = useRef<WaveSurfer | null>(null);
   const regionsPluginRef = useRef<RegionsPlugin | null>(null);
-  const {
-    // waveformIsPlaying,
-    selectedSampleId,
-    allSampleData,
-    updateSamplerStateSettings,
-  } = useAudioContext();
+  const { selectedSampleId, allSampleData, updateSamplerStateSettings } =
+    useAudioContext();
   const [zoom, setZoom] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { settings } = allSampleData[selectedSampleId];
@@ -159,26 +155,6 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       }
     };
   }, []);
-  // // Visual-only playback animation
-  // useEffect(() => {
-  //   const ws = waveSurferRef.current;
-  //   if (!ws) return;
-
-  //   if (waveformIsPlaying) {
-  //     const { start = 0, end } = allSampleData[selectedSampleId].settings;
-
-  //     ws.setVolume(0); // mute so it doesn't interfere
-  //     // play only the region
-  //     if (end) {
-  //       ws.play(start, end);
-  //     } else ws.play(start);
-  //   } else {
-  //     if (ws.isPlaying()) {
-  //       ws.pause();
-  //       ws.seekTo(0);
-  //     }
-  //   }
-  // }, [waveformIsPlaying, allSampleData, selectedSampleId]);
 
   return (
     <div className="flex w-full px-3 justify-center mb-2">

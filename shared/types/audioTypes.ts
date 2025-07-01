@@ -52,6 +52,7 @@ export type LoopSettings = {
   bars: number;
   bpm: number;
   swing: number;
+  isInitialized: boolean;
 };
 
 export type AllLoopSettings = {

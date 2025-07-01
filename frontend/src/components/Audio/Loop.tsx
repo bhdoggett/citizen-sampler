@@ -18,7 +18,6 @@ const Loop = () => {
     loopIsPlaying,
   } = useAudioContext();
   const { setShowDialog, uiWarningMessageRef } = useUIContext();
-  // const { handleStop } = useTransportControls();
 
   const handleSelectLoop = (loop: LoopName) => {
     if (loopIsPlaying) {
@@ -27,6 +26,21 @@ const Loop = () => {
       setShowDialog("ui-warning");
       return;
     }
+
+    // Check if this loop needs to be initialized
+    const currentLoopSettings = allLoopSettings[loop];
+    if (!currentLoopSettings || !currentLoopSettings.isInitialized) {
+      // Copy settings from current loop
+      const sourceSettings = allLoopSettings[currentLoop as LoopName];
+      setAllLoopSettings((prev) => ({
+        ...prev,
+        [loop]: {
+          ...sourceSettings,
+          isInitialized: true, // Mark as initialized
+        },
+      }));
+    }
+
     setCurrentLoop(loop);
   };
 
@@ -63,7 +77,7 @@ const Loop = () => {
 
   return (
     <div className="flex flex-col pl-1">
-      <div className="flex flex-col w-full mx-auto  border-2 border-black shadow-md shadow-slate-500">
+      <div className="flex flex-col w-full mx-auto border-2 border-black shadow-md shadow-slate-500">
         <h1 className="w-full border-b border-black bg-slate-800 text-white text-center">
           Loop
         </h1>
@@ -81,7 +95,7 @@ const Loop = () => {
           ))}
         </div>
         <div className="flex flex-col gap-1 w-full max-w-sm p-1 mb-1 text-sm font-semibold">
-          <div className="flex-1 flex items-center ">
+          <div className="flex-1 flex items-center">
             <label htmlFor="bpm" className="">
               BPM:
             </label>
@@ -90,22 +104,22 @@ const Loop = () => {
               type="number"
               min="40"
               max="240"
-              value={allLoopSettings[currentLoop as LoopName]?.bpm}
+              value={allLoopSettings[currentLoop as LoopName]?.bpm ?? 120}
               onChange={(e) => updateLoopSetting("bpm", Number(e.target.value))}
               className="w-16 p-1 border border-gray-400 text-center shadow-inner shadow-slate-500"
             />
           </div>
           <div className="flex-1 flex items-center">
-            <label htmlFor="bpm" className="">
+            <label htmlFor="swing" className="">
               Swing:
             </label>
             <input
-              id="bpm"
+              id="swing"
               type="number"
               min="0"
               max="1"
               step="0.1"
-              value={allLoopSettings[currentLoop as LoopName]?.swing}
+              value={allLoopSettings[currentLoop as LoopName]?.swing ?? 0}
               onChange={(e) =>
                 updateLoopSetting("swing", Number(e.target.value))
               }
@@ -115,14 +129,15 @@ const Loop = () => {
 
           {/* Time Signature Controls */}
           <div className="flex-1 flex items-center">
-            <label htmlFor="time-signature" className="">
+            <label htmlFor="beats" className="">
               Beats:
             </label>
             <input
+              id="beats"
               type="number"
               min="1"
               max="32"
-              value={allLoopSettings[currentLoop as LoopName]?.beats}
+              value={allLoopSettings[currentLoop as LoopName]?.beats ?? 4}
               onChange={(e) =>
                 updateLoopSetting("beats", Number(e.target.value))
               }
@@ -130,15 +145,16 @@ const Loop = () => {
             />
           </div>
 
-          <div className="flex-1 items-center">
-            <label htmlFor="loop-length" className="">
+          <div className="flex-1 flex items-center">
+            <label htmlFor="bars" className="">
               Bars:
             </label>
             <input
+              id="bars"
               type="number"
               min="1"
               max="32"
-              value={allLoopSettings[currentLoop as LoopName]?.bars}
+              value={allLoopSettings[currentLoop as LoopName]?.bars ?? 1}
               onChange={(e) =>
                 updateLoopSetting("bars", Number(e.target.value))
               }
