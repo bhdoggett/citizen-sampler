@@ -21,6 +21,8 @@ import {
   DrumMachineId,
   getKitSampleTitle,
 } from "../../lib/drumMachines";
+import axios from "axios";
+import { set, get } from "idb-keyval"; // for IndexedDB storage
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -64,6 +66,8 @@ type AudioContextType = {
   loadSamplersToRef: (
     sampleData: Record<string, SampleTypeFE>
   ) => Promise<void>;
+  storeAudioInIndexedDB: (url: string, sampleId: string) => Promise<void>;
+  getCachedAudioUrlFromIndexedDB: (sampleId: string) => Promise<string | null>;
   currentLoop: string;
   setCurrentLoop: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
@@ -279,8 +283,24 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     );
   };
 
-  const { makeBeatsButtonPressed, setMakeBeatsButtonPressed } = useUIContext();
+  const storeAudioInIndexedDB = async (url: string, sampleId: string) => {
+    try {
+      const response = await axios.get(url, { responseType: "blob" });
+      await set(`audio-${sampleId}`, response.data); // Store Blob directly to IndexedDB
+    } catch (error) {
+      console.error("Failed to store audio in IndexedDB:", error);
+    }
+  };
 
+  const getCachedAudioUrlFromIndexedDB = async (
+    sampleId: string
+  ): Promise<string | null> => {
+    const blob = await get<Blob>(`audio-${sampleId}`);
+    if (!blob) return null;
+    return URL.createObjectURL(blob);
+  };
+
+  const { makeBeatsButtonPressed, setMakeBeatsButtonPressed } = useUIContext();
   const [samplersLoading, setSamplersLoading] = useState<boolean>(true);
 
   // Function to create a sampler with FX chain.
@@ -477,8 +497,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [currentLoop, setCurrentLoop] = useState<string>("A");
-  // const lastLoopRef = useRef<LoopName>("A");
-
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
@@ -532,9 +550,15 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     initializeAudio();
   }, []);
 
-  // Load samplers to samplerRef
+  // Load samplers to samplerRef and waveform peaks to localStorage
   useEffect(() => {
     loadSamplersToRef(allSampleData);
+    // Store waveform peaks for each sample in localStorage
+    Object.entries(allSampleData).forEach(([id, sample]) => {
+      if (sample.url) {
+        storeAudioInIndexedDB(sample.url, id);
+      }
+    });
   }, []); // <===== if this empty dependency array is removed, the samplers are loaded with every update in allSampleData state
 
   // Upload allSampleData to localStorage.samples when allSampleData state changes.
@@ -667,6 +691,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         setSamplersLoading,
         loadSamplersToRef,
         makeSamplerWithFX,
+        storeAudioInIndexedDB,
+        getCachedAudioUrlFromIndexedDB,
         applySamplerSettings,
         initLocSampleData,
         initKitSampleData,

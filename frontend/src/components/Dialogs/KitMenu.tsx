@@ -9,8 +9,12 @@ import {
 } from "src/lib/drumMachines";
 
 const KitMenu: React.FC = () => {
-  const { initKitSamples, loadSamplersToRef, setAllSampleData } =
-    useAudioContext();
+  const {
+    initKitSamples,
+    loadSamplersToRef,
+    setAllSampleData,
+    storeAudioInIndexedDB,
+  } = useAudioContext();
   const { confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
   const drumMachineNames: string[] = Object.values(drumMachines).map(
     (drumMachine) => drumMachine.name
@@ -44,6 +48,10 @@ const KitMenu: React.FC = () => {
     });
 
     await loadSamplersToRef(newSamples);
+    // Store all new samples in IndexedDB
+    for (const [sampleId, sample] of Object.entries(newSamples)) {
+      await storeAudioInIndexedDB(sample.url, sampleId);
+    }
     setShowDialog(null);
     setHotKeysActive(true);
   };

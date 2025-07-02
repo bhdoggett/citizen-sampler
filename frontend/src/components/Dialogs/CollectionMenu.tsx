@@ -11,6 +11,7 @@ const CollectionMenu: React.FC = () => {
     initLocSamplesFromOneCollection,
     loadSamplersToRef,
     setAllSampleData,
+    storeAudioInIndexedDB,
   } = useAudioContext();
   const { confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
   const [c, setC] = useState<string>(collectionNames[0]);
@@ -34,6 +35,10 @@ const CollectionMenu: React.FC = () => {
     });
 
     await loadSamplersToRef(newSamples);
+    // Store all new samples in IndexedDB
+    for (const [sampleId, sample] of Object.entries(newSamples)) {
+      await storeAudioInIndexedDB(sample.url, sampleId);
+    }
     setShowDialog(null);
     setHotKeysActive(true);
   };

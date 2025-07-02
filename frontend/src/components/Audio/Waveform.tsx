@@ -12,8 +12,13 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   const waveSurferRef = useRef<WaveSurfer | null>(null);
   const regionsPluginRef = useRef<RegionsPlugin | null>(null);
   const [waveSurferIsReady, setWaveSurferIsReady] = useState<boolean>(false);
-  const { selectedSampleId, allSampleData, updateSamplerStateSettings } =
-    useAudioContext();
+  const {
+    selectedSampleId,
+    allSampleData,
+    updateSamplerStateSettings,
+    storeAudioInIndexedDB,
+    getCachedAudioUrlFromIndexedDB,
+  } = useAudioContext();
   const [zoom, setZoom] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { settings } = allSampleData[selectedSampleId];
@@ -38,11 +43,20 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
 
     waveSurferRef.current = wavesurfer;
 
-    wavesurfer.load(audioUrl).catch((error) => {
-      if (error.name !== "AbortError") {
-        console.warn("Error loading audio:", error);
+    const loadAudio = async () => {
+      const cachedUrl = await getCachedAudioUrlFromIndexedDB(selectedSampleId);
+
+      if (!cachedUrl) {
+        storeAudioInIndexedDB(audioUrl, selectedSampleId); // Cache it for next time
       }
-    });
+      wavesurfer.load(cachedUrl ?? audioUrl).catch((error) => {
+        if (error.name !== "AbortError") {
+          console.warn("Error loading audio:", error);
+        }
+      });
+    };
+
+    loadAudio();
 
     wavesurfer.on("ready", () => {
       setWaveSurferIsReady(true);
@@ -52,7 +66,13 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       setWaveSurferIsReady(false);
       wavesurfer.destroy();
     };
-  }, [audioUrl, containerRef]);
+  }, [
+    audioUrl,
+    containerRef,
+    selectedSampleId,
+    getCachedAudioUrlFromIndexedDB,
+    storeAudioInIndexedDB,
+  ]);
 
   // Update Region settings change
   useEffect(() => {
@@ -117,11 +137,15 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     // 🛡 Safeguard against race condition
     if (!ws || !plugin || !scrollContainer || !waveSurferIsReady) return;
 
-    // ✅ NEW GUARD: Only zoom if audio is loaded
     const duration = ws.getDuration();
-    if (!duration || duration === 0 || isNaN(duration)) return;
+    if (!duration || isNaN(duration) || duration < 0.1) return;
 
-    ws.zoom(zoom);
+    try {
+      ws.zoom(zoom);
+    } catch (err) {
+      console.warn("Zoom failed — audio likely not fully loaded yet:", err);
+      return;
+    }
 
     const regions = regionsPluginRef.current.getRegions();
     const region = Object.values(regions)[0];

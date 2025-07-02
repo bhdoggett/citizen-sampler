@@ -20,6 +20,7 @@ const LoadSong: React.FC = () => {
     setAllSampleData,
     setAllLoopSettings,
     loadSamplersToRef,
+    storeAudioInIndexedDB,
   } = useAudioContext();
   const { isAuthenticated, token } = useAuthContext();
   const { apiResponseMessageRef, setShowDialog } = useUIContext();
@@ -64,10 +65,12 @@ const LoadSong: React.FC = () => {
   ]);
 
   const handleLoadSong = async (e: React.FormEvent<HTMLFormElement>) => {
+    // Prevent default form submission behavior
     e.preventDefault();
     setLoading(true);
 
     let showDialogAfter = false;
+
     if (!isAuthenticated) {
       console.warn("User not authenticated. Song not saved to DB.");
       return;
@@ -92,6 +95,10 @@ const LoadSong: React.FC = () => {
         setAllLoopSettings(loops);
 
         await loadSamplersToRef(samples);
+        // Store all new samples in IndexedDB
+        for (const [sampleId, sample] of Object.entries(samples)) {
+          await storeAudioInIndexedDB(sample.url, sampleId);
+        }
         apiResponseMessageRef.current = result.data.message;
         showDialogAfter = true;
       }
@@ -122,20 +129,11 @@ const LoadSong: React.FC = () => {
     }
   }, [getSongtitles, isAuthenticated]);
 
-  // // Set error to null when component unmounts
-  // useEffect(() => {
-  //   return () => {
-  //     // setShowDialog(null);
-  //     apiResponseMessageRef.current = null;
-  //   };
-  // }, []);
-
   // Don't render anything until we've checked for songs
   if (!hasCheckedForSongs) {
     return null;
   }
 
-  // Only render the form if there are songs
   return (
     songTitles.length > 0 && (
       <form onSubmit={handleLoadSong}>
