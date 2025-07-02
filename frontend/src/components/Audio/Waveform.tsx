@@ -44,7 +44,10 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     waveSurferRef.current = wavesurfer;
 
     const loadAudio = async () => {
-      const cachedUrl = await getCachedAudioUrlFromIndexedDB(selectedSampleId);
+      const cachedUrl = await getCachedAudioUrlFromIndexedDB(
+        selectedSampleId,
+        audioUrl
+      );
 
       if (!cachedUrl) {
         storeAudioInIndexedDB(audioUrl, selectedSampleId); // Cache it for next time

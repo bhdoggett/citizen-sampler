@@ -67,7 +67,10 @@ type AudioContextType = {
     sampleData: Record<string, SampleTypeFE>
   ) => Promise<void>;
   storeAudioInIndexedDB: (url: string, sampleId: string) => Promise<void>;
-  getCachedAudioUrlFromIndexedDB: (sampleId: string) => Promise<string | null>;
+  getCachedAudioUrlFromIndexedDB: (
+    sampleId: string,
+    currentUrl: string
+  ) => Promise<string | null>;
   currentLoop: string;
   setCurrentLoop: React.Dispatch<React.SetStateAction<string>>;
   loopIsPlaying: boolean;
@@ -286,17 +289,28 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const storeAudioInIndexedDB = async (url: string, sampleId: string) => {
     try {
       const response = await axios.get(url, { responseType: "blob" });
-      await set(`audio-${sampleId}`, response.data); // Store Blob directly to IndexedDB
+      await set(`audio-${sampleId}`, { url: url, blob: response.data }); // Store Blob directly to IndexedDB
     } catch (error) {
       console.error("Failed to store audio in IndexedDB:", error);
     }
   };
 
   const getCachedAudioUrlFromIndexedDB = async (
-    sampleId: string
+    sampleId: string,
+    currentUrl: string // <-- pass in the current URL to compare
   ): Promise<string | null> => {
-    const blob = await get<Blob>(`audio-${sampleId}`);
-    if (!blob) return null;
+    const cached = await get<{ url: string; blob: Blob }>(`audio-${sampleId}`);
+    if (!cached) return null;
+
+    const { url, blob } = cached;
+
+    // Check if the cached URL matches the current URL
+    // This is important to ensure we don't return an outdated URL
+    if (url !== currentUrl) {
+      console.log("Cached URL is outdated. Expected:", currentUrl, "Got:", url);
+      return null;
+    }
+
     return URL.createObjectURL(blob);
   };
 
@@ -310,7 +324,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     sampleUrl: string,
     stems: boolean = false
   ): Promise<SamplerWithFX> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       // Only set loading state for non-stems (UI) samplers
       if (!stems) {
         setSamplersLoading(true);
@@ -321,8 +335,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       const panVol = new Tone.PanVol(0, 0);
       const highpass = new Tone.Filter(0, "highpass");
       const lowpass = new Tone.Filter(20000, "lowpass");
+
+      // Check if the sample is cached in IndexedDB by matching the url
+      const cached = await getCachedAudioUrlFromIndexedDB(sampleId, sampleUrl);
+
       const sampler = new CustomSampler({
-        urls: { C4: sampleUrl },
+        urls: { C4: cached ?? sampleUrl },
         onload: async () => {
           try {
             // Connect the FX chain
