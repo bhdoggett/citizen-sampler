@@ -9,9 +9,10 @@ import quantize from "../../lib/audio/util/quantize";
 type PitchPadProps = {
   note: string;
   sampler: CustomSampler;
+  buttonRef?: (element: HTMLButtonElement | null) => void;
 };
 
-const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
+const PitchPad: React.FC<PitchPadProps> = ({ note, sampler, buttonRef }) => {
   const {
     selectedSampleId,
     allSampleData,
@@ -25,7 +26,6 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
   const hasReleasedRef = useRef<boolean>(false);
   const lastPressTimeRef = useRef<number>(0);
   const [pitchIsPlaying, setPitchIsPlaying] = useState<boolean>(false);
-  // const debounceDelay = 0.01; // 10ms debounce delay
 
   const handlePress = async () => {
     const now = Tone.now();
@@ -238,6 +238,7 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler }) => {
 
   return (
     <button
+      ref={buttonRef}
       onMouseDown={handlePress}
       onMouseEnter={(e) => {
         if (e.buttons === 1) {
