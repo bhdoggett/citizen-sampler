@@ -26,7 +26,7 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
       { handlePress: () => void; handleRelease: () => void } | null
     >
   >({});
-  const [activeNote, setActiveNote] = useState<string | null>(null);
+  const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
 
   // Define root position (row 3, col 3, zero-indexed)
   const rootRow = NUM_ROWS - 3; // row 3
@@ -64,38 +64,64 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
     };
 
     const handleTouchStart = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      if (!touch) return;
-      const padNote = getPadNoteFromTouch(touch);
-      if (padNote && padNote !== activeNote) {
-        if (activeNote && pitchPadsHandlersRef.current[activeNote]) {
-          pitchPadsHandlersRef.current[activeNote].handleRelease();
+      const touches = Array.from(e.touches);
+      const newActiveNotes = new Set<string>();
+
+      // Process all touches
+      touches.forEach((touch) => {
+        const padNote = getPadNoteFromTouch(touch);
+        if (padNote) {
+          newActiveNotes.add(padNote);
+          if (!activeNotes.has(padNote)) {
+            pitchPadsHandlersRef.current[padNote]?.handlePress();
+          }
         }
-        pitchPadsHandlersRef.current[padNote]?.handlePress();
-        setActiveNote(padNote);
-      }
+      });
+
+      // Release notes that are no longer active
+      activeNotes.forEach((note) => {
+        if (!newActiveNotes.has(note)) {
+          pitchPadsHandlersRef.current[note]?.handleRelease();
+        }
+      });
+
+      setActiveNotes(newActiveNotes);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      // If multiple touches, disable touchmove tracking
+      if (e.touches.length > 1) {
+        return;
+      }
+
       const touch = e.touches[0];
       if (!touch) return;
       const padNote = getPadNoteFromTouch(touch);
-      if (padNote !== activeNote) {
-        if (activeNote && pitchPadsHandlersRef.current[activeNote]) {
-          pitchPadsHandlersRef.current[activeNote].handleRelease();
+      const newActiveNotes = new Set<string>();
+
+      if (padNote) {
+        newActiveNotes.add(padNote);
+        if (!activeNotes.has(padNote)) {
+          pitchPadsHandlersRef.current[padNote]?.handlePress();
         }
-        if (padNote && pitchPadsHandlersRef.current[padNote]) {
-          pitchPadsHandlersRef.current[padNote].handlePress();
-        }
-        setActiveNote(padNote);
       }
+
+      // Release notes that are no longer active
+      activeNotes.forEach((note) => {
+        if (!newActiveNotes.has(note)) {
+          pitchPadsHandlersRef.current[note]?.handleRelease();
+        }
+      });
+
+      setActiveNotes(newActiveNotes);
     };
 
-    const handleTouchEnd = () => {
-      if (activeNote && pitchPadsHandlersRef.current[activeNote]) {
-        pitchPadsHandlersRef.current[activeNote].handleRelease();
-        setActiveNote(null);
-      }
+    const handleTouchEnd = (_e: TouchEvent) => {
+      // Release all active notes
+      activeNotes.forEach((note) => {
+        pitchPadsHandlersRef.current[note]?.handleRelease();
+      });
+      setActiveNotes(new Set());
     };
 
     document.addEventListener("touchstart", handleTouchStart);
@@ -106,7 +132,7 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [activeNote]);
+  }, [activeNotes]);
 
   return (
     <div className="flex flex-col text-center w-1/2 ml-3 mt-1">

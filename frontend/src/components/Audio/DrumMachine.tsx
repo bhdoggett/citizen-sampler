@@ -16,7 +16,7 @@ const DrumMachine = () => {
   const drumPadsButtonRef = useRef<Record<string, HTMLButtonElement | null>>(
     {}
   );
-  const [activePad, setActivePad] = useState<string | null>(null);
+  const [activePads, setActivePads] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const getPadIdFromTouch = (touch: Touch) => {
@@ -30,38 +30,64 @@ const DrumMachine = () => {
     };
 
     const handleTouchStart = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      if (!touch) return;
-      const padId = getPadIdFromTouch(touch);
-      if (padId && padId !== activePad) {
-        if (activePad && drumPadsHandlersRef.current[activePad]) {
-          drumPadsHandlersRef.current[activePad].handleRelease();
+      const touches = Array.from(e.touches);
+      const newActivePads = new Set<string>();
+
+      // Process all touches
+      touches.forEach((touch) => {
+        const padId = getPadIdFromTouch(touch);
+        if (padId) {
+          newActivePads.add(padId);
+          if (!activePads.has(padId)) {
+            drumPadsHandlersRef.current[padId]?.handlePress();
+          }
         }
-        drumPadsHandlersRef.current[padId]?.handlePress();
-        setActivePad(padId);
-      }
+      });
+
+      // Release pads that are no longer active
+      activePads.forEach((padId) => {
+        if (!newActivePads.has(padId)) {
+          drumPadsHandlersRef.current[padId]?.handleRelease();
+        }
+      });
+
+      setActivePads(newActivePads);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      // If multiple touches, disable touchmove tracking
+      if (e.touches.length > 1) {
+        return;
+      }
+
       const touch = e.touches[0];
       if (!touch) return;
       const padId = getPadIdFromTouch(touch);
-      if (padId !== activePad) {
-        if (activePad && drumPadsHandlersRef.current[activePad]) {
-          drumPadsHandlersRef.current[activePad].handleRelease();
+      const newActivePads = new Set<string>();
+
+      if (padId) {
+        newActivePads.add(padId);
+        if (!activePads.has(padId)) {
+          drumPadsHandlersRef.current[padId]?.handlePress();
         }
-        if (padId && drumPadsHandlersRef.current[padId]) {
-          drumPadsHandlersRef.current[padId].handlePress();
-        }
-        setActivePad(padId);
       }
+
+      // Release pads that are no longer active
+      activePads.forEach((padId) => {
+        if (!newActivePads.has(padId)) {
+          drumPadsHandlersRef.current[padId]?.handleRelease();
+        }
+      });
+
+      setActivePads(newActivePads);
     };
 
-    const handleTouchEnd = () => {
-      if (activePad && drumPadsHandlersRef.current[activePad]) {
-        drumPadsHandlersRef.current[activePad].handleRelease();
-        setActivePad(null);
-      }
+    const handleTouchEnd = (_e: TouchEvent) => {
+      // Release all active pads
+      activePads.forEach((padId) => {
+        drumPadsHandlersRef.current[padId]?.handleRelease();
+      });
+      setActivePads(new Set());
     };
 
     document.addEventListener("touchstart", handleTouchStart);
@@ -72,7 +98,7 @@ const DrumMachine = () => {
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [activePad]);
+  }, [activePads]);
 
   return (
     <div className="flex flex-col text-center w-1/2 mt-1">
