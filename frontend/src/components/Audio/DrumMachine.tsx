@@ -19,14 +19,20 @@ const DrumMachine = () => {
   const [activePad, setActivePad] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleTouchMove = (e: TouchEvent) => {
+    const getPadIdFromTouch = (touch: Touch) => {
+      const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (!targetEl) return null;
+      return (
+        Object.entries(drumPadsButtonRef.current).find(([, el]) =>
+          el?.contains(targetEl)
+        )?.[0] || null
+      );
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
       if (!touch) return;
-      const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
-      if (!targetEl) return;
-      const padId = Object.entries(drumPadsButtonRef.current).find(([, el]) =>
-        el?.contains(targetEl)
-      )?.[0];
+      const padId = getPadIdFromTouch(touch);
       if (padId && padId !== activePad) {
         if (activePad && drumPadsHandlersRef.current[activePad]) {
           drumPadsHandlersRef.current[activePad].handleRelease();
@@ -34,20 +40,35 @@ const DrumMachine = () => {
         drumPadsHandlersRef.current[padId]?.handlePress();
         setActivePad(padId);
       }
-      if (!padId && activePad) {
-        drumPadsHandlersRef.current[activePad]?.handleRelease();
-        setActivePad(null);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const padId = getPadIdFromTouch(touch);
+      if (padId !== activePad) {
+        if (activePad && drumPadsHandlersRef.current[activePad]) {
+          drumPadsHandlersRef.current[activePad].handleRelease();
+        }
+        if (padId && drumPadsHandlersRef.current[padId]) {
+          drumPadsHandlersRef.current[padId].handlePress();
+        }
+        setActivePad(padId);
       }
     };
+
     const handleTouchEnd = () => {
       if (activePad && drumPadsHandlersRef.current[activePad]) {
         drumPadsHandlersRef.current[activePad].handleRelease();
         setActivePad(null);
       }
     };
+
+    document.addEventListener("touchstart", handleTouchStart);
     document.addEventListener("touchmove", handleTouchMove);
     document.addEventListener("touchend", handleTouchEnd);
     return () => {
+      document.removeEventListener("touchstart", handleTouchStart);
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
