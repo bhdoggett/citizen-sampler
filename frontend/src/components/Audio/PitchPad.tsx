@@ -1,5 +1,11 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { CustomSampler } from "../../types/CustomSampler";
@@ -9,10 +15,13 @@ import quantize from "../../lib/audio/util/quantize";
 type PitchPadProps = {
   note: string;
   sampler: CustomSampler;
-  buttonRef?: (element: HTMLButtonElement | null) => void;
+  pitchPadsRef: React.RefObject<Record<string, HTMLButtonElement | null>>;
 };
 
-const PitchPad: React.FC<PitchPadProps> = ({ note, sampler, buttonRef }) => {
+const PitchPad = forwardRef(function PitchPad(
+  { note, sampler, pitchPadsRef }: PitchPadProps,
+  ref
+) {
   const {
     selectedSampleId,
     allSampleData,
@@ -139,11 +148,6 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler, buttonRef }) => {
     }
   };
 
-  const handleTouchEnd = (e: React.TouchEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    handleRelease();
-  };
-
   const getActiveStyle = () => {
     return pitchIsPlaying
       ? "brightness-75 saturate-500 transition-all duration-100"
@@ -236,24 +240,30 @@ const PitchPad: React.FC<PitchPadProps> = ({ note, sampler, buttonRef }) => {
     };
   }, [selectedSampleId]);
 
+  useImperativeHandle(ref, () => ({
+    handlePress,
+    handleRelease,
+  }));
+
   return (
     <button
-      ref={buttonRef}
+      ref={(el) => {
+        pitchPadsRef.current[note] = el;
+      }} // handle touch events in PitchGrid.tsx
+      // Only keep mouse events for desktop
       onMouseDown={handlePress}
       onMouseEnter={(e) => {
         if (e.buttons === 1) {
           handlePress();
         }
       }}
-      onTouchStart={handlePress}
       onMouseUp={handleRelease}
       onMouseLeave={handleRelease}
-      onTouchEnd={handleTouchEnd}
       className={`border border-black text-sm cursor-pointer aspect-square shadow-inner shadow-slate-600 select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-user-select:none] [-webkit-tap-highlight-color:transparent] ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400 " : "bg-slate-300"} ${getActiveStyle()}`}
     >
       {note}
     </button>
   );
-};
+});
 
 export default PitchPad;

@@ -18,7 +18,14 @@ type PitchGridProps = {
 const PitchGrid: React.FC<PitchGridProps> = () => {
   const { selectedSampleId, allSampleData, samplersRef } = useAudioContext();
   const { baseNote } = allSampleData[selectedSampleId].settings;
-  const padRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const pitchPadsRef = useRef<Record<string, HTMLButtonElement | null>>({});
+  // Rename pitchPadComponentRefs to pitchPadsHandlersRef
+  const pitchPadsHandlersRef = useRef<
+    Record<
+      string,
+      { handlePress: () => void; handleRelease: () => void } | null
+    >
+  >({});
   const [activeNote, setActiveNote] = useState<string | null>(null);
 
   // Define root position (row 3, col 3, zero-indexed)
@@ -51,35 +58,29 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
       if (!touch) return;
       const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
       if (!targetEl) return;
-
-      const padNote = Object.entries(padRefs.current).find(([, el]) =>
+      const padNote = Object.entries(pitchPadsRef.current).find(([, el]) =>
         el?.contains(targetEl)
       )?.[0];
-
       if (padNote && padNote !== activeNote) {
-        if (activeNote && padRefs.current[activeNote]) {
-          padRefs.current[activeNote]?.dispatchEvent(new Event("touchend"));
+        if (activeNote && pitchPadsHandlersRef.current[activeNote]) {
+          pitchPadsHandlersRef.current[activeNote].handleRelease();
         }
-        padRefs.current[padNote]?.dispatchEvent(new Event("touchstart"));
+        pitchPadsHandlersRef.current[padNote]?.handlePress();
         setActiveNote(padNote);
       }
-
       if (!padNote && activeNote) {
-        padRefs.current[activeNote]?.dispatchEvent(new Event("touchend"));
+        pitchPadsHandlersRef.current[activeNote]?.handleRelease();
         setActiveNote(null);
       }
     };
-
     const handleTouchEnd = () => {
-      if (activeNote && padRefs.current[activeNote]) {
-        padRefs.current[activeNote]?.dispatchEvent(new Event("touchend"));
+      if (activeNote && pitchPadsHandlersRef.current[activeNote]) {
+        pitchPadsHandlersRef.current[activeNote].handleRelease();
         setActiveNote(null);
       }
     };
-
     document.addEventListener("touchmove", handleTouchMove);
     document.addEventListener("touchend", handleTouchEnd);
-
     return () => {
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
@@ -97,7 +98,13 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
               key={`${note}-${i}`}
               note={note}
               sampler={samplerObj?.sampler ?? null}
-              buttonRef={(element) => (padRefs.current[note] = element)}
+              pitchPadsRef={pitchPadsRef}
+              ref={(el) => {
+                pitchPadsHandlersRef.current[note] = el as {
+                  handlePress: () => void;
+                  handleRelease: () => void;
+                } | null;
+              }}
             />
           );
         })}

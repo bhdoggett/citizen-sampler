@@ -50,10 +50,19 @@ const getScheduleEvents = (
     })
     .filter((e): e is ScheduleEvent => !!e);
 
-  // Filter out undefined events and remove events that occur at the same start time
-  // This is a common issue with quantization
-  const eventsNoDuplicates = events.filter((event, index) => {
-    if (event?.[0] === events[index - 1]?.[0]) return false;
+  // Filter out undefined events and remove events that occur at the same start time AND same note
+  const eventsNoDuplicates = events.filter((event, index, arr) => {
+    if (!event) return false;
+    // Check if there is a previous event with the same start time and note
+    for (let i = 0; i < index; i++) {
+      if (
+        arr[i] &&
+        arr[i][0] === event[0] &&
+        arr[i][1].note === event[1].note
+      ) {
+        return false;
+      }
+    }
     return true;
   });
 
