@@ -140,14 +140,14 @@ const Transport = () => {
             fill={loopIsPlaying ? "green" : "white"}
             stroke="currentColor"
             strokeWidth="2"
-            className="hover:fill-slate-300 cursor-pointer mr-0.5"
+            className=" cursor-pointer mr-0.5"
             onClick={handlePlay}
           >
             <polygon points="6 3 20 12 6 21 6 3" />
           </svg>
           <Circle
             fill={isRecording ? "red" : "white"}
-            className="hover:fill-slate-300 cursor-pointer mr-0.5"
+            className=" cursor-pointer mr-0.5"
             onClick={handleRecord}
           />
           <svg
@@ -158,14 +158,14 @@ const Transport = () => {
             fill="white"
             stroke="currentColor"
             strokeWidth="2"
-            className="hover:fill-slate-300 cursor-pointer"
+            className="cursor-pointer"
             onClick={handleStop}
           >
             <rect width="18" height="18" x="3" y="3" />
           </svg>
           <Music3
             fill={metronomeActive ? "black" : "white"}
-            className="hover:fill-slate-300 cursor-pointer"
+            className="cursor-pointer"
             onClick={handleToggleMetronome}
           />
         </div>
