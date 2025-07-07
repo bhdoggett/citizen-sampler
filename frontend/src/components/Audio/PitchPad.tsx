@@ -266,7 +266,7 @@ const PitchPad = forwardRef(function PitchPad(
       onTouchEnd={(e) => {
         e.preventDefault();
       }}
-      className={`border border-black text-sm cursor-pointer aspect-square shadow-inner shadow-slate-600 select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-user-select:none] [-webkit-tap-highlight-color:transparent] ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400 " : "bg-slate-300"} ${getActiveStyle()}`}
+      className={`border border-black text-sm cursor-pointer w-full shadow-inner shadow-slate-600 select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-user-select:none] [-webkit-tap-highlight-color:transparent] ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400 " : "bg-slate-300"} ${getActiveStyle()}`}
     >
       {note}
     </button>
