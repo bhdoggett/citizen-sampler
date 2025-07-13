@@ -363,7 +363,7 @@ const SampleSettings = () => {
                     }}
                     className="w-12 mb-3 border flex mx-auto border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
                   >
-                    {[1, 4, 8, 16].map((option) => (
+                    {[1, 4, 8, 16, 32].map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>

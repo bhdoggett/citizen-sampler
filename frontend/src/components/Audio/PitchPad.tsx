@@ -31,6 +31,7 @@ const PitchPad = forwardRef(function PitchPad(
     currentLoop,
   } = useAudioContext();
   const currentEvent = useRef<SampleEventFE | null>(null);
+  const partRef = useRef<Tone.Part | null>(null);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef<boolean>(false);
   const lastPressTimeRef = useRef<number>(0);
@@ -154,6 +155,19 @@ const PitchPad = forwardRef(function PitchPad(
       : "brightness-100 saturate-100 transition-all duration-100";
   };
 
+  const disposePart = () => {
+    if (partRef.current) {
+      try {
+        if (partRef.current.state === "started") {
+          partRef.current.stop();
+        }
+        partRef.current.dispose();
+      } catch (error) {
+        console.warn("Error disposing part:", error);
+      }
+    }
+  };
+
   // Schedule playback of events, strictly for visual render feedback on the PitchPad
   useEffect(() => {
     const sampleData = allSampleData[selectedSampleId];
@@ -181,7 +195,7 @@ const PitchPad = forwardRef(function PitchPad(
         ];
       });
 
-    const part = new Tone.Part((time, event) => {
+    partRef.current = new Tone.Part((time, event) => {
       if (!sampler) return;
       const { start, end } = allSampleData[selectedSampleId].settings;
       if (
@@ -203,20 +217,7 @@ const PitchPad = forwardRef(function PitchPad(
       }
     }, events);
 
-    part.start(0);
-
-    const disposePart = () => {
-      if (part) {
-        try {
-          if (part.state === "started") {
-            part.stop();
-          }
-          part.dispose();
-        } catch (error) {
-          console.warn("Error disposing part:", error);
-        }
-      }
-    };
+    partRef.current.start(0);
 
     return () => {
       disposePart();
@@ -229,6 +230,12 @@ const PitchPad = forwardRef(function PitchPad(
     note,
     sampler,
   ]);
+
+  useEffect(() => {
+    if (partRef.current && !loopIsPlaying) {
+      disposePart();
+    }
+  }, [loopIsPlaying]);
 
   // clear currentEvent when selectedSampleId changes
   useEffect(() => {

@@ -69,7 +69,6 @@ const DrumPad = forwardRef(function DrumPad(
       clearTimeout(scheduledReleaseTimeoutRef.current);
       scheduledReleaseTimeoutRef.current = null;
     }
-
     const now = Tone.now();
     const { start, end } = allSampleData[id].settings;
 
@@ -222,6 +221,19 @@ const DrumPad = forwardRef(function DrumPad(
     return arrowMap[key] || key;
   };
 
+  const disposePart = () => {
+    if (partRef.current) {
+      try {
+        if (partRef.current.state === "started") {
+          partRef.current.stop();
+        }
+        partRef.current.dispose();
+      } catch (error) {
+        console.warn("Error disposing part:", error);
+      }
+    }
+  };
+
   // Activate hotkeys for pad interaction
   // Add event listeners for keydown and keyup events
   // and clean up on unmount or when hotKeysActive changes
@@ -242,19 +254,6 @@ const DrumPad = forwardRef(function DrumPad(
 
   // **** Schedule playback of sampler play events ****
   useEffect(() => {
-    // Clean up any existing part first
-    if (partRef.current) {
-      try {
-        if (partRef.current.state === "started") {
-          partRef.current.stop();
-        }
-        partRef.current.dispose();
-      } catch (error) {
-        console.warn("Error disposing existing part:", error);
-      }
-      partRef.current = null;
-    }
-
     if (!loopIsPlaying || allSampleData[id].events[currentLoop].length === 0) {
       return;
     }
@@ -296,17 +295,7 @@ const DrumPad = forwardRef(function DrumPad(
 
     // Cleanup function
     return () => {
-      if (partRef.current) {
-        try {
-          if (partRef.current.state === "started") {
-            partRef.current.stop();
-          }
-          partRef.current.dispose();
-        } catch (error) {
-          console.warn("Error disposing part:", error);
-        }
-        partRef.current = null;
-      }
+      disposePart();
     };
   }, [
     loopIsPlaying,
@@ -316,6 +305,11 @@ const DrumPad = forwardRef(function DrumPad(
     selectedSampleId,
     currentLoop,
   ]);
+
+  //Dispose part to cleanup if the loop stops playing
+  useEffect(() => {
+    if (partRef.current && !loopIsPlaying) disposePart();
+  }, [loopIsPlaying]);
 
   // Sync isSelected state with selectedSampleId
   useEffect(() => {
