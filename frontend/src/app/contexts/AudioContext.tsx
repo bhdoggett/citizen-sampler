@@ -160,7 +160,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         attack: 0,
         release: 0,
         quantize: false,
-        quantVal: 4,
+        quantVal: "4",
         highpass: [0, "highpass"] as [number, "highpass"],
         lowpass: [20000, "lowpass"] as [number, "lowpass"],
         ui: { zoom: 0, seekTo: 0 },
@@ -235,7 +235,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         attack: 0,
         release: 0,
         quantize: false,
-        quantVal: 4,
+        quantVal: "4",
         highpass: [0, "highpass"] as [number, "highpass"],
         lowpass: [20000, "lowpass"] as [number, "lowpass"],
         ui: { zoom: 0, seekTo: 0 },
@@ -571,7 +571,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   // Load samplers to samplerRef and waveform peaks to localStorage
   useEffect(() => {
     loadSamplersToRef(allSampleData);
-    // Store waveform peaks for each sample in localStorage
+    // Store sample audio for each sample in Indexed DB
     Object.entries(allSampleData).forEach(([id, sample]) => {
       if (sample.url) {
         storeAudioInIndexedDB(sample.url, id);

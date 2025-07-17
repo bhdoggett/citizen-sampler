@@ -35,9 +35,9 @@ const SampleSettingsSchema = new Schema(
     baseNote: { type: String, required: true },
     pitch: { type: Number, required: true },
     attack: { type: Number, required: true },
-    release: { type: Number, required: true },
+    release: { type: Number || String, required: true },
     quantize: { type: Boolean, required: true },
-    quantVal: { type: Number || String, required: true },
+    quantVal: { type: String, required: true },
     highpass: {
       type: [Schema.Types.Mixed],
       validate: {

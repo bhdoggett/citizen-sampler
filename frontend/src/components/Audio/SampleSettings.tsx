@@ -358,12 +358,25 @@ const SampleSettings = () => {
                     onChange={(e) => {
                       updateSetting(
                         "quantVal",
-                        Number(e.target.value) as QuantizeValue
+                        e.target.value as QuantizeValue
                       );
                     }}
-                    className="w-12 mb-3 border flex mx-auto border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
+                    className="w-16 mb-3 border flex mx-auto border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
                   >
-                    {[1, 4, 8, 16, 32].map((option) => (
+                    {[
+                      "1",
+                      "1t",
+                      "2",
+                      "2t",
+                      "4",
+                      "4t",
+                      "8",
+                      "8t",
+                      "16",
+                      "16t",
+                      "32",
+                      "32t",
+                    ].map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>

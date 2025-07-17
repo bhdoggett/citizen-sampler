@@ -1,4 +1,16 @@
-export type QuantizeValue = 1 | 2 | 4 | 8 | 16;
+export type QuantizeValue =
+  | "1"
+  | "1t"
+  | "2"
+  | "2t"
+  | "4"
+  | "4t"
+  | "8"
+  | "8t"
+  | "16"
+  | "16t"
+  | "32"
+  | "32t";
 
 export type SampleEvent = {
   startTime: number | null; // formerly Ticks
