@@ -195,7 +195,7 @@ router.post("/login", async (req, res, next) => {
 
       // Generate JWT
       const token = jwt.sign({ sub: user._id }, keys.TOKEN_SECRET!, {
-        expiresIn: "1h",
+        expiresIn: "1d",
       });
 
       res.json({
@@ -229,7 +229,7 @@ router.get(
           return res.redirect(`${FRONTEND_URL}/?loginError=google-auth-failed`);
         }
         const token = jwt.sign({ sub: user._id }, keys.TOKEN_SECRET!, {
-          expiresIn: "1h",
+          expiresIn: "1d",
         });
 
         res.redirect(
@@ -239,5 +239,27 @@ router.get(
     )(req, res, next);
   }
 );
+
+// Check login status
+router.get("/check-login", (req: Request, res: Response) => {
+  const authHeader = req.headers["authorization"];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res
+      .status(401)
+      .json({ loggedIn: false, message: "login expired, please login again" });
+    return;
+  }
+  const token = authHeader.split(" ")[1];
+  try {
+    jwt.verify(token, keys.TOKEN_SECRET!);
+    res.json({ loggedIn: true });
+    return;
+  } catch (err) {
+    res
+      .status(401)
+      .json({ loggedIn: false, message: "login expired, please login again" });
+    return;
+  }
+});
 
 export default router;
