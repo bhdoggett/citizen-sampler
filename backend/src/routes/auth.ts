@@ -27,7 +27,7 @@ const sendConfirmationLink = async (user: UserDoc, token: string) => {
     from: "CitizenSampler <no-reply@citizensampler.com>",
     to: [`${user.email}`],
     subject: "Confirm Email",
-    html: `Click this link to confirm your email address: ${FRONTEND_URL}/confirm?token=${token}.`,
+    html: `Click this link to confirm your email address: ${FRONTEND_URL}/confirm?confirmToken=${token}.`,
   });
 
   if (error) {
@@ -257,7 +257,7 @@ router.get("/check-login", (req: Request, res: Response) => {
   } catch (err) {
     res
       .status(401)
-      .json({ loggedIn: false, message: "login expired, please login again" });
+      .json({ loggedIn: false, message: "Login expired. Please login again." });
     return;
   }
 });

@@ -11,7 +11,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const Confirm = () => {
   const searchParams = useSearchParams();
-  const confirmToken = searchParams.get("token");
+  const confirmToken = searchParams.get("confirmToken");
   const [message, setMessage] = useState("Confirming your email...");
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
@@ -34,7 +34,6 @@ const Confirm = () => {
         const result = await axios.get(
           `${API_BASE_URL}/auth/confirm-email?confirmToken=${confirmToken}`
         );
-        // router.push(`/confirm?token=${result.data.token}`);
         if (result.status !== 200) {
           if (result.data.message === "Confirmation link expired") {
             setStatus("error");
@@ -45,7 +44,6 @@ const Confirm = () => {
             return;
           }
           setMessage(result.data.message || "Confirmation failed.");
-
           return;
         }
         setMessage(result.data.message);
@@ -62,6 +60,7 @@ const Confirm = () => {
   }, []);
 
   useEffect(() => {
+    console.log("the confirm page mounted briefly");
     if (status === "success") {
       // If confirmation is successful, redirect to home page after a delay
       const timer = setTimeout(() => {
@@ -80,7 +79,7 @@ const Confirm = () => {
   }, [message]);
 
   return (
-    <div className="flex flex-col p-4 max-w-md mx-auto text-center">
+    <div className="flex flex-col p-4 max-w-md mx-auto text-center items-center border-2 border-black rounded bg-white mt-10 shadow-lg shadow-black">
       <h1 className="text-xl font-semibold mb-2">
         {status === "loading" ? (
           <Spinner />
@@ -98,7 +97,7 @@ const Confirm = () => {
       ) : (
         <button
           onClick={() => router.push("/")}
-          className="border-2 border-black py-2 px-1 bg-slate-600 text-white font-bold shadow-sm shadow-slate-700"
+          className="border-2 border-black py-2 px-1 bg-slate-600 text-white font-bold shadow-sm shadow-slate-700 w-1/3 mx-auto"
         >
           {status === "error" ? "Back to Page" : "Login"}
         </button>

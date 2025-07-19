@@ -29,6 +29,7 @@ const Menu: React.FC = () => {
     displayName,
     setDisplayName,
     setAuthIsSignup,
+    setError,
   } = useAuthContext();
   const {
     confirmActionRef,
@@ -54,13 +55,15 @@ const Menu: React.FC = () => {
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const logout = (): void => {
+  const handleLogout = () => {
     localStorage.removeItem("token");
     router.push("/");
     setToken(null);
     setUserId(null);
     setUsername(null);
     setDisplayName(null);
+    setShowDialog("confirm-action");
+    if (setError) setError("Session expired. Please log in again.");
   };
 
   const handleReset = async () => {
@@ -135,11 +138,6 @@ const Menu: React.FC = () => {
 
   const handleDeleteSong = async () => {
     const songId = localStorage.getItem("songId");
-    // if (!songId) {
-    //   setShowDialog("save-new-song");
-    //   setMenuOpen(false);
-    //   return;
-    // }
 
     if (!isAuthenticated) {
       console.warn("User not authenticated. Song not deleted.");
@@ -191,6 +189,36 @@ const Menu: React.FC = () => {
       setHotKeysActive(true);
     }
   }, [showDialog, setHotKeysActive]);
+
+  useEffect(() => {
+    if (!token) return;
+    const checkLogin = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/auth/check-login`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.data.loggedIn) {
+          handleLogout();
+          apiResponseMessageRef.current = res.data.message;
+          setShowDialog("api-response");
+        }
+      } catch (err) {
+        const error = err as AxiosError<{ message: string }>;
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.message
+        ) {
+          handleLogout();
+          apiResponseMessageRef.current = error.response.data.message;
+          setShowDialog("api-response");
+        }
+      }
+    };
+    checkLogin();
+    // Only run on mount or when token changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -287,7 +315,7 @@ const Menu: React.FC = () => {
                       confirmActionRef.current = {
                         message: "Are you sure you want to log out?",
                         buttonText: "See Ya!",
-                        action: logout,
+                        action: handleLogout,
                       };
                       setShowDialog("confirm-action");
                       setMenuOpen(false);
