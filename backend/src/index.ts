@@ -10,24 +10,7 @@ dotenv.config();
 
 const app = express();
 
-// const isDevelopment = process.env.NODE_ENV === "development";
-
 app.use(cors());
-// if (isDevelopment) {
-//   app.use(
-//     cors({
-//       origin: "http://localhost:3000",
-//       credentials: true,
-//     })
-//   );
-// } else {
-//   app.use(
-//     cors({
-//       origin: "https://www.citizensampler.com",
-//       credentials: true,
-//     })
-//   );
-// }
 
 const PORT = process.env.PORT || 8000;
 

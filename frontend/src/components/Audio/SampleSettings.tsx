@@ -23,9 +23,6 @@ const SampleSettings = () => {
   } = useAudioContext();
   const { confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
 
-  // // Need Frequency Params for translating frequency filters from exponential to linear inputs
-  // const maxFreq = 20000;
-
   const { setSampleMute, setSampleSolo } = useMutesAndSolos();
 
   const [settings, setSettings] = useState<Partial<SampleSettingsFE> | null>(
@@ -90,7 +87,7 @@ const SampleSettings = () => {
     return `${value.toFixed(0)} Hz`;
   };
 
-  // initialize settings with selected sample's settings
+  // Initialize settings with selected sample's settings
   useEffect(() => {
     if (selectedSampleId && allSampleData[selectedSampleId]) {
       setSettings(allSampleData[selectedSampleId].settings);
@@ -120,18 +117,6 @@ const SampleSettings = () => {
 
     if (!selectedSampleId || !samplersRef.current[selectedSampleId]) return;
     updateSamplerRefSettings(selectedSampleId);
-
-    // const samplerWithFX = samplersRef.current[selectedSampleId];
-    // if (samplerWithFX) {
-    //   const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
-    //   pitch.pitch = settings.pitch || 0;
-    //   panVol.volume.value = settings.volume || 0;
-    //   panVol.pan.value = settings.pan || 0;
-    //   highpass.frequency.value = settings.highpass?.[0] || 0;
-    //   lowpass.frequency.value = settings.lowpass?.[0] || 20000;
-    //   sampler.attack = settings.attack || 0;
-    //   sampler.release = settings.release || 0;
-    // }
   }, [samplersRef, selectedSampleId, settings, updateSamplerRefSettings]);
 
   // Keep mute and solo rendering in sync with global state
@@ -161,12 +146,6 @@ const SampleSettings = () => {
       clearTimeout(handler); // cancel if settings change before debounceDelay
     };
   }, [selectedSampleId, allSampleData, settings, updateSamplerStateSettings]);
-
-  // if (!selectedSampleId) {
-  //   return (
-  //     <p className="text-center p-4">Select a sample to modify its settings</p>
-  //   );
-  // }
 
   if (!settings) {
     return <p>Loading...</p>;

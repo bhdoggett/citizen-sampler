@@ -61,7 +61,8 @@ type AudioContextType = {
   updateSamplerData: (id: string, data: SampleTypeFE) => void;
   applySamplerSettings: (
     sampleData: SampleTypeFE,
-    samplerWithFX: SamplerWithFX
+    samplerWithFX: SamplerWithFX,
+    solosExist: boolean
   ) => void;
   loadSamplersToRef: (
     sampleData: Record<string, SampleTypeFE>
@@ -467,7 +468,18 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     const settings = sampleData.settings;
     if (!samplerWithFX || !settings) return;
 
-    const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
+    const solosExistNow = Object.values(allSampleData).some(
+      (sample) => sample.settings.solo
+    );
+    const { sampler, gain, pitch, panVol, highpass, lowpass } = samplerWithFX;
+    gain.gain.value = solosExistNow
+      ? settings.solo
+        ? 1
+        : 0
+      : settings.mute
+        ? 0
+        : 1;
+
     sampler.attack = settings.attack || 0;
     sampler.release = settings.release || 0;
     pitch.pitch = settings.pitch || 0;
@@ -499,10 +511,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       // Wait for all samplers to be created
       const samplers = await Promise.all(samplerPromises);
 
-      // Assign samplers to ref
+      // Assign samplers to ref and apply settings
       samplers.forEach(({ key, sampler }) => {
         samplersRef.current[key] = sampler;
         applySamplerSettings(sampleData[key], sampler);
+        // CHECK FOR SOLOS EXIST HERE??
       });
     } catch (error) {
       console.error("Failed to load samplers:", error);
@@ -538,35 +551,35 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }));
   };
 
-  // Listen for user interaction to start the audio context
-  useEffect(() => {
-    const initializeAudio = () => {
-      // Initialize on ANY user interaction, not just your buttons
-      const handleFirstInteraction = async () => {
-        if (Tone.getContext().state !== "running") {
-          await Tone.start();
-          console.log("Audio context started");
-        }
-        // Remove listeners after first successful start
-        document.removeEventListener("click", handleFirstInteraction);
-        document.removeEventListener("touchstart", handleFirstInteraction);
-        document.removeEventListener("keydown", handleFirstInteraction);
-      };
+  // // Listen for user interaction to start the audio context
+  // useEffect(() => {
+  //   const initializeAudio = () => {
+  //     // Initialize on ANY user interaction, not just your buttons
+  //     const handleFirstInteraction = async () => {
+  //       if (Tone.getContext().state !== "running") {
+  //         await Tone.start();
+  //         console.log("Audio context started");
+  //       }
+  //       // Remove listeners after first successful start
+  //       document.removeEventListener("click", handleFirstInteraction);
+  //       document.removeEventListener("touchstart", handleFirstInteraction);
+  //       document.removeEventListener("keydown", handleFirstInteraction);
+  //     };
 
-      // Listen for ANY user interaction
-      document.addEventListener("click", handleFirstInteraction, {
-        passive: true,
-      });
-      document.addEventListener("touchstart", handleFirstInteraction, {
-        passive: true,
-      });
-      document.addEventListener("keydown", handleFirstInteraction, {
-        passive: true,
-      });
-    };
+  //     // Listen for ANY user interaction
+  //     document.addEventListener("click", handleFirstInteraction, {
+  //       passive: true,
+  //     });
+  //     document.addEventListener("touchstart", handleFirstInteraction, {
+  //       passive: true,
+  //     });
+  //     document.addEventListener("keydown", handleFirstInteraction, {
+  //       passive: true,
+  //     });
+  //   };
 
-    initializeAudio();
-  }, []);
+  //   initializeAudio();
+  // }, []);
 
   // Load samplers to samplerRef and waveform peaks to localStorage
   useEffect(() => {

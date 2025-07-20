@@ -3,7 +3,6 @@ import passport from "passport";
 import jwt from "jsonwebtoken";
 import User, { UserDoc } from "../models/user";
 import bcrypt from "bcryptjs";
-// import requireJwtAuth from "src/middleware/requireJwtAuth";
 import { Resend } from "resend";
 import dotenv from "dotenv";
 import keys from "../config/keys";
