@@ -61,8 +61,7 @@ type AudioContextType = {
   updateSamplerData: (id: string, data: SampleTypeFE) => void;
   applySamplerSettings: (
     sampleData: SampleTypeFE,
-    samplerWithFX: SamplerWithFX,
-    solosExist: boolean
+    samplerWithFX: SamplerWithFX
   ) => void;
   loadSamplersToRef: (
     sampleData: Record<string, SampleTypeFE>

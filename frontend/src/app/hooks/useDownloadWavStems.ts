@@ -38,7 +38,7 @@ const useDownloadWavStems = () => {
       if (event[1].startTime !== null && event[1].duration !== null) {
         const eventStart = Tone.Ticks(event[1].startTime).toSeconds();
         const quantizedStart = settings.quantize
-          ? quantize(eventStart, settings.quantVal as number)
+          ? quantize(eventStart, settings.quantVal)
           : eventStart;
         const eventEnd = quantizedStart + event[1].duration;
         if (eventEnd > maxEndTime) {
