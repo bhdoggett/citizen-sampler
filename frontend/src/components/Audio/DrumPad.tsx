@@ -50,16 +50,6 @@ const DrumPad = forwardRef(function DrumPad(
     note: "",
     velocity: 1,
   });
-  // const getCurrentEvent = useCallback(
-  //   () => samplersRef.current[id]?.currentEvent,
-  //   [id, samplersRef]
-  // );
-
-  // const semitonesToRate = (semitones: number) => {
-  //   return Math.pow(2, semitones / 12);
-  // };
-
-  // const playbackRate = semitonesToRate(pitch);
 
   const handlePress = useCallback(() => {
     if (!sampler) return;
@@ -173,6 +163,19 @@ const DrumPad = forwardRef(function DrumPad(
     setSelectedSampleId(id);
   };
 
+  const disposePart = () => {
+    if (partRef.current) {
+      try {
+        if (partRef.current.state === "started") {
+          partRef.current.stop();
+        }
+        partRef.current.dispose();
+      } catch (error) {
+        console.warn("Error disposing part:", error);
+      }
+    }
+  };
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (!hotKeysActive || e.metaKey || e.repeat) return;
@@ -219,19 +222,6 @@ const DrumPad = forwardRef(function DrumPad(
       ArrowDown: "↓",
     };
     return arrowMap[key] || key;
-  };
-
-  const disposePart = () => {
-    if (partRef.current) {
-      try {
-        if (partRef.current.state === "started") {
-          partRef.current.stop();
-        }
-        partRef.current.dispose();
-      } catch (error) {
-        console.warn("Error disposing part:", error);
-      }
-    }
   };
 
   // Activate hotkeys for pad interaction
