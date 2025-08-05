@@ -1,20 +1,11 @@
-# Use a base Node image
-FROM node:18
-
-# Create working directory
 WORKDIR /app
 
-# Copy the full repo from two levels up
-COPY ../../ /app/
-
-# Move into your app directory
-WORKDIR /app/backend
-
-# Install dependencies
+COPY package*.json ./
 RUN npm install
 
-# Build the app (optional if needed)
-RUN npm run build
+COPY backend ./backend
+COPY shared ./shared
 
-# Start the app
-CMD ["npm", "start"]
+WORKDIR /app/backend
+
+RUN npm run build
