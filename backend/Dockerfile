@@ -8,7 +8,7 @@ WORKDIR /app
 COPY ../../ /app/
 
 # Move into your app directory
-WORKDIR /app/web/song-share
+WORKDIR /app/backend
 
 # Install dependencies
 RUN npm install
