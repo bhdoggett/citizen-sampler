@@ -1,4 +1,3 @@
-
 import {
   useState,
   useEffect,
@@ -32,7 +31,7 @@ const PitchPad = forwardRef(function PitchPad(
   } = useAudioContext();
   const currentEvent = useRef<SampleEventFE | null>(null);
   const partRef = useRef<Tone.Part | null>(null);
-  const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scheduledReleaseTimeoutRef = useRef<number | null>(null);
   const hasReleasedRef = useRef<boolean>(false);
   const lastPressTimeRef = useRef<number>(0);
   const [pitchIsPlaying, setPitchIsPlaying] = useState<boolean>(false);
@@ -73,7 +72,7 @@ const PitchPad = forwardRef(function PitchPad(
 
     if (end) {
       const duration = end - start;
-      scheduledReleaseTimeoutRef.current = setTimeout(() => {
+      scheduledReleaseTimeoutRef.current = window.setTimeout(() => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
           sampler.triggerRelease(note, Tone.now());

@@ -1,4 +1,3 @@
-
 import {
   useRef,
   useEffect,
@@ -38,7 +37,7 @@ const DrumPad = forwardRef(function DrumPad(
   const partRef = useRef<Tone.Part | null>(null);
   const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
-  const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scheduledReleaseTimeoutRef = useRef<number | null>(null);
   const hasReleasedRef = useRef(false);
   const { baseNote } = allSampleData[id]?.settings;
   const { hotKeysActive } = useUIContext();
@@ -70,7 +69,7 @@ const DrumPad = forwardRef(function DrumPad(
 
     if (end) {
       const duration = end - start;
-      scheduledReleaseTimeoutRef.current = setTimeout(() => {
+      scheduledReleaseTimeoutRef.current = window.setTimeout(() => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
           sampler.triggerRelease(baseNote, Tone.now());
