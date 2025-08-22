@@ -1,0 +1,18 @@
+export const drumKeys = [
+  "q",
+  "w",
+  "e",
+  "r",
+  "a",
+  "s",
+  "d",
+  "f",
+  "z",
+  "x",
+  "c",
+  "v",
+  "ArrowLeft",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowRight",
+];
