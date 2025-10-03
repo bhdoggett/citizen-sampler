@@ -302,6 +302,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     // This is important to ensure we don't return an outdated URL
     if (url !== currentUrl) {
       console.log("Cached URL is outdated. Expected:", currentUrl, "Got:", url);
+      console.log("API_BASE_URL:", API_BASE_URL);
       return null;
     }
 
