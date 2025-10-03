@@ -18,6 +18,7 @@ const AuthDialog: React.FC = () => {
   const { authIsSignup, setAuthIsSignup } = useAuthContext();
   const { apiResponseMessageRef, setShowDialog } = useUIContext();
 
+  console.log("API_BASE_URL:", API_BASE_URL);
   const signup = async () => {
     try {
       if (!authIsSignup) return;

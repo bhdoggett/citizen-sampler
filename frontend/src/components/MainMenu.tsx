@@ -8,7 +8,7 @@ import { useUIContext } from "../contexts/UIContext";
 import useDownloadWavStems from "../hooks/useDownloadWavStems";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-console.log("API_BASE_URL:", API_BASE_URL);
+
 export type ConfirmActionRef = {
   message: string;
   buttonText: string;
