@@ -3,7 +3,7 @@ import axios, { AxiosError } from "axios";
 import { useAudioContext } from "../../contexts/AudioContext";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { useUIContext } from "../../contexts/UIContext";
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // type SaveNewSongProps = {
 //   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
@@ -35,11 +35,15 @@ const SaveNewSong: React.FC = () => {
     };
 
     try {
-      const result = await axios.post(`${BASE_URL}/beats/me/songs`, songData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const result = await axios.post(
+        `${API_BASE_URL}/beats/me/songs`,
+        songData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (result.status === 201) {
         localStorage.setItem("songId", result.data.song._id);

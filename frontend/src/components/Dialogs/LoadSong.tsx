@@ -5,7 +5,7 @@ import { useAuthContext } from "../../contexts/AuthContext";
 import { useUIContext } from "../../contexts/UIContext";
 import { SongTypeFE } from "../../types/audioTypesFE";
 import Spinner from "../Spinner";
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const LoadSong: React.FC = () => {
   const [songTitles, setSongTitles] = useState<string[]>([]);
@@ -24,7 +24,7 @@ const LoadSong: React.FC = () => {
 
   const getSongtitles = useCallback(async () => {
     try {
-      const result = await axios.get(`${BASE_URL}/beats/me/songs`, {
+      const result = await axios.get(`${API_BASE_URL}/beats/me/songs`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -74,7 +74,7 @@ const LoadSong: React.FC = () => {
 
     try {
       const result = await axios.get(
-        `${BASE_URL}/beats/me/songs/${selectedSong}`,
+        `${API_BASE_URL}/beats/me/songs/${selectedSong}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

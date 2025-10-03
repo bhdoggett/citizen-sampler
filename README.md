@@ -155,10 +155,10 @@ cd ../frontend
 npm install
 ```
 
-- Create a .env.local file in the frontend directory:
+- Create a .env file in the frontend directory:
 
-```.env.local
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```.env
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
 - Start the frontend development server:

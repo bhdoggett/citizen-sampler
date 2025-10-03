@@ -7,7 +7,7 @@ import { useAudioContext } from "../contexts/AudioContext";
 import { useUIContext } from "../contexts/UIContext";
 import useDownloadWavStems from "../hooks/useDownloadWavStems";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export type ConfirmActionRef = {
   message: string;
@@ -107,7 +107,7 @@ const Menu: React.FC = () => {
 
     try {
       const result = await axios.put(
-        `${BASE_URL}/beats/me/songs/${songId}`,
+        `${API_BASE_URL}/beats/me/songs/${songId}`,
         songData,
         {
           headers: {
@@ -144,7 +144,7 @@ const Menu: React.FC = () => {
 
     try {
       const result = await axios.delete(
-        `${BASE_URL}/beats/me/songs/${songId}`,
+        `${API_BASE_URL}/beats/me/songs/${songId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -192,7 +192,7 @@ const Menu: React.FC = () => {
     if (!token) return;
     const checkLogin = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/auth/check-login`, {
+        const res = await axios.get(`${API_BASE_URL}/auth/check-login`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.data.loggedIn) {
