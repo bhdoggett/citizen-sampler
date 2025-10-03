@@ -1,17 +1,15 @@
-"use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import axios, { AxiosError } from "axios";
-import dotenv from "dotenv";
-import { useUIContext } from "src/app/contexts/UIContext";
+import { useUIContext } from "../../contexts/UIContext";
 import Spinner from "../Spinner";
-dotenv.config();
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ResendConfirmation: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const router = useRouter();
+  const navigate = useNavigate();
   const { apiResponseMessageRef, setShowDialog } = useUIContext();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -42,7 +40,7 @@ const ResendConfirmation: React.FC = () => {
           console.warn("Email already confirmed.");
           apiResponseMessageRef.current = error.response.data.message;
           setShowDialog("api-response");
-          router.push("/");
+          navigate("/");
         } else if (error.response.data.message === "User not found") {
           console.error("Error resending confirmation link:", error);
           apiResponseMessageRef.current = error.response.data.message;

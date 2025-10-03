@@ -1,7 +1,6 @@
-"use client";
 import { useEffect, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useUIContext } from "src/app/contexts/UIContext";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { useUIContext } from "../../contexts/UIContext";
 
 type DialogWrapperProps = {
   children: React.ReactNode;
@@ -9,15 +8,15 @@ type DialogWrapperProps = {
 const DialogWrapper: React.FC<DialogWrapperProps> = ({ children }) => {
   const { setShowDialog, setHotKeysActive } = useUIContext();
   // const [loginError, setLoginError] = useState<string | null>(null);
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const dialogRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
   const loginError = searchParams.get("loginError");
 
   const handleCloseDialog = () => {
     {
       if (loginError) {
-        router.push("/");
+        navigate("/");
       }
       setHotKeysActive(true);
       setShowDialog(null);

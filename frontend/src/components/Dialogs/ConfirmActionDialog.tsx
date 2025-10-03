@@ -1,5 +1,5 @@
-"use client";
-import { useUIContext } from "../../app/contexts/UIContext";
+
+import { useUIContext } from "../../contexts/UIContext";
 
 const ConfirmActionDialog: React.FC = () => {
   const { setShowDialog, confirmActionRef, setHotKeysActive } = useUIContext();

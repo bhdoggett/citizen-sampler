@@ -1,7 +1,7 @@
-"use client";
+
 import * as Tone from "tone";
 import { useState, useEffect, useRef } from "react";
-import { useAudioContext } from "../../app/contexts/AudioContext";
+import { useAudioContext } from "../../contexts/AudioContext";
 import {
   getCollectionArrayFromName,
   collectionNames,
@@ -12,10 +12,10 @@ import {
   drumMachineNames,
   getDrumMachineKeyByName,
   getKitSampleTitle,
-} from "src/lib/drumMachines";
-import { useUIContext } from "src/app/contexts/UIContext";
+} from "../../lib/drumMachines";
+import { useUIContext } from "../../contexts/UIContext";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ChooseSample: React.FC = () => {
   const {

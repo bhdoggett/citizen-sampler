@@ -1,15 +1,11 @@
-"use client";
 import React, { useState, useEffect, useCallback } from "react";
 import axios, { AxiosError } from "axios";
-import dotenv from "dotenv";
-import { useAudioContext } from "../../app/contexts/AudioContext";
-import { useAuthContext } from "src/app/contexts/AuthContext";
-import { useUIContext } from "src/app/contexts/UIContext";
-import { SongTypeFE } from "src/types/audioTypesFE";
+import { useAudioContext } from "../../contexts/AudioContext";
+import { useAuthContext } from "../../contexts/AuthContext";
+import { useUIContext } from "../../contexts/UIContext";
+import { SongTypeFE } from "../../types/audioTypesFE";
 import Spinner from "../Spinner";
-
-dotenv.config();
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const LoadSong: React.FC = () => {
   const [songTitles, setSongTitles] = useState<string[]>([]);

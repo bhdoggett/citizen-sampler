@@ -1,4 +1,3 @@
-"use client";
 import {
   useState,
   useEffect,
@@ -7,9 +6,9 @@ import {
   useImperativeHandle,
 } from "react";
 import * as Tone from "tone";
-import { useAudioContext } from "../../app/contexts/AudioContext";
+import { useAudioContext } from "../../contexts/AudioContext";
 import { CustomSampler } from "../../types/CustomSampler";
-import { SampleEventFE } from "src/types/audioTypesFE";
+import { SampleEventFE } from "../../types/audioTypesFE";
 import quantize from "../../lib/audio/util/quantize";
 
 type PitchPadProps = {
@@ -32,7 +31,7 @@ const PitchPad = forwardRef(function PitchPad(
   } = useAudioContext();
   const currentEvent = useRef<SampleEventFE | null>(null);
   const partRef = useRef<Tone.Part | null>(null);
-  const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scheduledReleaseTimeoutRef = useRef<number | null>(null);
   const hasReleasedRef = useRef<boolean>(false);
   const lastPressTimeRef = useRef<number>(0);
   const [pitchIsPlaying, setPitchIsPlaying] = useState<boolean>(false);
@@ -73,7 +72,7 @@ const PitchPad = forwardRef(function PitchPad(
 
     if (end) {
       const duration = end - start;
-      scheduledReleaseTimeoutRef.current = setTimeout(() => {
+      scheduledReleaseTimeoutRef.current = window.setTimeout(() => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
           sampler.triggerRelease(note, Tone.now());
@@ -195,7 +194,7 @@ const PitchPad = forwardRef(function PitchPad(
         ];
       });
 
-    partRef.current = new Tone.Part((time, event) => {
+    partRef.current = new Tone.Part((_time, event) => {
       if (!sampler) return;
       const { start, end } = allSampleData[selectedSampleId].settings;
       if (

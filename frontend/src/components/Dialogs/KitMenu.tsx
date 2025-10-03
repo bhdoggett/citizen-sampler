@@ -1,12 +1,12 @@
-"use client";
+
 import { useState } from "react";
-import { useAudioContext } from "../../app/contexts/AudioContext";
-import { useUIContext } from "src/app/contexts/UIContext";
+import { useAudioContext } from "../../contexts/AudioContext";
+import { useUIContext } from "../../contexts/UIContext";
 import {
   DrumMachineId,
   drumMachines,
   getDrumMachineKeyByName,
-} from "src/lib/drumMachines";
+} from "../../lib/drumMachines";
 
 const KitMenu: React.FC = () => {
   const {

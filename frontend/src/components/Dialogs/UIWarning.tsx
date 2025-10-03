@@ -1,5 +1,5 @@
-"use client";
-import { useUIContext } from "src/app/contexts/UIContext";
+
+import { useUIContext } from "../../contexts/UIContext";
 
 const UIWarning: React.FC = () => {
   const { uiWarningMessageRef } = useUIContext();

@@ -1,6 +1,6 @@
-"use client";
+
 import React, { useState } from "react";
-import { useAudioContext } from "../app/contexts/AudioContext";
+import { useAudioContext } from "../contexts/AudioContext";
 
 type SignupProps = {
   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;

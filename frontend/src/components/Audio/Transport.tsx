@@ -1,10 +1,10 @@
-"use client";
+
 import { useEffect, useRef, useCallback } from "react";
 import * as Tone from "tone";
 import { Circle, Music3 } from "lucide-react";
-import { useAudioContext } from "../../app/contexts/AudioContext";
-import type { LoopName } from "@shared/types/audioTypes";
-import { useUIContext } from "src/app/contexts/UIContext";
+import { useAudioContext } from "../../contexts/AudioContext";
+import type { LoopName } from "../../shared/types/audioTypes";
+import { useUIContext } from "../../contexts/UIContext";
 
 const Transport = () => {
   const {

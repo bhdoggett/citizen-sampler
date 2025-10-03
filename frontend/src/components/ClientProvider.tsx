@@ -1,19 +1,6 @@
-"use client";
-import dynamic from "next/dynamic";
-
-const AuthProvider = dynamic(
-  () => import("../app/contexts/AuthContext").then((mod) => mod.AuthProvider),
-  {
-    ssr: false,
-  }
-);
-
-const AudioProvider = dynamic(
-  () => import("../app/contexts/AudioContext").then((mod) => mod.AudioProvider),
-  {
-    ssr: false,
-  }
-);
+import { AuthProvider } from "../contexts/AuthContext";
+import { AudioProvider } from "../contexts/AudioContext";
+import { UIProvider } from "../contexts/UIContext";
 
 export default function ClientProviders({
   children,
@@ -21,8 +8,10 @@ export default function ClientProviders({
   children: React.ReactNode;
 }) {
   return (
-    <AuthProvider>
-      <AudioProvider>{children}</AudioProvider>
-    </AuthProvider>
+    <UIProvider>
+      <AuthProvider>
+        <AudioProvider>{children}</AudioProvider>
+      </AuthProvider>
+    </UIProvider>
   );
 }

@@ -1,9 +1,9 @@
-"use client";
+
 import { useState } from "react";
-import { useAudioContext } from "src/app/contexts/AudioContext";
-import { collectionNames } from "src/lib/loc_collections";
-import { useUIContext } from "src/app/contexts/UIContext";
-import { SampleTypeFE } from "src/types/audioTypesFE";
+import { useAudioContext } from "../../contexts/AudioContext";
+import { collectionNames } from "../../lib/loc_collections";
+import { useUIContext } from "../../contexts/UIContext";
+import { SampleTypeFE } from "../../types/audioTypesFE";
 
 const CollectionMenu: React.FC = () => {
   const {

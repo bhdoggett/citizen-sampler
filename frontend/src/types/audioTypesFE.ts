@@ -4,7 +4,7 @@ import {
   SampleUISettings,
   LoopName,
   LoopSettings,
-} from "@shared/types/audioTypes";
+} from "../shared/types/audioTypes";
 
 import { Ticks, Frequency, NormalRange } from "tone/build/esm/core/type/Units";
 

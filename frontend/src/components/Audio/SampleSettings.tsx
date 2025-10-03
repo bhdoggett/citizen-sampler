@@ -1,16 +1,16 @@
-"use client";
-import { useAudioContext } from "../../app/contexts/AudioContext";
+
+import { useAudioContext } from "../../contexts/AudioContext";
 import { useState, useEffect, useCallback } from "react";
-import type { SampleSettingsFE } from "src/types/audioTypesFE";
-import useMutesAndSolos from "../../app/hooks/useMutesAndSolos";
+import type { SampleSettingsFE } from "../../types/audioTypesFE";
+import useMutesAndSolos from "../../hooks/useMutesAndSolos";
 import Waveform from "./Waveform";
 import notes from "../../lib/notes";
 import {
   linearizeFrequency,
   exponentiateFrequency,
 } from "../../lib/audio/util/frequencyConversion";
-import { useUIContext } from "../../app/contexts/UIContext";
-import { QuantizeValue } from "@shared/types/audioTypes";
+import { useUIContext } from "../../contexts/UIContext";
+import { QuantizeValue } from "../../shared/types/audioTypes";
 
 const SampleSettings = () => {
   const {

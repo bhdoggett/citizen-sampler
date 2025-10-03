@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as Tone from "tone";
-import { useAudioContext } from "src/app/contexts/AudioContext";
+import { useAudioContext } from "../../contexts/AudioContext";
 
 const LoopProgressBar = () => {
   const { allLoopSettings, loopIsPlaying } = useAudioContext();

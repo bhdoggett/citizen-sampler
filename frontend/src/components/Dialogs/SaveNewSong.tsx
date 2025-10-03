@@ -1,12 +1,9 @@
-"use client";
 import React, { useState, useEffect } from "react";
 import axios, { AxiosError } from "axios";
-import dotenv from "dotenv";
-import { useAudioContext } from "../../app/contexts/AudioContext";
-import { useAuthContext } from "src/app/contexts/AuthContext";
-import { useUIContext } from "src/app/contexts/UIContext";
-dotenv.config();
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import { useAudioContext } from "../../contexts/AudioContext";
+import { useAuthContext } from "../../contexts/AuthContext";
+import { useUIContext } from "../../contexts/UIContext";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // type SaveNewSongProps = {
 //   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;

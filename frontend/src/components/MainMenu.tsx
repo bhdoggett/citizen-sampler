@@ -1,15 +1,13 @@
-"use client";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import * as Tone from "tone";
 import axios, { AxiosError } from "axios";
-import dotenv from "dotenv";
-import { useAuthContext } from "../app/contexts/AuthContext";
-import { useAudioContext } from "../app/contexts/AudioContext";
-import { useUIContext } from "../app/contexts/UIContext";
-import useDownloadWavStems from "../app/hooks/useDownloadWavStems";
-dotenv.config();
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import { useAuthContext } from "../contexts/AuthContext";
+import { useAudioContext } from "../contexts/AudioContext";
+import { useUIContext } from "../contexts/UIContext";
+import useDownloadWavStems from "../hooks/useDownloadWavStems";
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export type ConfirmActionRef = {
   message: string;
@@ -52,12 +50,12 @@ const Menu: React.FC = () => {
     loadSamplersToRef,
   } = useAudioContext();
   const downloadAllWavStems = useDownloadWavStems();
-  const router = useRouter();
+  const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    router.push("/");
+    navigate("/");
     setToken(null);
     setUserId(null);
     setUsername(null);
