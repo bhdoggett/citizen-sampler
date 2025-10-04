@@ -1,4 +1,4 @@
-import type { SongTypeBase } from "../../../shared/types/audioTypes";
+import type { SongTypeBase } from "./audioTypes";
 import mongoose from "mongoose";
 
 export type SongTypeBE = SongTypeBase & {
