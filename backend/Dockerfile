@@ -1,14 +1,20 @@
+# Use Node 18 base image
 FROM node:18
 
+# Set working directory inside container
 WORKDIR /app
 
-COPY backend/package*.json ./backend/
-RUN cd backend && npm install
+# Copy only package files first for caching
+COPY package*.json ./
 
-COPY backend ./backend
+# Install dependencies
+RUN npm install
 
-WORKDIR /app/backend
+# Copy the rest of the backend source code
+COPY . .
 
+# Build the project
 RUN npm run build
 
+# Set command to run the built app
 CMD ["node", "dist/index.js"]
