@@ -6,7 +6,6 @@ COPY backend/package*.json ./backend/
 RUN cd backend && npm install
 
 COPY backend ./backend
-COPY shared ./shared
 
 WORKDIR /app/backend
 
