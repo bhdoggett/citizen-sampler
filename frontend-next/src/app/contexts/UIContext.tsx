@@ -19,6 +19,8 @@ type UIContextType = {
   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
   hotKeysActive: boolean;
   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
+  sequencerVisible: boolean;
+  setSequencerVisible: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
@@ -33,6 +35,7 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({
   const [hotKeysActive, setHotKeysActive] = useState<boolean>(true);
   const [makeBeatsButtonPressed, setMakeBeatsButtonPressed] =
     useState<boolean>(false);
+  const [sequencerVisible, setSequencerVisible] = useState<boolean>(false);
 
   return (
     <UIContext.Provider
@@ -46,6 +49,8 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({
         setShowDialog,
         hotKeysActive,
         setHotKeysActive,
+        sequencerVisible,
+        setSequencerVisible,
       }}
     >
       {children}

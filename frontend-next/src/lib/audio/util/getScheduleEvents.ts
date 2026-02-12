@@ -22,7 +22,8 @@ const getScheduleEvents = (
 
   const events = sampleData.events[currentLoop]
     .map((event) => {
-      if (!event.startTime) return;
+      // Check for null/undefined but allow 0 (start of loop)
+      if (event.startTime == null) return;
 
       // Convert startTime from ticks to seconds
       const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();

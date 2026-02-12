@@ -36,9 +36,24 @@ const PitchGrid = dynamic(() => import("../components/Audio/PitchGrid"), {
   ssr: false,
 });
 
+const StepSequencer = dynamic(
+  () =>
+    import("../components/Audio/StepSequencer/StepSequencer").then(
+      (mod) => mod.default
+    ),
+  {
+    ssr: false,
+  }
+);
+
 export default function Home() {
-  const { showDialog, makeBeatsButtonPressed, setMakeBeatsButtonPressed } =
-    useUIContext();
+  const {
+    showDialog,
+    makeBeatsButtonPressed,
+    setMakeBeatsButtonPressed,
+    sequencerVisible,
+    setSequencerVisible,
+  } = useUIContext();
   const { samplersRef, selectedSampleId, samplersLoading } = useAudioContext();
 
   useEffect(() => {
@@ -72,7 +87,8 @@ export default function Home() {
                     <Loop />
                   </div>
                 </div>
-                <div className="flex">
+                {/* DrumMachine must stay mounted for Tone.Part playback scheduling */}
+                <div className={sequencerVisible ? "hidden" : "flex"}>
                   <DrumMachine />
                   <PitchGrid
                     sampler={
@@ -80,6 +96,7 @@ export default function Home() {
                     }
                   />
                 </div>
+                {sequencerVisible && <StepSequencer />}
               </div>
 
               {/* Overlay when content should be blurred */}

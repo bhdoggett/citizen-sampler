@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useCallback } from "react";
 import * as Tone from "tone";
-import { Circle, Music3 } from "lucide-react";
+import { Circle, Music3, Grid3X3 } from "lucide-react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import type { LoopName } from "@shared/types/audioTypes";
 import { useUIContext } from "src/app/contexts/UIContext";
@@ -89,7 +89,12 @@ const Transport = () => {
     };
   }, [loopIsPlaying, allLoopSettings, currentLoop]);
 
-  const { hotKeysActive } = useUIContext();
+  const { hotKeysActive, sequencerVisible, setSequencerVisible } =
+    useUIContext();
+
+  const handleToggleSequencer = useCallback(() => {
+    setSequencerVisible((prev) => !prev);
+  }, [setSequencerVisible]);
   // useTransportHotKeys(hotKeysActive);
 
   useEffect(() => {
@@ -112,6 +117,9 @@ const Transport = () => {
       if (e.key === "m") {
         handleToggleMetronome();
       }
+      if (e.key === "s" && !e.ctrlKey && !e.metaKey) {
+        handleToggleSequencer();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -124,6 +132,7 @@ const Transport = () => {
     handleRecord,
     handleStop,
     handleToggleMetronome,
+    handleToggleSequencer,
     loopIsPlaying,
     hotKeysActive,
   ]);
@@ -167,6 +176,11 @@ const Transport = () => {
             fill={metronomeActive ? "black" : "white"}
             className="cursor-pointer"
             onClick={handleToggleMetronome}
+          />
+          <Grid3X3
+            fill={sequencerVisible ? "black" : "white"}
+            className="cursor-pointer"
+            onClick={handleToggleSequencer}
           />
         </div>
       </div>
