@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import * as Tone from "tone";
 import { useAudioContext } from "src/app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
@@ -17,6 +17,8 @@ import type { LoopName } from "../../../../../shared/types/audioTypes";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 
 const DEFAULT_CELL_WIDTH = 24;
+const PAD_LABEL_WIDTH = 64; // Width of the pad label column
+const CONTAINER_PADDING = 8; // Approximate padding/borders
 
 const StepSequencer: React.FC = () => {
   const {
@@ -33,7 +35,9 @@ const StepSequencer: React.FC = () => {
   const [subdivision, setSubdivision] = useState<Subdivision>("8n");
   const [cellWidth, setCellWidth] = useState(DEFAULT_CELL_WIDTH);
   const [playheadPosition, setPlayheadPosition] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
   const rafRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const loopSettings = allLoopSettings[currentLoop as LoopName];
 
@@ -43,6 +47,26 @@ const StepSequencer: React.FC = () => {
     allSampleData,
     currentLoop,
   });
+
+  // Calculate minimum cell width to fit the grid in the container
+  const minCellWidth = useMemo(() => {
+    if (containerWidth === 0 || totalColumns === 0) return 12;
+    const availableWidth = containerWidth - PAD_LABEL_WIDTH - CONTAINER_PADDING;
+    return Math.max(8, Math.floor(availableWidth / totalColumns));
+  }, [containerWidth, totalColumns]);
+
+  // Measure container width on mount and resize
+  useEffect(() => {
+    const updateContainerWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+
+    updateContainerWidth();
+    window.addEventListener("resize", updateContainerWidth);
+    return () => window.removeEventListener("resize", updateContainerWidth);
+  }, []);
 
   // Playhead animation
   useEffect(() => {
@@ -199,8 +223,8 @@ const StepSequencer: React.FC = () => {
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setCellWidth((prev) => Math.max(prev - 4, 12));
-  }, []);
+    setCellWidth((prev) => Math.max(prev - 4, minCellWidth));
+  }, [minCellWidth]);
 
   // Clear all events on selected pad for current loop
   const handleClearSelectedPad = useCallback(() => {
@@ -269,7 +293,7 @@ const StepSequencer: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col w-full">
+    <div ref={containerRef} className="flex flex-col w-full">
       <div className="flex justify-between items-center mb-2">
         <h3 className="bg-slate-800 px-4 py-1 border-2 border-slate-800 text-white font-bold">
           Step Sequencer
@@ -280,6 +304,7 @@ const StepSequencer: React.FC = () => {
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
           cellWidth={cellWidth}
+          minCellWidth={minCellWidth}
         />
       </div>
 

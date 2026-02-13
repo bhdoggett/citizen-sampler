@@ -7,6 +7,7 @@ type SequencerControlsProps = {
   onZoomIn: () => void;
   onZoomOut: () => void;
   cellWidth: number;
+  minCellWidth: number;
 };
 
 const subdivisionOptions: Subdivision[] = ["1n", "2n", "4n", "8n", "16n"];
@@ -18,6 +19,7 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
     onZoomIn,
     onZoomOut,
     cellWidth,
+    minCellWidth,
   }) => {
     return (
       <div className="flex items-center gap-4">
@@ -44,7 +46,7 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
           <label className="text-sm font-medium text-gray-700">Zoom:</label>
           <button
             onClick={onZoomOut}
-            disabled={cellWidth <= 12}
+            disabled={cellWidth <= minCellWidth}
             className="px-2 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Zoom out"
           >
