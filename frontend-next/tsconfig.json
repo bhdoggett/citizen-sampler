@@ -13,10 +13,10 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
-    // "paths": {
-    //   "@shared/*": ["../shared/*"]
-    // },
+    "paths": {
+      "src/*": ["./src/*"],
+      "@shared/*": ["../shared/*"]
+    },
     "plugins": [
       {
         "name": "next"
