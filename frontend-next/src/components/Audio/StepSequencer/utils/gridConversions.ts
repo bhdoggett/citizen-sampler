@@ -2,23 +2,21 @@ import * as Tone from "tone";
 import type { LoopSettingsFE } from "src/types/audioTypesFE";
 import type { Ticks } from "tone/build/esm/core/type/Units";
 
-export type Subdivision = "1n" | "2n" | "4n" | "8n" | "16n";
+export type Subdivision = "4n" | "8n" | "16n" | "32n";
 
 // Map subdivision to cells per beat
 export const subdivisionToCellsPerBeat: Record<Subdivision, number> = {
-  "1n": 0.25, // Whole note: 1 cell per 4 beats
-  "2n": 0.5, // Half note: 1 cell per 2 beats
   "4n": 1, // Quarter note: 1 cell per beat
   "8n": 2, // Eighth note: 2 cells per beat
   "16n": 4, // Sixteenth note: 4 cells per beat
+  "32n": 8, // 32nd note: 8 cells per beat
 };
 
 export const subdivisionLabels: Record<Subdivision, string> = {
-  "1n": "Whole",
-  "2n": "Half",
   "4n": "Quarter",
   "8n": "Eighth",
   "16n": "16th",
+  "32n": "32nd",
 };
 
 /**

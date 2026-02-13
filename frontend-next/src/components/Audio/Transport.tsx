@@ -117,7 +117,8 @@ const Transport = () => {
       if (e.key === "m") {
         handleToggleMetronome();
       }
-      if (e.key === "s" && !e.ctrlKey && !e.metaKey) {
+      if (e.key === "s" && e.metaKey) {
+        e.preventDefault();
         handleToggleSequencer();
       }
     };

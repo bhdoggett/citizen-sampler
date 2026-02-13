@@ -10,7 +10,7 @@ type SequencerControlsProps = {
   minCellWidth: number;
 };
 
-const subdivisionOptions: Subdivision[] = ["1n", "2n", "4n", "8n", "16n"];
+const subdivisionOptions: Subdivision[] = ["4n", "8n", "16n", "32n"];
 
 const SequencerControls: React.FC<SequencerControlsProps> = memo(
   ({
