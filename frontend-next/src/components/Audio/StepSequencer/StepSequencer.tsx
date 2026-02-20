@@ -12,6 +12,7 @@ import {
   gridPositionToTicks,
   getSubdivisionDuration,
   secondsToGridPosition,
+  subdivisionToCellsPerBeat,
 } from "./utils/gridConversions";
 import type { LoopName } from "../../../../../shared/types/audioTypes";
 import type { SampleEventFE } from "src/types/audioTypesFE";
@@ -232,10 +233,20 @@ const StepSequencer: React.FC = () => {
     [currentLoop, loopSettings, setAllSampleData, subdivision]
   );
 
-  // Handle subdivision change
+  // Handle subdivision change — scale cellWidth so bar width stays constant
   const handleSubdivisionChange = useCallback((newSubdivision: Subdivision) => {
+    const oldCellsPerBeat = subdivisionToCellsPerBeat[subdivision];
+    const newCellsPerBeat = subdivisionToCellsPerBeat[newSubdivision];
+    const ratio = oldCellsPerBeat / newCellsPerBeat;
+
+    setCellWidth((prev) => {
+      const current = prev ?? minCellWidth;
+      const newWidth = current * ratio;
+      return Math.max(MIN_CELL_WIDTH, Math.min(MAX_CELL_WIDTH, newWidth));
+    });
+
     setSubdivision(newSubdivision);
-  }, []);
+  }, [subdivision, minCellWidth]);
 
   // Handle zoom
   const handleZoomIn = useCallback(() => {

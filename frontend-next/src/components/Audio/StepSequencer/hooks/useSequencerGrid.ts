@@ -63,12 +63,12 @@ export function useSequencerGrid({
         const columnStart = ticksToGridPosition(
           event.startTime,
           loopSettings,
-          subdivision
+          subdivision,
         );
         const columnWidth = durationToGridWidth(
           event.duration,
           loopSettings,
-          subdivision
+          subdivision,
         );
 
         // Only include events that are within the grid bounds
