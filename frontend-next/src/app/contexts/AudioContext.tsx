@@ -623,37 +623,29 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     init();
   }, []);
 
-  // Update ToneJS Transport when currentLoop changes
+  // Update ToneJS Transport when switching to a different loop
   useEffect(() => {
     const transport = Tone.getTransport();
     const settings = allLoopSettings[currentLoop as LoopName];
     if (!settings) return;
 
     transport.bpm.value = settings.bpm;
+    transport.swing = settings.swing;
     transport.timeSignature = settings.beats;
     transport.loop = true;
     transport.loopStart = "0:0:0";
     transport.loopEnd = `${settings.bars}:0:0`;
 
-    // if (transport.state === "started") {
-    //   transport.stop();
-    //   transport.position = "0:0:0";
-    //   transport.start();
-    // }
-  }, [allLoopSettings, currentLoop]);
-
-  useEffect(() => {
-    const transport = Tone.getTransport();
     const wasPlaying = transport.state === "started";
-
     if (wasPlaying) {
       transport.stop();
       transport.position = "0:0:0";
       transport.start();
     } else {
-      transport.position = "0:0:0"; // reset for next play
+      transport.position = "0:0:0";
     }
-  }, [allLoopSettings]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentLoop]);
 
   // Cleanup effect for samplers when component unmounts
   useEffect(() => {

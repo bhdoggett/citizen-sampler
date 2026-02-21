@@ -48,8 +48,9 @@ const Loop = () => {
     key: K,
     value: LoopSettings[K]
   ) => {
-    if (loopIsPlaying) {
-      uiWarningMessageRef.current = "Stop playback before updating settings";
+    if (loopIsPlaying && (key === "beats" || key === "bars")) {
+      uiWarningMessageRef.current =
+        "Stop loop playback before updating beats or bars";
       setShowDialog("ui-warning");
       return;
     }
@@ -62,18 +63,24 @@ const Loop = () => {
     }));
   };
 
-  // Update ToneJS Transport settings when state changes
+  const thisLoopSettings = allLoopSettings[currentLoop as LoopName];
+
+  // Sync BPM and swing — safe to update during playback
   useEffect(() => {
-    const thisLoopSettings = allLoopSettings[currentLoop as LoopName];
     if (!thisLoopSettings) return;
-    const { bpm, beats, bars, swing } = thisLoopSettings;
     const transport = Tone.getTransport();
-    transport.bpm.value = bpm;
-    transport.swing = swing;
-    transport.timeSignature = beats;
+    transport.bpm.value = thisLoopSettings.bpm;
+    transport.swing = thisLoopSettings.swing;
+  }, [thisLoopSettings?.bpm, thisLoopSettings?.swing]);
+
+  // Sync beats, bars, and loop boundaries — only when structural settings change
+  useEffect(() => {
+    if (!thisLoopSettings) return;
+    const transport = Tone.getTransport();
+    transport.timeSignature = thisLoopSettings.beats;
     transport.loop = true;
-    transport.loopEnd = `${bars}:0:0`;
-  }, [allLoopSettings, currentLoop]);
+    transport.loopEnd = `${thisLoopSettings.bars}:0:0`;
+  }, [thisLoopSettings?.beats, thisLoopSettings?.bars]);
 
   return (
     <div className="flex flex-col pl-1">

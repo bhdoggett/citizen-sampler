@@ -63,6 +63,16 @@ const Transport = () => {
     }
   }, [metronomeActive]);
 
+  const loopSettingsRef = useRef(allLoopSettings);
+  useEffect(() => {
+    loopSettingsRef.current = allLoopSettings;
+  }, [allLoopSettings]);
+
+  const currentLoopRef = useRef(currentLoop);
+  useEffect(() => {
+    currentLoopRef.current = currentLoop;
+  }, [currentLoop]);
+
   useEffect(() => {
     // beatsCount will increment to keep track of when down-beat or off-beat should play
     let beatCount = 0;
@@ -73,7 +83,9 @@ const Transport = () => {
       const [, beats] = (Tone.getTransport().position as string)
         .split(":")
         .map(Number);
-      beatCount = beats % allLoopSettings[currentLoop as LoopName]!.beats;
+      beatCount =
+        beats %
+        loopSettingsRef.current[currentLoopRef.current as LoopName]!.beats;
 
       if (beatCount === 0) {
         metronomeRef.current.triggerAttackRelease("C6", "8n", time);
@@ -87,7 +99,7 @@ const Transport = () => {
     return () => {
       transportForCleanup.clear(metronomeLoop);
     };
-  }, [loopIsPlaying, allLoopSettings, currentLoop]);
+  }, [loopIsPlaying]);
 
   const { hotKeysActive } = useUIContext();
 
