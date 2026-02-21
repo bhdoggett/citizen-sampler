@@ -24,15 +24,13 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
     isMaxZoom,
   }) => {
     return (
-      <div className="flex items-center gap-4">
+      <div className="flex justify-between items-center m-1">
         {/* Subdivision selector */}
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">Grid:</label>
+          <label className="text-sm font-bold text-gray-700">Grid:</label>
           <select
             value={subdivision}
-            onChange={(e) =>
-              onSubdivisionChange(e.target.value as Subdivision)
-            }
+            onChange={(e) => onSubdivisionChange(e.target.value as Subdivision)}
             className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
           >
             {subdivisionOptions.map((sub) => (
@@ -45,7 +43,7 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
 
         {/* Zoom controls */}
         <div className="flex items-center gap-1">
-          <label className="text-sm font-medium text-gray-700">Zoom:</label>
+          <label className="text-sm font-bold text-gray-700">Zoom:</label>
           <button
             onClick={onZoomOut}
             disabled={isMinZoom}
@@ -68,7 +66,7 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 SequencerControls.displayName = "SequencerControls";

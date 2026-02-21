@@ -14,7 +14,7 @@ const DrumMachine = () => {
     >
   >({});
   const drumPadsButtonRef = useRef<Record<string, HTMLButtonElement | null>>(
-    {}
+    {},
   );
   const [activePads, setActivePads] = useState<Set<string>>(new Set());
 
@@ -24,7 +24,7 @@ const DrumMachine = () => {
       if (!targetEl) return null;
       return (
         Object.entries(drumPadsButtonRef.current).find(([, el]) =>
-          el?.contains(targetEl)
+          el?.contains(targetEl),
         )?.[0] || null
       );
     };
@@ -101,10 +101,10 @@ const DrumMachine = () => {
   }, [activePads]);
 
   return (
-    <div className="flex flex-col text-center w-1/2 mt-1">
-      <h3 className="bg-slate-800 w-full border-2 border-slate-800 text-white font-bold">
+    <div className="flex flex-col text-center w-1/2">
+      {/* <h3 className="bg-slate-800 w-full border-2 border-slate-800 text-white font-bold">
         Sample Pads
-      </h3>
+      </h3> */}
       <div className="grid grid-cols-4 gap-0 mt-1 touch-none select-none">
         {allPadIds.map((id) => {
           const samplerObj = samplersRef.current[id];

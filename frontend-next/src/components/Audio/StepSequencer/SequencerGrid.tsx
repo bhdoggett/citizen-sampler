@@ -19,14 +19,15 @@ type SequencerGridProps = {
   onDragEnd?: (
     padId: string,
     eventIndex: number,
-    newColumnStart: number
+    newColumnStart: number,
   ) => void;
   onResizeEnd?: (
     padId: string,
     eventIndex: number,
-    newColumnWidth: number
+    newColumnWidth: number,
   ) => void;
   playheadPosition?: number;
+  maxHeight?: number;
 };
 
 const SequencerGrid: React.FC<SequencerGridProps> = memo(
@@ -44,13 +45,14 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     onDragEnd,
     onResizeEnd,
     playheadPosition = 0,
+    maxHeight,
   }) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     // Generate pad IDs in order (pad-1 through pad-16)
     const padIds = useMemo(
       () => Array.from({ length: 16 }, (_, i) => `pad-${i + 1}`),
-      []
+      [],
     );
 
     const cellsPerBeat = subdivisionToCellsPerBeat[subdivision];
@@ -72,15 +74,16 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     }, [bars, cellsPerBar]);
 
     return (
-      <div className="flex flex-col border border-gray-300 rounded overflow-hidden">
+      <div className="flex flex-col border border-gray-300 rounded">
         {/* Scrollable container for both header and grid */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto overflow-y-auto max-h-[432px]"
+          className="overflow-x-auto overflow-y-auto"
+          style={maxHeight ? { maxHeight } : undefined}
         >
           <div style={{ width: `${64 + totalColumns * cellWidth}px` }}>
             {/* Column headers - inside scroll container */}
-            <div className="flex bg-gray-200 border-b-2 border-gray-400 sticky top-0 z-20">
+            <div className="flex bg-gray-200 border-b-2 border-gray-400 sticky top-0 z-30">
               {/* Spacer for pad labels column */}
               <div className="sticky left-0 z-30 w-16 min-w-16 bg-gray-200 border-r-2 border-gray-300 flex items-center justify-center text-xs font-bold">
                 Pad
@@ -144,7 +147,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 SequencerGrid.displayName = "SequencerGrid";

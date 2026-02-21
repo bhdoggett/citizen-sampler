@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import * as Tone from "tone";
 import { useAudioContext } from "src/app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
@@ -17,10 +23,14 @@ import type { LoopName } from "../../../../../shared/types/audioTypes";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 
 const PAD_LABEL_WIDTH = 64; // Width of the pad label column
-const CONTAINER_PADDING = 8; // Approximate padding/borders
+const CONTAINER_PADDING = 2; // 1px border on each side of the grid
 const MAX_CELL_WIDTH = 48;
 
-const StepSequencer: React.FC = () => {
+type StepSequencerProps = {
+  maxHeight?: number;
+};
+
+const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const {
     allSampleData,
     setAllSampleData,
@@ -37,6 +47,7 @@ const StepSequencer: React.FC = () => {
   const [playheadPosition, setPlayheadPosition] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
   const rafRef = useRef<number | null>(null);
+  const controlsRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const loopSettings = allLoopSettings[currentLoop as LoopName];
@@ -63,6 +74,13 @@ const StepSequencer: React.FC = () => {
 
   // Derive effective cell width from zoom level
   const effectiveCellWidth = fitCellWidth > 0 ? fitCellWidth * zoomLevel : 0;
+
+  // Grid maxHeight: subtract controls height from total maxHeight
+  const gridMaxHeight = useMemo(() => {
+    if (!maxHeight) return undefined;
+    const controlsHeight = controlsRef.current?.offsetHeight ?? 0;
+    return maxHeight - controlsHeight;
+  }, [maxHeight]);
 
   // Zoom percentage for display
   const zoomPercent = Math.round(zoomLevel * 100);
@@ -96,7 +114,7 @@ const StepSequencer: React.FC = () => {
       const position = secondsToGridPosition(
         currentSeconds,
         loopSettings,
-        subdivision
+        subdivision,
       );
       setPlayheadPosition(position);
       rafRef.current = requestAnimationFrame(updatePlayhead);
@@ -119,7 +137,7 @@ const StepSequencer: React.FC = () => {
       const startTimeTicks = gridPositionToTicks(
         columnIndex,
         loopSettings,
-        subdivision
+        subdivision,
       );
       const duration = getSubdivisionDuration(loopSettings, subdivision);
       const baseNote = allSampleData[padId]?.settings.baseNote || "C4";
@@ -137,7 +155,10 @@ const StepSequencer: React.FC = () => {
           ...prev[padId],
           events: {
             ...prev[padId].events,
-            [currentLoop]: [...(prev[padId].events[currentLoop] || []), newEvent],
+            [currentLoop]: [
+              ...(prev[padId].events[currentLoop] || []),
+              newEvent,
+            ],
           },
         },
       }));
@@ -151,7 +172,7 @@ const StepSequencer: React.FC = () => {
       setAllSampleData,
       setSelectedSampleId,
       subdivision,
-    ]
+    ],
   );
 
   // Handle event deletion
@@ -164,13 +185,13 @@ const StepSequencer: React.FC = () => {
           events: {
             ...prev[padId].events,
             [currentLoop]: prev[padId].events[currentLoop].filter(
-              (_, idx) => idx !== eventIndex
+              (_, idx) => idx !== eventIndex,
             ),
           },
         },
       }));
     },
-    [currentLoop, setAllSampleData]
+    [currentLoop, setAllSampleData],
   );
 
   // Handle event drag (move)
@@ -181,7 +202,7 @@ const StepSequencer: React.FC = () => {
       const newStartTimeTicks = gridPositionToTicks(
         newColumnStart,
         loopSettings,
-        subdivision
+        subdivision,
       );
 
       setAllSampleData((prev) => ({
@@ -193,13 +214,13 @@ const StepSequencer: React.FC = () => {
             [currentLoop]: prev[padId].events[currentLoop].map((event, idx) =>
               idx === eventIndex
                 ? { ...event, startTime: newStartTimeTicks }
-                : event
+                : event,
             ),
           },
         },
       }));
     },
-    [currentLoop, loopSettings, setAllSampleData, subdivision]
+    [currentLoop, loopSettings, setAllSampleData, subdivision],
   );
 
   // Handle event resize
@@ -217,13 +238,13 @@ const StepSequencer: React.FC = () => {
           events: {
             ...prev[padId].events,
             [currentLoop]: prev[padId].events[currentLoop].map((event, idx) =>
-              idx === eventIndex ? { ...event, duration: newDuration } : event
+              idx === eventIndex ? { ...event, duration: newDuration } : event,
             ),
           },
         },
       }));
     },
-    [currentLoop, loopSettings, setAllSampleData, subdivision]
+    [currentLoop, loopSettings, setAllSampleData, subdivision],
   );
 
   // Handle subdivision change — zoom level stays the same, fitCellWidth auto-adjusts
@@ -291,12 +312,7 @@ const StepSequencer: React.FC = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [
-    hotKeysActive,
-    handleClearSelectedPad,
-    handleZoomIn,
-    handleZoomOut,
-  ]);
+  }, [hotKeysActive, handleClearSelectedPad, handleZoomIn, handleZoomOut]);
 
   if (!loopSettings) {
     return (
@@ -308,10 +324,14 @@ const StepSequencer: React.FC = () => {
 
   return (
     <div ref={containerRef} className="flex flex-col w-full">
-      <div className="flex justify-between items-center mb-2">
+      {/* <div className="flex justify-between items-center mb-2">
         <h3 className="bg-slate-800 px-4 py-1 border-2 border-slate-800 text-white font-bold">
           Step Sequencer
         </h3>
+        
+      </div> */}
+
+      <div ref={controlsRef}>
         <SequencerControls
           subdivision={subdivision}
           onSubdivisionChange={handleSubdivisionChange}
@@ -337,6 +357,7 @@ const StepSequencer: React.FC = () => {
         onDragEnd={handleDragEnd}
         onResizeEnd={handleResizeEnd}
         playheadPosition={loopIsPlaying ? playheadPosition : 0}
+        maxHeight={gridMaxHeight}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import MainMenu from "../components/MainMenu";
@@ -25,7 +25,7 @@ const SampleSettings = dynamic(
   () => import("../components/Audio/SampleSettings"),
   {
     ssr: false,
-  }
+  },
 );
 
 const DrumMachine = dynamic(() => import("../components/Audio/DrumMachine"), {
@@ -39,11 +39,11 @@ const PitchGrid = dynamic(() => import("../components/Audio/PitchGrid"), {
 const StepSequencer = dynamic(
   () =>
     import("../components/Audio/StepSequencer/StepSequencer").then(
-      (mod) => mod.default
+      (mod) => mod.default,
     ),
   {
     ssr: false,
-  }
+  },
 );
 
 export default function Home() {
@@ -53,8 +53,14 @@ export default function Home() {
     setMakeBeatsButtonPressed,
     sequencerVisible,
     setSequencerVisible,
+    hotKeysActive,
   } = useUIContext();
   const { samplersRef, selectedSampleId, samplersLoading } = useAudioContext();
+
+  const playViewRef = useRef<HTMLDivElement>(null);
+  const [playViewHeight, setPlayViewHeight] = useState<number | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     if (samplersLoading) {
@@ -62,6 +68,30 @@ export default function Home() {
       setMakeBeatsButtonPressed(false);
     }
   });
+
+  useEffect(() => {
+    if (!playViewRef.current || sequencerVisible) return;
+    const height = playViewRef.current.getBoundingClientRect().height;
+    setPlayViewHeight(height);
+  }, [sequencerVisible]);
+
+  const handleToggleSequencer = useCallback(() => {
+    setSequencerVisible((prev) => !prev);
+  }, [setSequencerVisible]);
+
+  useEffect(() => {
+    if (!hotKeysActive) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "s" && e.metaKey) {
+        e.preventDefault();
+        handleToggleSequencer();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [hotKeysActive, handleToggleSequencer]);
 
   return (
     <>
@@ -87,16 +117,53 @@ export default function Home() {
                     <Loop />
                   </div>
                 </div>
-                {/* DrumMachine must stay mounted for Tone.Part playback scheduling */}
-                <div className={sequencerVisible ? "hidden" : "flex"}>
-                  <DrumMachine />
-                  <PitchGrid
-                    sampler={
-                      samplersRef.current[selectedSampleId]?.sampler ?? null
-                    }
-                  />
+                <div className="flex">
+                  {/* Play / Seq toggle buttons */}
+                  <div className="flex flex-col gap-1 mt-1 mr-1">
+                    <button
+                      onClick={() => setSequencerVisible(false)}
+                      className={`flex flex-1 px-2 py-1 text-xs border-2 border-black cursor-pointer ${
+                        !sequencerVisible
+                          ? "bg-slate-600 text-white font-bold shadow-inner shadow-black"
+                          : "bg-slate-200 text-black shadow-sm shadow-slate-500"
+                      }`}
+                    >
+                      <span className="[writing-mode:vertical-lr] rotate-180">
+                        PADS
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setSequencerVisible(true)}
+                      className={`flex flex-1 px-2 py-1 text-xs border-2 border-black cursor-pointer ${
+                        sequencerVisible
+                          ? "bg-slate-600 text-white font-bold shadow-inner shadow-black"
+                          : "bg-slate-200 text-black shadow-sm shadow-slate-500"
+                      }`}
+                    >
+                      <span className="[writing-mode:vertical-lr] rotate-180">
+                        SEQUENCER
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    {/* DrumMachine must stay mounted for Tone.Part playback scheduling */}
+                    <div
+                      ref={playViewRef}
+                      className={sequencerVisible ? "hidden" : "flex"}
+                    >
+                      <DrumMachine />
+                      <PitchGrid
+                        sampler={
+                          samplersRef.current[selectedSampleId]?.sampler ?? null
+                        }
+                      />
+                    </div>
+                    {sequencerVisible && (
+                      <StepSequencer maxHeight={playViewHeight} />
+                    )}
+                  </div>
                 </div>
-                {sequencerVisible && <StepSequencer />}
               </div>
 
               {/* Overlay when content should be blurred */}
