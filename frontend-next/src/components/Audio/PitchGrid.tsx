@@ -34,7 +34,7 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
       if (!targetEl) return null;
       return (
         Object.entries(pitchPadsRef.current).find(([, el]) =>
-          el?.contains(targetEl)
+          el?.contains(targetEl),
         )?.[0] || null
       );
     };
@@ -113,7 +113,6 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
   return (
     <div className="relative w-full max-w-[400px] border-2 border-black flex flex-col bg-white ml-1 mt-1">
       <div className="flex-none">
-        <h3 className="bg-slate-50 font-bold border-b-2 border-black shadow-inner shadow-slate-400 w-full text-center">{`Pitch Grid: ${selectedSampleId}`}</h3>
         <div className="flex w-full text-xs">
           <button
             className={`font-bold border-l border-b border-black shadow-inner w-full shadow-slate-800 ${scale === "chromatic" ? "bg-slate-600 text-white" : "bg-slate-50 text-black"}`}

@@ -358,7 +358,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   return (
     <div
       ref={containerRef}
-      className="flex flex-col w-full"
+      className="flex flex-col w-full select-none"
       style={maxHeight ? { height: maxHeight } : undefined}
     >
       <SequencerControls

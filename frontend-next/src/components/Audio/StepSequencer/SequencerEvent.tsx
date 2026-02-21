@@ -107,6 +107,43 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!onDragEnd) return;
+    e.stopPropagation();
+
+    setIsDragging(true);
+    startXRef.current = e.touches[0].clientX;
+    dragOffsetRef.current = 0;
+    didInteractRef.current = false;
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      const deltaX = moveEvent.touches[0].clientX - startXRef.current;
+      const deltaColumns = snapToGrid ? Math.round(deltaX / cellWidth) : deltaX / cellWidth;
+      if (deltaColumns !== 0) {
+        didInteractRef.current = true;
+      }
+      dragOffsetRef.current = deltaColumns;
+      setDragOffset(deltaColumns);
+    };
+
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+      const newColumn = snapToGrid
+        ? Math.max(0, Math.round(columnStart + dragOffsetRef.current))
+        : Math.max(0, columnStart + dragOffsetRef.current);
+      if (didInteractRef.current && newColumn !== columnStart) {
+        onDragEnd(padId, eventIndex, newColumn);
+      }
+      dragOffsetRef.current = 0;
+      setDragOffset(0);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+
+    document.addEventListener("touchmove", handleTouchMove);
+    document.addEventListener("touchend", handleTouchEnd);
+  };
+
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     if (!onResizeEnd) return;
     e.stopPropagation();
@@ -144,6 +181,44 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
 
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleResizeTouchStart = (e: React.TouchEvent) => {
+    if (!onResizeEnd) return;
+    e.stopPropagation();
+
+    setIsResizing(true);
+    startXRef.current = e.touches[0].clientX;
+    resizeWidthRef.current = columnWidth;
+    didInteractRef.current = false;
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      const deltaX = moveEvent.touches[0].clientX - startXRef.current;
+      const deltaColumns = snapToGrid ? Math.round(deltaX / cellWidth) : deltaX / cellWidth;
+      const minWidth = snapToGrid ? 1 : 0.25;
+      const newWidth = snapToGrid
+        ? Math.max(minWidth, Math.round(columnWidth + deltaColumns))
+        : Math.max(minWidth, columnWidth + deltaColumns);
+      if (newWidth !== columnWidth) {
+        didInteractRef.current = true;
+      }
+      resizeWidthRef.current = newWidth;
+      setResizeWidth(newWidth);
+    };
+
+    const handleTouchEnd = () => {
+      setIsResizing(false);
+      if (didInteractRef.current && resizeWidthRef.current !== columnWidth) {
+        onResizeEnd(padId, eventIndex, resizeWidthRef.current);
+      }
+      resizeWidthRef.current = columnWidth;
+      setResizeWidth(columnWidth);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+
+    document.addEventListener("touchmove", handleTouchMove);
+    document.addEventListener("touchend", handleTouchEnd);
   };
 
   const handleResizeStartMouseDown = (e: React.MouseEvent) => {
@@ -206,6 +281,65 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const handleResizeStartTouchStart = (e: React.TouchEvent) => {
+    if (!onResizeStartEnd) return;
+    e.stopPropagation();
+
+    setIsResizingStart(true);
+    startXRef.current = e.touches[0].clientX;
+    resizeStartOffsetRef.current = 0;
+    didInteractRef.current = false;
+
+    const rightEdge = snapToGrid
+      ? Math.round(columnStart + columnWidth)
+      : columnStart + columnWidth;
+    const minWidth = snapToGrid ? 1 : 0.25;
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      const deltaX = moveEvent.touches[0].clientX - startXRef.current;
+      if (snapToGrid) {
+        const deltaColumns = Math.round(deltaX / cellWidth);
+        const snappedTarget = Math.round(columnStart) + deltaColumns;
+        const clampedStart = Math.max(0, Math.min(snappedTarget, rightEdge - minWidth));
+        const offset = clampedStart - columnStart;
+        if (offset !== 0) {
+          didInteractRef.current = true;
+        }
+        resizeStartOffsetRef.current = offset;
+        setResizeStartOffset(offset);
+      } else {
+        const deltaColumns = deltaX / cellWidth;
+        const target = columnStart + deltaColumns;
+        const clampedStart = Math.max(0, Math.min(target, rightEdge - minWidth));
+        const offset = clampedStart - columnStart;
+        if (offset !== 0) {
+          didInteractRef.current = true;
+        }
+        resizeStartOffsetRef.current = offset;
+        setResizeStartOffset(offset);
+      }
+    };
+
+    const handleTouchEnd = () => {
+      setIsResizingStart(false);
+      const offset = resizeStartOffsetRef.current;
+      if (didInteractRef.current && offset !== 0) {
+        const newStart = snapToGrid
+          ? Math.round(columnStart + offset)
+          : columnStart + offset;
+        const newWidth = rightEdge - newStart;
+        onResizeStartEnd(padId, eventIndex, newStart, newWidth);
+      }
+      resizeStartOffsetRef.current = 0;
+      setResizeStartOffset(0);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+
+    document.addEventListener("touchmove", handleTouchMove);
+    document.addEventListener("touchend", handleTouchEnd);
+  };
+
   const displayColumn = isDragging
     ? Math.max(0, columnStart + dragOffset)
     : isResizingStart
@@ -220,7 +354,7 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
   return (
     <div
       ref={eventRef}
-      className={`absolute top-0.5 bottom-0.5 rounded cursor-pointer transition-colors pointer-events-auto
+      className={`absolute top-0.5 bottom-0.5 rounded cursor-pointer transition-colors pointer-events-auto touch-none
         ${isDragging || isResizing || isResizingStart ? "z-10" : "z-5"}
         ${isSelected ? "ring-2 ring-blue-400" : ""}
         ${isDragging ? "opacity-70" : ""}`}
@@ -231,19 +365,22 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
       }}
       onClick={handleClick}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       {/* Resize handle on left edge */}
       {onResizeStartEnd && (
         <div
-          className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-blue-300/50"
+          className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-blue-300/50 touch-none"
           onMouseDown={handleResizeStartMouseDown}
+          onTouchStart={handleResizeStartTouchStart}
         />
       )}
       {/* Resize handle on right edge */}
       {onResizeEnd && (
         <div
-          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-blue-300/50"
+          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-blue-300/50 touch-none"
           onMouseDown={handleResizeMouseDown}
+          onTouchStart={handleResizeTouchStart}
         />
       )}
     </div>
