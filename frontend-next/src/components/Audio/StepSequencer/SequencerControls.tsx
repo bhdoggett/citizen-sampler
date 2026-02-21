@@ -1,5 +1,6 @@
 import React, { memo } from "react";
 import { Subdivision, subdivisionLabels } from "./utils/gridConversions";
+import type { ScaleName } from "src/lib/audio/util/scaleNotes";
 
 type SequencerControlsProps = {
   subdivision: Subdivision;
@@ -11,6 +12,11 @@ type SequencerControlsProps = {
   zoomPercent: number;
   isMinZoom: boolean;
   isMaxZoom: boolean;
+  pianoRollMode: boolean;
+  onPianoRollToggle: () => void;
+  pianoRollScale: ScaleName;
+  onPianoRollScaleChange: (scale: ScaleName) => void;
+  selectedSampleId: string;
 };
 
 const subdivisionOptions: Subdivision[] = ["4n", "8n", "16n", "32n"];
@@ -26,6 +32,11 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
     zoomPercent,
     isMinZoom,
     isMaxZoom,
+    pianoRollMode,
+    onPianoRollToggle,
+    pianoRollScale,
+    onPianoRollScaleChange,
+    selectedSampleId,
   }) => {
     return (
       <div className="flex justify-between items-center m-1">
@@ -50,6 +61,28 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
           >
             Snap
           </button>
+          <button
+            onClick={onPianoRollToggle}
+            className={`border-1 border-black px-2 text-sm ${pianoRollMode ? "bg-slate-600 text-white font-bold shadow-inner shadow-black" : "bg-slate-200 text-black shadow-sm shadow-slate-500"}`}
+            title={pianoRollMode ? "Switch to Drum mode" : "Switch to Piano Roll mode"}
+          >
+            {pianoRollMode ? "Piano Roll" : "Drum"}
+          </button>
+          {pianoRollMode && (
+            <>
+              <select
+                value={pianoRollScale}
+                onChange={(e) => onPianoRollScaleChange(e.target.value as ScaleName)}
+                className="border border-gray-700 shadow-inner shadow-slate-800 text-center bg-white text-sm py-0"
+              >
+                <option value="chromatic">Chromatic</option>
+                <option value="major">Major</option>
+                <option value="minor">Minor</option>
+                <option value="pentatonic">Pentatonic</option>
+              </select>
+              <span className="text-xs text-gray-600 font-medium">{selectedSampleId}</span>
+            </>
+          )}
         </div>
 
         {/* Zoom controls */}

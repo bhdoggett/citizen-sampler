@@ -14,7 +14,7 @@ type SequencerGridProps = {
   subdivision: Subdivision;
   cellWidth: number;
   selectedSampleId: string;
-  onCellClick?: (padId: string, columnIndex: number) => void;
+  onCellClick?: (padId: string, columnIndex: number, note?: string) => void;
   onDeleteEvent?: (padId: string, eventIndex: number) => void;
   onDragEnd?: (
     padId: string,
@@ -34,6 +34,9 @@ type SequencerGridProps = {
   ) => void;
   playheadPosition?: number;
   snapToGrid?: boolean;
+  pianoRollMode?: boolean;
+  pianoRollNotes?: string[];
+  pianoRollPadId?: string;
 };
 
 const SequencerGrid: React.FC<SequencerGridProps> = memo(
@@ -53,14 +56,42 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     onResizeStartEnd,
     playheadPosition = 0,
     snapToGrid = true,
+    pianoRollMode = false,
+    pianoRollNotes = [],
+    pianoRollPadId,
   }) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Generate pad IDs in order (pad-1 through pad-16)
+    // Generate pad IDs in order (pad-1 through pad-16) for drum mode
     const padIds = useMemo(
       () => Array.from({ length: 16 }, (_, i) => `pad-${i + 1}`),
       [],
     );
+
+    // Build rows: either 16 drum pads or N piano roll note rows
+    const rows = useMemo(() => {
+      if (pianoRollMode && pianoRollPadId && pianoRollNotes.length > 0) {
+        return pianoRollNotes.map((note, idx) => ({
+          key: `${pianoRollPadId}-${note}-${idx}`,
+          padId: pianoRollPadId,
+          padNumber: idx + 1,
+          note,
+          label: note,
+          isSharp: note.includes("#"),
+        }));
+      }
+      return padIds.map((padId) => {
+        const padNumber = parseInt(padId.split("-")[1], 10);
+        return {
+          key: padId,
+          padId,
+          padNumber,
+          note: undefined as string | undefined,
+          label: undefined as string | undefined,
+          isSharp: false,
+        };
+      });
+    }, [pianoRollMode, pianoRollPadId, pianoRollNotes, padIds]);
 
     const cellsPerBeat = subdivisionToCellsPerBeat[subdivision];
     const cellsPerBar = beats * cellsPerBeat;
@@ -92,7 +123,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
             <div className="flex bg-gray-200 border-b-2 border-gray-400 sticky top-0 z-30">
               {/* Spacer for pad labels column */}
               <div className="sticky left-0 z-30 w-20 min-w-20 bg-gray-200 border-r-2 border-gray-300 flex items-center justify-center text-xs font-bold">
-                Pad
+                {pianoRollMode ? "Note" : "Pad"}
               </div>
 
               {/* Bar/beat labels */}
@@ -111,18 +142,21 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
 
             {/* Grid rows */}
             <div className="relative">
-              {padIds.map((padId) => {
-                const padNumber = parseInt(padId.split("-")[1], 10);
-                const sampleData = allSampleData[padId];
-                const events = gridEvents.get(padId) || [];
-
+              {rows.map((row) => {
+                const sampleData = allSampleData[row.padId];
                 if (!sampleData) return null;
+
+                const allEvents = gridEvents.get(row.padId) || [];
+                // In piano roll mode, filter events to only show those matching this row's note
+                const events = pianoRollMode && row.note
+                  ? allEvents.filter((e) => e.originalEvent.note === row.note)
+                  : allEvents;
 
                 return (
                   <SequencerRow
-                    key={padId}
-                    padId={padId}
-                    padNumber={padNumber}
+                    key={row.key}
+                    padId={row.padId}
+                    padNumber={row.padNumber}
                     sampleData={sampleData}
                     events={events}
                     totalColumns={totalColumns}
@@ -134,8 +168,12 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
                     onDragEnd={onDragEnd}
                     onResizeEnd={onResizeEnd}
                     onResizeStartEnd={onResizeStartEnd}
-                    isSelected={padId === selectedSampleId}
+                    isSelected={!pianoRollMode && row.padId === selectedSampleId}
                     snapToGrid={snapToGrid}
+                    rowLabel={row.label}
+                    pianoRollMode={pianoRollMode}
+                    pianoRollNote={row.note}
+                    isSharpRow={row.isSharp}
                   />
                 );
               })}

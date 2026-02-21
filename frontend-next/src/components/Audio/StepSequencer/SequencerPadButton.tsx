@@ -9,6 +9,7 @@ import type { SampleEventFE } from "src/types/audioTypesFE";
 type SequencerPadButtonProps = {
   padId: string;
   padNumber: number;
+  overrideNote?: string;
 };
 
 const getKeySymbol = (key: string): string => {
@@ -24,6 +25,7 @@ const getKeySymbol = (key: string): string => {
 const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
   padId,
   padNumber,
+  overrideNote,
 }) => {
   const {
     samplersRef,
@@ -60,9 +62,10 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
 
     const now = Tone.now();
     const { start, end, baseNote } = allSampleData[padId].settings;
+    const noteToPlay = overrideNote || baseNote;
 
     hasReleasedRef.current = false;
-    sampler.triggerAttack(baseNote, now, start, 1);
+    sampler.triggerAttack(noteToPlay, now, start, 1);
     setSelectedSampleId(padId);
     setIsPressed(true);
 
@@ -71,7 +74,7 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
       scheduledReleaseTimeoutRef.current = setTimeout(() => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
-          sampler.triggerRelease(baseNote, Tone.now());
+          sampler.triggerRelease(noteToPlay, Tone.now());
           setIsPressed(false);
         }
       }, duration * 1000);
@@ -80,10 +83,10 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     if (loopIsPlaying && isRecording) {
       currentEvent.current.startTime = Tone.getTransport().ticks;
       currentEvent.current.duration = 0;
-      currentEvent.current.note = baseNote;
+      currentEvent.current.note = noteToPlay;
       currentEvent.current.velocity = 1;
     }
-  }, [allSampleData, padId, isRecording, loopIsPlaying, samplersRef, setSelectedSampleId]);
+  }, [allSampleData, padId, isRecording, loopIsPlaying, samplersRef, setSelectedSampleId, overrideNote]);
 
   const handleRelease = useCallback(() => {
     const sampler = samplersRef.current[padId]?.sampler;
@@ -95,10 +98,11 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     }
 
     const { baseNote } = allSampleData[padId].settings;
+    const noteToPlay = overrideNote || baseNote;
 
     hasReleasedRef.current = true;
     setIsPressed(false);
-    sampler.triggerRelease(baseNote, Tone.now());
+    sampler.triggerRelease(noteToPlay, Tone.now());
 
     if (!currentEvent.current.startTime || !loopIsPlaying || !isRecording)
       return;
@@ -145,21 +149,40 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     isPressed,
     selectedSampleId,
     setAllSampleData,
+    overrideNote,
   ]);
 
   // Sync visual state with keyboard hotkeys (audio is triggered by DrumPad)
+  // Skip hotkey registration for piano roll rows (overrideNote set)
+  const keyReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    if (!hotKeysActive) return;
+    if (!hotKeysActive || overrideNote) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.repeat) return;
       if (e.key === padKey) {
+        if (keyReleaseTimeoutRef.current) {
+          clearTimeout(keyReleaseTimeoutRef.current);
+          keyReleaseTimeoutRef.current = null;
+        }
         setIsPressed(true);
+
+        const { start, end } = allSampleData[padId].settings;
+        if (end) {
+          const duration = end - start;
+          keyReleaseTimeoutRef.current = setTimeout(() => {
+            setIsPressed(false);
+          }, duration * 1000);
+        }
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === padKey) {
+        if (keyReleaseTimeoutRef.current) {
+          clearTimeout(keyReleaseTimeoutRef.current);
+          keyReleaseTimeoutRef.current = null;
+        }
         setIsPressed(false);
       }
     };
@@ -169,8 +192,11 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      if (keyReleaseTimeoutRef.current) {
+        clearTimeout(keyReleaseTimeoutRef.current);
+      }
     };
-  }, [hotKeysActive, padKey]);
+  }, [hotKeysActive, padKey, allSampleData, padId, overrideNote]);
 
   return (
     <button
@@ -182,9 +208,9 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
           ? "bg-cyan-400 text-white scale-95"
           : "bg-gray-300 hover:bg-gray-400 text-gray-700"
         }`}
-      title={`Play pad ${padNumber} (${hotKeysActive ? getKeySymbol(padKey) : padKey})`}
+      title={overrideNote ? `Play ${overrideNote}` : `Play pad ${padNumber} (${hotKeysActive ? getKeySymbol(padKey) : padKey})`}
     >
-      {hotKeysActive ? getKeySymbol(padKey) : ""}
+      {overrideNote ? "\u25B6" : hotKeysActive ? getKeySymbol(padKey) : ""}
     </button>
   );
 };

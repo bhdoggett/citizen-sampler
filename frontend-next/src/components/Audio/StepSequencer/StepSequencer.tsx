@@ -21,6 +21,10 @@ import {
 } from "./utils/gridConversions";
 import type { LoopName } from "../../../../../shared/types/audioTypes";
 import type { SampleEventFE } from "src/types/audioTypesFE";
+import {
+  type ScaleName,
+  generatePianoRollNotes,
+} from "src/lib/audio/util/scaleNotes";
 
 const PAD_LABEL_WIDTH = 80; // Width of the pad label column
 const CONTAINER_PADDING = 2; // 1px border on each side of the grid
@@ -47,6 +51,8 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [playheadPosition, setPlayheadPosition] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [pianoRollMode, setPianoRollMode] = useState(false);
+  const [pianoRollScale, setPianoRollScale] = useState<ScaleName>("chromatic");
   const rafRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -75,6 +81,13 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   // Derive effective cell width from zoom level
   const effectiveCellWidth = fitCellWidth > 0 ? fitCellWidth * zoomLevel : 0;
 
+
+  // Piano roll notes for the selected sample
+  const pianoRollNotes = useMemo(() => {
+    if (!pianoRollMode) return [];
+    const baseNote = String(allSampleData[selectedSampleId]?.settings.baseNote || "C4");
+    return generatePianoRollNotes(baseNote, pianoRollScale);
+  }, [pianoRollMode, selectedSampleId, allSampleData, pianoRollScale]);
 
   // Zoom percentage for display
   const zoomPercent = Math.round(zoomLevel * 100);
@@ -125,7 +138,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
 
   // Handle cell click to create new event
   const handleCellClick = useCallback(
-    (padId: string, columnIndex: number) => {
+    (padId: string, columnIndex: number, note?: string) => {
       if (!loopSettings) return;
 
       const startTimeTicks = gridPositionToTicks(
@@ -139,7 +152,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
       const newEvent: SampleEventFE = {
         startTime: startTimeTicks,
         duration,
-        note: baseNote,
+        note: note || baseNote,
         velocity: 1,
       };
 
@@ -358,6 +371,11 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
         zoomPercent={zoomPercent}
         isMinZoom={isMinZoom}
         isMaxZoom={isMaxZoom}
+        pianoRollMode={pianoRollMode}
+        onPianoRollToggle={() => setPianoRollMode((prev) => !prev)}
+        pianoRollScale={pianoRollScale}
+        onPianoRollScaleChange={setPianoRollScale}
+        selectedSampleId={selectedSampleId}
       />
 
       <div className="flex-1 min-h-0 overflow-hidden">
@@ -377,6 +395,9 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
           onResizeStartEnd={handleResizeStartEnd}
           playheadPosition={loopIsPlaying ? playheadPosition : 0}
           snapToGrid={snapToGrid}
+          pianoRollMode={pianoRollMode}
+          pianoRollNotes={pianoRollNotes}
+          pianoRollPadId={pianoRollMode ? selectedSampleId : undefined}
         />
       </div>
     </div>

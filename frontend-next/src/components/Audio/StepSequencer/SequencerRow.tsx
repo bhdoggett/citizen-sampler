@@ -13,7 +13,7 @@ type SequencerRowProps = {
   cellWidth: number;
   beats: number;
   subdivision: string;
-  onCellClick?: (padId: string, columnIndex: number) => void;
+  onCellClick?: (padId: string, columnIndex: number, note?: string) => void;
   onDeleteEvent?: (padId: string, eventIndex: number) => void;
   onDragEnd?: (
     padId: string,
@@ -33,6 +33,10 @@ type SequencerRowProps = {
   ) => void;
   isSelected?: boolean;
   snapToGrid?: boolean;
+  rowLabel?: string;
+  pianoRollMode?: boolean;
+  pianoRollNote?: string;
+  isSharpRow?: boolean;
 };
 
 const SequencerRow: React.FC<SequencerRowProps> = memo(
@@ -52,6 +56,10 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
     onResizeStartEnd,
     isSelected = false,
     snapToGrid = true,
+    rowLabel,
+    pianoRollMode = false,
+    pianoRollNote,
+    isSharpRow = false,
   }) => {
     // Calculate cells per beat based on subdivision
     const getCellsPerBeat = () => {
@@ -76,15 +84,18 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
 
     const handleCellClick = (columnIndex: number) => {
       if (onCellClick) {
-        onCellClick(padId, columnIndex);
+        onCellClick(padId, columnIndex, pianoRollNote);
       }
     };
 
-    // Get row background color based on mute/solo
+    // Get row background color based on mute/solo/sharp
     const getRowBgClass = () => {
-      if (sampleData.settings.mute) return "bg-red-50";
-      if (sampleData.settings.solo) return "bg-yellow-50";
-      return isSelected ? "bg-blue-50" : "bg-white";
+      if (!pianoRollMode) {
+        if (sampleData.settings.mute) return "bg-red-50";
+        if (sampleData.settings.solo) return "bg-yellow-50";
+        return isSelected ? "bg-blue-50" : "bg-white";
+      }
+      return isSharpRow ? "bg-gray-200" : "bg-white";
     };
 
     return (
@@ -95,14 +106,17 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
         <div
           className={`sticky left-0 z-20 w-20 min-w-20 flex items-center justify-between px-1.5
             border-r-2 border-gray-300 font-medium text-sm
-            ${sampleData.settings.mute ? "bg-red-200 text-red-800" : ""}
-            ${sampleData.settings.solo ? "bg-yellow-200 text-yellow-800" : ""}
-            ${!sampleData.settings.mute && !sampleData.settings.solo ? (isSelected ? "bg-blue-100" : "bg-gray-100") : ""}`}
+            ${pianoRollMode
+              ? (isSharpRow ? "bg-gray-300" : "bg-gray-100")
+              : `${sampleData.settings.mute ? "bg-red-200 text-red-800" : ""}
+                 ${sampleData.settings.solo ? "bg-yellow-200 text-yellow-800" : ""}
+                 ${!sampleData.settings.mute && !sampleData.settings.solo ? (isSelected ? "bg-blue-100" : "bg-gray-100") : ""}`
+            }`}
         >
-          <span className="truncate" title={sampleData.title}>
-            {padNumber}
+          <span className="truncate" title={rowLabel || sampleData.title}>
+            {rowLabel || padNumber}
           </span>
-          <SequencerPadButton padId={padId} padNumber={padNumber} />
+          <SequencerPadButton padId={padId} padNumber={padNumber} overrideNote={pianoRollNote} />
         </div>
 
         {/* Grid cells */}
@@ -120,7 +134,8 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
               return (
                 <div
                   key={i}
-                  className={`h-full border-r cursor-pointer hover:bg-gray-100
+                  className={`h-full border-r cursor-pointer
+                    ${isSharpRow ? "hover:bg-gray-300" : "hover:bg-gray-100"}
                     ${isBarEnd ? "border-gray-400" : isBeatEnd ? "border-gray-300" : "border-gray-200"}`}
                   style={{ width: `${cellWidth}px` }}
                   onClick={() => handleCellClick(i)}
