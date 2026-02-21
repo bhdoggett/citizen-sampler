@@ -64,15 +64,21 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
           <button
             onClick={onPianoRollToggle}
             className={`border-1 border-black px-2 text-sm ${pianoRollMode ? "bg-slate-600 text-white font-bold shadow-inner shadow-black" : "bg-slate-200 text-black shadow-sm shadow-slate-500"}`}
-            title={pianoRollMode ? "Switch to Drum mode" : "Switch to Piano Roll mode"}
+            title={
+              pianoRollMode
+                ? "Switch to Drum mode"
+                : "Switch to Piano Roll mode"
+            }
           >
-            {pianoRollMode ? "Piano Roll" : "Drum"}
+            {"\u266B"}
           </button>
           {pianoRollMode && (
             <>
               <select
                 value={pianoRollScale}
-                onChange={(e) => onPianoRollScaleChange(e.target.value as ScaleName)}
+                onChange={(e) =>
+                  onPianoRollScaleChange(e.target.value as ScaleName)
+                }
                 className="border border-gray-700 shadow-inner shadow-slate-800 text-center bg-white text-sm py-0"
               >
                 <option value="chromatic">Chromatic</option>
@@ -80,7 +86,9 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
                 <option value="minor">Minor</option>
                 <option value="pentatonic">Pentatonic</option>
               </select>
-              <span className="text-xs text-gray-600 font-medium">{selectedSampleId}</span>
+              <span className="text-xs text-gray-600 font-medium">
+                {selectedSampleId}
+              </span>
             </>
           )}
         </div>

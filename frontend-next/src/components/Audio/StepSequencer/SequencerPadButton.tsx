@@ -86,7 +86,15 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
       currentEvent.current.note = noteToPlay;
       currentEvent.current.velocity = 1;
     }
-  }, [allSampleData, padId, isRecording, loopIsPlaying, samplersRef, setSelectedSampleId, overrideNote]);
+  }, [
+    allSampleData,
+    padId,
+    isRecording,
+    loopIsPlaying,
+    samplersRef,
+    setSelectedSampleId,
+    overrideNote,
+  ]);
 
   const handleRelease = useCallback(() => {
     const sampler = samplersRef.current[padId]?.sampler;
@@ -117,7 +125,7 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
       : padReleasetime;
 
     const startTimeInSeconds = Tone.Ticks(
-      currentEvent.current.startTime
+      currentEvent.current.startTime,
     ).toSeconds();
     const loopEndInSeconds = Tone.Time(Tone.getTransport().loopEnd).toSeconds();
 
@@ -203,12 +211,16 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
       onMouseDown={handlePress}
       onMouseUp={handleRelease}
       onMouseLeave={handleRelease}
-      className={`flex items-center justify-center w-7 h-5 rounded text-[10px] font-bold cursor-pointer select-none transition-all duration-75
+      className={`flex items-center justify-center w-7 h-5 rounded text-[10px] font-bold cursor-pointer select-none transition-all duration-75 border border-gray-700
         ${isPressed
           ? "bg-cyan-400 text-white scale-95"
-          : "bg-gray-300 hover:bg-gray-400 text-gray-700"
+          : "bg-gray-500 hover:bg-gray-600 text-white"
         }`}
-      title={overrideNote ? `Play ${overrideNote}` : `Play pad ${padNumber} (${hotKeysActive ? getKeySymbol(padKey) : padKey})`}
+      title={
+        overrideNote
+          ? `Play ${overrideNote}`
+          : `Play pad ${padNumber} (${hotKeysActive ? getKeySymbol(padKey) : padKey})`
+      }
     >
       {overrideNote ? "\u25B6" : hotKeysActive ? getKeySymbol(padKey) : ""}
     </button>
