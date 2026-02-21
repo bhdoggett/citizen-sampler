@@ -23,6 +23,17 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { settings } = allSampleData[selectedSampleId];
 
+  // Refs to hold unstable context values so the init effect only re-runs when audioUrl changes
+  const selectedSampleIdRef = useRef(selectedSampleId);
+  const getCachedRef = useRef(getCachedAudioUrlFromIndexedDB);
+  const storeRef = useRef(storeAudioInIndexedDB);
+
+  useEffect(() => {
+    selectedSampleIdRef.current = selectedSampleId;
+    getCachedRef.current = getCachedAudioUrlFromIndexedDB;
+    storeRef.current = storeAudioInIndexedDB;
+  });
+
   // Initialize WaveSurfer
   useEffect(() => {
     if (!containerRef.current || !audioUrl) return;
@@ -44,13 +55,13 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     waveSurferRef.current = wavesurfer;
 
     const loadAudio = async () => {
-      const cachedUrl = await getCachedAudioUrlFromIndexedDB(
-        selectedSampleId,
+      const cachedUrl = await getCachedRef.current(
+        selectedSampleIdRef.current,
         audioUrl
       );
 
       if (!cachedUrl) {
-        storeAudioInIndexedDB(audioUrl, selectedSampleId); // Cache it for next time
+        storeRef.current(audioUrl, selectedSampleIdRef.current); // Cache it for next time
       }
       wavesurfer.load(cachedUrl ?? audioUrl).catch((error) => {
         if (error.name !== "AbortError") {
@@ -69,13 +80,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       setWaveSurferIsReady(false);
       wavesurfer.destroy();
     };
-  }, [
-    audioUrl,
-    containerRef,
-    selectedSampleId,
-    getCachedAudioUrlFromIndexedDB,
-    storeAudioInIndexedDB,
-  ]);
+  }, [audioUrl]);
 
   // Update Region settings change
   useEffect(() => {
