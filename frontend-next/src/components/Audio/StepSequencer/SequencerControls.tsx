@@ -4,6 +4,8 @@ import { Subdivision, subdivisionLabels } from "./utils/gridConversions";
 type SequencerControlsProps = {
   subdivision: Subdivision;
   onSubdivisionChange: (subdivision: Subdivision) => void;
+  snapToGrid: boolean;
+  onSnapToggle: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   zoomPercent: number;
@@ -17,6 +19,8 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
   ({
     subdivision,
     onSubdivisionChange,
+    snapToGrid,
+    onSnapToggle,
     onZoomIn,
     onZoomOut,
     zoomPercent,
@@ -25,13 +29,13 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
   }) => {
     return (
       <div className="flex justify-between items-center m-1">
-        {/* Subdivision selector */}
+        {/* Subdivision selector and snap toggle */}
         <div className="flex items-center gap-2">
           <label className="text-sm font-bold text-gray-700">Grid:</label>
           <select
             value={subdivision}
             onChange={(e) => onSubdivisionChange(e.target.value as Subdivision)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+            className="border border-gray-700 shadow-inner shadow-slate-800 text-center bg-white text-sm py-0"
           >
             {subdivisionOptions.map((sub) => (
               <option key={sub} value={sub}>
@@ -39,6 +43,13 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
               </option>
             ))}
           </select>
+          <button
+            onClick={onSnapToggle}
+            className={`border-1 border-black px-2 text-sm ${snapToGrid ? "bg-slate-600 text-white font-bold shadow-inner shadow-black" : "bg-slate-200 text-black shadow-sm shadow-slate-500"}`}
+            title={snapToGrid ? "Snap to grid: ON" : "Snap to grid: OFF"}
+          >
+            Snap
+          </button>
         </div>
 
         {/* Zoom controls */}
@@ -47,7 +58,7 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
           <button
             onClick={onZoomOut}
             disabled={isMinZoom}
-            className="px-2 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-sm px-1 bg-slate-400 hover:bg-slate-500 text-white border border-black shadow-inner shadow-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Zoom out"
           >
             -
@@ -58,7 +69,7 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
           <button
             onClick={onZoomIn}
             disabled={isMaxZoom}
-            className="px-2 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-sm px-1 bg-slate-400 hover:bg-slate-500 text-white border border-black shadow-inner shadow-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Zoom in"
           >
             +

@@ -33,6 +33,7 @@ type SequencerGridProps = {
     newColumnWidth: number,
   ) => void;
   playheadPosition?: number;
+  snapToGrid?: boolean;
 };
 
 const SequencerGrid: React.FC<SequencerGridProps> = memo(
@@ -51,6 +52,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     onResizeEnd,
     onResizeStartEnd,
     playheadPosition = 0,
+    snapToGrid = true,
   }) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -133,6 +135,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
                     onResizeEnd={onResizeEnd}
                     onResizeStartEnd={onResizeStartEnd}
                     isSelected={padId === selectedSampleId}
+                    snapToGrid={snapToGrid}
                   />
                 );
               })}

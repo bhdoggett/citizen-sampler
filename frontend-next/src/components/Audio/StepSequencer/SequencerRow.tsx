@@ -31,6 +31,7 @@ type SequencerRowProps = {
     newColumnWidth: number
   ) => void;
   isSelected?: boolean;
+  snapToGrid?: boolean;
 };
 
 const SequencerRow: React.FC<SequencerRowProps> = memo(
@@ -49,6 +50,7 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
     onResizeEnd,
     onResizeStartEnd,
     isSelected = false,
+    snapToGrid = true,
   }) => {
     // Calculate cells per beat based on subdivision
     const getCellsPerBeat = () => {
@@ -137,6 +139,7 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
                 onResizeEnd={onResizeEnd}
                 onResizeStartEnd={onResizeStartEnd}
                 isSelected={isSelected}
+                snapToGrid={snapToGrid}
               />
             ))}
           </div>

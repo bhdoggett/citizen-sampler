@@ -22,6 +22,7 @@ type SequencerEventProps = {
     newColumnWidth: number
   ) => void;
   isSelected?: boolean;
+  snapToGrid?: boolean;
 };
 
 const SequencerEvent: React.FC<SequencerEventProps> = memo(({
@@ -32,6 +33,7 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
   onResizeEnd,
   onResizeStartEnd,
   isSelected = false,
+  snapToGrid = true,
 }) => {
   const { columnStart, columnWidth, padId, eventIndex, originalEvent } =
     gridEvent;
@@ -79,7 +81,7 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startXRef.current;
-      const deltaColumns = Math.round(deltaX / cellWidth);
+      const deltaColumns = snapToGrid ? Math.round(deltaX / cellWidth) : deltaX / cellWidth;
       if (deltaColumns !== 0) {
         didInteractRef.current = true;
       }
@@ -89,7 +91,9 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
 
     const handleMouseUp = () => {
       setIsDragging(false);
-      const newColumn = Math.max(0, columnStart + dragOffsetRef.current);
+      const newColumn = snapToGrid
+        ? Math.max(0, Math.round(columnStart + dragOffsetRef.current))
+        : Math.max(0, columnStart + dragOffsetRef.current);
       if (didInteractRef.current && newColumn !== columnStart) {
         onDragEnd(padId, eventIndex, newColumn);
       }
@@ -115,8 +119,11 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startXRef.current;
-      const deltaColumns = Math.round(deltaX / cellWidth);
-      const newWidth = Math.max(1, columnWidth + deltaColumns);
+      const deltaColumns = snapToGrid ? Math.round(deltaX / cellWidth) : deltaX / cellWidth;
+      const minWidth = snapToGrid ? 1 : 0.25;
+      const newWidth = snapToGrid
+        ? Math.max(minWidth, Math.round(columnWidth + deltaColumns))
+        : Math.max(minWidth, columnWidth + deltaColumns);
       if (newWidth !== columnWidth) {
         didInteractRef.current = true;
       }
@@ -149,29 +156,43 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
     resizeStartOffsetRef.current = 0;
     didInteractRef.current = false;
 
-    // Snap: compute the right edge (anchored) as the nearest integer column
-    const rightEdge = Math.round(columnStart + columnWidth);
+    const rightEdge = snapToGrid
+      ? Math.round(columnStart + columnWidth)
+      : columnStart + columnWidth;
+    const minWidth = snapToGrid ? 1 : 0.25;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startXRef.current;
-      const deltaColumns = Math.round(deltaX / cellWidth);
-      // Target snapped column for the new start
-      const snappedTarget = Math.round(columnStart) + deltaColumns;
-      // Clamp: can't go before 0 or make width less than 1
-      const clampedStart = Math.max(0, Math.min(snappedTarget, rightEdge - 1));
-      const offset = clampedStart - columnStart;
-      if (offset !== 0) {
-        didInteractRef.current = true;
+      if (snapToGrid) {
+        const deltaColumns = Math.round(deltaX / cellWidth);
+        const snappedTarget = Math.round(columnStart) + deltaColumns;
+        const clampedStart = Math.max(0, Math.min(snappedTarget, rightEdge - minWidth));
+        const offset = clampedStart - columnStart;
+        if (offset !== 0) {
+          didInteractRef.current = true;
+        }
+        resizeStartOffsetRef.current = offset;
+        setResizeStartOffset(offset);
+      } else {
+        const deltaColumns = deltaX / cellWidth;
+        const target = columnStart + deltaColumns;
+        const clampedStart = Math.max(0, Math.min(target, rightEdge - minWidth));
+        const offset = clampedStart - columnStart;
+        if (offset !== 0) {
+          didInteractRef.current = true;
+        }
+        resizeStartOffsetRef.current = offset;
+        setResizeStartOffset(offset);
       }
-      resizeStartOffsetRef.current = offset;
-      setResizeStartOffset(offset);
     };
 
     const handleMouseUp = () => {
       setIsResizingStart(false);
       const offset = resizeStartOffsetRef.current;
       if (didInteractRef.current && offset !== 0) {
-        const newStart = Math.round(columnStart + offset);
+        const newStart = snapToGrid
+          ? Math.round(columnStart + offset)
+          : columnStart + offset;
         const newWidth = rightEdge - newStart;
         onResizeStartEnd(padId, eventIndex, newStart, newWidth);
       }

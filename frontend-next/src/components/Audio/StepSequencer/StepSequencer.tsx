@@ -43,6 +43,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const { hotKeysActive } = useUIContext();
 
   const [subdivision, setSubdivision] = useState<Subdivision>("8n");
+  const [snapToGrid, setSnapToGrid] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [playheadPosition, setPlayheadPosition] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -350,6 +351,8 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
       <SequencerControls
         subdivision={subdivision}
         onSubdivisionChange={handleSubdivisionChange}
+        snapToGrid={snapToGrid}
+        onSnapToggle={() => setSnapToGrid((prev) => !prev)}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         zoomPercent={zoomPercent}
@@ -373,6 +376,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
           onResizeEnd={handleResizeEnd}
           onResizeStartEnd={handleResizeStartEnd}
           playheadPosition={loopIsPlaying ? playheadPosition : 0}
+          snapToGrid={snapToGrid}
         />
       </div>
     </div>
