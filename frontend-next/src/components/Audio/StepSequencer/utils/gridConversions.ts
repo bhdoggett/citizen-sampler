@@ -62,8 +62,8 @@ export function ticksToGridPosition(
   const cellDuration = getCellDurationSeconds(loopSettings, subdivision);
   const totalColumns = getTotalColumns(loopSettings, subdivision);
 
-  // Ensure we don't exceed grid bounds
-  const column = Math.floor(seconds / cellDuration);
+  // Return fractional position to preserve true position across subdivision changes
+  const column = seconds / cellDuration;
   return Math.min(column, totalColumns - 1);
 }
 
@@ -106,7 +106,7 @@ export function durationToGridWidth(
 ): number {
   if (duration === null || duration === 0) return 1;
   const cellDuration = getCellDurationSeconds(loopSettings, subdivision);
-  return Math.max(1, Math.round(duration / cellDuration));
+  return duration / cellDuration;
 }
 
 /**
