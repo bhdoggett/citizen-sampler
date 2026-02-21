@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useRef } from "react";
+import React, { memo, useEffect, useMemo, useRef } from "react";
 import SequencerRow from "./SequencerRow";
 import type { GridEvent } from "./hooks/useSequencerGrid";
 import type { SampleTypeFE } from "src/types/audioTypesFE";
@@ -37,6 +37,10 @@ type SequencerGridProps = {
   pianoRollMode?: boolean;
   pianoRollNotes?: string[];
   pianoRollPadId?: string;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  isMinZoom?: boolean;
+  isMaxZoom?: boolean;
 };
 
 const SequencerGrid: React.FC<SequencerGridProps> = memo(
@@ -59,8 +63,32 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     pianoRollMode = false,
     pianoRollNotes = [],
     pianoRollPadId,
+    onZoomIn,
+    onZoomOut,
+    isMinZoom = false,
+    isMaxZoom = false,
   }) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Two-finger pinch/zoom on the grid
+    useEffect(() => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const handleWheel = (e: WheelEvent) => {
+        if (e.ctrlKey) {
+          e.preventDefault();
+          if (e.deltaY < 0 && !isMaxZoom) {
+            onZoomIn?.();
+          } else if (e.deltaY > 0 && !isMinZoom) {
+            onZoomOut?.();
+          }
+        }
+      };
+
+      container.addEventListener("wheel", handleWheel, { passive: false });
+      return () => container.removeEventListener("wheel", handleWheel);
+    }, [onZoomIn, onZoomOut, isMinZoom, isMaxZoom]);
 
     // Generate pad IDs in order (pad-1 through pad-16) for drum mode
     const padIds = useMemo(

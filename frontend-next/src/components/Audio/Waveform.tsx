@@ -223,13 +223,15 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
             }
             setZoom((prev) => Math.min(prev + zoomDiff, 1000));
           }}
-          className="text-sm px-1 bg-slate-400 hover:bg-slate-500 text-white border border-black shadow-inner shadow-slate-800"
+          disabled={zoom >= 1000}
+          className="text-sm px-1 bg-slate-400 hover:bg-slate-500 text-white border border-black shadow-inner shadow-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           +
         </button>
         <button
           onClick={() => setZoom((prev) => Math.max(prev - 20, 0))}
-          className="text-sm px-1 bg-slate-400 hover:bg-slate-500 text-white border border-black shadow-inner shadow-slate-800"
+          disabled={zoom <= 0}
+          className="text-sm px-1 bg-slate-400 hover:bg-slate-500 text-white border border-black shadow-inner shadow-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           -
         </button>

@@ -398,6 +398,10 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
           pianoRollMode={pianoRollMode}
           pianoRollNotes={pianoRollNotes}
           pianoRollPadId={pianoRollMode ? selectedSampleId : undefined}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          isMinZoom={isMinZoom}
+          isMaxZoom={isMaxZoom}
         />
       </div>
     </div>
