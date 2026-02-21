@@ -1,5 +1,6 @@
 import React, { memo } from "react";
 import SequencerEvent from "./SequencerEvent";
+import SequencerPadButton from "./SequencerPadButton";
 import type { GridEvent } from "./hooks/useSequencerGrid";
 import type { SampleTypeFE } from "src/types/audioTypesFE";
 
@@ -92,15 +93,16 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
       >
         {/* Pad label - sticky left */}
         <div
-          className={`sticky left-0 z-20 w-16 min-w-16 flex items-center justify-center
+          className={`sticky left-0 z-20 w-20 min-w-20 flex items-center justify-between px-1.5
             border-r-2 border-gray-300 font-medium text-sm
             ${sampleData.settings.mute ? "bg-red-200 text-red-800" : ""}
             ${sampleData.settings.solo ? "bg-yellow-200 text-yellow-800" : ""}
             ${!sampleData.settings.mute && !sampleData.settings.solo ? (isSelected ? "bg-blue-100" : "bg-gray-100") : ""}`}
         >
-          <span className="truncate px-1" title={sampleData.title}>
+          <span className="truncate" title={sampleData.title}>
             {padNumber}
           </span>
+          <SequencerPadButton padId={padId} padNumber={padNumber} />
         </div>
 
         {/* Grid cells */}

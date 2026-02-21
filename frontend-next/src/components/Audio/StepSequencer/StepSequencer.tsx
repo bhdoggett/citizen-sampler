@@ -22,7 +22,7 @@ import {
 import type { LoopName } from "../../../../../shared/types/audioTypes";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 
-const PAD_LABEL_WIDTH = 64; // Width of the pad label column
+const PAD_LABEL_WIDTH = 80; // Width of the pad label column
 const CONTAINER_PADDING = 2; // 1px border on each side of the grid
 const MAX_CELL_WIDTH = 48;
 

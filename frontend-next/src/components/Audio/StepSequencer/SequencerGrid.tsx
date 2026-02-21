@@ -87,11 +87,11 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
           ref={scrollContainerRef}
           className="overflow-x-auto overflow-y-auto h-full"
         >
-          <div style={{ width: `${64 + totalColumns * cellWidth}px` }}>
+          <div style={{ width: `${80 + totalColumns * cellWidth}px` }}>
             {/* Column headers - inside scroll container */}
             <div className="flex bg-gray-200 border-b-2 border-gray-400 sticky top-0 z-30">
               {/* Spacer for pad labels column */}
-              <div className="sticky left-0 z-30 w-16 min-w-16 bg-gray-200 border-r-2 border-gray-300 flex items-center justify-center text-xs font-bold">
+              <div className="sticky left-0 z-30 w-20 min-w-20 bg-gray-200 border-r-2 border-gray-300 flex items-center justify-center text-xs font-bold">
                 Pad
               </div>
 
@@ -145,7 +145,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
                 <div
                   className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-30 pointer-events-none"
                   style={{
-                    left: `${64 + playheadPosition * cellWidth}px`,
+                    left: `${80 + playheadPosition * cellWidth}px`,
                     transition: "none",
                   }}
                 />
