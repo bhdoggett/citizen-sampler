@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { useAudioContext } from "src/app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import * as Tone from "tone";
@@ -146,6 +146,31 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     selectedSampleId,
     setAllSampleData,
   ]);
+
+  // Sync visual state with keyboard hotkeys (audio is triggered by DrumPad)
+  useEffect(() => {
+    if (!hotKeysActive) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.repeat) return;
+      if (e.key === padKey) {
+        setIsPressed(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === padKey) {
+        setIsPressed(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [hotKeysActive, padKey]);
 
   return (
     <button
