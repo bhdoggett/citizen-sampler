@@ -24,6 +24,12 @@ type SequencerRowProps = {
     eventIndex: number,
     newColumnWidth: number
   ) => void;
+  onResizeStartEnd?: (
+    padId: string,
+    eventIndex: number,
+    newColumnStart: number,
+    newColumnWidth: number
+  ) => void;
   isSelected?: boolean;
 };
 
@@ -41,6 +47,7 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
     onDeleteEvent,
     onDragEnd,
     onResizeEnd,
+    onResizeStartEnd,
     isSelected = false,
   }) => {
     // Calculate cells per beat based on subdivision
@@ -128,6 +135,7 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
                 onDelete={onDeleteEvent}
                 onDragEnd={onDragEnd}
                 onResizeEnd={onResizeEnd}
+                onResizeStartEnd={onResizeStartEnd}
                 isSelected={isSelected}
               />
             ))}

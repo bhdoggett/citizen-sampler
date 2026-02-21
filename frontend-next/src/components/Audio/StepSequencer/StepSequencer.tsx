@@ -240,6 +240,32 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     [currentLoop, loopSettings, setAllSampleData, subdivision],
   );
 
+  // Handle left-edge resize (changes both start time and duration)
+  const handleResizeStartEnd = useCallback(
+    (padId: string, eventIndex: number, newColumnStart: number, newColumnWidth: number) => {
+      if (!loopSettings) return;
+
+      const newStartTimeTicks = gridPositionToTicks(newColumnStart, loopSettings, subdivision);
+      const newDuration = getSubdivisionDuration(loopSettings, subdivision) * newColumnWidth;
+
+      setAllSampleData((prev) => ({
+        ...prev,
+        [padId]: {
+          ...prev[padId],
+          events: {
+            ...prev[padId].events,
+            [currentLoop]: prev[padId].events[currentLoop].map((event, idx) =>
+              idx === eventIndex
+                ? { ...event, startTime: newStartTimeTicks, duration: newDuration }
+                : event,
+            ),
+          },
+        },
+      }));
+    },
+    [currentLoop, loopSettings, setAllSampleData, subdivision],
+  );
+
   // Handle subdivision change — zoom level stays the same, fitCellWidth auto-adjusts
   const handleSubdivisionChange = useCallback((newSubdivision: Subdivision) => {
     setSubdivision(newSubdivision);
@@ -345,6 +371,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
           onDeleteEvent={handleDeleteEvent}
           onDragEnd={handleDragEnd}
           onResizeEnd={handleResizeEnd}
+          onResizeStartEnd={handleResizeStartEnd}
           playheadPosition={loopIsPlaying ? playheadPosition : 0}
         />
       </div>

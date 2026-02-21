@@ -26,6 +26,12 @@ type SequencerGridProps = {
     eventIndex: number,
     newColumnWidth: number,
   ) => void;
+  onResizeStartEnd?: (
+    padId: string,
+    eventIndex: number,
+    newColumnStart: number,
+    newColumnWidth: number,
+  ) => void;
   playheadPosition?: number;
 };
 
@@ -43,6 +49,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     onDeleteEvent,
     onDragEnd,
     onResizeEnd,
+    onResizeStartEnd,
     playheadPosition = 0,
   }) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -124,6 +131,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
                     onDeleteEvent={onDeleteEvent}
                     onDragEnd={onDragEnd}
                     onResizeEnd={onResizeEnd}
+                    onResizeStartEnd={onResizeStartEnd}
                     isSelected={padId === selectedSampleId}
                   />
                 );
