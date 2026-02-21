@@ -57,8 +57,8 @@ export default function Home() {
   } = useUIContext();
   const { samplersRef, selectedSampleId, samplersLoading } = useAudioContext();
 
-  const playViewRef = useRef<HTMLDivElement>(null);
-  const [playViewHeight, setPlayViewHeight] = useState<number | undefined>(
+  const padsViewRef = useRef<HTMLDivElement>(null);
+  const [padsViewHeight, setPadsViewHeight] = useState<number | undefined>(
     undefined,
   );
 
@@ -70,9 +70,9 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (!playViewRef.current || sequencerVisible) return;
-    const height = playViewRef.current.getBoundingClientRect().height;
-    setPlayViewHeight(height);
+    if (!padsViewRef.current || sequencerVisible) return;
+    const height = padsViewRef.current.getBoundingClientRect().height;
+    setPadsViewHeight(height);
   }, [sequencerVisible]);
 
   const handleToggleSequencer = useCallback(() => {
@@ -149,7 +149,7 @@ export default function Home() {
                   <div className="flex-1 min-w-0">
                     {/* DrumMachine must stay mounted for Tone.Part playback scheduling */}
                     <div
-                      ref={playViewRef}
+                      ref={padsViewRef}
                       className={sequencerVisible ? "hidden" : "flex"}
                     >
                       <DrumMachine />
@@ -160,7 +160,7 @@ export default function Home() {
                       />
                     </div>
                     {sequencerVisible && (
-                      <StepSequencer maxHeight={playViewHeight} />
+                      <StepSequencer maxHeight={padsViewHeight} />
                     )}
                   </div>
                 </div>

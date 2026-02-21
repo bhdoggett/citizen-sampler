@@ -27,7 +27,6 @@ type SequencerGridProps = {
     newColumnWidth: number,
   ) => void;
   playheadPosition?: number;
-  maxHeight?: number;
 };
 
 const SequencerGrid: React.FC<SequencerGridProps> = memo(
@@ -45,7 +44,6 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     onDragEnd,
     onResizeEnd,
     playheadPosition = 0,
-    maxHeight,
   }) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -74,12 +72,11 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     }, [bars, cellsPerBar]);
 
     return (
-      <div className="flex flex-col border border-gray-300 rounded">
+      <div className="flex flex-col border border-gray-300 rounded h-full">
         {/* Scrollable container for both header and grid */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto overflow-y-auto"
-          style={maxHeight ? { maxHeight } : undefined}
+          className="overflow-x-auto overflow-y-auto h-full"
         >
           <div style={{ width: `${64 + totalColumns * cellWidth}px` }}>
             {/* Column headers - inside scroll container */}

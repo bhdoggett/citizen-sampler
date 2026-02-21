@@ -47,7 +47,6 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const [playheadPosition, setPlayheadPosition] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
   const rafRef = useRef<number | null>(null);
-  const controlsRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const loopSettings = allLoopSettings[currentLoop as LoopName];
@@ -75,12 +74,6 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   // Derive effective cell width from zoom level
   const effectiveCellWidth = fitCellWidth > 0 ? fitCellWidth * zoomLevel : 0;
 
-  // Grid maxHeight: subtract controls height from total maxHeight
-  const gridMaxHeight = useMemo(() => {
-    if (!maxHeight) return undefined;
-    const controlsHeight = controlsRef.current?.offsetHeight ?? 0;
-    return maxHeight - controlsHeight;
-  }, [maxHeight]);
 
   // Zoom percentage for display
   const zoomPercent = Math.round(zoomLevel * 100);
@@ -323,42 +316,38 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   }
 
   return (
-    <div ref={containerRef} className="flex flex-col w-full">
-      {/* <div className="flex justify-between items-center mb-2">
-        <h3 className="bg-slate-800 px-4 py-1 border-2 border-slate-800 text-white font-bold">
-          Step Sequencer
-        </h3>
-        
-      </div> */}
+    <div
+      ref={containerRef}
+      className="flex flex-col w-full"
+      style={maxHeight ? { height: maxHeight } : undefined}
+    >
+      <SequencerControls
+        subdivision={subdivision}
+        onSubdivisionChange={handleSubdivisionChange}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        zoomPercent={zoomPercent}
+        isMinZoom={isMinZoom}
+        isMaxZoom={isMaxZoom}
+      />
 
-      <div ref={controlsRef}>
-        <SequencerControls
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <SequencerGrid
+          allSampleData={allSampleData}
+          gridEvents={gridEvents}
+          totalColumns={totalColumns}
+          bars={bars}
+          beats={beats}
           subdivision={subdivision}
-          onSubdivisionChange={handleSubdivisionChange}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          zoomPercent={zoomPercent}
-          isMinZoom={isMinZoom}
-          isMaxZoom={isMaxZoom}
+          cellWidth={effectiveCellWidth}
+          selectedSampleId={selectedSampleId}
+          onCellClick={handleCellClick}
+          onDeleteEvent={handleDeleteEvent}
+          onDragEnd={handleDragEnd}
+          onResizeEnd={handleResizeEnd}
+          playheadPosition={loopIsPlaying ? playheadPosition : 0}
         />
       </div>
-
-      <SequencerGrid
-        allSampleData={allSampleData}
-        gridEvents={gridEvents}
-        totalColumns={totalColumns}
-        bars={bars}
-        beats={beats}
-        subdivision={subdivision}
-        cellWidth={effectiveCellWidth}
-        selectedSampleId={selectedSampleId}
-        onCellClick={handleCellClick}
-        onDeleteEvent={handleDeleteEvent}
-        onDragEnd={handleDragEnd}
-        onResizeEnd={handleResizeEnd}
-        playheadPosition={loopIsPlaying ? playheadPosition : 0}
-        maxHeight={gridMaxHeight}
-      />
     </div>
   );
 };
