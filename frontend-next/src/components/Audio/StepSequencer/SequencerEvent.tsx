@@ -341,7 +341,9 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
   };
 
   const displayColumn = isDragging
-    ? Math.max(0, columnStart + dragOffset)
+    ? snapToGrid
+      ? Math.max(0, Math.round(columnStart + dragOffset))
+      : Math.max(0, columnStart + dragOffset)
     : isResizingStart
       ? columnStart + resizeStartOffset
       : columnStart;
