@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { Trash2 } from "lucide-react";
 import SequencerEvent from "./SequencerEvent";
 import SequencerPadButton from "./SequencerPadButton";
 import type { GridEvent } from "./hooks/useSequencerGrid";
@@ -37,6 +38,7 @@ type SequencerRowProps = {
   pianoRollMode?: boolean;
   pianoRollNote?: string;
   isSharpRow?: boolean;
+  onClearRow?: (padId: string) => void;
 };
 
 const SequencerRow: React.FC<SequencerRowProps> = memo(
@@ -60,6 +62,7 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
     pianoRollMode = false,
     pianoRollNote,
     isSharpRow = false,
+    onClearRow,
   }) => {
     // Calculate cells per beat based on subdivision
     const getCellsPerBeat = () => {
@@ -161,6 +164,17 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
             ))}
           </div>
         </div>
+
+        {/* Clear row trash icon - drum mode only */}
+        {!pianoRollMode && onClearRow && (
+          <button
+            className="sticky right-0 z-20 w-7 min-w-7 flex items-center justify-center bg-gray-100 border-l border-gray-300 hover:bg-red-100 hover:text-red-600 text-gray-400 transition-colors"
+            onClick={() => onClearRow(padId)}
+            title="Clear row"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
       </div>
     );
   }

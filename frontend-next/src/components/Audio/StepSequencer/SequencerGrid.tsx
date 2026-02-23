@@ -37,6 +37,7 @@ type SequencerGridProps = {
   pianoRollMode?: boolean;
   pianoRollNotes?: string[];
   pianoRollPadId?: string;
+  onClearRow?: (padId: string) => void;
 };
 
 const SequencerGrid: React.FC<SequencerGridProps> = memo(
@@ -59,6 +60,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     pianoRollMode = false,
     pianoRollNotes = [],
     pianoRollPadId,
+    onClearRow,
   }) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -118,7 +120,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
           ref={scrollContainerRef}
           className="overflow-x-auto overflow-y-auto h-full"
         >
-          <div style={{ width: `${80 + totalColumns * cellWidth}px` }}>
+          <div style={{ width: `${80 + totalColumns * cellWidth + (!pianoRollMode ? 28 : 0)}px` }}>
             {/* Column headers - inside scroll container */}
             <div className="flex bg-gray-200 border-b-2 border-gray-400 sticky top-0 z-30">
               {/* Spacer for pad labels column */}
@@ -174,6 +176,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
                     pianoRollMode={pianoRollMode}
                     pianoRollNote={row.note}
                     isSharpRow={row.isSharp}
+                    onClearRow={!pianoRollMode ? onClearRow : undefined}
                   />
                 );
               })}
