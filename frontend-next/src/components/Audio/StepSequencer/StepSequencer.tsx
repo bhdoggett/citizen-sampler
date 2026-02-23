@@ -29,6 +29,7 @@ import {
 const PAD_LABEL_WIDTH = 80; // Width of the pad label column
 const CONTAINER_PADDING = 2; // 1px border on each side of the grid
 const MAX_CELL_WIDTH = 48;
+const TRASH_ICON_WIDTH = 28;
 
 type StepSequencerProps = {
   maxHeight?: number;
@@ -44,7 +45,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     setSelectedSampleId,
     loopIsPlaying,
   } = useAudioContext();
-  const { hotKeysActive } = useUIContext();
+  const { hotKeysActive, confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
 
   const [subdivision, setSubdivision] = useState<Subdivision>("8n");
   const [snapToGrid, setSnapToGrid] = useState(true);
@@ -68,9 +69,10 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   // fitCellWidth: the cell width at which the grid exactly fills the container (100% zoom)
   const fitCellWidth = useMemo(() => {
     if (containerWidth === 0 || totalColumns === 0) return 0;
-    const availableWidth = containerWidth - PAD_LABEL_WIDTH - CONTAINER_PADDING;
+    const trashColumnWidth = pianoRollMode ? 0 : TRASH_ICON_WIDTH;
+    const availableWidth = containerWidth - PAD_LABEL_WIDTH - CONTAINER_PADDING - trashColumnWidth;
     return availableWidth / totalColumns;
-  }, [containerWidth, totalColumns]);
+  }, [containerWidth, totalColumns, pianoRollMode]);
 
   // Max zoom: cells should never exceed MAX_CELL_WIDTH
   const maxZoom = useMemo(() => {
@@ -309,6 +311,31 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     }));
   }, [currentLoop, selectedSampleId, setAllSampleData]);
 
+  // Clear all events on a specific pad for current loop (via trash icon)
+  const handleClearRow = useCallback(
+    (padId: string) => {
+      confirmActionRef.current = {
+        message: "Clear beats from this sample?",
+        buttonText: "Clear",
+        action: () => {
+          setAllSampleData((prev) => ({
+            ...prev,
+            [padId]: {
+              ...prev[padId],
+              events: {
+                ...prev[padId].events,
+                [currentLoop]: [],
+              },
+            },
+          }));
+        },
+      };
+      setShowDialog("confirm-action");
+      setHotKeysActive(false);
+    },
+    [confirmActionRef, currentLoop, setAllSampleData, setHotKeysActive, setShowDialog],
+  );
+
   // Keyboard shortcuts
   useEffect(() => {
     if (!hotKeysActive) return;
@@ -402,6 +429,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
           onZoomOut={handleZoomOut}
           isMinZoom={isMinZoom}
           isMaxZoom={isMaxZoom}
+          onClearRow={!pianoRollMode ? handleClearRow : undefined}
         />
       </div>
     </div>
