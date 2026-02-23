@@ -45,7 +45,8 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     setSelectedSampleId,
     loopIsPlaying,
   } = useAudioContext();
-  const { hotKeysActive, confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
+  const { hotKeysActive, confirmActionRef, setShowDialog, setHotKeysActive } =
+    useUIContext();
 
   const [subdivision, setSubdivision] = useState<Subdivision>("8n");
   const [snapToGrid, setSnapToGrid] = useState(true);
@@ -54,6 +55,9 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const [containerWidth, setContainerWidth] = useState(0);
   const [pianoRollMode, setPianoRollMode] = useState(false);
   const [pianoRollScale, setPianoRollScale] = useState<ScaleName>("chromatic");
+  const [hasCopiedPattern, setHasCopiedPattern] = useState(false);
+  const [copiedFromLoop, setCopiedFromLoop] = useState<LoopName | null>(null);
+  const copiedPatternRef = useRef<Record<string, SampleEventFE[]> | null>(null);
   const rafRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -70,7 +74,8 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const fitCellWidth = useMemo(() => {
     if (containerWidth === 0 || totalColumns === 0) return 0;
     const trashColumnWidth = pianoRollMode ? 0 : TRASH_ICON_WIDTH;
-    const availableWidth = containerWidth - PAD_LABEL_WIDTH - CONTAINER_PADDING - trashColumnWidth;
+    const availableWidth =
+      containerWidth - PAD_LABEL_WIDTH - CONTAINER_PADDING - trashColumnWidth;
     return availableWidth / totalColumns;
   }, [containerWidth, totalColumns, pianoRollMode]);
 
@@ -83,11 +88,12 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   // Derive effective cell width from zoom level
   const effectiveCellWidth = fitCellWidth > 0 ? fitCellWidth * zoomLevel : 0;
 
-
   // Piano roll notes for the selected sample
   const pianoRollNotes = useMemo(() => {
     if (!pianoRollMode) return [];
-    const baseNote = String(allSampleData[selectedSampleId]?.settings.baseNote || "C4");
+    const baseNote = String(
+      allSampleData[selectedSampleId]?.settings.baseNote || "C4",
+    );
     return generatePianoRollNotes(baseNote, pianoRollScale);
   }, [pianoRollMode, selectedSampleId, allSampleData, pianoRollScale]);
 
@@ -258,11 +264,21 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
 
   // Handle left-edge resize (changes both start time and duration)
   const handleResizeStartEnd = useCallback(
-    (padId: string, eventIndex: number, newColumnStart: number, newColumnWidth: number) => {
+    (
+      padId: string,
+      eventIndex: number,
+      newColumnStart: number,
+      newColumnWidth: number,
+    ) => {
       if (!loopSettings) return;
 
-      const newStartTimeTicks = gridPositionToTicks(newColumnStart, loopSettings, subdivision);
-      const newDuration = getSubdivisionDuration(loopSettings, subdivision) * newColumnWidth;
+      const newStartTimeTicks = gridPositionToTicks(
+        newColumnStart,
+        loopSettings,
+        subdivision,
+      );
+      const newDuration =
+        getSubdivisionDuration(loopSettings, subdivision) * newColumnWidth;
 
       setAllSampleData((prev) => ({
         ...prev,
@@ -272,7 +288,11 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
             ...prev[padId].events,
             [currentLoop]: prev[padId].events[currentLoop].map((event, idx) =>
               idx === eventIndex
-                ? { ...event, startTime: newStartTimeTicks, duration: newDuration }
+                ? {
+                    ...event,
+                    startTime: newStartTimeTicks,
+                    duration: newDuration,
+                  }
                 : event,
             ),
           },
@@ -333,8 +353,71 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
       setShowDialog("confirm-action");
       setHotKeysActive(false);
     },
-    [confirmActionRef, currentLoop, setAllSampleData, setHotKeysActive, setShowDialog],
+    [
+      confirmActionRef,
+      currentLoop,
+      setAllSampleData,
+      setHotKeysActive,
+      setShowDialog,
+    ],
   );
+
+  // Copy loop pattern
+  const handleCopyLoop = useCallback(() => {
+    const snapshot: Record<string, SampleEventFE[]> = {};
+    for (let i = 1; i <= 16; i++) {
+      const padId = `pad-${i}`;
+      snapshot[padId] = allSampleData[padId]?.events[currentLoop] || [];
+    }
+    copiedPatternRef.current = snapshot;
+    setHasCopiedPattern(true);
+    setCopiedFromLoop(currentLoop as LoopName);
+  }, [allSampleData, currentLoop]);
+
+  // Cancel copy
+  const handleCancelCopy = useCallback(() => {
+    copiedPatternRef.current = null;
+    setHasCopiedPattern(false);
+    setCopiedFromLoop(null);
+  }, []);
+
+  // Paste loop pattern
+  const handlePasteLoop = useCallback(() => {
+    if (!copiedPatternRef.current) return;
+    const clipboard = copiedPatternRef.current;
+    confirmActionRef.current = {
+      message:
+        "This action will clear any existing beats in the current loop. You sure?",
+      buttonText: "Paste",
+      action: () => {
+        setAllSampleData((prev) => {
+          const next = { ...prev };
+          for (let i = 1; i <= 16; i++) {
+            const padId = `pad-${i}`;
+            next[padId] = {
+              ...next[padId],
+              events: {
+                ...next[padId].events,
+                [currentLoop]: clipboard[padId]?.map((e) => ({ ...e })) || [],
+              },
+            };
+          }
+          return next;
+        });
+        copiedPatternRef.current = null;
+        setHasCopiedPattern(false);
+        setCopiedFromLoop(null);
+      },
+    };
+    setShowDialog("confirm-action");
+    setHotKeysActive(false);
+  }, [
+    confirmActionRef,
+    currentLoop,
+    setAllSampleData,
+    setHotKeysActive,
+    setShowDialog,
+  ]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -403,6 +486,11 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
         pianoRollScale={pianoRollScale}
         onPianoRollScaleChange={setPianoRollScale}
         selectedSampleId={selectedSampleId}
+        onCopyLoop={handleCopyLoop}
+        onPasteLoop={handlePasteLoop}
+        hasCopiedPattern={hasCopiedPattern}
+        copiedFromLoop={copiedFromLoop}
+        onCancelCopy={handleCancelCopy}
       />
 
       <div className="flex-1 min-h-0 overflow-hidden">

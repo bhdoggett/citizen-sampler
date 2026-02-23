@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { Copy, ClipboardPaste, X } from "lucide-react";
 import { Subdivision, subdivisionLabels } from "./utils/gridConversions";
 import type { ScaleName } from "src/lib/audio/util/scaleNotes";
 
@@ -17,6 +18,11 @@ type SequencerControlsProps = {
   pianoRollScale: ScaleName;
   onPianoRollScaleChange: (scale: ScaleName) => void;
   selectedSampleId: string;
+  onCopyLoop?: () => void;
+  onPasteLoop?: () => void;
+  hasCopiedPattern?: boolean;
+  copiedFromLoop?: string | null;
+  onCancelCopy?: () => void;
 };
 
 const subdivisionOptions: Subdivision[] = ["4n", "8n", "16n", "32n"];
@@ -37,6 +43,11 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
     pianoRollScale,
     onPianoRollScaleChange,
     selectedSampleId,
+    onCopyLoop,
+    onPasteLoop,
+    hasCopiedPattern,
+    copiedFromLoop,
+    onCancelCopy,
   }) => {
     return (
       <div className="flex justify-between items-center m-1">
@@ -92,6 +103,40 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
             </>
           )}
         </div>
+
+        {/* Copy/Paste loop controls (hidden in piano roll mode) */}
+        {!pianoRollMode && <div className="flex items-center gap-1">
+          {hasCopiedPattern ? (
+            <>
+              <button
+                onClick={onPasteLoop}
+                title="Paste loop pattern"
+                className="border-1 border-black px-1.5 py-0.5 text-sm flex items-center gap-1 bg-slate-200 text-black shadow-sm shadow-slate-500"
+              >
+                <ClipboardPaste size={16} />
+                <span className="text-xs font-medium">
+                  Paste from Loop {copiedFromLoop}
+                </span>
+              </button>
+              <button
+                onClick={onCancelCopy}
+                title="Cancel paste"
+                className="border-1 border-black px-1 py-0.5 text-sm bg-slate-200 text-black shadow-sm shadow-slate-500"
+              >
+                <X size={14} />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onCopyLoop}
+              title="Copy loop pattern"
+              className="border-1 border-black px-1.5 py-0.5 text-sm flex items-center gap-1 bg-slate-200 text-black shadow-sm shadow-slate-500"
+            >
+              <Copy size={16} />
+              <span className="text-xs font-medium">Copy loop</span>
+            </button>
+          )}
+        </div>}
 
         {/* Zoom controls */}
         <div className="flex items-center gap-1">
