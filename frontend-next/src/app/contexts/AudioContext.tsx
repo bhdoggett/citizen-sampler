@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import * as Tone from "tone";
 import {
   SampleTypeFE,
@@ -286,16 +286,16 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     );
   };
 
-  const storeAudioInIndexedDB = async (url: string, sampleId: string) => {
+  const storeAudioInIndexedDB = useCallback(async (url: string, sampleId: string) => {
     try {
       const response = await axios.get(url, { responseType: "blob" });
       await set(`audio-${sampleId}`, { url: url, blob: response.data }); // Store Blob directly to IndexedDB
     } catch (error) {
       console.error("Failed to store audio in IndexedDB:", error);
     }
-  };
+  }, []);
 
-  const getCachedAudioUrlFromIndexedDB = async (
+  const getCachedAudioUrlFromIndexedDB = useCallback(async (
     sampleId: string,
     currentUrl: string // <-- pass in the current URL to compare
   ): Promise<string | null> => {
@@ -312,7 +312,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }
 
     return URL.createObjectURL(blob);
-  };
+  }, []);
 
   const { makeBeatsButtonPressed, setMakeBeatsButtonPressed } = useUIContext();
   const [samplersLoading, setSamplersLoading] = useState<boolean>(true);

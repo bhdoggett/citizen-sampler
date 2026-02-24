@@ -132,3 +132,26 @@ export function secondsToGridPosition(
   const cellDuration = getCellDurationSeconds(loopSettings, subdivision);
   return Math.floor(seconds / cellDuration);
 }
+
+/**
+ * Snap a fractional grid column to the nearest quantize grid position.
+ * Mirrors the logic in quantize.ts but uses loopSettings.bpm directly.
+ */
+export function quantizeGridPosition(
+  columnStart: number,
+  loopSettings: LoopSettingsFE,
+  subdivision: Subdivision,
+  quantVal: string,
+): number {
+  const cellDuration = getCellDurationSeconds(loopSettings, subdivision);
+  const secondsPerQuarterNote = 60 / loopSettings.bpm;
+  let quantizeSeconds: number;
+  if (quantVal.includes("t")) {
+    const tripletQuantVal = Number(quantVal[0]) * 1.5;
+    quantizeSeconds = (secondsPerQuarterNote / tripletQuantVal) * 4;
+  } else {
+    quantizeSeconds = (secondsPerQuarterNote / Number(quantVal)) * 4;
+  }
+  const quantizeColumns = quantizeSeconds / cellDuration;
+  return Math.round(columnStart / quantizeColumns) * quantizeColumns;
+}
