@@ -6,6 +6,7 @@ import {
   getCellDurationSeconds,
   ticksToGridPosition,
   durationToGridWidth,
+  quantizeGridPosition,
 } from "../utils/gridConversions";
 
 export type GridEvent = {
@@ -14,12 +15,13 @@ export type GridEvent = {
   columnWidth: number;
   padId: string;
   eventIndex: number;
+  quantizedColumnStart?: number;
 };
 
 type UseSequencerGridProps = {
   loopSettings: LoopSettingsFE | null;
   subdivision: Subdivision;
-  allSampleData: Record<string, { events: Record<string, SampleEventFE[]> }>;
+  allSampleData: Record<string, { events: Record<string, SampleEventFE[]>; settings?: { quantize: boolean; quantVal: string } }>;
   currentLoop: string;
 };
 
@@ -71,6 +73,17 @@ export function useSequencerGrid({
           subdivision,
         );
 
+        // Compute quantized column start if sample has quantize enabled
+        const quantizedColumnStart =
+          sampleData.settings?.quantize && sampleData.settings.quantVal
+            ? quantizeGridPosition(
+                columnStart,
+                loopSettings,
+                subdivision,
+                sampleData.settings.quantVal,
+              )
+            : undefined;
+
         // Only include events that are within the grid bounds
         if (columnStart < totalColumns) {
           mappedEvents.push({
@@ -79,6 +92,7 @@ export function useSequencerGrid({
             columnWidth: Math.min(columnWidth, totalColumns - columnStart),
             padId,
             eventIndex,
+            quantizedColumnStart,
           });
         }
       });
