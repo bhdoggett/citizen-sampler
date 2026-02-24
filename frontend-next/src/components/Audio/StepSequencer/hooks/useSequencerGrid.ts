@@ -81,6 +81,7 @@ export function useSequencerGrid({
                 loopSettings,
                 subdivision,
                 sampleData.settings.quantVal,
+                totalColumns,
               )
             : undefined;
 

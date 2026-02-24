@@ -142,6 +142,7 @@ export function quantizeGridPosition(
   loopSettings: LoopSettingsFE,
   subdivision: Subdivision,
   quantVal: string,
+  totalColumns: number,
 ): number {
   const cellDuration = getCellDurationSeconds(loopSettings, subdivision);
   const secondsPerQuarterNote = 60 / loopSettings.bpm;
@@ -153,5 +154,7 @@ export function quantizeGridPosition(
     quantizeSeconds = (secondsPerQuarterNote / Number(quantVal)) * 4;
   }
   const quantizeColumns = quantizeSeconds / cellDuration;
-  return Math.round(columnStart / quantizeColumns) * quantizeColumns;
+  const quantized = Math.round(columnStart / quantizeColumns) * quantizeColumns;
+  // Wrap to loop start if quantized to the loop end (mirrors getScheduleEvents.ts)
+  return quantized >= totalColumns ? 0 : quantized;
 }
