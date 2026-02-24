@@ -18,6 +18,8 @@ import Transport from "../components/Audio/Transport";
 import Loop from "../components/Audio/Loop";
 import { useUIContext } from "./contexts/UIContext";
 import { useAudioContext } from "./contexts/AudioContext";
+import { useSelectLoop } from "./hooks/useSelectLoop";
+import type { LoopName } from "@shared/types/audioTypes";
 import ResendConfirmation from "src/components/Dialogs/ResendConfirmation";
 import About from "src/components/Dialogs/About";
 
@@ -55,7 +57,8 @@ export default function Home() {
     setSequencerVisible,
     hotKeysActive,
   } = useUIContext();
-  const { samplersRef, selectedSampleId, samplersLoading } = useAudioContext();
+  const { samplersRef, selectedSampleId, samplersLoading, allSampleData, updateSamplerStateSettings } = useAudioContext();
+  const handleSelectLoop = useSelectLoop();
 
   const padsViewRef = useRef<HTMLDivElement>(null);
   const [padsViewHeight, setPadsViewHeight] = useState<number | undefined>(
@@ -86,12 +89,33 @@ export default function Home() {
       if (e.key === "s" && e.metaKey) {
         e.preventDefault();
         handleToggleSequencer();
+        return;
+      }
+
+      if (e.shiftKey) {
+        const key = e.key.toUpperCase();
+        if (key === "A" || key === "B" || key === "C" || key === "D") {
+          e.preventDefault();
+          handleSelectLoop(key as LoopName);
+        } else if (key === "S") {
+          e.preventDefault();
+          setSequencerVisible(true);
+        } else if (key === "P") {
+          e.preventDefault();
+          setSequencerVisible(false);
+        } else if (key === "Q") {
+          e.preventDefault();
+          if (selectedSampleId && allSampleData[selectedSampleId]) {
+            const current = allSampleData[selectedSampleId].settings.quantize;
+            updateSamplerStateSettings(selectedSampleId, { quantize: !current });
+          }
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hotKeysActive, handleToggleSequencer]);
+  }, [hotKeysActive, handleToggleSequencer, handleSelectLoop, setSequencerVisible, selectedSampleId, allSampleData, updateSamplerStateSettings]);
 
   return (
     <>

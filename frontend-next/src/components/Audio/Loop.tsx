@@ -4,6 +4,7 @@ import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import LoopProgressBar from "./LoopProgress";
+import { useSelectLoop } from "src/app/hooks/useSelectLoop";
 
 import type { LoopName, LoopSettings } from "@shared/types/audioTypes";
 
@@ -14,35 +15,11 @@ const Loop = () => {
     allLoopSettings,
     setAllLoopSettings,
     currentLoop,
-    setCurrentLoop,
     loopIsPlaying,
   } = useAudioContext();
   const { setShowDialog, uiWarningMessageRef } = useUIContext();
 
-  const handleSelectLoop = (loop: LoopName) => {
-    if (loopIsPlaying) {
-      uiWarningMessageRef.current =
-        "Stop playback before selecting a different loop";
-      setShowDialog("ui-warning");
-      return;
-    }
-
-    // Check if this loop needs to be initialized
-    const currentLoopSettings = allLoopSettings[loop];
-    if (!currentLoopSettings || !currentLoopSettings.isInitialized) {
-      // Copy settings from current loop
-      const sourceSettings = allLoopSettings[currentLoop as LoopName];
-      setAllLoopSettings((prev) => ({
-        ...prev,
-        [loop]: {
-          ...sourceSettings,
-          isInitialized: true, // Mark as initialized
-        },
-      }));
-    }
-
-    setCurrentLoop(loop);
-  };
+  const handleSelectLoop = useSelectLoop();
 
   const updateLoopSetting = <K extends keyof LoopSettings>(
     key: K,
