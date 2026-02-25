@@ -14,18 +14,19 @@ import {
   getKitSampleTitle,
 } from "src/lib/drumMachines";
 import { useUIContext } from "src/app/contexts/UIContext";
+import { getTitle } from "../../lib/getTitle";
+import { SampleTypeFE } from "src/types/audioTypesFE";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const ChooseSample: React.FC = () => {
   const {
     selectedSampleId,
-    initLocSampleData,
-    initKitSampleData,
+    allSampleData,
     loadSamplersToRef,
     updateSamplerData,
   } = useAudioContext();
-  const { setShowDialog, confirmActionRef } = useUIContext();
+  const { setShowDialog } = useUIContext();
   const [type, setType] = useState<"loc" | "kit" | null>(null);
   const [sampleGroup, setSampleGroup] = useState<string | null>(null);
   const [samplesArray, setSamplesArray] = useState<string[]>([]);
@@ -96,30 +97,24 @@ const ChooseSample: React.FC = () => {
       return;
 
     const sampleSource = samplesArray[selectedIndex];
-
     const url =
       type === "loc"
         ? sampleSource
         : `${API_BASE_URL}/beats/drums/${sampleSource}`;
+    const existing = allSampleData[selectedSampleId];
+    if (!existing) return;
 
-    const sampleData =
-      type === "loc"
-        ? initLocSampleData(selectedSampleId, url, sampleGroup)
-        : initKitSampleData(
-            selectedSampleId,
-            url,
-            getKitSampleTitle(sampleSource),
-            sampleGroup
-          );
-    updateSamplerData(selectedSampleId, sampleData);
-    loadSamplersToRef({ [selectedSampleId]: sampleData });
-    // cleanupSampler(selectedSampleId, samplersRef);
-    // samplersRef.current[selectedSampleId] = await makeSamplerWithFX(
-    //   selectedSampleId,
-    //   url,
-    //   false
-    // );
-    // if (!makeBeatsButtonPressed) setMakeBeatsButtonPressed(false);
+    const updatedData: SampleTypeFE = {
+      ...existing,
+      url,
+      title:
+        type === "loc" ? getTitle(url) : getKitSampleTitle(sampleSource),
+      type: type!,
+      collectionName: sampleGroup,
+      attribution: type === "loc" ? "" : existing.attribution,
+    };
+    updateSamplerData(selectedSampleId, updatedData);
+    loadSamplersToRef({ [selectedSampleId]: updatedData });
     setShowDialog(null);
   };
 
@@ -247,15 +242,7 @@ const ChooseSample: React.FC = () => {
             </span>
             <button
               className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
-              onClick={() => {
-                confirmActionRef.current = {
-                  message:
-                    "Replace the current sample and all it's settings with your new sample?",
-                  buttonText: "Yep",
-                  action: handleChooseSample,
-                };
-                setShowDialog("confirm-action");
-              }}
+              onClick={handleChooseSample}
             >
               Choose Sample
             </button>
