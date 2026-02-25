@@ -1,19 +1,17 @@
 import React, { memo, useEffect, useMemo, useRef } from "react";
 import SequencerRow from "./SequencerRow";
 import type { GridEvent } from "./hooks/useSequencerGrid";
-import type { SampleTypeFE } from "src/types/audioTypesFE";
 import type { Subdivision } from "./utils/gridConversions";
 import { subdivisionToCellsPerBeat } from "./utils/gridConversions";
+import { useAudioContext } from "src/app/contexts/AudioContext";
 
 type SequencerGridProps = {
-  allSampleData: Record<string, SampleTypeFE>;
   gridEvents: Map<string, GridEvent[]>;
   totalColumns: number;
   bars: number;
   beats: number;
   subdivision: Subdivision;
   cellWidth: number;
-  selectedSampleId: string;
   onCellClick?: (padId: string, columnIndex: number, note?: string) => void;
   onDeleteEvent?: (padId: string, eventIndex: number) => void;
   onDragEnd?: (
@@ -46,14 +44,12 @@ type SequencerGridProps = {
 
 const SequencerGrid: React.FC<SequencerGridProps> = memo(
   ({
-    allSampleData,
     gridEvents,
     totalColumns,
     bars,
     beats,
     subdivision,
     cellWidth,
-    selectedSampleId,
     onCellClick,
     onDeleteEvent,
     onDragEnd,
@@ -70,6 +66,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     isMaxZoom = false,
     onClearRow,
   }) => {
+    const { allSampleData, selectedSampleId } = useAudioContext();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     // Two-finger pinch/zoom on the grid

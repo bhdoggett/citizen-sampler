@@ -495,14 +495,12 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
 
       <div className="flex-1 min-h-0 overflow-hidden">
         <SequencerGrid
-          allSampleData={allSampleData}
           gridEvents={gridEvents}
           totalColumns={totalColumns}
           bars={bars}
           beats={beats}
           subdivision={subdivision}
           cellWidth={effectiveCellWidth}
-          selectedSampleId={selectedSampleId}
           onCellClick={handleCellClick}
           onDeleteEvent={handleDeleteEvent}
           onDragEnd={handleDragEnd}
