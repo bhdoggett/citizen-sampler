@@ -6,6 +6,7 @@ import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useAuthContext } from "src/app/contexts/AuthContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import { SongTypeFE } from "src/types/audioTypesFE";
+import type { LoopName } from "@shared/types/audioTypes";
 import Spinner from "../Spinner";
 
 dotenv.config();
@@ -89,10 +90,20 @@ const LoadSong: React.FC = () => {
       if (result.status === 200) {
         const song: SongTypeFE = result.data.song;
         const { title, samples, loops } = song;
+
+        // Normalize loop settings for songs saved before isInitialized was added
+        const normalizedLoops: Record<string, unknown> = { ...loops };
+        for (const key of Object.keys(normalizedLoops) as LoopName[]) {
+          const loop = normalizedLoops[key] as Record<string, unknown> | null;
+          if (loop && !("isInitialized" in loop)) {
+            normalizedLoops[key] = { ...loop, isInitialized: true };
+          }
+        }
+
         localStorage.setItem("songId", song._id!);
         setSongTitle(title);
         setAllSampleData(samples);
-        setAllLoopSettings(loops);
+        setAllLoopSettings(normalizedLoops as SongTypeFE["loops"]);
 
         await loadSamplersToRef(samples);
         // Store all new samples in IndexedDB
