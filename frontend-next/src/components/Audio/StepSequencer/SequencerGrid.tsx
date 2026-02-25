@@ -30,6 +30,12 @@ type SequencerGridProps = {
     newColumnStart: number,
     newColumnWidth: number,
   ) => void;
+  onVelocityChange?: (
+    padId: string,
+    eventIndex: number,
+    velocity: number
+  ) => void;
+  ctrlHeld?: boolean;
   playheadPosition?: number;
   snapToGrid?: boolean;
   pianoRollMode?: boolean;
@@ -55,6 +61,8 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     onDragEnd,
     onResizeEnd,
     onResizeStartEnd,
+    onVelocityChange,
+    ctrlHeld = false,
     playheadPosition = 0,
     snapToGrid = true,
     pianoRollMode = false,
@@ -195,6 +203,8 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
                     onDragEnd={onDragEnd}
                     onResizeEnd={onResizeEnd}
                     onResizeStartEnd={onResizeStartEnd}
+                    onVelocityChange={onVelocityChange}
+                    ctrlHeld={ctrlHeld}
                     isSelected={!pianoRollMode && row.padId === selectedSampleId}
                     snapToGrid={snapToGrid}
                     rowLabel={row.label}

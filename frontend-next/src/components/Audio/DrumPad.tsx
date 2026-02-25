@@ -271,7 +271,7 @@ const DrumPad = forwardRef(function DrumPad(
           actualDuration,
           time,
           start,
-          1
+          event.velocity
         );
         setSampleIsPlaying(true);
 

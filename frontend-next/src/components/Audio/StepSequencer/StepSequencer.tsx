@@ -57,6 +57,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const [pianoRollScale, setPianoRollScale] = useState<ScaleName>("chromatic");
   const [hasCopiedPattern, setHasCopiedPattern] = useState(false);
   const [copiedFromLoop, setCopiedFromLoop] = useState<LoopName | null>(null);
+  const [ctrlHeld, setCtrlHeld] = useState(false);
   const copiedPatternRef = useRef<Record<string, SampleEventFE[]> | null>(null);
   const rafRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -302,6 +303,26 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     [currentLoop, loopSettings, setAllSampleData, subdivision],
   );
 
+  // Handle velocity change for a single event
+  const handleVelocityChange = useCallback(
+    (padId: string, eventIndex: number, velocity: number) => {
+      const clamped = Math.max(0, Math.min(1, velocity));
+      setAllSampleData((prev) => ({
+        ...prev,
+        [padId]: {
+          ...prev[padId],
+          events: {
+            ...prev[padId].events,
+            [currentLoop]: prev[padId].events[currentLoop].map((event, idx) =>
+              idx === eventIndex ? { ...event, velocity: clamped } : event,
+            ),
+          },
+        },
+      }));
+    },
+    [currentLoop, setAllSampleData],
+  );
+
   // Handle subdivision change — zoom level stays the same, fitCellWidth auto-adjusts
   const handleSubdivisionChange = useCallback((newSubdivision: Subdivision) => {
     setSubdivision(newSubdivision);
@@ -419,6 +440,22 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     setShowDialog,
   ]);
 
+  // Track Ctrl key for velocity bar visibility
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Control") setCtrlHeld(true);
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Control") setCtrlHeld(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
+
   // Keyboard shortcuts
   useEffect(() => {
     if (!hotKeysActive) return;
@@ -506,6 +543,8 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
           onDragEnd={handleDragEnd}
           onResizeEnd={handleResizeEnd}
           onResizeStartEnd={handleResizeStartEnd}
+          onVelocityChange={handleVelocityChange}
+          ctrlHeld={ctrlHeld}
           playheadPosition={loopIsPlaying ? playheadPosition : 0}
           snapToGrid={snapToGrid}
           pianoRollMode={pianoRollMode}

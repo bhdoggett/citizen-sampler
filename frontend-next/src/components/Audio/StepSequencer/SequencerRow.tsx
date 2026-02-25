@@ -32,6 +32,12 @@ type SequencerRowProps = {
     newColumnStart: number,
     newColumnWidth: number
   ) => void;
+  onVelocityChange?: (
+    padId: string,
+    eventIndex: number,
+    velocity: number
+  ) => void;
+  ctrlHeld?: boolean;
   isSelected?: boolean;
   snapToGrid?: boolean;
   rowLabel?: string;
@@ -56,6 +62,8 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
     onDragEnd,
     onResizeEnd,
     onResizeStartEnd,
+    onVelocityChange,
+    ctrlHeld = false,
     isSelected = false,
     snapToGrid = true,
     rowLabel,
@@ -158,6 +166,8 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
                 onDragEnd={onDragEnd}
                 onResizeEnd={onResizeEnd}
                 onResizeStartEnd={onResizeStartEnd}
+                onVelocityChange={onVelocityChange}
+                ctrlHeld={ctrlHeld}
                 isSelected={isSelected}
                 snapToGrid={snapToGrid}
               />
