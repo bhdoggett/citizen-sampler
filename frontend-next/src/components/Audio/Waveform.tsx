@@ -94,6 +94,9 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       regionsPluginRef.current = plugin;
     }
 
+    // Clear any existing regions before adding to avoid stacking duplicates
+    plugin.getRegions().forEach((r) => r.remove());
+
     const region = plugin.addRegion({
       start: settings.start ?? 0,
       end: settings.end ?? wavesurfer.getDuration(),
@@ -102,18 +105,17 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       color: "rgba(255, 0, 0, 0.2)",
     });
 
-    region.on("update-end", () => {
+    const handleUpdateEnd = () => {
       updateSamplerStateSettings(selectedSampleId, {
         start: region.start,
         end: region.end,
       });
-    });
+    };
+    region.on("update-end", handleUpdateEnd);
 
-    plugin.on("region-created", (newRegion) => {
-      plugin.getRegions().forEach((r) => {
-        if (r.id !== newRegion.id) r.remove();
-      });
-    });
+    return () => {
+      region.un("update-end", handleUpdateEnd);
+    };
   }, [
     settings.start,
     settings.end,
