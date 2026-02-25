@@ -26,6 +26,8 @@ type SequencerEventProps = {
     eventIndex: number,
     velocity: number
   ) => void;
+  velocityPaintActive?: boolean;
+  onVelocityPaintStart?: () => void;
   ctrlHeld?: boolean;
   isSelected?: boolean;
   snapToGrid?: boolean;
@@ -39,6 +41,8 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
   onResizeEnd,
   onResizeStartEnd,
   onVelocityChange,
+  velocityPaintActive = false,
+  onVelocityPaintStart,
   ctrlHeld = false,
   isSelected = false,
   snapToGrid = true,
@@ -49,14 +53,12 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isResizingStart, setIsResizingStart] = useState(false);
-  const [isDraggingVelocity, setIsDraggingVelocity] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [resizeWidth, setResizeWidth] = useState(columnWidth);
   const [resizeStartOffset, setResizeStartOffset] = useState(0);
 
   const eventRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef(0);
-  const velocityDragStartRef = useRef({ y: 0, velocity: 0 });
   // Use refs to track current values during drag/resize (avoids stale closure)
   const dragOffsetRef = useRef(0);
   const resizeWidthRef = useRef(columnWidth);
@@ -73,6 +75,20 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
   const velocityMargin = 0.1;
   const clampedMargin = Math.max(0, Math.min(0.45, velocityMargin));
   const barPosition = clampedMargin + (1 - v) * (1 - 2 * clampedMargin);
+
+  const applyVelocityFromClientY = (clientY: number) => {
+    if (!onVelocityChange || !eventRef.current) return;
+    const rect = eventRef.current.getBoundingClientRect();
+    if (rect.height === 0) return;
+    const yNorm = (clientY - rect.top) / rect.height;
+    const clampedY = Math.max(0, Math.min(1, yNorm));
+    const t = Math.max(
+      0,
+      Math.min(1, (clampedY - clampedMargin) / (1 - 2 * clampedMargin)),
+    );
+    const newVelocity = 1 - t;
+    onVelocityChange(padId, eventIndex, newVelocity);
+  };
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -364,65 +380,18 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
   const handleVelocityBarMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    if (!onVelocityChange) return;
-    setIsDraggingVelocity(true);
-    velocityDragStartRef.current = {
-      y: e.clientY,
-      velocity: originalEvent.velocity,
-    };
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      const rect = eventRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const deltaY = moveEvent.clientY - velocityDragStartRef.current.y;
-      // Dragging up (negative deltaY) = increase velocity
-      const velocityDelta = -deltaY / rect.height;
-      const newVelocity = Math.max(
-        0,
-        Math.min(1, velocityDragStartRef.current.velocity + velocityDelta),
-      );
-      onVelocityChange(padId, eventIndex, newVelocity);
-    };
-
-    const handleMouseUp = () => {
-      setIsDraggingVelocity(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    if (!onVelocityChange || !onVelocityPaintStart) return;
+    didInteractRef.current = true;
+    onVelocityPaintStart();
+    applyVelocityFromClientY(e.clientY);
   };
 
   const handleVelocityBarTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation();
-    if (!onVelocityChange) return;
-    setIsDraggingVelocity(true);
-    velocityDragStartRef.current = {
-      y: e.touches[0].clientY,
-      velocity: originalEvent.velocity,
-    };
-
-    const handleTouchMove = (moveEvent: TouchEvent) => {
-      const rect = eventRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const deltaY = moveEvent.touches[0].clientY - velocityDragStartRef.current.y;
-      const velocityDelta = -deltaY / rect.height;
-      const newVelocity = Math.max(
-        0,
-        Math.min(1, velocityDragStartRef.current.velocity + velocityDelta),
-      );
-      onVelocityChange(padId, eventIndex, newVelocity);
-    };
-
-    const handleTouchEnd = () => {
-      setIsDraggingVelocity(false);
-      document.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("touchend", handleTouchEnd);
-    };
-
-    document.addEventListener("touchmove", handleTouchMove);
-    document.addEventListener("touchend", handleTouchEnd);
+    if (!onVelocityChange || !onVelocityPaintStart) return;
+    didInteractRef.current = true;
+    onVelocityPaintStart();
+    applyVelocityFromClientY(e.touches[0].clientY);
   };
 
   const baseColumn = gridEvent.quantizedColumnStart ?? columnStart;
@@ -444,7 +413,7 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
     <div
       ref={eventRef}
       className={`absolute top-0.5 bottom-0.5 rounded cursor-pointer transition-colors pointer-events-auto touch-none
-        ${isDragging || isResizing || isResizingStart || isDraggingVelocity ? "z-10" : "z-5"}
+        ${isDragging || isResizing || isResizingStart ? "z-10" : "z-5"}
         ${isSelected ? "ring-2 ring-blue-400" : ""}
         ${isDragging ? "opacity-70" : ""}`}
       style={{
@@ -454,6 +423,11 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
       }}
       onClick={handleClick}
       onMouseDown={handleMouseDown}
+      onMouseMove={(e) => {
+        if (ctrlHeld && velocityPaintActive) {
+          applyVelocityFromClientY(e.clientY);
+        }
+      }}
       onContextMenu={(e) => e.preventDefault()}
       onTouchStart={handleTouchStart}
     >

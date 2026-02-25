@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import SequencerEvent from "./SequencerEvent";
 import SequencerPadButton from "./SequencerPadButton";
@@ -72,6 +72,23 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
     isSharpRow = false,
     onClearRow,
   }) => {
+    const [velocityPaintActive, setVelocityPaintActive] = useState(false);
+
+    // Stop velocity painting when mouse/touch is released anywhere
+    useEffect(() => {
+      if (!velocityPaintActive) return;
+
+      const handleUp = () => setVelocityPaintActive(false);
+
+      document.addEventListener("mouseup", handleUp);
+      document.addEventListener("touchend", handleUp);
+
+      return () => {
+        document.removeEventListener("mouseup", handleUp);
+        document.removeEventListener("touchend", handleUp);
+      };
+    }, [velocityPaintActive]);
+
     // Calculate cells per beat based on subdivision
     const getCellsPerBeat = () => {
       switch (subdivision) {
@@ -167,6 +184,8 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
                 onResizeEnd={onResizeEnd}
                 onResizeStartEnd={onResizeStartEnd}
                 onVelocityChange={onVelocityChange}
+                velocityPaintActive={velocityPaintActive}
+                onVelocityPaintStart={() => setVelocityPaintActive(true)}
                 ctrlHeld={ctrlHeld}
                 isSelected={isSelected}
                 snapToGrid={snapToGrid}
