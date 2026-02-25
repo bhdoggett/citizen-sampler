@@ -11,12 +11,8 @@ import type { LoopName, LoopSettings } from "@shared/types/audioTypes";
 const loops = ["A", "B", "C", "D"];
 
 const Loop = () => {
-  const {
-    allLoopSettings,
-    setAllLoopSettings,
-    currentLoop,
-    loopIsPlaying,
-  } = useAudioContext();
+  const { allLoopSettings, setAllLoopSettings, currentLoop, loopIsPlaying } =
+    useAudioContext();
   const { setShowDialog, uiWarningMessageRef } = useUIContext();
 
   const handleSelectLoop = useSelectLoop();
@@ -79,7 +75,7 @@ const Loop = () => {
             </button>
           ))}
         </div>
-        <div className="flex flex-col gap-1 w-full max-w-sm p-1 mb-1 text-sm font-semibold">
+        <div className="flex flex-col gap-1 w-full max-w-sm p-1 text-sm font-semibold">
           <div className="flex-1 flex items-center">
             <label htmlFor="bpm" className="">
               BPM:

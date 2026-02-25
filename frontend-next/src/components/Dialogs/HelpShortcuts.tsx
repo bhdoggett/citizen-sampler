@@ -135,6 +135,14 @@ const HelpShortcuts: React.FC = () => {
           choose a subdivision to have newly recorded events snap to the grid
           (also accessible with <code>Shift + Q</code>).
         </li>
+        <li>
+          <strong>Mute &amp; Solo</strong>: use the <code>M</code> and <code>S</code> buttons to
+          mute or solo the selected sample when you want to focus on or hide a sound in the mix.
+        </li>
+        <li>
+          <strong>Choose a new sample</strong>: click the folder button (📂) to open the sample
+          browser and load a different sound onto the selected pad.
+        </li>
       </ul>
 
       {/* Loops & patterns */}

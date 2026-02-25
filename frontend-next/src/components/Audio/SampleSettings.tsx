@@ -16,12 +16,10 @@ const SampleSettings = () => {
   const {
     selectedSampleId,
     allSampleData,
-    setAllSampleData,
     samplersRef,
     updateSamplerStateSettings,
-    currentLoop,
   } = useAudioContext();
-  const { confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
+  const { setShowDialog } = useUIContext();
 
   const { setSampleMute, setSampleSolo } = useMutesAndSolos();
 
@@ -61,23 +59,6 @@ const SampleSettings = () => {
       ...prev,
       [key]: value,
     }));
-  };
-
-  // Clear recorded sample events from specified sampler
-  const handleClearSampleEvents = () => {
-    if (!selectedSampleId) return;
-    setAllSampleData((prev) => ({
-      ...prev,
-      [selectedSampleId]: {
-        ...prev[selectedSampleId],
-        events: {
-          ...prev[selectedSampleId].events,
-          [currentLoop]: [],
-        },
-      },
-    }));
-    setShowDialog(null);
-    setHotKeysActive(true);
   };
 
   // Render Hz or kHz based on value
@@ -387,20 +368,6 @@ const SampleSettings = () => {
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => {
-                confirmActionRef.current = {
-                  message:
-                    "This will clear all recorded play events for this sampler",
-                  buttonText: "Okay",
-                  action: handleClearSampleEvents,
-                };
-                setShowDialog("confirm-action");
-              }}
-              className="border border-black px-1 bg-slate-100 hover:bg-slate-300 shadow-inner shadow-slate-800 flex mx-auto text-xs"
-            >
-              Clear Recorded Events
-            </button>
           </div>
         </div>
       </div>
