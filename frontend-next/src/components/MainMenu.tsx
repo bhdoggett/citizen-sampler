@@ -435,6 +435,15 @@ const Menu: React.FC = () => {
               >
                 About
               </li>
+              <li
+                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                onClick={() => {
+                  setShowDialog("help-shortcuts");
+                  setMenuOpen(false);
+                }}
+              >
+                Help &amp; Shortcuts
+              </li>
             </ul>
           </div>
         )}

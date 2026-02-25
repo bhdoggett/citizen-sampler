@@ -328,6 +328,7 @@ const SampleSettings = () => {
                         updateSetting("quantize", !settings.quantize)
                       }
                       className={`border-2 border-black px-2 py-1 ${settings.quantize ? "bg-slate-600 text-white font-bold shadow-inner shadow-black" : "bg-slate-200 text-black shadow-sm shadow-slate-500"}`}
+                      title="Toggle quantize (Shift + Q)"
                     >
                       Quantize
                     </button>

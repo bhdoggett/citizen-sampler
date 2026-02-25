@@ -73,6 +73,7 @@ const Loop = () => {
                 loop !== "D" ? "border-r border-black" : ""
               } ${loop === currentLoop ? "bg-slate-400 shadow-inner shadow-black" : "bg-slate-300"}`}
               onClick={() => handleSelectLoop(loop as LoopName)}
+              title={`Select loop ${loop} (Shift + ${loop})`}
             >
               {loop}
             </button>

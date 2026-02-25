@@ -1,6 +1,14 @@
 "use client";
 
+import { useUIContext } from "src/app/contexts/UIContext";
+
 const About: React.FC = () => {
+  const { setShowDialog } = useUIContext();
+
+  const openHelp = () => {
+    setShowDialog("help-shortcuts");
+  };
+
   return (
     <section className="max-w-3xl mx-auto px-4 py-2 text-gray-200 max-h-[65vh] overflow-y-auto rounded-lg ">
       <h2 className="text-3xl font-bold mb-4">About Citizen Sampler</h2>
@@ -37,32 +45,34 @@ const About: React.FC = () => {
       </p>
 
       <p className="mb-4">
-        In the <strong>Sample Settings</strong> section, zoom in on waveforms,
-        tweak start and end points, alter the sample&#39;s base note and
-        finetune the pitch. Shape your sound with filters, volume, pan, attack,
-        and release. Enable <strong>Quantize</strong> and choose a beat
-        subdivision if you need your samples locked to the time signature. And
-        finally, use <strong>Clear Recorded Events</strong> to start fresh or to
-        remove any mistakes made while recording.
+        In the <strong>Sample Settings</strong> section, you can zoom in on
+        waveforms, tweak start and end points, adjust the sample&#39;s base
+        note, and shape your sound with filters, volume, pan, attack, and
+        release. Use <strong>Quantize</strong> when you want your recorded hits
+        locked tightly to the grid.
       </p>
 
       <p className="mb-4">
         The <strong>Transport Controls</strong> let you play, record, and stop
-        your loop, as well as enable a metronome. For faster music creation, use{" "}
-        <strong>spacebar</strong> to start and stop the loop,{" "}
-        <strong>ctrl + r</strong> to toggle record, and <strong>m</strong> to
-        toggle the metronome.
-      </p>
-
-      <p className="mb-4">
-        The <strong>Loop Section</strong> allows you to adjust tempo, swing, and
-        time signature for up to four unique Loop patterns (A, B, C, D).
+        your loop, as well as enable a metronome, while the{" "}
+        <strong>Loop Section</strong> adjusts tempo, swing, and time signature
+        for up to four patterns (A, B, C, D).
       </p>
 
       <p className="mb-4">
         All users can build a beat and download wav stems. Create an account to
         save and recall multiple songs.
       </p>
+
+      <div className="mb-6 flex justify-center">
+        <button
+          type="button"
+          onClick={openHelp}
+          className="border border-blue-300 px-3 py-1 rounded text-sm text-blue-200 hover:bg-blue-200 hover:text-slate-900 transition-colors"
+        >
+          See Controls &amp; Shortcuts
+        </button>
+      </div>
 
       <hr className="mx-auto w-1/3 mb-4" />
 

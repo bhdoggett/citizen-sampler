@@ -22,6 +22,8 @@ import { useSelectLoop } from "./hooks/useSelectLoop";
 import type { LoopName } from "@shared/types/audioTypes";
 import ResendConfirmation from "src/components/Dialogs/ResendConfirmation";
 import About from "src/components/Dialogs/About";
+import HelpShortcuts from "src/components/Dialogs/HelpShortcuts";
+import Welcome from "src/components/Dialogs/Welcome";
 
 const SampleSettings = dynamic(
   () => import("../components/Audio/SampleSettings"),
@@ -51,6 +53,7 @@ const StepSequencer = dynamic(
 export default function Home() {
   const {
     showDialog,
+    setShowDialog,
     makeBeatsButtonPressed,
     setMakeBeatsButtonPressed,
     sequencerVisible,
@@ -111,11 +114,29 @@ export default function Home() {
           }
         }
       }
+
+      // Help & Shortcuts: Shift + / (often '?')
+      if (e.key === "?" || (e.key === "/" && e.shiftKey)) {
+        e.preventDefault();
+        setShowDialog("help-shortcuts");
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hotKeysActive, handleToggleSequencer, handleSelectLoop, setSequencerVisible, selectedSampleId, allSampleData, updateSamplerStateSettings]);
+  }, [hotKeysActive, handleToggleSequencer, handleSelectLoop, setSequencerVisible, selectedSampleId, allSampleData, updateSamplerStateSettings, setShowDialog]);
+
+  // First-run welcome dialog (shown once per browser)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (showDialog) return;
+    const KEY = "citizenSamplerHasSeenWelcome";
+    const hasSeen = window.localStorage.getItem(KEY);
+    if (!hasSeen) {
+      window.localStorage.setItem(KEY, "true");
+      setShowDialog("welcome");
+    }
+  }, [showDialog, setShowDialog]);
 
   return (
     <>
@@ -151,6 +172,7 @@ export default function Home() {
                           ? "bg-slate-600 text-white font-bold shadow-inner shadow-black"
                           : "bg-slate-200 text-black shadow-sm shadow-slate-500"
                       }`}
+                      title="PADS (Shift + P)"
                     >
                       <span className="[writing-mode:vertical-lr] rotate-180">
                         PADS
@@ -163,6 +185,7 @@ export default function Home() {
                           ? "bg-slate-600 text-white font-bold shadow-inner shadow-black"
                           : "bg-slate-200 text-black shadow-sm shadow-slate-500"
                       }`}
+                      title="SEQUENCER (Shift + S)"
                     >
                       <span className="[writing-mode:vertical-lr] rotate-180">
                         SEQUENCER
@@ -250,6 +273,8 @@ export default function Home() {
               {showDialog === "api-response" && <APIResponseDialog />}
               {showDialog === "ui-warning" && <UIWarning />}
               {showDialog === "about" && <About />}
+              {showDialog === "help-shortcuts" && <HelpShortcuts />}
+              {showDialog === "welcome" && <Welcome />}
             </DialogWrapper>
           )}
         </div>
