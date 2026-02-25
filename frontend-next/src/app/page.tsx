@@ -16,6 +16,7 @@ import APIResponseDialog from "../components/Dialogs/APIResponseDialog";
 import UIWarning from "../components/Dialogs/UIWarning";
 import Transport from "../components/Audio/Transport";
 import Loop from "../components/Audio/Loop";
+import MidiHandler from "../components/Audio/MidiHandler";
 import { useUIContext } from "./contexts/UIContext";
 import { useAudioContext } from "./contexts/AudioContext";
 import { useSelectLoop } from "./hooks/useSelectLoop";
@@ -145,8 +146,9 @@ export default function Home() {
         <div className="flex flex-col justify-center items-center mt-4 mb-6">
           <div className="w-[600px] lg:w-[800px] md:w-[800px] sm:w-[700px] xs:w-[600px] border-[3px] border-black bg-white p-3 rounded-lg shadow-lg shadow-black">
             {/* Header - NOT blurred */}
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <h1 className="text-5xl font-bold block mb-3">Citizen Sampler</h1>
+              <MidiHandler />
               <MainMenu />
             </div>
 
