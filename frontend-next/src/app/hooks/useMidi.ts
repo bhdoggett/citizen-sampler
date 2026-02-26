@@ -39,11 +39,11 @@ export function useMidi(callbacks: MidiCallbacks): UseMidiReturn {
           ((status & 0xf0) === 0x90 && velocity === 0);
 
         if (isNoteOn) {
-          const noteName = new Frequency(midiNote, "midi").toNote();
+          const noteName = Frequency(midiNote, "midi").toNote();
           const normalizedVelocity = velocity / 127;
           callbacksRef.current.onNoteOn(noteName, normalizedVelocity);
         } else if (isNoteOff) {
-          const noteName = new Frequency(midiNote, "midi").toNote();
+          const noteName = Frequency(midiNote, "midi").toNote();
           callbacksRef.current.onNoteOff(noteName);
         }
       };
