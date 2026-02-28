@@ -62,7 +62,6 @@ export function ticksToGridPosition(
   const cellDuration = getCellDurationSeconds(loopSettings, subdivision);
   const totalColumns = getTotalColumns(loopSettings, subdivision);
 
-  // Return fractional position to preserve true position across subdivision changes
   const column = seconds / cellDuration;
   return Math.min(column, totalColumns - 1);
 }

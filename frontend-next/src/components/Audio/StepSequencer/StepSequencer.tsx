@@ -173,7 +173,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
         duration,
         // Piano roll: note is already the resolved trigger note (pre-resolved in pianoRollTriggerNotes).
         // Drum mode: note is undefined — resolve baseNote against itself → C4.
-        note: note ?? resolvePlayNote(baseNote, baseNote),
+        note: note ?? resolvePlayNote(String(baseNote), String(baseNote)),
         velocity: 1,
       };
 
