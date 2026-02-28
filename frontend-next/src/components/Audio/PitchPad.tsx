@@ -73,7 +73,7 @@ const PitchPad = forwardRef(function PitchPad(
     const { start, end, baseNote } = allSampleData[selectedSampleId].settings;
 
     // Transpose relative to C4 reference — see resolvePlayNote.ts
-    const playNote = resolvePlayNote(note, baseNote);
+    const playNote = resolvePlayNote(note, String(baseNote));
     // Store so handleRelease uses the same note even if baseNote changes
     lastPlayNoteRef.current = playNote;
 
@@ -119,7 +119,7 @@ const PitchPad = forwardRef(function PitchPad(
     setPitchIsPlaying(false);
     // Use the playNote stored at press time — avoids stale-baseNote mismatch
     const { baseNote } = allSampleData[selectedSampleId].settings;
-    const playNote = lastPlayNoteRef.current ?? resolvePlayNote(note, baseNote);
+    const playNote = lastPlayNoteRef.current ?? resolvePlayNote(note, String(baseNote));
     sampler.triggerRelease(playNote, Tone.now());
 
     if (!currentEvent.current?.startTime) return;
@@ -219,7 +219,7 @@ const PitchPad = forwardRef(function PitchPad(
         event.duration !== null
       ) {
         const { baseNote } = allSampleData[selectedSampleId].settings;
-        const resolvedNote = resolvePlayNote(note, baseNote);
+        const resolvedNote = resolvePlayNote(note, String(baseNote));
         const sampleDuration = end ? (end - start) / calcPlaybackRate(resolvedNote as Tone.Unit.Frequency) : null;
         const actualDuration =
           sampleDuration !== null

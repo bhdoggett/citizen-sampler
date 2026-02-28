@@ -57,7 +57,7 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
     }
 
     // Transpose relative to C4 reference — see resolvePlayNote.ts
-    const playNote = resolvePlayNote(note, baseNote);
+    const playNote = resolvePlayNote(note, String(baseNote));
     sampler.triggerAttack(playNote, Tone.now(), start, velocity);
 
     // Keep activeMidiNotes keyed by raw note for visual highlight on PitchPads
@@ -107,7 +107,7 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
     const activeNote = activeNotesRef.current.get(note);
     const playNote =
       activeNote?.note ??
-      resolvePlayNote(note, allSampleData[selectedSampleId].settings.baseNote);
+      resolvePlayNote(note, String(allSampleData[selectedSampleId].settings.baseNote));
     sampler.triggerRelease(playNote, Tone.now());
 
     setActiveMidiNotes((prev) => {

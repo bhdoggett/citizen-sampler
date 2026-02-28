@@ -68,7 +68,7 @@ const DrumPad = forwardRef(function DrumPad(
 
     // Transpose relative to C4 reference — see resolvePlayNote.ts
     // DrumPad always plays at natural pitch, so resolve baseNote against itself → C4
-    const playNote = resolvePlayNote(baseNote, baseNote);
+    const playNote = resolvePlayNote(String(baseNote), String(baseNote));
 
     hasReleasedRef.current = false;
     sampler.triggerAttack(playNote, now, start, 1);
@@ -118,7 +118,7 @@ const DrumPad = forwardRef(function DrumPad(
     hasReleasedRef.current = true;
     setSampleIsPlaying(false);
     // Transpose relative to C4 reference — see resolvePlayNote.ts
-    const playNote = resolvePlayNote(baseNote, baseNote);
+    const playNote = resolvePlayNote(String(baseNote), String(baseNote));
     sampler.triggerRelease(playNote, Tone.now());
 
     if (!currentEvent.current.startTime || !loopIsPlaying || !isRecording)
