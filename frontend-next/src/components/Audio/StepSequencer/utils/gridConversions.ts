@@ -60,10 +60,12 @@ export function ticksToGridPosition(
   const seconds = (startTime as number) * secondsPerTick;
 
   const cellDuration = getCellDurationSeconds(loopSettings, subdivision);
-  const totalColumns = getTotalColumns(loopSettings, subdivision);
 
-  const column = seconds / cellDuration;
-  return Math.min(column, totalColumns - 1);
+  // Return the raw fractional column — the caller's filter (columnStart < totalColumns)
+  // handles out-of-bounds exclusion. Clamping to totalColumns-1 caused notes at
+  // sub-grid positions (e.g. 3.25, 3.75) to all snap to the integer start of the
+  // last cell, making them appear shifted when switching subdivisions.
+  return seconds / cellDuration;
 }
 
 /**
