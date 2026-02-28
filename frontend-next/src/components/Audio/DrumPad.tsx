@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
+import { useMidiContext } from "../../app/contexts/MidiContext";
 import * as Tone from "tone";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
@@ -42,6 +43,7 @@ const DrumPad = forwardRef(function DrumPad(
   const hasReleasedRef = useRef(false);
   const { baseNote } = allSampleData[id]?.settings;
   const { hotKeysActive } = useUIContext();
+  const { activeMidiNotes } = useMidiContext();
   const padNum = id.split("-")[1];
   const padKey = drumKeys[Number(padNum) - 1];
   const currentEvent = useRef<SampleEventFE>({
@@ -208,7 +210,9 @@ const DrumPad = forwardRef(function DrumPad(
 
   // Get the active style based on whether the sample is playing
   const getActiveStyle = () => {
-    return sampleIsPlaying
+    const isActive =
+      sampleIsPlaying || (id === selectedSampleId && activeMidiNotes.size > 0);
+    return isActive
       ? "brightness-75 saturate-150 translate-x-[2px] translate-y-[1px] shadow-cyan-200 transition-all duration-25 border-cyan-400"
       : "brightness-100 saturate-100 shadow-md shadow-slate-500 translate-x-0 translate-y-0 transition-all duration-25 border-gray-600";
   };

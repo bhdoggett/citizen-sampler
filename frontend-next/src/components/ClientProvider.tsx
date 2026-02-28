@@ -15,6 +15,13 @@ const AudioProvider = dynamic(
   }
 );
 
+const MidiProvider = dynamic(
+  () => import("../app/contexts/MidiContext").then((mod) => mod.MidiProvider),
+  {
+    ssr: false,
+  }
+);
+
 export default function ClientProviders({
   children,
 }: {
@@ -22,7 +29,9 @@ export default function ClientProviders({
 }) {
   return (
     <AuthProvider>
-      <AudioProvider>{children}</AudioProvider>
+      <AudioProvider>
+        <MidiProvider>{children}</MidiProvider>
+      </AudioProvider>
     </AuthProvider>
   );
 }

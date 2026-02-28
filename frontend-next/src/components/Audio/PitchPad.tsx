@@ -8,6 +8,7 @@ import {
 } from "react";
 import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
+import { useMidiContext } from "../../app/contexts/MidiContext";
 import { CustomSampler } from "../../types/CustomSampler";
 import { SampleEventFE } from "src/types/audioTypesFE";
 import quantize from "../../lib/audio/util/quantize";
@@ -30,6 +31,7 @@ const PitchPad = forwardRef(function PitchPad(
     isRecording,
     currentLoop,
   } = useAudioContext();
+  const { activeMidiNotes } = useMidiContext();
   const currentEvent = useRef<SampleEventFE | null>(null);
   const partRef = useRef<Tone.Part | null>(null);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -150,7 +152,8 @@ const PitchPad = forwardRef(function PitchPad(
   };
 
   const getActiveStyle = () => {
-    return pitchIsPlaying
+    const isActive = pitchIsPlaying || activeMidiNotes.has(note);
+    return isActive
       ? "brightness-75 saturate-500 transition-all duration-100"
       : "brightness-100 saturate-100 transition-all duration-100";
   };
