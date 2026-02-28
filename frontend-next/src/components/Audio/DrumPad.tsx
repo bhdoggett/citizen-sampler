@@ -15,6 +15,7 @@ import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
 import { drumKeys } from "src/lib/constants/drumKeys";
 import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
+import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 
 type DrumPadProps = {
@@ -71,7 +72,7 @@ const DrumPad = forwardRef(function DrumPad(
     setSampleIsPlaying(true);
 
     if (end) {
-      const duration = end - start;
+      const duration = (end - start) / calcPlaybackRate(baseNote as Tone.Unit.Frequency);
       scheduledReleaseTimeoutRef.current = setTimeout(() => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
@@ -264,11 +265,11 @@ const DrumPad = forwardRef(function DrumPad(
         "duration" in event &&
         event.duration !== null
       ) {
-        const actualDuration = end
-          ? end - start < event.duration
-            ? end - start
-            : event.duration
-          : event.duration;
+        const sampleDuration = end ? (end - start) / calcPlaybackRate(event.note) : null;
+        const actualDuration =
+          sampleDuration !== null
+            ? Math.min(sampleDuration, event.duration)
+            : event.duration;
 
         sampler.triggerAttackRelease(
           event.note,

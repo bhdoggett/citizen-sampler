@@ -3,6 +3,7 @@ import * as Tone from "tone";
 import { useAudioContext } from "../contexts/AudioContext";
 import quantize from "../../lib/audio/util/quantize";
 import getScheduleEvents from "../../lib/audio/util/getScheduleEvents";
+import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import toWav from "audiobuffer-to-wav";
 import type { LoopName } from "../../../../shared/types/audioTypes";
 
@@ -76,11 +77,11 @@ const useDownloadWavStems = () => {
           "duration" in event &&
           event.duration !== null
         ) {
-          const actualDuration = end
-            ? end - start < event.duration
-              ? end - start
-              : event.duration
-            : event.duration;
+          const sampleDuration = end ? (end - start) / calcPlaybackRate(event.note) : null;
+          const actualDuration =
+            sampleDuration !== null
+              ? Math.min(sampleDuration, event.duration)
+              : event.duration;
           sampler.triggerAttackRelease(
             event.note,
             actualDuration,

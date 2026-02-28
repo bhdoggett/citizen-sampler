@@ -12,6 +12,7 @@ import { useMidiContext } from "../../app/contexts/MidiContext";
 import { CustomSampler } from "../../types/CustomSampler";
 import { SampleEventFE } from "src/types/audioTypesFE";
 import quantize from "../../lib/audio/util/quantize";
+import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 
 type PitchPadProps = {
   note: string;
@@ -74,7 +75,7 @@ const PitchPad = forwardRef(function PitchPad(
     setPitchIsPlaying(true);
 
     if (end) {
-      const duration = end - start;
+      const duration = (end - start) / calcPlaybackRate(note as Tone.Unit.Frequency);
       scheduledReleaseTimeoutRef.current = setTimeout(() => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
@@ -207,11 +208,11 @@ const PitchPad = forwardRef(function PitchPad(
         "duration" in event &&
         event.duration !== null
       ) {
-        const actualDuration = end
-          ? end - start < event.duration
-            ? end - start
-            : event.duration
-          : event.duration;
+        const sampleDuration = end ? (end - start) / calcPlaybackRate(note as Tone.Unit.Frequency) : null;
+        const actualDuration =
+          sampleDuration !== null
+            ? Math.min(sampleDuration, event.duration)
+            : event.duration;
 
         setPitchIsPlaying(true);
         setTimeout(() => {
