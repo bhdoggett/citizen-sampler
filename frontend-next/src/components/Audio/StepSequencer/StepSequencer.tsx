@@ -25,6 +25,7 @@ import {
   type ScaleName,
   generatePianoRollNotes,
 } from "src/lib/audio/util/scaleNotes";
+import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 
 const PAD_LABEL_WIDTH = 80; // Width of the pad label column
 const CONTAINER_PADDING = 2; // 1px border on each side of the grid
@@ -89,7 +90,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   // Derive effective cell width from zoom level
   const effectiveCellWidth = fitCellWidth > 0 ? fitCellWidth * zoomLevel : 0;
 
-  // Piano roll notes for the selected sample
+  // Piano roll notes for the selected sample (display labels)
   const pianoRollNotes = useMemo(() => {
     if (!pianoRollMode) return [];
     const baseNote = String(
@@ -97,6 +98,15 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     );
     return generatePianoRollNotes(baseNote, pianoRollScale);
   }, [pianoRollMode, selectedSampleId, allSampleData, pianoRollScale]);
+
+  // Pre-resolve all piano roll notes to sampler trigger notes once at the top level
+  const pianoRollTriggerNotes = useMemo(() => {
+    if (!pianoRollMode || pianoRollNotes.length === 0) return [];
+    const baseNote = String(
+      allSampleData[selectedSampleId]?.settings.baseNote || "C4",
+    );
+    return pianoRollNotes.map((note) => resolvePlayNote(note, baseNote));
+  }, [pianoRollMode, pianoRollNotes, allSampleData, selectedSampleId]);
 
   // Zoom percentage for display
   const zoomPercent = Math.round(zoomLevel * 100);
@@ -161,7 +171,9 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
       const newEvent: SampleEventFE = {
         startTime: startTimeTicks,
         duration,
-        note: note || baseNote,
+        // Piano roll: note is already the resolved trigger note (pre-resolved in pianoRollTriggerNotes).
+        // Drum mode: note is undefined — resolve baseNote against itself → C4.
+        note: note ?? resolvePlayNote(baseNote, baseNote),
         velocity: 1,
       };
 
@@ -549,6 +561,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
           snapToGrid={snapToGrid}
           pianoRollMode={pianoRollMode}
           pianoRollNotes={pianoRollNotes}
+          pianoRollTriggerNotes={pianoRollTriggerNotes}
           pianoRollPadId={pianoRollMode ? selectedSampleId : undefined}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}

@@ -335,6 +335,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       const panVol = new Tone.PanVol(0, 0);
       const highpass = new Tone.Filter(0, "highpass");
       const lowpass = new Tone.Filter(20000, "lowpass");
+      const analyser = new Tone.Analyser("fft", 4096);
 
       // Check if the sample is cached in IndexedDB by matching the url
       const cached = await getCachedAudioUrlFromIndexedDB(sampleId, sampleUrl);
@@ -346,6 +347,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
             // Connect the FX chain
             sampler.connect(gain);
             gain.connect(pitch);
+            gain.connect(analyser); // side-chain tap BEFORE PitchShift to eliminate phase-vocoder latency
             pitch.connect(highpass);
             highpass.connect(lowpass);
             lowpass.connect(panVol);
@@ -364,6 +366,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
               panVol,
               highpass,
               lowpass,
+              analyser,
               currentEvent: {
                 startTime: null,
                 duration: null,

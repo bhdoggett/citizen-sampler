@@ -33,13 +33,14 @@ type SequencerGridProps = {
   onVelocityChange?: (
     padId: string,
     eventIndex: number,
-    velocity: number
+    velocity: number,
   ) => void;
   ctrlHeld?: boolean;
   playheadPosition?: number;
   snapToGrid?: boolean;
   pianoRollMode?: boolean;
   pianoRollNotes?: string[];
+  pianoRollTriggerNotes?: string[];
   pianoRollPadId?: string;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
@@ -67,6 +68,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     snapToGrid = true,
     pianoRollMode = false,
     pianoRollNotes = [],
+    pianoRollTriggerNotes = [],
     pianoRollPadId,
     onZoomIn,
     onZoomOut,
@@ -103,6 +105,20 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
       [],
     );
 
+    // Pre-group piano roll events by trigger note once — O(M) — so each row lookup is O(1)
+    const pianoRollEventMap = useMemo(() => {
+      if (!pianoRollMode || !pianoRollPadId) return null;
+      const allEvents = gridEvents.get(pianoRollPadId) || [];
+      const map = new Map<string, GridEvent[]>();
+      for (const event of allEvents) {
+        const note = String(event.originalEvent.note);
+        const bucket = map.get(note);
+        if (bucket) bucket.push(event);
+        else map.set(note, [event]);
+      }
+      return map;
+    }, [pianoRollMode, pianoRollPadId, gridEvents]);
+
     // Build rows: either 16 drum pads or N piano roll note rows
     const rows = useMemo(() => {
       if (pianoRollMode && pianoRollPadId && pianoRollNotes.length > 0) {
@@ -110,7 +126,8 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
           key: `${pianoRollPadId}-${note}-${idx}`,
           padId: pianoRollPadId,
           padNumber: idx + 1,
-          note,
+          note,           // display label
+          triggerNote: pianoRollTriggerNotes[idx], // pre-resolved sampler trigger note
           label: note,
           isSharp: note.includes("#"),
         }));
@@ -122,11 +139,12 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
           padId,
           padNumber,
           note: undefined as string | undefined,
+          triggerNote: undefined as string | undefined,
           label: undefined as string | undefined,
           isSharp: false,
         };
       });
-    }, [pianoRollMode, pianoRollPadId, pianoRollNotes, padIds]);
+    }, [pianoRollMode, pianoRollPadId, pianoRollNotes, pianoRollTriggerNotes, padIds]);
 
     const cellsPerBeat = subdivisionToCellsPerBeat[subdivision];
     const cellsPerBar = beats * cellsPerBeat;
@@ -153,7 +171,11 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
           ref={scrollContainerRef}
           className="overflow-x-auto overflow-y-auto h-full"
         >
-          <div style={{ width: `${80 + totalColumns * cellWidth + (!pianoRollMode ? 28 : 0)}px` }}>
+          <div
+            style={{
+              width: `${80 + totalColumns * cellWidth + (!pianoRollMode ? 28 : 0)}px`,
+            }}
+          >
             {/* Column headers - inside scroll container */}
             <div className="flex bg-gray-200 border-b-2 border-gray-400 sticky top-0 z-30">
               {/* Spacer for pad labels column */}
@@ -181,11 +203,12 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
                 const sampleData = allSampleData[row.padId];
                 if (!sampleData) return null;
 
-                const allEvents = gridEvents.get(row.padId) || [];
-                // In piano roll mode, filter events to only show those matching this row's note
-                const events = pianoRollMode && row.note
-                  ? allEvents.filter((e) => e.originalEvent.note === row.note)
-                  : allEvents;
+                // In piano roll mode use the pre-grouped map — O(1) per row.
+                // row.triggerNote is already the resolved sampler trigger note.
+                const events =
+                  pianoRollMode && row.triggerNote && pianoRollEventMap
+                    ? (pianoRollEventMap.get(row.triggerNote) ?? [])
+                    : (gridEvents.get(row.padId) ?? []);
 
                 return (
                   <SequencerRow
@@ -205,11 +228,13 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
                     onResizeStartEnd={onResizeStartEnd}
                     onVelocityChange={onVelocityChange}
                     ctrlHeld={ctrlHeld}
-                    isSelected={!pianoRollMode && row.padId === selectedSampleId}
+                    isSelected={
+                      !pianoRollMode && row.padId === selectedSampleId
+                    }
                     snapToGrid={snapToGrid}
                     rowLabel={row.label}
                     pianoRollMode={pianoRollMode}
-                    pianoRollNote={row.note}
+                    pianoRollTriggerNote={row.triggerNote}
                     isSharpRow={row.isSharp}
                     onClearRow={!pianoRollMode ? onClearRow : undefined}
                   />

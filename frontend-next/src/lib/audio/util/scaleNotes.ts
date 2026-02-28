@@ -61,7 +61,8 @@ export const generateScaleNotes = (
 };
 
 /**
- * Generate 25 unique notes sorted descending by pitch (high to low) for piano roll rows.
+ * Generate unique notes sorted descending by pitch (high to low) for piano roll rows.
+ * Extends the base scale by one octave above and below (±24 semitones total).
  */
 export const generatePianoRollNotes = (
   baseNote: string,
@@ -70,8 +71,15 @@ export const generatePianoRollNotes = (
   const offsets = scaleOffsets[scale].flat();
   const baseMidi = Tone.Frequency(baseNote).toMidi();
 
+  // Extend scale offsets by one extra octave in each direction
+  const extendedOffsets = [
+    ...offsets.map((o) => o + 12),
+    ...offsets,
+    ...offsets.map((o) => o - 12),
+  ];
+
   // Get unique MIDI values, sorted descending (high to low)
-  const uniqueMidis = [...new Set(offsets.map((o) => baseMidi + o))].sort(
+  const uniqueMidis = [...new Set(extendedOffsets.map((o) => baseMidi + o))].sort(
     (a, b) => b - a,
   );
 

@@ -11,6 +11,8 @@ import {
 } from "../../lib/audio/util/frequencyConversion";
 import { useUIContext } from "../../app/contexts/UIContext";
 import { QuantizeValue } from "@shared/types/audioTypes";
+import { usePitchDetector } from "../../app/hooks/usePitchDetector";
+import PitchMeter from "./PitchMeter";
 
 const SampleSettings = () => {
   const {
@@ -23,9 +25,13 @@ const SampleSettings = () => {
 
   const { setSampleMute, setSampleSolo } = useMutesAndSolos();
 
+  const analyser = samplersRef.current[selectedSampleId]?.analyser ?? null;
+
   const [settings, setSettings] = useState<Partial<SampleSettingsFE> | null>(
-    null
+    null,
   );
+
+  const pitchResult = usePitchDetector(analyser, settings?.pitch ?? 0);
   const [isSoloed, setIsSoloed] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
 
@@ -53,7 +59,7 @@ const SampleSettings = () => {
   // Update settings in this component's state by setting type
   const updateSetting = <K extends keyof SampleSettingsFE>(
     key: K,
-    value: SampleSettingsFE[K]
+    value: SampleSettingsFE[K],
   ) => {
     setSettings((prev) => ({
       ...prev,
@@ -89,7 +95,7 @@ const SampleSettings = () => {
       highpass.frequency.value = settings?.highpass?.[0] || 0;
       lowpass.frequency.value = settings?.lowpass?.[0] || 200;
     },
-    [samplersRef, settings]
+    [samplersRef, settings],
   );
 
   // Keep samplersRef settings in sync with UI
@@ -231,7 +237,7 @@ const SampleSettings = () => {
                     max="1"
                     step="0.001"
                     value={linearizeFrequency(
-                      settings.highpass?.[0] || 0
+                      settings.highpass?.[0] || 0,
                     ).toFixed(2)}
                     onChange={(e) =>
                       updateSetting("highpass", [
@@ -266,7 +272,7 @@ const SampleSettings = () => {
                   />
                 </div>
                 <div>
-                  <div className="flex mt-2 mb-4">
+                  <div className="flex items-center gap-2 mt-2 mb-2">
                     <label className="" htmlFor="base-note">
                       Note
                     </label>
@@ -274,6 +280,11 @@ const SampleSettings = () => {
                       value={settings.baseNote}
                       onChange={(e) => {
                         updateSetting("baseNote", e.target.value);
+                        e.target.blur();
+                      }}
+                      onKeyDown={(e) => {
+                        e.preventDefault();
+                        e.currentTarget.blur();
                       }}
                       className="w-12 border flex mx-auto border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"
                     >
@@ -283,17 +294,17 @@ const SampleSettings = () => {
                         </option>
                       ))}
                     </select>
+                    <PitchMeter pitch={pitchResult} />
                   </div>
-
                   <label htmlFor="pitch" className="mt-3 flex justify-between">
                     <span>Pitch</span>
-                    <span>{settings.pitch?.toFixed(1) || "0.0"}</span>
+                    <span>{((settings.pitch || 0) * 100).toFixed(0)}</span>
                   </label>
                   <input
                     name="pitch"
                     type="range"
-                    min="-12"
-                    max="12"
+                    min="-0.5"
+                    max="0.5"
                     step="0.01"
                     value={settings.pitch || 0}
                     onChange={(e) => {
@@ -319,7 +330,7 @@ const SampleSettings = () => {
                     onChange={(e) => {
                       updateSetting(
                         "quantVal",
-                        e.target.value as QuantizeValue
+                        e.target.value as QuantizeValue,
                       );
                     }}
                     className="w-16 mb-3 border flex mx-auto border-gray-700 shadow-inner shadow-slate-800 text-center bg-white"

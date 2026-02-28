@@ -42,7 +42,7 @@ type SequencerRowProps = {
   snapToGrid?: boolean;
   rowLabel?: string;
   pianoRollMode?: boolean;
-  pianoRollNote?: string;
+  pianoRollTriggerNote?: string;
   isSharpRow?: boolean;
   onClearRow?: (padId: string) => void;
 };
@@ -68,7 +68,7 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
     snapToGrid = true,
     rowLabel,
     pianoRollMode = false,
-    pianoRollNote,
+    pianoRollTriggerNote,
     isSharpRow = false,
     onClearRow,
   }) => {
@@ -112,7 +112,8 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
 
     const handleCellClick = (columnIndex: number) => {
       if (onCellClick) {
-        onCellClick(padId, columnIndex, pianoRollNote);
+        // Pass the pre-resolved trigger note so StepSequencer stores it directly
+        onCellClick(padId, columnIndex, pianoRollTriggerNote);
       }
     };
 
@@ -144,7 +145,7 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
           <span className="truncate" title={rowLabel || sampleData.title}>
             {rowLabel || padNumber}
           </span>
-          <SequencerPadButton padId={padId} padNumber={padNumber} overrideNote={pianoRollNote} />
+          <SequencerPadButton padId={padId} padNumber={padNumber} overrideNote={pianoRollTriggerNote} />
         </div>
 
         {/* Grid cells */}

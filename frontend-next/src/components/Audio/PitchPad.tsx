@@ -13,6 +13,7 @@ import { CustomSampler } from "../../types/CustomSampler";
 import { SampleEventFE } from "src/types/audioTypesFE";
 import quantize from "../../lib/audio/util/quantize";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
+import { resolvePlayNote } from "../../lib/audio/util/resolvePlayNote";
 
 type PitchPadProps = {
   note: string;
@@ -38,6 +39,7 @@ const PitchPad = forwardRef(function PitchPad(
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef<boolean>(false);
   const lastPressTimeRef = useRef<number>(0);
+  const lastPlayNoteRef = useRef<string | null>(null);
   const [pitchIsPlaying, setPitchIsPlaying] = useState<boolean>(false);
 
   const handlePress = async () => {
@@ -68,18 +70,23 @@ const PitchPad = forwardRef(function PitchPad(
       scheduledReleaseTimeoutRef.current = null;
     }
 
-    const { start, end } = allSampleData[selectedSampleId].settings;
+    const { start, end, baseNote } = allSampleData[selectedSampleId].settings;
+
+    // Transpose relative to C4 reference — see resolvePlayNote.ts
+    const playNote = resolvePlayNote(note, baseNote);
+    // Store so handleRelease uses the same note even if baseNote changes
+    lastPlayNoteRef.current = playNote;
 
     hasReleasedRef.current = false;
-    sampler.triggerAttack(note, now, start, 1);
+    sampler.triggerAttack(playNote, now, start, 1);
     setPitchIsPlaying(true);
 
     if (end) {
-      const duration = (end - start) / calcPlaybackRate(note as Tone.Unit.Frequency);
+      const duration = (end - start) / calcPlaybackRate(playNote as Tone.Unit.Frequency);
       scheduledReleaseTimeoutRef.current = setTimeout(() => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
-          sampler.triggerRelease(note, Tone.now());
+          sampler.triggerRelease(playNote, Tone.now());
           setPitchIsPlaying(false);
         }
       }, duration * 1000);
@@ -94,7 +101,7 @@ const PitchPad = forwardRef(function PitchPad(
       };
       currentEvent.current.startTime = Tone.getTransport().ticks;
       currentEvent.current.duration = 0;
-      currentEvent.current.note = note;
+      currentEvent.current.note = playNote;
       currentEvent.current.velocity = 1;
     }
   };
@@ -110,7 +117,10 @@ const PitchPad = forwardRef(function PitchPad(
 
     hasReleasedRef.current = true;
     setPitchIsPlaying(false);
-    sampler.triggerRelease(note, Tone.now());
+    // Use the playNote stored at press time — avoids stale-baseNote mismatch
+    const { baseNote } = allSampleData[selectedSampleId].settings;
+    const playNote = lastPlayNoteRef.current ?? resolvePlayNote(note, baseNote);
+    sampler.triggerRelease(playNote, Tone.now());
 
     if (!currentEvent.current?.startTime) return;
 
@@ -208,7 +218,9 @@ const PitchPad = forwardRef(function PitchPad(
         "duration" in event &&
         event.duration !== null
       ) {
-        const sampleDuration = end ? (end - start) / calcPlaybackRate(note as Tone.Unit.Frequency) : null;
+        const { baseNote } = allSampleData[selectedSampleId].settings;
+        const resolvedNote = resolvePlayNote(note, baseNote);
+        const sampleDuration = end ? (end - start) / calcPlaybackRate(resolvedNote as Tone.Unit.Frequency) : null;
         const actualDuration =
           sampleDuration !== null
             ? Math.min(sampleDuration, event.duration)

@@ -10,5 +10,6 @@ export type SamplerWithFX = {
   panVol: Tone.PanVol;
   highpass: Tone.Filter;
   lowpass: Tone.Filter;
+  analyser: Tone.Analyser;
   currentEvent: SampleEventFE;
 };

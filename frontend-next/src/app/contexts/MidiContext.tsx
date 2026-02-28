@@ -6,6 +6,7 @@ import { useMidi } from "../hooks/useMidi";
 import { SampleEventFE } from "src/types/audioTypesFE";
 import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
+import { resolvePlayNote } from "../../lib/audio/util/resolvePlayNote";
 
 type MidiContextType = {
   activeMidiNotes: Set<string>;
@@ -46,19 +47,38 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
     if (!samplerWithFX) return;
 
     const { sampler } = samplerWithFX;
-    const { start, end } = allSampleData[selectedSampleId].settings;
-    sampler.triggerAttack(note, Tone.now(), start, velocity);
+    const { start, end, baseNote } = allSampleData[selectedSampleId].settings;
 
+    // Cancel any existing auto-release timer for this note (rapid retriggering)
+    const existingTimer = activeReleaseTimersRef.current.get(note);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      activeReleaseTimersRef.current.delete(note);
+    }
+
+    // Transpose relative to C4 reference — see resolvePlayNote.ts
+    const playNote = resolvePlayNote(note, baseNote);
+    sampler.triggerAttack(playNote, Tone.now(), start, velocity);
+
+    // Keep activeMidiNotes keyed by raw note for visual highlight on PitchPads
     setActiveMidiNotes((prev) => {
       const next = new Set(prev);
       next.add(note);
       return next;
     });
 
+    // Always store playNote so onNoteOff releases the correct note even if baseNote changes
+    activeNotesRef.current.set(note, {
+      startTime: loopIsPlaying && isRecording ? Tone.getTransport().ticks : null,
+      duration: 0,
+      note: playNote,
+      velocity,
+    });
+
     if (end) {
-      const duration = (end - start) / calcPlaybackRate(note as Tone.Unit.Frequency);
+      const duration = (end - start) / calcPlaybackRate(playNote as Tone.Unit.Frequency);
       const timer = setTimeout(() => {
-        sampler.triggerRelease(note, Tone.now());
+        sampler.triggerRelease(playNote, Tone.now());
         setActiveMidiNotes((prev) => {
           const next = new Set(prev);
           next.delete(note);
@@ -68,15 +88,6 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
         activeReleaseTimersRef.current.delete(note);
       }, duration * 1000);
       activeReleaseTimersRef.current.set(note, timer);
-    }
-
-    if (loopIsPlaying && isRecording) {
-      activeNotesRef.current.set(note, {
-        startTime: Tone.getTransport().ticks,
-        duration: 0,
-        note,
-        velocity,
-      });
     }
   };
 
@@ -92,7 +103,12 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
       activeReleaseTimersRef.current.delete(note);
     }
 
-    sampler.triggerRelease(note, Tone.now());
+    // Use the playNote stored at noteOn time — avoids stale-baseNote mismatch
+    const activeNote = activeNotesRef.current.get(note);
+    const playNote =
+      activeNote?.note ??
+      resolvePlayNote(note, allSampleData[selectedSampleId].settings.baseNote);
+    sampler.triggerRelease(playNote, Tone.now());
 
     setActiveMidiNotes((prev) => {
       const next = new Set(prev);
@@ -100,7 +116,8 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
       return next;
     });
 
-    const activeNote = activeNotesRef.current.get(note);
+    activeNotesRef.current.delete(note);
+
     if (!activeNote?.startTime || !isRecording) return;
 
     const duration = calcEventDuration(
@@ -108,11 +125,6 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
       Tone.getTransport().loopEnd as Tone.Unit.Time,
       allSampleData[selectedSampleId].settings.end
     );
-
-    const completedEvent: SampleEventFE = {
-      ...activeNote,
-      duration,
-    };
 
     setAllSampleData((prev) => ({
       ...prev,
@@ -122,13 +134,11 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
           ...prev[selectedSampleId].events,
           [currentLoop]: [
             ...(prev[selectedSampleId].events[currentLoop] || []),
-            completedEvent,
+            { ...activeNote, duration },
           ],
         },
       },
     }));
-
-    activeNotesRef.current.delete(note);
   };
 
   const { isConnected, inputDevices } = useMidi({ onNoteOn, onNoteOff });

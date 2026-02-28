@@ -5,6 +5,7 @@ import { useUIContext } from "src/app/contexts/UIContext";
 import * as Tone from "tone";
 import { drumKeys } from "src/lib/constants/drumKeys";
 import type { SampleEventFE } from "src/types/audioTypesFE";
+import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 
 type SequencerPadButtonProps = {
   padId: string;
@@ -42,6 +43,7 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
   const [isPressed, setIsPressed] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
+  const lastPlayNoteRef = useRef<string | null>(null);
   const currentEvent = useRef<SampleEventFE>({
     startTime: null,
     duration: 0,
@@ -62,7 +64,9 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
 
     const now = Tone.now();
     const { start, end, baseNote } = allSampleData[padId].settings;
-    const noteToPlay = overrideNote || baseNote;
+    // overrideNote is pre-resolved by the parent; for drum mode (no overrideNote) resolve baseNote → C4
+    const noteToPlay = overrideNote ?? resolvePlayNote(String(baseNote), String(baseNote));
+    lastPlayNoteRef.current = noteToPlay;
 
     hasReleasedRef.current = false;
     sampler.triggerAttack(noteToPlay, now, start, 1);
@@ -106,7 +110,8 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     }
 
     const { baseNote } = allSampleData[padId].settings;
-    const noteToPlay = overrideNote || baseNote;
+    const noteToPlay = lastPlayNoteRef.current ??
+      resolvePlayNote(overrideNote || String(baseNote), String(baseNote));
 
     hasReleasedRef.current = true;
     setIsPressed(false);

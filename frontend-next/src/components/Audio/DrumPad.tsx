@@ -16,6 +16,7 @@ import { CustomSampler } from "../../types/CustomSampler";
 import { drumKeys } from "src/lib/constants/drumKeys";
 import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
+import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 
 type DrumPadProps = {
@@ -65,18 +66,22 @@ const DrumPad = forwardRef(function DrumPad(
     const now = Tone.now();
     const { start, end } = allSampleData[id].settings;
 
+    // Transpose relative to C4 reference — see resolvePlayNote.ts
+    // DrumPad always plays at natural pitch, so resolve baseNote against itself → C4
+    const playNote = resolvePlayNote(baseNote, baseNote);
+
     hasReleasedRef.current = false;
-    sampler.triggerAttack(baseNote, now, start, 1);
+    sampler.triggerAttack(playNote, now, start, 1);
     setSelectedSampleId(id);
     setIsSelected(true);
     setSampleIsPlaying(true);
 
     if (end) {
-      const duration = (end - start) / calcPlaybackRate(baseNote as Tone.Unit.Frequency);
+      const duration = (end - start) / calcPlaybackRate(playNote as Tone.Unit.Frequency);
       scheduledReleaseTimeoutRef.current = setTimeout(() => {
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
-          sampler.triggerRelease(baseNote, Tone.now());
+          sampler.triggerRelease(playNote, Tone.now());
           setSampleIsPlaying(false);
         }
       }, duration * 1000);
@@ -85,7 +90,7 @@ const DrumPad = forwardRef(function DrumPad(
     if (loopIsPlaying && isRecording) {
       currentEvent.current.startTime = Tone.getTransport().ticks;
       currentEvent.current.duration = 0;
-      currentEvent.current.note = baseNote;
+      currentEvent.current.note = playNote;
       currentEvent.current.velocity = 1;
     }
   }, [
@@ -112,7 +117,9 @@ const DrumPad = forwardRef(function DrumPad(
 
     hasReleasedRef.current = true;
     setSampleIsPlaying(false);
-    sampler.triggerRelease(baseNote, Tone.now());
+    // Transpose relative to C4 reference — see resolvePlayNote.ts
+    const playNote = resolvePlayNote(baseNote, baseNote);
+    sampler.triggerRelease(playNote, Tone.now());
 
     if (!currentEvent.current.startTime || !loopIsPlaying || !isRecording)
       return;
