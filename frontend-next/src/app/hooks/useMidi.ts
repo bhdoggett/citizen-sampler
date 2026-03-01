@@ -16,10 +16,15 @@ export function useMidi(callbacks: MidiCallbacks): UseMidiReturn {
   const [inputDevices, setInputDevices] = useState<string[]>([]);
   const callbacksRef = useRef(callbacks);
 
-  // Keep callbacks ref updated on each render to avoid stale closures
-  useEffect(() => {
-    callbacksRef.current = callbacks;
-  });
+  // Synchronous assignment (not useEffect) so MIDI events that fire between a
+  // render and its effects always see the latest selectedSampleId/baseNote etc.
+  callbacksRef.current = callbacks;
+
+  // Tracks the timestamp of the most recent note-on per note name.
+  // Used to deduplicate note-ons that arrive within a short window — common
+  // when a MIDI controller exposes multiple ports (e.g. "MIDI In" + "MIDI Through")
+  // and both fire for the same physical key press.
+  const recentNoteOnsRef = useRef<Map<string, number>>(new Map());
 
   const attachListeners = useCallback((midiAccess: MIDIAccess) => {
     const devices: string[] = [];
@@ -40,6 +45,12 @@ export function useMidi(callbacks: MidiCallbacks): UseMidiReturn {
 
         if (isNoteOn) {
           const noteName = Frequency(midiNote, "midi").toNote();
+          // Skip duplicate note-ons for the same note within 15 ms
+          const now = performance.now();
+          const last = recentNoteOnsRef.current.get(noteName) ?? -Infinity;
+          if (now - last < 15) return;
+          recentNoteOnsRef.current.set(noteName, now);
+
           const normalizedVelocity = velocity / 127;
           callbacksRef.current.onNoteOn(noteName, normalizedVelocity);
         } else if (isNoteOff) {
