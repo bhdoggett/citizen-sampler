@@ -7,7 +7,7 @@ import {
   AllLoopSettingsFE,
 } from "src/types/audioTypesFE";
 import { useUIContext } from "./UIContext";
-import { LoopName } from "../../../../shared/types/audioTypes";
+import { LoopName } from "../../types/audioTypes";
 import { SamplerWithFX } from "src/types/SamplerWithFX";
 import { CustomSampler } from "src/types/CustomSampler";
 import {

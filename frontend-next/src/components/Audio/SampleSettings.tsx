@@ -10,7 +10,7 @@ import {
   exponentiateFrequency,
 } from "../../lib/audio/util/frequencyConversion";
 import { useUIContext } from "../../app/contexts/UIContext";
-import { QuantizeValue } from "@shared/types/audioTypes";
+import { QuantizeValue } from "../../types/audioTypes";
 import { usePitchDetector } from "../../app/hooks/usePitchDetector";
 import PitchMeter from "./PitchMeter";
 

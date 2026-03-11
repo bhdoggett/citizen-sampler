@@ -6,7 +6,7 @@ import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useAuthContext } from "src/app/contexts/AuthContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import { SongTypeFE } from "src/types/audioTypesFE";
-import type { LoopName } from "@shared/types/audioTypes";
+import type { LoopName } from "../../types/audioTypes";
 import Spinner from "../Spinner";
 
 dotenv.config();

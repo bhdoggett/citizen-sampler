@@ -5,7 +5,7 @@ import quantize from "../../lib/audio/util/quantize";
 import getScheduleEvents from "../../lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import toWav from "audiobuffer-to-wav";
-import type { LoopName } from "../../../../shared/types/audioTypes";
+import type { LoopName } from "../../types/audioTypes";
 
 const useDownloadWavStems = () => {
   const {

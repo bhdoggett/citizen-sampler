@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useAudioContext } from "../contexts/AudioContext";
 import { useUIContext } from "../contexts/UIContext";
-import type { LoopName } from "@shared/types/audioTypes";
+import type { LoopName } from "../../types/audioTypes";
 
 export function useSelectLoop(): (loop: LoopName) => void {
   const {

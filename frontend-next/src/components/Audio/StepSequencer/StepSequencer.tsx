@@ -19,7 +19,7 @@ import {
   getSubdivisionDuration,
   secondsToGridPosition,
 } from "./utils/gridConversions";
-import type { LoopName } from "../../../../../shared/types/audioTypes";
+import type { LoopName } from "../../../types/audioTypes";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 import {
   type ScaleName,

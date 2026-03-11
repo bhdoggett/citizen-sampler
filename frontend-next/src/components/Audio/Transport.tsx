@@ -3,7 +3,7 @@ import { useEffect, useRef, useCallback } from "react";
 import * as Tone from "tone";
 import { Circle, Music3 } from "lucide-react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
-import type { LoopName } from "@shared/types/audioTypes";
+import type { LoopName } from "../../types/audioTypes";
 import { useUIContext } from "src/app/contexts/UIContext";
 
 const Transport = () => {

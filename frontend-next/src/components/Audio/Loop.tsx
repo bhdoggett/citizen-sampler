@@ -6,7 +6,7 @@ import { useUIContext } from "src/app/contexts/UIContext";
 import LoopProgressBar from "./LoopProgress";
 import { useSelectLoop } from "src/app/hooks/useSelectLoop";
 
-import type { LoopName, LoopSettings } from "@shared/types/audioTypes";
+import type { LoopName, LoopSettings } from "../../types/audioTypes";
 
 const loops = ["A", "B", "C", "D"];
 
