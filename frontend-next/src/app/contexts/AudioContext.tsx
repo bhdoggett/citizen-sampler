@@ -21,7 +21,6 @@ import {
   DrumMachineId,
   getKitSampleTitle,
 } from "../../lib/drumMachines";
-import axios from "axios";
 import { set, get } from "idb-keyval"; // for IndexedDB storage
 import dotenv from "dotenv";
 dotenv.config();
@@ -288,8 +287,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   const storeAudioInIndexedDB = useCallback(async (url: string, sampleId: string) => {
     try {
-      const response = await axios.get(url, { responseType: "blob" });
-      await set(`audio-${sampleId}`, { url: url, blob: response.data }); // Store Blob directly to IndexedDB
+      const response = await fetch(url);
+      const blob = await response.blob();
+      await set(`audio-${sampleId}`, { url: url, blob }); // Store Blob directly to IndexedDB
     } catch (error) {
       console.error("Failed to store audio in IndexedDB:", error);
     }
