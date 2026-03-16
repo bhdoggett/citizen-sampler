@@ -77,7 +77,7 @@ Each of the four loop patterns (A, B, C, D) can have unique settings:
 
 ### Main Menu
 
-- **Login / Signup:** Anyone can build beats and download WAV stems without logging in, but to save songs persistently to the database, users must create an account—either with a username/password or by signing in with Google.
+- **Login / Signup:** Anyone can build beats and download WAV stems without logging in, but to save songs persistently to the database, users must sign in with Google.
 
 - **Load Collection:** Choose from sample collections curated by Citizen DJ. The selected collection will replace the current samples on pads 1–12.
 
@@ -124,8 +124,6 @@ External accounts/resources required:
 - Google Drive folder
   - Store the drum machine samples (linked above) in a Drive folder and share it with your service account
 
-Resend account for sending verification emails
-
 Create a .env file in the backend directory:
 
 ```.env
@@ -134,10 +132,8 @@ BACKEND_BASE_URL=http://localhost:8000
 FRONTEND_URL=http://localhost:3000
 MONGO_URI=mongodb://localhost:27017
 TOKEN_SECRET='your_token_secret_here'
-EMAIL_TOKEN_SECRET='your_email_token_secret_here'
 GOOGLE_CLIENT_ID='your_google_client_id_here'
 GOOGLE_CLIENT_SECRET='your_google_client_secret_here'
-RESEND_API_KEY='your_resend_api_key_here'
 GOOGLE_APPLICATION_CREDENTIALS_BASE64='your_base64_encoded_credentials_json'
 GOOGLE_DRIVE_DRUMS_FOLDER_ID='your_drive_folder_id_here'
 ```

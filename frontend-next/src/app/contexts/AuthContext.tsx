@@ -15,8 +15,6 @@ type AuthContextType = {
   token: string | null;
   setToken: (token: string | null) => void;
   isAuthenticated: boolean;
-  authIsSignup: boolean;
-  setAuthIsSignup: React.Dispatch<React.SetStateAction<boolean>>;
   error: string | null;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
 };
@@ -36,7 +34,6 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   const [token, setTokenState] = useState<string | null>(() =>
     localStorage.getItem("token")
   );
-  const [authIsSignup, setAuthIsSignup] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { apiResponseMessageRef, setShowDialog } = useUIContext();
   const router = useRouter();
@@ -123,8 +120,6 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
         token,
         setToken,
         isAuthenticated: !!token,
-        authIsSignup,
-        setAuthIsSignup,
         error,
         setError,
       }}

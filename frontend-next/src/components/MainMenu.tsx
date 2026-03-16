@@ -28,7 +28,6 @@ const Menu: React.FC = () => {
     setUsername,
     displayName,
     setDisplayName,
-    setAuthIsSignup,
     setError,
   } = useAuthContext();
   const {
@@ -367,17 +366,6 @@ const Menu: React.FC = () => {
                   <li
                     className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
                     onClick={() => {
-                      setAuthIsSignup(true);
-                      setShowDialog("auth-dialog");
-                      setMenuOpen(false);
-                    }}
-                  >
-                    Sign Up
-                  </li>
-                  <li
-                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
-                    onClick={() => {
-                      setAuthIsSignup(false);
                       setShowDialog("auth-dialog");
                       setMenuOpen(false);
                     }}

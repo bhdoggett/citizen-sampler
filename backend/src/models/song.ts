@@ -1,5 +1,5 @@
 import { Schema, model, HydratedDocument } from "mongoose";
-import { SongTypeBE } from "src/types/SongTypeBE";
+import { SongTypeBE } from "../types/SongTypeBE";
 
 // SampleEvent
 const SampleEventSchema = new Schema(

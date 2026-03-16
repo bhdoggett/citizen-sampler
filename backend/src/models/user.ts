@@ -1,5 +1,5 @@
 import { Schema, Types, model, Document, HydratedDocument } from "mongoose";
-import { SongTypeBE } from "src/types/SongTypeBE";
+import { SongTypeBE } from "../types/SongTypeBE";
 
 export type UserType = {
   username?: string;

@@ -21,7 +21,6 @@ import { useUIContext } from "./contexts/UIContext";
 import { useAudioContext } from "./contexts/AudioContext";
 import { useSelectLoop } from "./hooks/useSelectLoop";
 import type { LoopName } from "../types/audioTypes";
-import ResendConfirmation from "src/components/Dialogs/ResendConfirmation";
 import About from "src/components/Dialogs/About";
 import HelpShortcuts from "src/components/Dialogs/HelpShortcuts";
 import Welcome from "src/components/Dialogs/Welcome";
@@ -270,7 +269,6 @@ export default function Home() {
               {showDialog === "collection-menu" && <CollectionMenu />}
               {showDialog === "kit-menu" && <KitMenu />}
               {showDialog === "auth-dialog" && <AuthDialog />}
-              {showDialog === "resend-confirmation" && <ResendConfirmation />}
               {showDialog === "confirm-action" && <ConfirmActionDialog />}
               {showDialog === "api-response" && <APIResponseDialog />}
               {showDialog === "ui-warning" && <UIWarning />}

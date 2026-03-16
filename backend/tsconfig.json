@@ -1,14 +1,13 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "CommonJS",
+    "module": "Node16",
     "rootDir": "../",
     "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "moduleResolution": "node",
-    "baseUrl": ".",
+    "moduleResolution": "node16",
     "typeRoots": ["./types", "./node_modules/@types"],
     "types": ["node"]
   },
