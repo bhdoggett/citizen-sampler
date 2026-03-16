@@ -1,17 +1,37 @@
-import { useState, useEffect, useRef } from "react";
-import WaveSurfer from "wavesurfer.js";
-import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
+import {
+  decodeAudioUrl,
+  extractPeaks,
+  drawWaveform,
+} from "../../lib/audio/decodeAudio";
 
 type WaveformProps = {
   audioUrl: string;
 };
 
+const PEAK_BINS = 4000;
+
 const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const waveSurferRef = useRef<WaveSurfer | null>(null);
-  const regionsPluginRef = useRef<RegionsPlugin | null>(null);
-  const [waveSurferIsReady, setWaveSurferIsReady] = useState<boolean>(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null); // scrollable outer
+  const wrapperRef = useRef<HTMLDivElement>(null); // inner relative wrapper
+  const audioBufferRef = useRef<AudioBuffer | null>(null);
+  const peaksRef = useRef<Float32Array | null>(null);
+  const [duration, setDuration] = useState(0);
+  const [isReady, setIsReady] = useState(false);
+  const [zoom, setZoom] = useState(0);
+
+  // Region fractions (0–1) derived from settings
+  const [startFrac, setStartFrac] = useState(0);
+  const [endFrac, setEndFrac] = useState(1);
+
+  // Refs so zoom effect can read fracs without them as deps
+  const startFracRef = useRef(startFrac);
+  const endFracRef = useRef(endFrac);
+  startFracRef.current = startFrac;
+  endFracRef.current = endFrac;
+
   const {
     selectedSampleId,
     allSampleData,
@@ -19,11 +39,10 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     storeAudioInIndexedDB,
     getCachedAudioUrlFromIndexedDB,
   } = useAudioContext();
-  const [zoom, setZoom] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
+
   const { settings } = allSampleData[selectedSampleId];
 
-  // Refs to hold unstable context values so the init effect only re-runs when audioUrl changes
+  // Stable refs so the init effect only runs when audioUrl changes
   const selectedSampleIdRef = useRef(selectedSampleId);
   const getCachedRef = useRef(getCachedAudioUrlFromIndexedDB);
   const storeRef = useRef(storeAudioInIndexedDB);
@@ -34,182 +53,216 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     storeRef.current = storeAudioInIndexedDB;
   });
 
-  // Initialize WaveSurfer
+  // Canvas pixel width derived from zoom + duration
+  const containerWidth = containerRef.current?.clientWidth ?? 0;
+  const canvasPixelWidth =
+    zoom > 0 && duration > 0
+      ? Math.max(containerWidth, zoom * duration)
+      : containerWidth || undefined;
+
+  // Redraw canvas using cached peaks (no extractPeaks on zoom)
+  const redrawCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    const peaks = peaksRef.current;
+    if (!canvas || !peaks) return;
+    if (canvas.clientWidth < 1) return;
+    drawWaveform(canvas, peaks, "#2026D6");
+  }, []);
+
+  // Load audio on url change
   useEffect(() => {
-    if (!containerRef.current || !audioUrl) return;
+    setIsReady(false);
+    audioBufferRef.current = null;
+    setDuration(0);
 
-    waveSurferRef.current?.destroy();
+    if (!audioUrl) return;
 
-    regionsPluginRef.current = RegionsPlugin.create();
-    const wavesurfer = WaveSurfer.create({
-      container: containerRef.current,
-      waveColor: "blue",
-      interact: false,
-      height: 60,
-      barWidth: NaN,
-      backend: "WebAudio",
-      normalize: true,
-      plugins: [regionsPluginRef.current],
-    });
+    let cancelled = false;
 
-    waveSurferRef.current = wavesurfer;
-
-    const loadAudio = async () => {
+    const load = async () => {
       const cachedUrl = await getCachedRef.current(
         selectedSampleIdRef.current,
-        audioUrl
+        audioUrl,
       );
-
       if (!cachedUrl) {
-        storeRef.current(audioUrl, selectedSampleIdRef.current); // Cache it for next time
+        storeRef.current(audioUrl, selectedSampleIdRef.current);
       }
-      wavesurfer.load(cachedUrl ?? audioUrl).catch((error) => {
-        if (error.name !== "AbortError") {
-          console.warn("Error loading audio:", error);
-        }
-      });
+      const buffer = await decodeAudioUrl(cachedUrl ?? audioUrl);
+      if (cancelled) return;
+      audioBufferRef.current = buffer;
+      peaksRef.current = extractPeaks(buffer, PEAK_BINS, true);
+      setDuration(buffer.duration);
+      setIsReady(true);
     };
 
-    loadAudio();
-
-    wavesurfer.on("ready", () => {
-      setWaveSurferIsReady(true);
+    load().catch((err) => {
+      if (err?.name !== "AbortError") console.warn("Error loading audio:", err);
     });
 
     return () => {
-      setWaveSurferIsReady(false);
-      wavesurfer.destroy();
+      cancelled = true;
     };
   }, [audioUrl]);
 
-  // Update Region settings change
+  // Redraw when ready or zoom changes
   useEffect(() => {
-    const wavesurfer = waveSurferRef.current;
-    if (!wavesurfer) return;
+    if (isReady) redrawCanvas();
+  }, [isReady, redrawCanvas]);
 
-    let plugin = regionsPluginRef.current;
+  // Sync region fractions from settings when ready or settings change
+  useEffect(() => {
+    if (!isReady || duration === 0) return;
+    setStartFrac((settings.start ?? 0) / duration);
+    setEndFrac((settings.end != null ? settings.end : duration) / duration);
+  }, [isReady, duration, settings.start, settings.end]);
 
-    if (!plugin) {
-      plugin = RegionsPlugin.create();
-      regionsPluginRef.current = plugin;
-    }
-
-    // Clear any existing regions before adding to avoid stacking duplicates
-    plugin.getRegions().forEach((r) => r.remove());
-
-    const region = plugin.addRegion({
-      start: settings.start ?? 0,
-      end: settings.end ?? wavesurfer.getDuration(),
-      drag: true,
-      resize: true,
-      color: "rgba(255, 0, 0, 0.2)",
-    });
-
-    const handleUpdateEnd = () => {
-      updateSamplerStateSettings(selectedSampleId, {
-        start: region.start,
-        end: region.end,
-      });
-    };
-    region.on("update-end", handleUpdateEnd);
-
-    return () => {
-      region.un("update-end", handleUpdateEnd);
-    };
-  }, [
-    settings.start,
-    settings.end,
-    selectedSampleId,
-    updateSamplerStateSettings,
-    waveSurferIsReady,
-  ]);
-
-  // Reset zoom to zero when selectedSampleId changes
+  // Reset zoom when sample changes
   useEffect(() => {
     setZoom(0);
   }, [selectedSampleId]);
 
-  // Zoom functionality
+  // Scroll to center of region after zoom change
   useEffect(() => {
-    if (
-      !waveSurferRef.current ||
-      !scrollRef.current ||
-      !regionsPluginRef.current ||
-      !waveSurferIsReady
-    ) {
-      return;
-    }
+    if (!isReady || !containerRef.current) return;
+    redrawCanvas();
+    const scrollContainer = containerRef.current;
+    const canvasW = canvasRef.current?.clientWidth ?? scrollContainer.clientWidth;
+    const centerX = ((startFracRef.current + endFracRef.current) / 2) * canvasW;
+    scrollContainer.scrollLeft = Math.max(
+      centerX - scrollContainer.clientWidth / 2,
+      0,
+    );
+  }, [zoom, isReady, redrawCanvas]);
 
-    const ws = waveSurferRef.current;
-    const scrollContainer = scrollRef.current;
-    const plugin = regionsPluginRef.current;
-
-    // 🛡 Safeguard against race condition
-    if (!ws || !plugin || !scrollContainer || !waveSurferIsReady) return;
-
-    const duration = ws.getDuration();
-    if (!duration || isNaN(duration) || duration < 0.1) return;
-
-    try {
-      ws.zoom(zoom);
-    } catch (err) {
-      console.warn("Zoom failed — audio likely not fully loaded yet:", err);
-      return;
-    }
-
-    const regions = regionsPluginRef.current.getRegions();
-    const region = Object.values(regions)[0];
-    if (region) {
-      const duration = ws.getDuration();
-      const pixelPerSecond = zoom / duration;
-      const regionCenter = (region.start + region.end) / 2;
-      const centerX = regionCenter * pixelPerSecond;
-
-      const containerWidth = scrollContainer.clientWidth;
-      scrollContainer.scrollLeft = Math.max(centerX - containerWidth / 2, 0);
-    }
-  }, [zoom, waveSurferIsReady]);
-
-  // Handle pinch/zoom with two-finger gesture
+  // Pinch-to-zoom via ctrl+wheel (on window so container scroll stays native)
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      // Check for two-finger pinch/zoom gesture
-      if (e.ctrlKey) {
-        e.preventDefault(); // prevent zooming the page
-        if (e.deltaY < 0) {
-          // Zoom in
-          setZoom((prev) => Math.min(prev + 5, 1000)); // Optional max
-        } else if (e.deltaY > 0) {
-          // Zoom out
-          setZoom((prev) => Math.max(prev - 5, 0)); // Optional min
-        }
-      }
+      if (!e.ctrlKey) return;
+      if (!containerRef.current?.contains(e.target as Node)) return;
+      e.preventDefault();
+      setZoom((prev) =>
+        e.deltaY < 0 ? Math.min(prev + 5, 1000) : Math.max(prev - 5, 0),
+      );
     };
-
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener("wheel", handleWheel, { passive: false });
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("wheel", handleWheel);
-      }
-    };
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    return () => window.removeEventListener("wheel", handleWheel);
   }, []);
+
+  // Region drag handlers
+  const dragState = useRef<{
+    handle: "start" | "end";
+    startX: number;
+    startFrac: number;
+  } | null>(null);
+
+  const onHandlePointerDown = useCallback(
+    (e: React.PointerEvent, handle: "start" | "end") => {
+      e.currentTarget.setPointerCapture(e.pointerId);
+      dragState.current = {
+        handle,
+        startX: e.clientX,
+        startFrac: handle === "start" ? startFrac : endFrac,
+      };
+    },
+    [startFrac, endFrac],
+  );
+
+  const onHandlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!dragState.current || !canvasRef.current) return;
+      const canvasW = canvasRef.current.clientWidth;
+      const delta = (e.clientX - dragState.current.startX) / canvasW;
+      const newFrac = Math.max(
+        0,
+        Math.min(1, dragState.current.startFrac + delta),
+      );
+      if (dragState.current.handle === "start") {
+        setStartFrac(Math.min(newFrac, endFrac - 0.01));
+      } else {
+        setEndFrac(Math.max(newFrac, startFrac + 0.01));
+      }
+    },
+    [startFrac, endFrac],
+  );
+
+  const onHandlePointerUp = useCallback(() => {
+    if (!dragState.current || duration === 0) return;
+    const newStart =
+      dragState.current.handle === "start"
+        ? startFrac * duration
+        : (settings.start ?? 0);
+    const newEnd =
+      dragState.current.handle === "end"
+        ? endFrac * duration
+        : (settings.end ?? duration);
+    updateSamplerStateSettings(selectedSampleId, {
+      start: newStart,
+      end: newEnd,
+    });
+    dragState.current = null;
+  }, [
+    startFrac,
+    endFrac,
+    duration,
+    selectedSampleId,
+    settings.start,
+    settings.end,
+    updateSamplerStateSettings,
+  ]);
 
   return (
     <div className="flex w-full px-3 justify-center mb-2">
-      {/* Border wrapper */}
+      {/* Scrollable border wrapper */}
       <div
-        className="border border-slate-600 w-full overflow-hidden"
-        ref={scrollRef}
+        className="border border-slate-600 w-full overflow-x-auto"
+        ref={containerRef}
       >
-        <div className="w-full">
-          <div
-            ref={containerRef}
-            className="cursor-pointer bg-stone-50 shadow-inner shadow-slate-700 w-full box-border"
+        <div
+          className="relative"
+          ref={wrapperRef}
+          style={{
+            width: canvasPixelWidth,
+            background: `linear-gradient(to right, #ffffff ${startFrac * 100}%, #ffe8e8 ${startFrac * 100}%, #ffe8e8 ${endFrac * 100}%, #ffffff ${endFrac * 100}%)`,
+          }}
+        >
+          <canvas
+            ref={canvasRef}
+            height={60}
+            className="block w-full shadow-inner shadow-slate-900"
+            style={{ height: 60 }}
           />
+          {isReady && (
+            <>
+              {/* Left handle */}
+              <div
+                className="absolute top-0 h-full z-10"
+                style={{
+                  left: `${startFrac * 100}%`,
+                  width: 2,
+                  cursor: "ew-resize",
+                  background: "rgba(255,0,0,0.85)",
+                  transform: "translateX(-50%)",
+                }}
+                onPointerDown={(e) => onHandlePointerDown(e, "start")}
+                onPointerMove={onHandlePointerMove}
+                onPointerUp={onHandlePointerUp}
+              />
+              {/* Right handle */}
+              <div
+                className="absolute top-0 h-full z-10"
+                style={{
+                  left: `${endFrac * 100}%`,
+                  width: 2,
+                  cursor: "ew-resize",
+                  background: "rgba(255,0,0,0.85)",
+                  transform: "translateX(-50%)",
+                }}
+                onPointerDown={(e) => onHandlePointerDown(e, "end")}
+                onPointerMove={onHandlePointerMove}
+                onPointerUp={onHandlePointerUp}
+              />
+            </>
+          )}
         </div>
       </div>
 
@@ -217,12 +270,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
       <div className="flex flex-col items-center my-auto space-y-2 ml-2">
         <button
           onClick={() => {
-            let zoomDiff;
-            if (zoom === 0) {
-              zoomDiff = 100;
-            } else {
-              zoomDiff = 20;
-            }
+            const zoomDiff = zoom === 0 ? 100 : 20;
             setZoom((prev) => Math.min(prev + zoomDiff, 1000));
           }}
           disabled={zoom >= 1000}

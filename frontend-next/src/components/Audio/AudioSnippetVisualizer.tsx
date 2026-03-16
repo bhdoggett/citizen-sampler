@@ -1,5 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
-import WaveSurfer from "wavesurfer.js";
+import React, { useEffect, useRef } from "react";
+import {
+  decodeAudioUrl,
+  extractPeaks,
+  drawWaveform,
+} from "../../lib/audio/decodeAudio";
 
 type AudioSnippetVisualizerProps = {
   url: string;
@@ -8,62 +12,27 @@ type AudioSnippetVisualizerProps = {
 const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
   url,
 }) => {
-  const waveformRef = useRef<HTMLDivElement | null>(null);
-  const wavesurferRef = useRef<WaveSurfer | null>(null);
-  const [duration, setDuration] = useState(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // (Re)load waveform on URL change
   useEffect(() => {
-    if (!url || !waveformRef.current) return;
-
-    // Destroy old instance
-    wavesurferRef.current?.destroy();
-
-    // Create new instance
-    const wave = WaveSurfer.create({
-      container: waveformRef.current,
-      waveColor: "#ccc",
-      progressColor: "#ccc",
-      cursorWidth: 0,
-      height: 20,
-      normalize: false,
-    });
-
-    wavesurferRef.current = wave;
-    wave.load(url).catch((error) => {
-      if (error.name === "AbortError") {
-        console.log("Audio load aborted - component unmounted or URL changed");
-      } else {
-        console.warn("Error loading audio:", error);
-      }
-    });
-
-    wave.on("ready", () => {
-      setDuration(wave.getDuration());
-    });
-
+    if (!url || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    let cancelled = false;
+    decodeAudioUrl(url)
+      .then((buffer) => {
+        if (cancelled || !canvas) return;
+        const peaks = extractPeaks(buffer, canvas.clientWidth || 100, false);
+        drawWaveform(canvas, peaks, "#ccc");
+      })
+      .catch(console.warn);
     return () => {
-      wave.destroy();
+      cancelled = true;
     };
   }, [url]);
 
   return (
     <div className="relative w-full mt-2" style={{ minHeight: "1px" }}>
-      <div ref={waveformRef} className="w-full" />
-      {duration > 0 && (
-        <div
-          className="absolute top-0 pointer-events-none transition-all"
-          style={
-            {
-              height: "100%",
-              mixBlendMode: "multiply",
-              WebkitMixBlendMode: "multiply",
-              transform: "translateZ(0)", // Force hardware acceleration on Safari
-              WebkitTransform: "translateZ(0)",
-            } as React.CSSProperties
-          }
-        />
-      )}
+      <canvas ref={canvasRef} className="w-full" style={{ height: 20 }} />
     </div>
   );
 };
