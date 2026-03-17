@@ -70,6 +70,11 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
 
     hasReleasedRef.current = false;
     sampler.triggerAttack(noteToPlay, now, start, 1);
+    const samplerObj = samplersRef.current[padId];
+    if (samplerObj) {
+      samplerObj.triggerTime = now;
+      samplerObj.currentEvent.note = noteToPlay;
+    }
     setSelectedSampleId(padId);
     setIsPressed(true);
 
@@ -79,6 +84,8 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
           sampler.triggerRelease(noteToPlay, Tone.now());
+          const s = samplersRef.current[padId];
+          if (s) s.triggerTime = null;
           setIsPressed(false);
         }
       }, duration * 1000);
@@ -116,6 +123,8 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     hasReleasedRef.current = true;
     setIsPressed(false);
     sampler.triggerRelease(noteToPlay, Tone.now());
+    const samplerObj = samplersRef.current[padId];
+    if (samplerObj) samplerObj.triggerTime = null;
 
     if (!currentEvent.current.startTime || !loopIsPlaying || !isRecording)
       return;

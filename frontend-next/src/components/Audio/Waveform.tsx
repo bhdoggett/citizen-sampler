@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import {
   decodeAudioUrl,
   extractPeaks,
   drawWaveform,
 } from "../../lib/audio/decodeAudio";
+import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 
 type WaveformProps = {
   audioUrl: string;
@@ -25,6 +27,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   // Region fractions (0–1) derived from settings
   const [startFrac, setStartFrac] = useState(0);
   const [endFrac, setEndFrac] = useState(1);
+  const [isRegionDragging, setIsRegionDragging] = useState(false);
 
   // Refs so zoom effect can read fracs without them as deps
   const startFracRef = useRef(startFrac);
@@ -38,9 +41,18 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     updateSamplerStateSettings,
     storeAudioInIndexedDB,
     getCachedAudioUrlFromIndexedDB,
+    samplersRef,
   } = useAudioContext();
 
   const { settings } = allSampleData[selectedSampleId];
+
+  // Playhead
+  const playheadRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
+  const durationRef = useRef(duration);
+  durationRef.current = duration;
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
 
   // Stable refs so the init effect only runs when audioUrl changes
   const selectedSampleIdRef = useRef(selectedSampleId);
@@ -148,11 +160,48 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     return () => window.removeEventListener("wheel", handleWheel);
   }, []);
 
+  // Playhead rAF loop — direct DOM mutation, no re-renders
+  useEffect(() => {
+    const tick = () => {
+      rafRef.current = requestAnimationFrame(tick);
+      const el = playheadRef.current;
+      if (!el) return;
+
+      const sampler = samplersRef.current[selectedSampleId];
+      const triggerTime = sampler?.triggerTime;
+      if (triggerTime == null || durationRef.current === 0) {
+        el.style.display = "none";
+        return;
+      }
+
+      const playedNote = sampler.currentEvent.note;
+      const rate = playedNote ? calcPlaybackRate(playedNote as Tone.Unit.Frequency) : 1;
+      const elapsed = (Tone.now() - triggerTime) * rate;
+      const s = settingsRef.current;
+      const sampleStart = s.start ?? 0;
+      const sampleEnd = s.end ?? durationRef.current;
+      const sampleDur = sampleEnd - sampleStart;
+
+      if (elapsed < 0 || elapsed > sampleDur) {
+        el.style.display = "none";
+        return;
+      }
+
+      const frac = (sampleStart + elapsed) / durationRef.current;
+      el.style.display = "block";
+      el.style.left = `${frac * 100}%`;
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [selectedSampleId, samplersRef]);
+
   // Region drag handlers
   const dragState = useRef<{
-    handle: "start" | "end";
+    handle: "start" | "end" | "region";
     startX: number;
     startFrac: number;
+    startEndFrac?: number; // region drag only
   } | null>(null);
 
   const onHandlePointerDown = useCallback(
@@ -167,19 +216,37 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     [startFrac, endFrac],
   );
 
+  const onRegionPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      e.currentTarget.setPointerCapture(e.pointerId);
+      dragState.current = {
+        handle: "region",
+        startX: e.clientX,
+        startFrac,
+        startEndFrac: endFrac,
+      };
+      setIsRegionDragging(true);
+    },
+    [startFrac, endFrac],
+  );
+
   const onHandlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!dragState.current || !canvasRef.current) return;
       const canvasW = canvasRef.current.clientWidth;
       const delta = (e.clientX - dragState.current.startX) / canvasW;
-      const newFrac = Math.max(
-        0,
-        Math.min(1, dragState.current.startFrac + delta),
-      );
-      if (dragState.current.handle === "start") {
-        setStartFrac(Math.min(newFrac, endFrac - 0.01));
+      if (dragState.current.handle === "region") {
+        const width = dragState.current.startEndFrac! - dragState.current.startFrac;
+        const newStart = Math.max(0, Math.min(1 - width, dragState.current.startFrac + delta));
+        setStartFrac(newStart);
+        setEndFrac(newStart + width);
       } else {
-        setEndFrac(Math.max(newFrac, startFrac + 0.01));
+        const newFrac = Math.max(0, Math.min(1, dragState.current.startFrac + delta));
+        if (dragState.current.handle === "start") {
+          setStartFrac(Math.min(newFrac, endFrac - 0.01));
+        } else {
+          setEndFrac(Math.max(newFrac, startFrac + 0.01));
+        }
       }
     },
     [startFrac, endFrac],
@@ -187,19 +254,17 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
 
   const onHandlePointerUp = useCallback(() => {
     if (!dragState.current || duration === 0) return;
+    const handle = dragState.current.handle;
     const newStart =
-      dragState.current.handle === "start"
-        ? startFrac * duration
-        : (settings.start ?? 0);
+      handle === "end" ? (settings.start ?? 0) : startFrac * duration;
     const newEnd =
-      dragState.current.handle === "end"
-        ? endFrac * duration
-        : (settings.end ?? duration);
+      handle === "start" ? (settings.end ?? duration) : endFrac * duration;
     updateSamplerStateSettings(selectedSampleId, {
       start: newStart,
       end: newEnd,
     });
     dragState.current = null;
+    setIsRegionDragging(false);
   }, [
     startFrac,
     endFrac,
@@ -222,7 +287,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
           ref={wrapperRef}
           style={{
             width: canvasPixelWidth,
-            background: `linear-gradient(to right, #ffffff ${startFrac * 100}%, #ffe8e8 ${startFrac * 100}%, #ffe8e8 ${endFrac * 100}%, #ffffff ${endFrac * 100}%)`,
+            background: `linear-gradient(to right, #ffffff ${startFrac * 100}%, #ffc8c8 ${startFrac * 100}%, #ffc8c8 ${endFrac * 100}%, #ffffff ${endFrac * 100}%)`,
           }}
         >
           <canvas
@@ -233,6 +298,18 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
           />
           {isReady && (
             <>
+              {/* Draggable region */}
+              <div
+                className="absolute top-0 h-full z-5"
+                style={{
+                  left: `${startFrac * 100}%`,
+                  width: `${(endFrac - startFrac) * 100}%`,
+                  cursor: isRegionDragging ? "grabbing" : "grab",
+                }}
+                onPointerDown={onRegionPointerDown}
+                onPointerMove={onHandlePointerMove}
+                onPointerUp={onHandlePointerUp}
+              />
               {/* Left handle */}
               <div
                 className="absolute top-0 h-full z-10"
@@ -240,7 +317,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
                   left: `${startFrac * 100}%`,
                   width: 2,
                   cursor: "ew-resize",
-                  background: "rgba(255,0,0,0.85)",
+                  background: "rgba(0,0,0,0.85)",
                   transform: "translateX(-50%)",
                 }}
                 onPointerDown={(e) => onHandlePointerDown(e, "start")}
@@ -254,7 +331,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
                   left: `${endFrac * 100}%`,
                   width: 2,
                   cursor: "ew-resize",
-                  background: "rgba(255,0,0,0.85)",
+                  background: "rgba(0,0,0,0.85)",
                   transform: "translateX(-50%)",
                 }}
                 onPointerDown={(e) => onHandlePointerDown(e, "end")}
@@ -263,6 +340,17 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
               />
             </>
           )}
+          {/* Playhead */}
+          <div
+            ref={playheadRef}
+            className="absolute top-0 h-full pointer-events-none z-20"
+            style={{
+              display: "none",
+              width: 2,
+              background: "rgba(255, 0, 0, 0.85)",
+              transform: "translateX(-50%)",
+            }}
+          />
         </div>
       </div>
 

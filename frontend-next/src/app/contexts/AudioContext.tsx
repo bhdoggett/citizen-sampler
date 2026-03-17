@@ -373,6 +373,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
                 note: "C4",
                 velocity: 1,
               },
+              triggerTime: null,
             };
 
             await Tone.loaded();

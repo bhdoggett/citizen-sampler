@@ -12,4 +12,5 @@ export type SamplerWithFX = {
   lowpass: Tone.Filter;
   analyser: Tone.Analyser;
   currentEvent: SampleEventFE;
+  triggerTime: number | null;
 };

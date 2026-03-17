@@ -32,6 +32,7 @@ const PitchPad = forwardRef(function PitchPad(
     loopIsPlaying,
     isRecording,
     currentLoop,
+    samplersRef,
   } = useAudioContext();
   const { activeMidiNotes } = useMidiContext();
   const currentEvent = useRef<SampleEventFE | null>(null);
@@ -79,6 +80,11 @@ const PitchPad = forwardRef(function PitchPad(
 
     hasReleasedRef.current = false;
     sampler.triggerAttack(playNote, now, start, 1);
+    const samplerObj = samplersRef.current[selectedSampleId];
+    if (samplerObj) {
+      samplerObj.triggerTime = Tone.now();
+      samplerObj.currentEvent.note = playNote;
+    }
     setPitchIsPlaying(true);
 
     if (end) {
@@ -87,6 +93,8 @@ const PitchPad = forwardRef(function PitchPad(
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
           sampler.triggerRelease(playNote, Tone.now());
+          const s = samplersRef.current[selectedSampleId];
+          if (s) s.triggerTime = null;
           setPitchIsPlaying(false);
         }
       }, duration * 1000);
@@ -121,6 +129,8 @@ const PitchPad = forwardRef(function PitchPad(
     const { baseNote } = allSampleData[selectedSampleId].settings;
     const playNote = lastPlayNoteRef.current ?? resolvePlayNote(note, String(baseNote));
     sampler.triggerRelease(playNote, Tone.now());
+    const samplerObj = samplersRef.current[selectedSampleId];
+    if (samplerObj) samplerObj.triggerTime = null;
 
     if (!currentEvent.current?.startTime) return;
 
