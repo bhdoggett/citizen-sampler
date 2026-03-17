@@ -37,6 +37,7 @@ const DrumPad = forwardRef(function DrumPad(
     setSelectedSampleId,
     selectedSampleId,
     currentLoop,
+    samplersRef,
   } = useAudioContext();
   const partRef = useRef<Tone.Part | null>(null);
   const [isSelected, setIsSelected] = useState(false);
@@ -72,6 +73,11 @@ const DrumPad = forwardRef(function DrumPad(
 
     hasReleasedRef.current = false;
     sampler.triggerAttack(playNote, now, start, 1);
+    const samplerObj = samplersRef.current[id];
+    if (samplerObj) {
+      samplerObj.triggerTime = now;
+      samplerObj.currentEvent.note = playNote;
+    }
     setSelectedSampleId(id);
     setIsSelected(true);
     setSampleIsPlaying(true);
@@ -82,6 +88,8 @@ const DrumPad = forwardRef(function DrumPad(
         if (!hasReleasedRef.current) {
           hasReleasedRef.current = true;
           sampler.triggerRelease(playNote, Tone.now());
+          const s = samplersRef.current[id];
+          if (s) s.triggerTime = null;
           setSampleIsPlaying(false);
         }
       }, duration * 1000);
@@ -100,6 +108,7 @@ const DrumPad = forwardRef(function DrumPad(
     isRecording,
     loopIsPlaying,
     sampler,
+    samplersRef,
     setSelectedSampleId,
   ]);
 
@@ -120,6 +129,8 @@ const DrumPad = forwardRef(function DrumPad(
     // Transpose relative to C4 reference — see resolvePlayNote.ts
     const playNote = resolvePlayNote(String(baseNote), String(baseNote));
     sampler.triggerRelease(playNote, Tone.now());
+    const samplerObj = samplersRef.current[id];
+    if (samplerObj) samplerObj.triggerTime = null;
 
     if (!currentEvent.current.startTime || !loopIsPlaying || !isRecording)
       return;
@@ -285,9 +296,16 @@ const DrumPad = forwardRef(function DrumPad(
           start,
           event.velocity
         );
+        const s = samplersRef.current[id];
+        if (s) {
+          s.triggerTime = time;
+          s.currentEvent.note = event.note;
+        }
         setSampleIsPlaying(true);
 
         setTimeout(() => {
+          const s = samplersRef.current[id];
+          if (s) s.triggerTime = null;
           setSampleIsPlaying(false);
         }, actualDuration * 1000);
       }
