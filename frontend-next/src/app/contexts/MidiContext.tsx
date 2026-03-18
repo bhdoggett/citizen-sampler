@@ -59,7 +59,11 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
     // Transpose relative to C4 reference — see resolvePlayNote.ts
     const playNote = resolvePlayNote(note, String(baseNote));
     const triggerNow = Tone.now();
-    sampler.triggerAttack(playNote, triggerNow, start, velocity);
+    const bufDuration = sampler.bufferDuration;
+    const offset = allSampleData[selectedSampleId].settings.reverse
+      ? bufDuration - (end ?? bufDuration)
+      : start;
+    sampler.triggerAttack(playNote, triggerNow, offset, velocity);
     samplerWithFX.triggerTime = triggerNow;
     samplerWithFX.currentEvent.note = playNote;
 
@@ -98,6 +102,7 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
   const onNoteOff = (note: string) => {
     const samplerWithFX = samplersRef.current[selectedSampleId];
     if (!samplerWithFX) return;
+    if (allSampleData[selectedSampleId].settings.oneShot) return;
 
     const { sampler } = samplerWithFX;
 

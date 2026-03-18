@@ -78,15 +78,20 @@ const useDownloadWavStems = () => {
           event.duration !== null
         ) {
           const sampleDuration = end ? (end - start) / calcPlaybackRate(event.note) : null;
-          const actualDuration =
-            sampleDuration !== null
+          const actualDuration = settings.oneShot
+            ? (sampleDuration ?? 999)
+            : sampleDuration !== null
               ? Math.min(sampleDuration, event.duration)
               : event.duration;
+          const bufDuration = sampler.bufferDuration;
+          const offset = settings.reverse
+            ? bufDuration - (end ?? bufDuration)
+            : start;
           sampler.triggerAttackRelease(
             event.note,
             actualDuration,
             time,
-            start,
+            offset,
             event.velocity
           );
         }

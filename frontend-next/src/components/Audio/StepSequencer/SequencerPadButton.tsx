@@ -69,7 +69,11 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     lastPlayNoteRef.current = noteToPlay;
 
     hasReleasedRef.current = false;
-    sampler.triggerAttack(noteToPlay, now, start, 1);
+    const bufDuration = sampler.bufferDuration;
+    const offset = allSampleData[padId].settings.reverse
+      ? bufDuration - (end ?? bufDuration)
+      : start;
+    sampler.triggerAttack(noteToPlay, now, offset, 1);
     const samplerObj = samplersRef.current[padId];
     if (samplerObj) {
       samplerObj.triggerTime = now;
@@ -110,6 +114,7 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
   const handleRelease = useCallback(() => {
     const sampler = samplersRef.current[padId]?.sampler;
     if (!sampler || !isPressed) return;
+    if (allSampleData[padId].settings.oneShot) return;
 
     if (scheduledReleaseTimeoutRef.current) {
       clearTimeout(scheduledReleaseTimeoutRef.current);

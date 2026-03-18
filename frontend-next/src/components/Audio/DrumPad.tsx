@@ -44,6 +44,8 @@ const DrumPad = forwardRef(function DrumPad(
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
+  const settingsRef = useRef(allSampleData[id]?.settings);
+  useEffect(() => { settingsRef.current = allSampleData[id]?.settings; }, [allSampleData, id]);
   const { baseNote } = allSampleData[id]?.settings;
   const { hotKeysActive } = useUIContext();
   const { activeMidiNotes } = useMidiContext();
@@ -72,7 +74,11 @@ const DrumPad = forwardRef(function DrumPad(
     const playNote = resolvePlayNote(String(baseNote), String(baseNote));
 
     hasReleasedRef.current = false;
-    sampler.triggerAttack(playNote, now, start, 1);
+    const bufDuration = sampler.bufferDuration;
+    const offset = allSampleData[id].settings.reverse
+      ? bufDuration - (end ?? bufDuration)
+      : start;
+    sampler.triggerAttack(playNote, now, offset, 1);
     const samplerObj = samplersRef.current[id];
     if (samplerObj) {
       samplerObj.triggerTime = now;
@@ -115,6 +121,7 @@ const DrumPad = forwardRef(function DrumPad(
   const handleRelease = useCallback(() => {
     // const currentEvent = getCurrentEvent();
     if (!sampler) return;
+    if (allSampleData[id].settings.oneShot) return;
 
     if (!sampleIsPlaying) return;
 
@@ -275,7 +282,7 @@ const DrumPad = forwardRef(function DrumPad(
 
     partRef.current = new Tone.Part((time, event) => {
       if (!sampler) return;
-      const { start, end } = allSampleData[id].settings;
+      const { start, end, oneShot } = settingsRef.current;
 
       if (
         typeof event === "object" &&
@@ -284,16 +291,21 @@ const DrumPad = forwardRef(function DrumPad(
         event.duration !== null
       ) {
         const sampleDuration = end ? (end - start) / calcPlaybackRate(event.note) : null;
-        const actualDuration =
-          sampleDuration !== null
+        const actualDuration = oneShot
+          ? (sampleDuration ?? 999)
+          : sampleDuration !== null
             ? Math.min(sampleDuration, event.duration)
             : event.duration;
 
+        const bufDuration = sampler.bufferDuration;
+        const offset = settingsRef.current.reverse
+          ? bufDuration - (end ?? bufDuration)
+          : start;
         sampler.triggerAttackRelease(
           event.note,
           actualDuration,
           time,
-          start,
+          offset,
           event.velocity
         );
         const s = samplersRef.current[id];

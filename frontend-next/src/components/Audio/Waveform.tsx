@@ -187,7 +187,9 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
         return;
       }
 
-      const frac = (sampleStart + elapsed) / durationRef.current;
+      const frac = settingsRef.current?.reverse
+        ? (sampleEnd - elapsed) / durationRef.current
+        : (sampleStart + elapsed) / durationRef.current;
       el.style.display = "block";
       el.style.left = `${frac * 100}%`;
     };

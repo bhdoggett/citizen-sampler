@@ -490,6 +490,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     panVol.pan.value = settings.pan || 0;
     highpass.frequency.value = settings.highpass[0] || 0;
     lowpass.frequency.value = settings.lowpass[0] || 200;
+    sampler.setReverse(settings.reverse ?? false);
   };
 
   const loadSamplersToRef = async (

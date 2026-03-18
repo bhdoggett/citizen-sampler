@@ -89,6 +89,7 @@ const SampleSettings = () => {
       const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
       sampler.attack = settings?.attack || 0;
       sampler.release = settings?.release || 0;
+      sampler.setReverse(settings?.reverse ?? false);
       pitch.pitch = settings?.pitch || 0;
       panVol.volume.value = settings?.volume || 0;
       panVol.pan.value = settings?.pan || 0;
@@ -366,6 +367,20 @@ const SampleSettings = () => {
                       onClick={handleToggleSolo}
                     >
                       S
+                    </button>
+                    <button
+                      className={`border shadow-inner shadow-slate-600 border-black px-1 mx-1 ${settings.oneShot ? "bg-blue-300" : ""}`}
+                      onClick={() => updateSetting("oneShot", !settings.oneShot)}
+                      title="One shot — always play full clip"
+                    >
+                      1S
+                    </button>
+                    <button
+                      className={`border shadow-inner shadow-slate-600 border-black px-1 mx-1 ${settings.reverse ? "bg-red-300" : ""}`}
+                      onClick={() => updateSetting("reverse", !settings.reverse)}
+                      title="Reverse playback"
+                    >
+                      REV
                     </button>
                     <button
                       onClick={() => {

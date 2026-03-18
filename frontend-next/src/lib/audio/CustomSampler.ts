@@ -373,6 +373,25 @@ export class CustomSampler extends Instrument<CustomSamplerOptions> {
   }
 
   /**
+   * Expose loaded buffer duration for reverse offset calculation
+   */
+  get bufferDuration(): number {
+    if (this._buffers.has(60 as MidiNote)) {
+      return this._buffers.get(60 as MidiNote).duration;
+    }
+    return 0;
+  }
+
+  /**
+   * Set reversal state on the loaded buffer (idempotent via ToneAudioBuffer.reverse setter)
+   */
+  setReverse(shouldReverse: boolean): void {
+    if (this._buffers.has(60 as MidiNote)) {
+      this._buffers.get(60 as MidiNote).reverse = shouldReverse;
+    }
+  }
+
+  /**
    * Clean up
    */
   dispose(): this {

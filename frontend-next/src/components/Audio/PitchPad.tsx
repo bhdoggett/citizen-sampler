@@ -79,7 +79,11 @@ const PitchPad = forwardRef(function PitchPad(
     lastPlayNoteRef.current = playNote;
 
     hasReleasedRef.current = false;
-    sampler.triggerAttack(playNote, now, start, 1);
+    const bufDuration = sampler.bufferDuration;
+    const offset = allSampleData[selectedSampleId].settings.reverse
+      ? bufDuration - (end ?? bufDuration)
+      : start;
+    sampler.triggerAttack(playNote, now, offset, 1);
     const samplerObj = samplersRef.current[selectedSampleId];
     if (samplerObj) {
       samplerObj.triggerTime = Tone.now();
@@ -116,6 +120,7 @@ const PitchPad = forwardRef(function PitchPad(
 
   const handleRelease = () => {
     if (!sampler) return;
+    if (allSampleData[selectedSampleId].settings.oneShot) return;
 
     // Stop scheduled release
     if (scheduledReleaseTimeoutRef.current) {
