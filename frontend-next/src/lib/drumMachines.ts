@@ -289,3 +289,29 @@ export const getKitSampleTitle = (fileName: string) => {
   const title = fileName.split(".")[0].split("__")[1].replace("_", " ");
   return title;
 };
+
+const DRUM_BASE_URL = (process.env.NEXT_PUBLIC_DRUM_BASE_URL ?? "").replace(
+  /\/+$/,
+  ""
+);
+
+export const drumUrl = (fileName: string) =>
+  `${DRUM_BASE_URL}/${encodeURIComponent(fileName)}`;
+
+// Songs saved before the move to R2 store drum URLs that point at the old
+// backend proxy route (`<api>/beats/drums/<file>`). Rewrite them to the bucket.
+const LEGACY_DRUM_PATH = "/beats/drums/";
+
+export const migrateDrumUrls = <T extends { url: string }>(
+  samples: Record<string, T>
+): Record<string, T> =>
+  Object.fromEntries(
+    Object.entries(samples).map(([id, sample]) => {
+      const index = sample.url?.indexOf(LEGACY_DRUM_PATH) ?? -1;
+      if (index === -1) return [id, sample];
+      const fileName = decodeURIComponent(
+        sample.url.slice(index + LEGACY_DRUM_PATH.length)
+      );
+      return [id, { ...sample, url: drumUrl(fileName) }];
+    })
+  );

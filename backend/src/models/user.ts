@@ -1,5 +1,4 @@
-import { Schema, Types, model, Document, HydratedDocument } from "mongoose";
-import { SongTypeBE } from "../types/SongTypeBE";
+import { Schema, Types, model, HydratedDocument } from "mongoose";
 
 export type UserType = {
   username?: string;
@@ -33,7 +32,7 @@ export const UserSchema = new Schema<UserType>({
   },
   password: {
     type: String,
-    required: function () {
+    required: function (this: UserType): boolean {
       return !this.googleId;
     },
   },

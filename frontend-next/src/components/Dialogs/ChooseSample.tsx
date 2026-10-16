@@ -12,12 +12,12 @@ import {
   drumMachineNames,
   getDrumMachineKeyByName,
   getKitSampleTitle,
+  drumUrl,
 } from "src/lib/drumMachines";
 import { useUIContext } from "src/app/contexts/UIContext";
 import { getTitle } from "../../lib/getTitle";
 import { SampleTypeFE } from "src/types/audioTypesFE";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const ChooseSample: React.FC = () => {
   const {
@@ -50,20 +50,10 @@ const ChooseSample: React.FC = () => {
     }
 
     if (type === "kit") {
-      currentPlayer.current = new Tone.Player(
-        `${API_BASE_URL}/beats/drums/${url}`
-      ).toDestination();
+      currentPlayer.current = new Tone.Player(drumUrl(url)).toDestination();
     }
     if (currentPlayer.current) currentPlayer.current.autostart = true;
   };
-
-  // const playKitSample = (fileName: string) => {
-  //   stopAndDisposePlayer();
-  //   currentPlayer.current = new Tone.Player(
-  //     `${API_BASE_URL}/drums/${fileName}`
-  //   ).toDestination();
-  //   currentPlayer.current.autostart = true;
-  // };
 
   // For populating the samples menu
   const formatLocSampleName = (url?: string) => {
@@ -100,7 +90,7 @@ const ChooseSample: React.FC = () => {
     const url =
       type === "loc"
         ? sampleSource
-        : `${API_BASE_URL}/beats/drums/${sampleSource}`;
+        : drumUrl(sampleSource);
     const existing = allSampleData[selectedSampleId];
     if (!existing) return;
 

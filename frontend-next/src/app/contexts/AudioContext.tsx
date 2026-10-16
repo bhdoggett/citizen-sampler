@@ -20,12 +20,12 @@ import {
   drumMachines,
   DrumMachineId,
   getKitSampleTitle,
+  drumUrl,
+  migrateDrumUrls,
 } from "../../lib/drumMachines";
 import { set, get } from "idb-keyval"; // for IndexedDB storage
 import dotenv from "dotenv";
 dotenv.config();
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 type AudioContextType = {
   songTitle: string;
@@ -256,7 +256,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       if (!fileName) {
         throw new Error(`No ${type} sample found for machine ${machineId}`);
       }
-      const url = `${API_BASE_URL}/beats/drums/${fileName}`;
+      const url = drumUrl(fileName);
       const collection = drumMachines[machineId].name;
       const title = getKitSampleTitle(fileName);
 
@@ -442,7 +442,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   >(() => {
     const savedSamples = localStorage.getItem("samples");
     return savedSamples
-      ? JSON.parse(savedSamples)
+      ? migrateDrumUrls(JSON.parse(savedSamples))
       : {
           ...initLocSamplesFromAllCollections(),
           ...initKitSamples("mpc"),

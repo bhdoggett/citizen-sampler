@@ -1,43 +1,31 @@
-import express from "express";
-import passport from "passport";
-import cors from "cors";
+import { serve } from "@hono/node-server";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
 import mongoose from "mongoose";
-import auth from "./routes/auth";
-import keys from "./config/keys";
-import beats from "./routes/beats";
-import dotenv from "dotenv";
-dotenv.config();
+import { env } from "./env.js";
+import auth from "./routes/auth.js";
+import beats from "./routes/beats.js";
 
-const app = express();
+const app = new Hono();
 
-app.use(cors());
+app.use(logger());
+app.use(cors({ origin: env.FRONTEND_URL }));
 
-const PORT = process.env.PORT || 8000;
+app.get("/health", (c) =>
+  c.json({ ok: true, db: mongoose.connection.readyState === 1 })
+);
+app.route("/auth", auth);
+app.route("/beats", beats);
 
-app.use(passport.initialize());
-app.use(express.json());
-app.use("/auth", auth);
-app.use("/beats", beats);
-
-if (!keys.MONGO_URI) {
-  throw new Error("Missing MONGO_URI in environment variables");
-}
-
-mongoose.connect(keys.MONGO_URI);
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", () => {
-  console.log("Connected to MongoDB");
+app.onError((err, c) => {
+  console.error(err);
+  return c.json({ message: "Internal server error" }, 500);
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+await mongoose.connect(env.MONGO_URI);
+console.log("Connected to MongoDB");
 
-app.get("/test", (req, res) => {
-  res.send("Hello Test!");
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+serve({ fetch: app.fetch, port: env.PORT }, (info) => {
+  console.log(`Server is running on port ${info.port}`);
 });

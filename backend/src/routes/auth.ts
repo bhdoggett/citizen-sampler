@@ -1,264 +1,144 @@
-import express, { Request, Response, NextFunction } from "express";
-import passport from "passport";
-import jwt from "jsonwebtoken";
-import User, { UserDoc } from "../models/user";
-import bcrypt from "bcryptjs";
-import { Resend } from "resend";
-import dotenv from "dotenv";
-import keys from "../config/keys";
-import "../strategies/jwt";
-import "../strategies/local";
-import "../strategies/google";
-dotenv.config();
+import { Hono } from "hono";
+import { getCookie, setCookie, deleteCookie } from "hono/cookie";
+import { sign, verify } from "hono/jwt";
+import User from "../models/user.js";
+import { env } from "../env.js";
 
-const syncIndexes = async () => {
-  await User.syncIndexes();
+const auth = new Hono();
+
+const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
+const STATE_COOKIE = "oauth_state";
+const TOKEN_TTL_SECONDS = 60 * 60 * 24;
+
+const callbackUrl = () => `${env.BACKEND_BASE_URL}/auth/google/callback`;
+
+type GoogleProfile = {
+  sub: string;
+  email?: string;
+  email_verified?: boolean;
+  name?: string;
 };
 
-syncIndexes();
-
-const { FRONTEND_URL, RESEND_API_KEY } = keys;
-const router = express.Router();
-const resend = new Resend(RESEND_API_KEY);
-
-const sendConfirmationLink = async (user: UserDoc, token: string) => {
-  const { data, error } = await resend.emails.send({
-    from: "CitizenSampler <no-reply@citizensampler.com>",
-    to: [`${user.email}`],
-    subject: "Confirm Email",
-    html: `Click this link to confirm your email address: ${FRONTEND_URL}/confirm?confirmToken=${token}.`,
+// Start Google login
+auth.get("/google", (c) => {
+  const state = crypto.randomUUID();
+  setCookie(c, STATE_COOKIE, state, {
+    httpOnly: true,
+    secure: env.BACKEND_BASE_URL.startsWith("https://"),
+    sameSite: "Lax",
+    path: "/auth",
+    maxAge: 600,
   });
 
-  if (error) {
-    console.error({ error });
-    return;
-  }
-};
-
-// Local signup
-router.post("/signup", async (req: Request, res: Response): Promise<void> => {
-  const { username, email, password } = req.body;
-
-  try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      res.status(400).json({ message: "User already exists" });
-      return;
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({
-      username,
-      email,
-      displayName: username,
-      password: hashedPassword,
-      lastLogin: new Date(),
-      createdAt: new Date(),
-      songs: [],
-      confirmed: false,
-    });
-
-    await newUser.save();
-
-    const emailToken = jwt.sign({ id: newUser._id }, keys.EMAIL_TOKEN_SECRET!, {
-      expiresIn: "15m",
-    });
-
-    sendConfirmationLink(newUser, emailToken);
-
-    res.status(201).json({
-      message: "Confirmation email sent. Check your inbox.",
-    });
-  } catch (err) {
-    console.error("Signup error:", err);
-    res.status(500).json({ message: "Internal server error" });
-  }
+  const params = new URLSearchParams({
+    client_id: env.GOOGLE_CLIENT_ID,
+    redirect_uri: callbackUrl(),
+    response_type: "code",
+    scope: "openid email profile",
+    state,
+  });
+  return c.redirect(`${GOOGLE_AUTH_URL}?${params}`);
 });
 
-// Confirm email
-router.get("/confirm-email", async (req, res) => {
-  const { confirmToken } = req.query;
-  if (!confirmToken) {
-    res.status(400).json({ message: "Missing confirmation token" });
-    return;
-  }
+// Google redirects back here with an authorization code
+auth.get("/google/callback", async (c) => {
+  const failure = () =>
+    c.redirect(`${env.FRONTEND_URL}/?loginError=google-auth-failed`);
 
-  // Ensure confirmToken is a string
-  if (typeof confirmToken !== "string") {
-    res.status(400).json({ message: "Invalid or missing token" });
-    return;
-  }
+  const { code, state } = c.req.query();
+  const expectedState = getCookie(c, STATE_COOKIE);
+  deleteCookie(c, STATE_COOKIE, { path: "/auth" });
 
-  if (!keys.EMAIL_TOKEN_SECRET) {
-    res.status(500).json({ message: "Email token secret not configured" });
-    return;
-  }
-
-  // Verify the token
-  try {
-    const payload = jwt.verify(confirmToken, keys.EMAIL_TOKEN_SECRET!) as {
-      id: string;
-    };
-
-    // Find the user by ID
-    const user = await User.findById(payload.id);
-    if (!user) {
-      res.status(404).send("User not found");
-      return;
-    }
-
-    user.confirmed = true;
-    await user.save();
-
-    const accessToken = jwt.sign({ id: user._id }, keys.TOKEN_SECRET!, {
-      expiresIn: "1d",
-    });
-
-    res.status(200).json({
-      message: "Email Confirmed. You can now log in.",
-      token: accessToken,
-      user: {
-        _id: user._id,
-        username: user.username,
-        displayName: user.displayName,
-      },
-    });
-  } catch (err) {
-    const error = err as Error;
-    if (error.name === "TokenExpiredError") {
-      res.status(400).json({ message: "Confirmation link expired" });
-      return;
-    }
-    // Make this consistent with JSON format too
-    res.status(400).json({ message: "Invalid or expired confirmation link" });
-    return;
-  }
-});
-
-// Resend confirmation email
-router.post("/resend-confirmation", async (req, res) => {
-  const { email } = req.body;
-
-  if (!email) {
-    res.status(400).json({ message: "Email is required" });
-    return;
+  if (!code || !state || state !== expectedState) {
+    console.error("Google auth failed: missing code or state mismatch");
+    return failure();
   }
 
   try {
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
+    const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: env.GOOGLE_CLIENT_ID,
+        client_secret: env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: callbackUrl(),
+        grant_type: "authorization_code",
+      }),
+    });
+    if (!tokenRes.ok) {
+      throw new Error(`Token exchange failed: ${await tokenRes.text()}`);
+    }
+    const { access_token } = (await tokenRes.json()) as { access_token: string };
+
+    const profileRes = await fetch(GOOGLE_USERINFO_URL, {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+    if (!profileRes.ok) {
+      throw new Error(`Userinfo request failed: ${await profileRes.text()}`);
+    }
+    const profile = (await profileRes.json()) as GoogleProfile;
+
+    if (!profile.email || !profile.email_verified) {
+      throw new Error("Google profile has no verified email");
     }
 
-    // Check if user is already confirmed
-    if (user.confirmed) {
-      res.status(400).json({ message: "Email already confirmed" });
-      return;
-    }
-
-    // Generate new confirmation token
-    const confirmToken = jwt.sign({ id: user._id }, keys.EMAIL_TOKEN_SECRET!, {
-      expiresIn: "15m",
-    });
-
-    // Send confirmation email (implement your email sending logic)
-    await sendConfirmationLink(user, confirmToken);
-
-    res.status(200).json({
-      message: "Confirmation email resent successfully",
-    });
-  } catch (err) {
-    console.error("Error resending confirmation:", err);
-    res.status(500).json({ message: "Failed to resend confirmation email" });
-  }
-});
-
-// Local login
-router.post("/login", async (req, res, next) => {
-  passport.authenticate(
-    "local",
-    (err: any, user: any, info: { message: string }) => {
-      if (err) return next(err);
-      if (!user) return res.status(401).json({ message: info.message });
-      if (!user.confirmed) {
-        return res.status(403).json({
-          message: "Please confirm your email before logging in.",
-        });
-      }
-
-      // Update lastLogin
+    // Accounts created with the old email/password signup get linked to
+    // Google on first sign-in, since Google has verified the email.
+    let user = await User.findOne({ email: profile.email });
+    if (user) {
+      user.googleId ??= profile.sub;
       user.lastLogin = new Date();
-      user.save();
-
-      // Generate JWT
-      const token = jwt.sign({ sub: user._id }, keys.TOKEN_SECRET!, {
-        expiresIn: "1d",
-      });
-
-      res.json({
-        message: "Login successful",
-        token,
-        user: {
-          _id: user._id,
-          username: user.username,
-          displayName: user.displayName,
-        },
+      await user.save();
+    } else {
+      user = await User.create({
+        displayName: profile.name,
+        googleId: profile.sub,
+        email: profile.email,
       });
     }
-  )(req, res, next);
-});
 
-// Google login
-router.get(
-  "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
+    const token = await sign(
+      {
+        sub: user._id.toString(),
+        exp: Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS,
+      },
+      env.TOKEN_SECRET,
+      "HS256"
+    );
 
-router.get(
-  "/google/callback",
-  (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate(
-      "google",
-      { session: false },
-      (err, user: UserDoc, info) => {
-        if (err || !user) {
-          console.error("Google auth failed:", err || info);
-          return res.redirect(`${FRONTEND_URL}/?loginError=google-auth-failed`);
-        }
-        const token = jwt.sign({ sub: user._id }, keys.TOKEN_SECRET!, {
-          expiresIn: "1d",
-        });
-
-        res.redirect(
-          `${FRONTEND_URL}/?token=${token}&displayName=${user.displayName}&userId=${user._id}`
-        );
-      }
-    )(req, res, next);
+    const params = new URLSearchParams({
+      token,
+      displayName: user.displayName ?? "",
+      userId: user._id.toString(),
+    });
+    return c.redirect(`${env.FRONTEND_URL}/?${params}`);
+  } catch (err) {
+    console.error("Google auth failed:", err);
+    return failure();
   }
-);
+});
 
 // Check login status
-router.get("/check-login", (req: Request, res: Response) => {
-  const authHeader = req.headers["authorization"];
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res
-      .status(401)
-      .json({ loggedIn: false, message: "login expired, please login again" });
-    return;
+auth.get("/check-login", async (c) => {
+  const authHeader = c.req.header("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return c.json(
+      { loggedIn: false, message: "login expired, please login again" },
+      401
+    );
   }
-  const token = authHeader.split(" ")[1];
   try {
-    jwt.verify(token, keys.TOKEN_SECRET!);
-    res.json({ loggedIn: true });
-    return;
-  } catch (err) {
-    res
-      .status(401)
-      .json({ loggedIn: false, message: "Login expired. Please login again." });
-    return;
+    await verify(authHeader.slice(7), env.TOKEN_SECRET, "HS256");
+    return c.json({ loggedIn: true });
+  } catch {
+    return c.json(
+      { loggedIn: false, message: "Login expired. Please login again." },
+      401
+    );
   }
 });
 
-export default router;
+export default auth;

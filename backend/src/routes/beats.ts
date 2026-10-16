@@ -1,255 +1,108 @@
-import express, { Request, Response, NextFunction } from "express";
-import axios, { AxiosError } from "axios";
-import requireJwtAuth from "../middleware/requireJwtAuth";
-import User, { UserDoc } from "../models/user";
-import Song, { SongDoc } from "../models/song";
-import dotenv from "dotenv";
-import keys from "../config/keys";
-import fs from "fs";
-import { google } from "googleapis";
-dotenv.config();
+import { Hono } from "hono";
+import { isValidObjectId } from "mongoose";
+import requireAuth, { AuthEnv } from "../middleware/requireAuth.js";
+import User, { UserDoc } from "../models/user.js";
+import Song, { SongDoc } from "../models/song.js";
+import { env } from "../env.js";
 
-const router = express.Router();
+const beats = new Hono<AuthEnv>();
 
-const { GOOGLE_APPLICATION_CREDENTIALS_BASE64, GOOGLE_DRIVE_DRUMS_FOLDER_ID } =
-  keys;
+const ownsSong = (user: UserDoc, songId: string) =>
+  isValidObjectId(songId) && user.songs.some((id) => id.equals(songId));
 
-if (!GOOGLE_APPLICATION_CREDENTIALS_BASE64) {
-  console.error("Missing GOOGLE_APPLICATION_CREDENTIALS_BASE64");
-  process.exit(1); // Exit early if the env variable isn't set
-}
-
-if (!GOOGLE_DRIVE_DRUMS_FOLDER_ID) {
-  console.error("Missing GOOGLE_DRIVE_DRUMS_FOLDER_ID");
-  process.exit(1); // Exit early if the env variable isn't set
-}
-
-const credentials = Buffer.from(
-  GOOGLE_APPLICATION_CREDENTIALS_BASE64,
-  "base64"
-).toString("utf-8");
-
-// Write the credentials to a temporary file
-fs.writeFileSync("/tmp/credentials.json", credentials);
-
-const auth = new google.auth.GoogleAuth({
-  keyFile: "/tmp/credentials.json",
-  scopes: ["https://www.googleapis.com/auth/drive.readonly"],
-});
-
-const drive = google.drive({ version: "v3", auth });
-
-// Save New Song
-router.post(
-  "/me/songs",
-  requireJwtAuth,
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { song, userId } = req.body;
-
-    if (!song || !userId) {
-      res.status(400).json({ message: "Missing song or userId" });
-      return;
-    }
-
-    const user = req.user as UserDoc;
-
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
-
-    await user.populate("songs");
-
-    try {
-      const existingSong = user.songs.find(
-        (existingSong: any) =>
-          existingSong.title.trim().toLowerCase() ===
-          song.title.trim().toLowerCase()
-      );
-      if (existingSong) {
-        res.status(409).json({ message: "Song already exists" });
-        return;
-      }
-
-      const newSong = new Song(song);
-
-      await newSong.save(); // Save the song in the Song collection
-
-      // Ensure no duplicates in user's song list
-      if (!user.songs.includes(newSong._id)) {
-        user.songs.push(newSong._id);
-        await user.save();
-      }
-
-      await user.save();
-
-      res
-        .status(201)
-        .json({ message: "Song successfully saved", song: newSong });
-      return;
-    } catch (err) {
-      next(err);
-    }
+// Save new song
+beats.post("/me/songs", requireAuth, async (c) => {
+  const { song, userId } = await c.req.json();
+  if (!song || !userId) {
+    return c.json({ message: "Missing song or userId" }, 400);
   }
-);
+
+  const user = c.get("user");
+  await user.populate<{ songs: SongDoc[] }>("songs");
+  const songs = user.songs as unknown as SongDoc[];
+
+  const title = String(song.title).trim().toLowerCase();
+  if (songs.some((existing) => existing.title.trim().toLowerCase() === title)) {
+    return c.json({ message: "Song already exists" }, 409);
+  }
+
+  const newSong = await Song.create(song);
+  await User.updateOne({ _id: user._id }, { $addToSet: { songs: newSong._id } });
+
+  return c.json({ message: "Song successfully saved", song: newSong }, 201);
+});
 
 // Save existing song
-router.put(
-  "/me/songs/:_id",
-  requireJwtAuth,
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { song, userId } = req.body;
-
-    if (!song || !userId) {
-      res.status(400).json({ message: "Missing song or user Id" });
-      return;
-    }
-
-    const user = req.user;
-
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
-
-    try {
-      const { _id } = req.params;
-
-      const existingSong = await Song.findOne({ _id: _id });
-      if (!existingSong) {
-        res.status(404).json({ message: "Song not found" });
-        return;
-      }
-
-      existingSong.loops = song.loops;
-      existingSong.samples = song.samples;
-
-      await existingSong.save();
-
-      res
-        .status(201)
-        .json({ message: "Song successfully saved", song: existingSong });
-      return;
-    } catch (err) {
-      next(err);
-    }
+beats.put("/me/songs/:_id", requireAuth, async (c) => {
+  const { song, userId } = await c.req.json();
+  if (!song || !userId) {
+    return c.json({ message: "Missing song or user Id" }, 400);
   }
-);
 
-router.delete(
-  "/me/songs/:_id",
-  requireJwtAuth,
-  async (req: Request, res: Response, next: NextFunction) => {
-    const user = req.user as UserDoc;
-
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
-
-    try {
-      const { _id } = req.params;
-
-      const existingSong = await Song.findOne({ _id: _id });
-
-      if (!existingSong) {
-        res.status(404).json({ message: "Song not found" });
-        return;
-      }
-
-      await Song.deleteOne({ _id: _id });
-
-      // Remove the song ID from user's songs array
-      await User.updateOne({ _id: user._id }, { $pull: { songs: _id } });
-
-      res.status(200).json({ message: "Song successfully deleted" });
-      return;
-    } catch (err) {
-      next(err);
-    }
+  const _id = c.req.param("_id");
+  if (!ownsSong(c.get("user"), _id)) {
+    return c.json({ message: "Song not found" }, 404);
   }
-);
 
-// Get Saved Song Titles
-router.get(
-  "/me/songs",
-  requireJwtAuth,
-  async (req: Request, res: Response, next: NextFunction) => {
-    const user = req.user as UserDoc;
-    await user.populate("songs");
-
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
-
-    const songs = user.songs as unknown as SongDoc[];
-    if (!songs || songs.length === 0) {
-      res.status(200).json({ message: "No songs found" });
-      return;
-    }
-
-    const titles = songs.map((song: SongDoc) => song.title);
-
-    res.status(200).json(titles);
+  const existingSong = await Song.findById(_id);
+  if (!existingSong) {
+    return c.json({ message: "Song not found" }, 404);
   }
-);
 
-router.get(
-  "/me/songs/:title",
-  requireJwtAuth,
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { title } = req.params;
-    const user = req.user as UserDoc;
+  existingSong.loops = song.loops;
+  existingSong.samples = song.samples;
+  await existingSong.save();
 
-    await user.populate("songs");
-
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
-
-    const songs = user.songs as unknown as SongDoc[];
-
-    const song = songs.find((song: SongDoc) => song.title === title);
-
-    if (!song) {
-      res.status(404).json({ message: "Song not found" });
-      return;
-    }
-
-    res.status(200).json({ message: `Loaded Song: ${song.title}`, song });
-  }
-);
-
-// Get drumMachine audio from Google Drive
-router.get("/drums/:filename", async (req: Request, res: Response) => {
-  const { filename } = req.params;
-
-  try {
-    const list = await drive.files.list({
-      q: `name='${filename}' and '${GOOGLE_DRIVE_DRUMS_FOLDER_ID}' in parents and mimeType='audio/mpeg' `,
-      fields: "files(id, name)",
-      pageSize: 1,
-    });
-
-    const file = list.data.files?.[0];
-    if (!file?.id) {
-      res.status(404).send("File not found or missing ID");
-      return;
-    }
-
-    const driveRes = await drive.files.get(
-      { fileId: file.id, alt: "media" },
-      { responseType: "stream" }
-    );
-
-    res.set("Content-Type", "audio/mpeg");
-    driveRes.data.pipe(res);
-  } catch (err) {
-    console.error("Drive error", err);
-    res.status(500).send("Error fetching file");
-  }
+  return c.json({ message: "Song successfully saved", song: existingSong }, 201);
 });
 
-export default router;
+// Delete song
+beats.delete("/me/songs/:_id", requireAuth, async (c) => {
+  const user = c.get("user");
+  const _id = c.req.param("_id");
+  if (!ownsSong(user, _id)) {
+    return c.json({ message: "Song not found" }, 404);
+  }
+
+  await Song.deleteOne({ _id });
+  await User.updateOne({ _id: user._id }, { $pull: { songs: _id } });
+
+  return c.json({ message: "Song successfully deleted" }, 200);
+});
+
+// Get saved song titles
+beats.get("/me/songs", requireAuth, async (c) => {
+  const user = c.get("user");
+  await user.populate("songs");
+  const songs = user.songs as unknown as SongDoc[];
+
+  if (songs.length === 0) {
+    return c.json({ message: "No songs found" }, 200);
+  }
+  return c.json(songs.map((song) => song.title), 200);
+});
+
+// Load song by title
+beats.get("/me/songs/:title", requireAuth, async (c) => {
+  const title = c.req.param("title");
+  const user = c.get("user");
+  await user.populate("songs");
+  const songs = user.songs as unknown as SongDoc[];
+
+  const song = songs.find((s) => s.title === title);
+  if (!song) {
+    return c.json({ message: "Song not found" }, 404);
+  }
+  return c.json({ message: `Loaded Song: ${song.title}`, song }, 200);
+});
+
+// Songs saved before the move to R2 store drum URLs pointing at this route,
+// so redirect them to the bucket.
+beats.get("/drums/:filename", (c) =>
+  c.redirect(
+    `${env.DRUM_BASE_URL}/${encodeURIComponent(c.req.param("filename"))}`,
+    301
+  )
+);
+
+export default beats;

@@ -1,16 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "Node16",
-    "rootDir": "../",
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
-    "moduleResolution": "node16",
-    "typeRoots": ["./types", "./node_modules/@types"],
     "types": ["node"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "../frontend"]
+  "include": ["src/**/*"]
 }

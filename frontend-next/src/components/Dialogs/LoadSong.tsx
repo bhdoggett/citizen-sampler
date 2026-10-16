@@ -8,6 +8,7 @@ import { useUIContext } from "src/app/contexts/UIContext";
 import { SongTypeFE } from "src/types/audioTypesFE";
 import type { LoopName } from "../../types/audioTypes";
 import Spinner from "../Spinner";
+import { migrateDrumUrls } from "src/lib/drumMachines";
 
 dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -89,7 +90,8 @@ const LoadSong: React.FC = () => {
 
       if (result.status === 200) {
         const song: SongTypeFE = result.data.song;
-        const { title, samples, loops } = song;
+        const { title, loops } = song;
+        const samples = migrateDrumUrls(song.samples);
 
         // Normalize loop settings for songs saved before isInitialized was added
         const normalizedLoops: Record<string, unknown> = { ...loops };
