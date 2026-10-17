@@ -298,20 +298,24 @@ const DRUM_BASE_URL = (process.env.NEXT_PUBLIC_DRUM_BASE_URL ?? "").replace(
 export const drumUrl = (fileName: string) =>
   `${DRUM_BASE_URL}/${encodeURIComponent(fileName)}`;
 
-// Songs saved before the move to R2 store drum URLs that point at the old
-// backend proxy route (`<api>/beats/drums/<file>`). Rewrite them to the bucket.
-const LEGACY_DRUM_PATH = "/beats/drums/";
+const drumFileNames = new Set(
+  Object.values(drumMachines).flatMap((machine) => machine.samples)
+);
 
+// Saved songs and localStorage can hold drum URLs from older builds: the
+// backend proxy route (`<api>/beats/drums/<file>`) or a bare `/<file>` from a
+// build without NEXT_PUBLIC_DRUM_BASE_URL. Point any known drum file at R2.
 export const migrateDrumUrls = <T extends { url: string }>(
   samples: Record<string, T>
 ): Record<string, T> =>
   Object.fromEntries(
     Object.entries(samples).map(([id, sample]) => {
-      const index = sample.url?.indexOf(LEGACY_DRUM_PATH) ?? -1;
-      if (index === -1) return [id, sample];
-      const fileName = decodeURIComponent(
-        sample.url.slice(index + LEGACY_DRUM_PATH.length)
-      );
-      return [id, { ...sample, url: drumUrl(fileName) }];
+      if (!sample.url) return [id, sample];
+      const fileName = decodeURIComponent(sample.url.split("/").pop() ?? "");
+      const url = drumUrl(fileName);
+      if (!drumFileNames.has(fileName) || sample.url === url) {
+        return [id, sample];
+      }
+      return [id, { ...sample, url }];
     })
   );

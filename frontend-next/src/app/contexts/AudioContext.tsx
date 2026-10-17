@@ -288,6 +288,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const storeAudioInIndexedDB = useCallback(async (url: string, sampleId: string) => {
     try {
       const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText} for ${url}`);
+      }
       const blob = await response.blob();
       await set(`audio-${sampleId}`, { url: url, blob }); // Store Blob directly to IndexedDB
     } catch (error) {
