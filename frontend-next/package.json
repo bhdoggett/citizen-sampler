@@ -24,7 +24,7 @@
     "tone": "^15.0.4"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -37,5 +37,6 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
     "typeslayer": "^0.1.31"
-  }
+  },
+  "packageManager": "pnpm@11.9.0"
 }

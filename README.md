@@ -113,7 +113,7 @@ cd citizen-sampler
 
 ```bash
 cd backend
-npm install
+pnpm install
 ```
 
 External accounts/resources required:
@@ -141,14 +141,14 @@ GOOGLE_DRIVE_DRUMS_FOLDER_ID='your_drive_folder_id_here'
 - Start the backend development server:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ### 3. Set Up the Frontend
 
 ```bash
 cd ../frontend
-npm install
+pnpm install
 ```
 
 - Create a .env file in the frontend directory:
@@ -160,7 +160,7 @@ VITE_API_BASE_URL=http://localhost:8000
 - Start the frontend development server:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ---

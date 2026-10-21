@@ -1,0 +1,4 @@
+allowBuilds:
+  sharp: false
+  typeslayer: false
+  unrs-resolver: false
