@@ -1,2 +1,7 @@
 [phases.setup]
 nixPkgs = ["nodejs_22"]
+
+# Nixpacks' default pnpm setup installs corepack@0.24.1, which can't run
+# pnpm 11. Use the newer corepack bundled with Node 22 instead.
+[phases.install]
+cmds = ["corepack enable", "pnpm install --frozen-lockfile"]
