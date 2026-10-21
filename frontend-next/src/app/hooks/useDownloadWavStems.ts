@@ -21,28 +21,35 @@ const useDownloadWavStems = () => {
 
   // Function to get Audio Buffer for a given sampler's loop recording
   const getAudioBuffer = async (id: string, loop: LoopName) => {
-    const loopEnd = Tone.getTransport().loopEnd;
-    const loopDuration = Tone.Time(loopEnd).toSeconds();
+    const loopSettings = allLoopSettings[loop];
     const sampleData = allSampleData[id];
     const { settings } = sampleData;
     const events = sampleData.events[loop];
 
-    if (events.length === 0) return null;
+    if (!loopSettings || events.length === 0) return null;
+
+    // Use this loop's own tempo and length, not whichever loop is live
+    const { bpm, beats, bars, swing } = loopSettings;
+    const loopDuration = bars * beats * (60 / bpm);
 
     // Format schedule events for Tone.Part
-    const scheduleEvents = getScheduleEvents(allSampleData, id, loop);
+    const scheduleEvents = getScheduleEvents(allSampleData, id, loop, {
+      bpm,
+      beats,
+      bars,
+    });
 
     // Render the full loop, plus any tail from events that ring past its end
     const renderDuration = calcRenderDuration(scheduleEvents, loopDuration);
 
     const toneBuffer = await Tone.Offline(async ({ transport }) => {
-      // Set tempo and loop settings per loop
-      const loopSettings = allLoopSettings[loop];
-      if (!loopSettings) return;
-      transport.bpm.value = loopSettings.bpm;
+      // Match the live transport setup for this loop
+      transport.bpm.value = bpm;
+      transport.swing = swing;
+      transport.timeSignature = beats;
       transport.loop = true;
-      transport.loopStart = 0;
-      transport.loopEnd = `${loopSettings.bars}m`;
+      transport.loopStart = "0:0:0";
+      transport.loopEnd = `${bars}:0:0`;
 
       const offlineSamplerWithFx = await makeSamplerWithFX(
         id,

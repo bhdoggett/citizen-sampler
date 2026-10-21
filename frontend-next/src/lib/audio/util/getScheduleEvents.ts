@@ -13,12 +13,26 @@ type ScheduleEvent = [number, SampleEvent];
 
 type AllSampleData = Record<string, SampleTypeFE>;
 
+// Tempo and length of the loop being scheduled. Omit to use the live transport.
+export type LoopTiming = { bpm: number; beats: number; bars: number };
+
 const getScheduleEvents = (
   allSampleData: AllSampleData,
   id: string,
-  currentLoop: string
+  currentLoop: string,
+  timing?: LoopTiming
 ): ScheduleEvent[] => {
   const sampleData = allSampleData[id];
+  const transport = Tone.getTransport();
+
+  const ticksToSeconds = (ticks: number) =>
+    timing
+      ? (ticks / transport.PPQ) * (60 / timing.bpm)
+      : Tone.Ticks(ticks).toSeconds();
+  const loopStart = timing ? 0 : Tone.Time(transport.loopStart).toSeconds();
+  const loopEnd = timing
+    ? timing.bars * timing.beats * (60 / timing.bpm)
+    : Tone.Time(transport.loopEnd).toSeconds();
 
   const events = sampleData.events[currentLoop]
     .map((event) => {
@@ -26,17 +40,21 @@ const getScheduleEvents = (
       if (event.startTime == null) return;
 
       // Convert startTime from ticks to seconds
-      const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
+      const startTimeInSeconds = ticksToSeconds(event.startTime);
 
       // If quantize === true, quantize the start time
       // Otherwise, use the start time as is
       let eventTime = sampleData.settings.quantize
-        ? quantize(startTimeInSeconds, sampleData.settings.quantVal)
+        ? quantize(
+            startTimeInSeconds,
+            sampleData.settings.quantVal,
+            timing?.bpm
+          )
         : startTimeInSeconds;
 
       // If an event is quantied to the loop end, wrap it to the loop start
-      if (eventTime === Tone.Time(Tone.getTransport().loopEnd).toSeconds()) {
-        eventTime = Tone.Time(Tone.getTransport().loopStart).toSeconds();
+      if (eventTime === loopEnd) {
+        eventTime = loopStart;
       }
 
       return [

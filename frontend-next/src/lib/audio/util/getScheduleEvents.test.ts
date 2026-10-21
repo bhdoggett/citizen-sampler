@@ -94,4 +94,41 @@ describe("getScheduleEvents", () => {
   it("returns an empty array when the loop has no events", () => {
     expect(getScheduleEvents(makeData([]), "pad-1", "A")).toEqual([]);
   });
+
+  describe("with an explicit loop timing", () => {
+    // Live transport stays at 120 BPM in 4/4; the timing describes another loop.
+    const timing = { bpm: 60, beats: 3, bars: 1 };
+
+    it("converts ticks with the loop's tempo", () => {
+      const result = getScheduleEvents(
+        makeData([event(192)]),
+        "pad-1",
+        "A",
+        timing
+      );
+      expect(result[0][0]).toBeCloseTo(1);
+    });
+
+    it("quantizes with the loop's tempo", () => {
+      // 250 ticks ≈ 1.3 s at 60 BPM, which snaps to the 1 s quarter note.
+      const result = getScheduleEvents(
+        makeData([event(250)], { quantize: true, quantVal: "4" }),
+        "pad-1",
+        "A",
+        timing
+      );
+      expect(result[0][0]).toBeCloseTo(1);
+    });
+
+    it("wraps at the loop's own end, using beats per bar", () => {
+      // 1 bar of 3/4 at 60 BPM is 3 s. 570 ticks ≈ 2.97 s snaps to 3 s.
+      const result = getScheduleEvents(
+        makeData([event(570)], { quantize: true, quantVal: "4" }),
+        "pad-1",
+        "A",
+        timing
+      );
+      expect(result[0][0]).toBe(0);
+    });
+  });
 });

@@ -36,4 +36,8 @@ describe("quantize", () => {
     expect(quantize(grid * 1.1, quantVal)).toBeCloseTo(grid);
     expect(quantize(grid * 2.9, quantVal)).toBeCloseTo(grid * 3);
   });
+
+  it("uses an explicit bpm over the transport tempo", () => {
+    expect(quantize(0.6, "4", 60)).toBeCloseTo(1);
+  });
 });

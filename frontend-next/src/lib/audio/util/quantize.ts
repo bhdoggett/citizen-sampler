@@ -1,7 +1,11 @@
 import * as Tone from "tone";
 
-const quantize = (time: number, quantVal: string): number => {
-  const bpm = Tone.getTransport().bpm.value;
+// bpm defaults to the live transport; pass it to quantize for another loop.
+const quantize = (
+  time: number,
+  quantVal: string,
+  bpm: number = Tone.getTransport().bpm.value
+): number => {
   const secondsPerQuarterNote = 60 / bpm;
   let quantizeSeconds;
   if (typeof quantVal === "string" && quantVal.includes("t")) {
