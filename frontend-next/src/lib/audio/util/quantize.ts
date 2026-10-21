@@ -5,7 +5,7 @@ const quantize = (time: number, quantVal: string): number => {
   const secondsPerQuarterNote = 60 / bpm;
   let quantizeSeconds;
   if (typeof quantVal === "string" && quantVal.includes("t")) {
-    const tripletQuantVal = Number(Array.from(quantVal)[0]) * 1.5;
+    const tripletQuantVal = parseInt(quantVal, 10) * 1.5;
     quantizeSeconds = (secondsPerQuarterNote / tripletQuantVal) * 4;
   } else {
     quantizeSeconds = (secondsPerQuarterNote / Number(quantVal)) * 4;
