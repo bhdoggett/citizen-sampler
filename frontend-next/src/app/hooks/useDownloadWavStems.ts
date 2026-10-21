@@ -1,9 +1,9 @@
 // import Recorder from "recorder-js";
 import * as Tone from "tone";
 import { useAudioContext } from "../contexts/AudioContext";
-import quantize from "../../lib/audio/util/quantize";
 import getScheduleEvents from "../../lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
+import { calcRenderDuration } from "../../lib/audio/util/calcRenderDuration";
 import toWav from "audiobuffer-to-wav";
 import type { LoopName } from "../../types/audioTypes";
 
@@ -32,23 +32,8 @@ const useDownloadWavStems = () => {
     // Format schedule events for Tone.Part
     const scheduleEvents = getScheduleEvents(allSampleData, id, loop);
 
-    // Find max end time of the rendered audio based on duration of scheduled events
-    let maxEndTime = 0;
-
-    for (const event of scheduleEvents) {
-      if (event[1].startTime !== null && event[1].duration !== null) {
-        const eventStart = Tone.Ticks(event[1].startTime).toSeconds();
-        const quantizedStart = settings.quantize
-          ? quantize(eventStart, settings.quantVal)
-          : eventStart;
-        const eventEnd = quantizedStart + event[1].duration;
-        if (eventEnd > maxEndTime) {
-          maxEndTime = eventEnd;
-        }
-      }
-    }
-
-    const renderDuration = Math.max(loopDuration, maxEndTime);
+    // Render the full loop, plus any tail from events that ring past its end
+    const renderDuration = calcRenderDuration(scheduleEvents, loopDuration);
 
     const toneBuffer = await Tone.Offline(async ({ transport }) => {
       // Set tempo and loop settings per loop
