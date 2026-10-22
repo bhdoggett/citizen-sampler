@@ -14,6 +14,7 @@ import { SampleEventFE } from "src/types/audioTypesFE";
 import quantize from "../../lib/audio/util/quantize";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { resolvePlayNote } from "../../lib/audio/util/resolvePlayNote";
+import styles from "./PitchPad.module.css";
 
 type PitchPadProps = {
   note: string;
@@ -179,9 +180,7 @@ const PitchPad = forwardRef(function PitchPad(
 
   const getActiveStyle = () => {
     const isActive = pitchIsPlaying || activeMidiNotes.has(note);
-    return isActive
-      ? "brightness-75 saturate-500 transition-all duration-100"
-      : "brightness-100 saturate-100 transition-all duration-100";
+    return isActive ? styles.active : "";
   };
 
   const disposePart = () => {
@@ -304,7 +303,7 @@ const PitchPad = forwardRef(function PitchPad(
       onTouchEnd={(e) => {
         e.preventDefault();
       }}
-      className={`border border-black text-sm cursor-pointer w-full shadow-inner shadow-slate-600 select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-user-select:none] [-webkit-tap-highlight-color:transparent] ${note === allSampleData[selectedSampleId].settings.baseNote ? "bg-slate-400 " : "bg-slate-300"} ${getActiveStyle()}`}
+      className={`${styles.pitchPad} ${note === allSampleData[selectedSampleId].settings.baseNote ? styles.baseNote : ""} ${getActiveStyle()}`}
     >
       {note}
     </button>

@@ -1,0 +1,45 @@
+.pitchGrid {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+  border: var(--line);
+  background: var(--ink);
+}
+
+.scaleTabs {
+  display: flex;
+  gap: 1px;
+  border-bottom: var(--line);
+}
+
+.scaleTab {
+  flex: 1;
+  padding: var(--space-1) 0;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--paper);
+}
+
+.scaleTab:hover {
+  color: var(--ink);
+  background: var(--paper-2);
+}
+
+.scaleTabActive,
+.scaleTabActive:hover {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+/* 1px gaps over the ink background draw the grid lines */
+.grid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  touch-action: none;
+  user-select: none;
+}

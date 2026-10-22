@@ -2,6 +2,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import styles from "./page.module.css";
 import MainMenu from "../components/MainMenu";
 import Spinner from "../components/Spinner";
 import DialogWrapper from "../components/Dialogs/DialogWrapper";
@@ -138,148 +139,117 @@ export default function Home() {
     }
   }, [showDialog, setShowDialog]);
 
+  const contentHidden = samplersLoading || !makeBeatsButtonPressed;
+
   return (
     <>
-      (
-      <>
-        <div className="flex flex-col justify-center items-center mt-4 mb-6">
-          <div className="w-[600px] lg:w-[800px] md:w-[800px] sm:w-[700px] xs:w-[600px] border-[3px] border-black bg-white p-3 rounded-lg shadow-lg shadow-black">
-            {/* Header - NOT blurred */}
-            <div className="flex justify-between items-center">
-              <h1 className="text-5xl font-bold block mb-3">Citizen Sampler</h1>
-              <MidiHandler />
-              <MainMenu />
-            </div>
+      <div className={styles.page}>
+        <div className={styles.frame}>
+          {/* Header - NOT blurred */}
+          <header className={styles.header}>
+            <h1 className={styles.title}>Citizen Sampler</h1>
+            <MidiHandler />
+            <MainMenu />
+          </header>
 
-            {/* Audio Components Container - This gets blurred */}
-            <div className="relative">
-              <div
-                className={`${samplersLoading || !makeBeatsButtonPressed ? "blur-sm" : ""}`}
-              >
-                <div className="flex">
-                  <SampleSettings />
-                  <div className="flex flex-col w-1/6">
-                    <Transport />
-                    <Loop />
-                  </div>
-                </div>
-                <div className="flex">
-                  {/* Play / Seq toggle buttons */}
-                  <div className="flex flex-col gap-1 mt-1 mr-1">
-                    <button
-                      onClick={() => setSequencerVisible(false)}
-                      className={`flex flex-1 px-2 py-1 text-xs border-2 border-black cursor-pointer ${
-                        !sequencerVisible
-                          ? "bg-slate-600 text-white font-bold shadow-inner shadow-black"
-                          : "bg-slate-200 text-black shadow-sm shadow-slate-500"
-                      }`}
-                      title="PADS (Shift + P)"
-                    >
-                      <span className="[writing-mode:vertical-lr] rotate-180">
-                        PADS
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => setSequencerVisible(true)}
-                      className={`flex flex-1 px-2 py-1 text-xs border-2 border-black cursor-pointer ${
-                        sequencerVisible
-                          ? "bg-slate-600 text-white font-bold shadow-inner shadow-black"
-                          : "bg-slate-200 text-black shadow-sm shadow-slate-500"
-                      }`}
-                      title="SEQUENCER (Shift + S)"
-                    >
-                      <span className="[writing-mode:vertical-lr] rotate-180">
-                        SEQUENCER
-                      </span>
-                    </button>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    {/* DrumMachine must stay mounted for Tone.Part playback scheduling */}
-                    <div
-                      ref={padsViewRef}
-                      className={sequencerVisible ? "hidden" : "flex"}
-                    >
-                      <DrumMachine />
-                      <PitchGrid
-                        sampler={
-                          samplersRef.current[selectedSampleId]?.sampler ?? null
-                        }
-                      />
-                    </div>
-                    {sequencerVisible && (
-                      <StepSequencer maxHeight={padsViewHeight} />
-                    )}
-                  </div>
+          {/* Audio Components Container - This gets blurred */}
+          <div className={styles.workspace}>
+            <div className={contentHidden ? styles.blurred : undefined}>
+              <div className={styles.topRow}>
+                <SampleSettings />
+                <div className={styles.sideColumn}>
+                  <Transport />
+                  <Loop />
                 </div>
               </div>
+              <div className={styles.bottomRow}>
+                {/* Pads / Sequencer toggle */}
+                <div className={styles.viewTabs}>
+                  <button
+                    onClick={() => setSequencerVisible(false)}
+                    className={`${styles.viewTab} ${!sequencerVisible ? styles.viewTabActive : ""}`}
+                    title="PADS (Shift + P)"
+                  >
+                    <span className={styles.viewTabLabel}>PADS</span>
+                  </button>
+                  <button
+                    onClick={() => setSequencerVisible(true)}
+                    className={`${styles.viewTab} ${sequencerVisible ? styles.viewTabActive : ""}`}
+                    title="SEQUENCER (Shift + S)"
+                  >
+                    <span className={styles.viewTabLabel}>SEQUENCER</span>
+                  </button>
+                </div>
 
-              {/* Overlay when content should be blurred */}
-              {(samplersLoading || !makeBeatsButtonPressed) && (
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                  {samplersLoading ? (
-                    // Show spinner when samplers are loading
-                    <div className="flex items-center justify-center">
-                      <Spinner />
-                    </div>
-                  ) : (
-                    // Show button when samplers are loaded but button not pressed
-                    <button
-                      onClick={() => setMakeBeatsButtonPressed(true)}
-                      className="border-2 border-black px-2 py-1 bg-slate-600 hover:bg-slate-700 shadow-md shadow-slate-700 text-white font-bold transition-colors"
-                    >
-                      Make Beats
-                    </button>
+                <div className={styles.views}>
+                  {/* DrumMachine must stay mounted for Tone.Part playback scheduling */}
+                  <div
+                    ref={padsViewRef}
+                    className={sequencerVisible ? styles.hidden : styles.padsView}
+                  >
+                    <DrumMachine />
+                    <PitchGrid
+                      sampler={
+                        samplersRef.current[selectedSampleId]?.sampler ?? null
+                      }
+                    />
+                  </div>
+                  {sequencerVisible && (
+                    <StepSequencer maxHeight={padsViewHeight} />
                   )}
                 </div>
-              )}
+              </div>
             </div>
+
+            {/* Overlay when content should be blurred */}
+            {contentHidden && (
+              <div className={styles.overlay}>
+                {samplersLoading ? (
+                  <Spinner />
+                ) : (
+                  <button
+                    onClick={() => setMakeBeatsButtonPressed(true)}
+                    className={styles.makeBeats}
+                  >
+                    Make Beats
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-
-          {/* Footer - NOT blurred */}
-          <footer className="flex flex-col items-center mt-2 text-white">
-            <p className="text-sm">
-              Inspired and made possible by
-              <Link
-                className="m-1 text-sm text-blue-500 font-bold"
-                href="https://citizen-dj.labs.loc.gov/"
-              >
-                Citizen DJ
-              </Link>
-            </p>
-            <p className="text-sm">
-              and the
-              <Link
-                className="m-1 text-sm text-blue-500 font-bold"
-                href="https://loc.gov/"
-              >
-                Library of Congress
-              </Link>
-            </p>
-          </footer>
         </div>
 
-        {/* Menu Dialogues */}
-        <div>
-          {showDialog && (
-            <DialogWrapper>
-              {showDialog === "choose-sample" && <ChooseSample />}
-              {showDialog === "load-song" && <LoadSong />}
-              {showDialog === "save-new-song" && <SaveNewSong />}
-              {showDialog === "collection-menu" && <CollectionMenu />}
-              {showDialog === "kit-menu" && <KitMenu />}
-              {showDialog === "auth-dialog" && <AuthDialog />}
-              {showDialog === "confirm-action" && <ConfirmActionDialog />}
-              {showDialog === "api-response" && <APIResponseDialog />}
-              {showDialog === "ui-warning" && <UIWarning />}
-              {showDialog === "about" && <About />}
-              {showDialog === "help-shortcuts" && <HelpShortcuts />}
-              {showDialog === "welcome" && <Welcome />}
-            </DialogWrapper>
-          )}
-        </div>
-      </>
-      )
+        {/* Footer - NOT blurred */}
+        <footer className={styles.footer}>
+          <p>
+            Inspired and made possible by{" "}
+            <Link href="https://citizen-dj.labs.loc.gov/">Citizen DJ</Link>
+          </p>
+          <p>
+            and the <Link href="https://loc.gov/">Library of Congress</Link>
+          </p>
+        </footer>
+      </div>
+
+      {/* Menu Dialogues */}
+      <div>
+        {showDialog && (
+          <DialogWrapper>
+            {showDialog === "choose-sample" && <ChooseSample />}
+            {showDialog === "load-song" && <LoadSong />}
+            {showDialog === "save-new-song" && <SaveNewSong />}
+            {showDialog === "collection-menu" && <CollectionMenu />}
+            {showDialog === "kit-menu" && <KitMenu />}
+            {showDialog === "auth-dialog" && <AuthDialog />}
+            {showDialog === "confirm-action" && <ConfirmActionDialog />}
+            {showDialog === "api-response" && <APIResponseDialog />}
+            {showDialog === "ui-warning" && <UIWarning />}
+            {showDialog === "about" && <About />}
+            {showDialog === "help-shortcuts" && <HelpShortcuts />}
+            {showDialog === "welcome" && <Welcome />}
+          </DialogWrapper>
+        )}
+      </div>
     </>
   );
 }

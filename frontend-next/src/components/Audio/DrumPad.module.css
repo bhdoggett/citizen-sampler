@@ -1,0 +1,79 @@
+.cell {
+  display: flex;
+  aspect-ratio: 1;
+  user-select: none;
+}
+
+.pad {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-1);
+  background: var(--paper-2);
+  border: var(--line);
+  box-shadow: var(--shadow-hard-sm);
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--press),
+    box-shadow var(--press),
+    background-color var(--press);
+}
+
+.pad:hover {
+  background: var(--paper-3);
+}
+
+.selected .pad {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.muted {
+  background: var(--mute);
+}
+
+.soloed {
+  background: var(--solo);
+}
+
+.muted:hover,
+.soloed:hover {
+  filter: brightness(0.95);
+}
+
+/* Pressed or triggered: the pad sinks into its shadow and lights up */
+.active,
+.active:hover {
+  background: var(--accent);
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  line-height: 1;
+}
+
+.number {
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.key {
+  font-size: var(--text-2xs);
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.active .key {
+  color: var(--ink);
+}

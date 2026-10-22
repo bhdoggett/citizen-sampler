@@ -1,0 +1,27 @@
+.pitchPad {
+  width: 100%;
+  font-size: var(--text-sm);
+  background: var(--paper-2);
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--press);
+}
+
+.pitchPad:hover {
+  background: var(--paper-3);
+}
+
+.baseNote,
+.baseNote:hover {
+  font-weight: 700;
+  background: var(--accent-soft);
+}
+
+.active,
+.active:hover {
+  background: var(--accent);
+}

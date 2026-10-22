@@ -3,10 +3,18 @@ import { useState, useEffect, useRef } from "react";
 import { useAudioContext } from "src/app/contexts/AudioContext";
 import { CustomSampler } from "src/types/CustomSampler";
 import PitchPad from "./PitchPad";
+import styles from "./PitchGrid.module.css";
 import {
   type ScaleName,
   generateScaleNotes,
 } from "src/lib/audio/util/scaleNotes";
+
+const SCALES: { name: ScaleName; label: string }[] = [
+  { name: "chromatic", label: "Chromatic" },
+  { name: "major", label: "Major" },
+  { name: "minor", label: "Minor" },
+  { name: "pentatonic", label: "Pentatonic" },
+];
 
 type PitchGridProps = {
   sampler: CustomSampler | null;
@@ -111,38 +119,20 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
   }, [activeNotes]);
 
   return (
-    <div className="relative w-full max-w-[400px] border-2 border-black flex flex-col bg-white ml-1 mt-1">
-      <div className="flex-none">
-        <div className="flex w-full text-xs">
+    <div className={styles.pitchGrid}>
+      <div className={styles.scaleTabs}>
+        {SCALES.map(({ name, label }) => (
           <button
-            className={`font-bold border-l border-b border-black shadow-inner w-full shadow-slate-800 ${scale === "chromatic" ? "bg-slate-600 text-white" : "bg-slate-50 text-black"}`}
-            onClick={() => setScale("chromatic")}
+            key={name}
+            className={`${styles.scaleTab} ${scale === name ? styles.scaleTabActive : ""}`}
+            onClick={() => setScale(name)}
           >
-            Chromatic
+            {label}
           </button>
-          <button
-            className={`font-bold border-l border-b border-black shadow-inner w-full shadow-slate-800 ${scale === "major" ? "bg-slate-600 text-white" : "bg-slate-50 text-black"}`}
-            onClick={() => setScale("major")}
-          >
-            Major
-          </button>
-          <button
-            className={`font-bold border-l border-b border-black shadow-inner w-full shadow-slate-800 ${scale === "minor" ? "bg-slate-600 text-white" : "bg-slate-50 text-black"}`}
-            onClick={() => setScale("minor")}
-          >
-            Minor
-          </button>
-          <button
-            className={`font-bold border-x border-b border-black shadow-inner w-full shadow-slate-800 ${scale === "pentatonic" ? "bg-slate-600 text-white" : "bg-slate-50 text-black"}`}
-            onClick={() => setScale("pentatonic")}
-          >
-            Pentatonic
-          </button>
-        </div>
+        ))}
       </div>
 
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-full h-full grid grid-cols-5 gap-0 touch-none select-none">
+      <div className={styles.grid}>
           {gridNotes.map((note, i) => {
             const samplerObj = samplersRef.current[selectedSampleId];
             return (
@@ -160,7 +150,6 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
               />
             );
           })}
-        </div>
       </div>
     </div>
   );

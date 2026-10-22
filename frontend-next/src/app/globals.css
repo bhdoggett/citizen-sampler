@@ -3,67 +3,108 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design tokens. Sharp corners, thin ink lines, one accent. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Color */
+  --ink: #16181c;
+  --paper: #f2efe7;
+  --paper-2: #e5e1d6;
+  --paper-3: #d4cfc1;
+  --muted: #6b6f77;
+  --accent: #ff5a1f;
+  --accent-soft: #ffd9c9;
+  --on-accent: #16181c;
+  --rec: #e5322d;
+  --mute: #e86b5f;
+  --solo: #f2c94c;
+  --page-bg: #2a2e35;
+  --page-text: #e9e6de;
+  --wave: #8a8578;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Lines and depth */
+  --line: 1px solid var(--ink);
+  --line-strong: 2px solid var(--ink);
+  --shadow-hard: 4px 4px 0 var(--ink);
+  --shadow-hard-sm: 2px 2px 0 var(--ink);
+
+  /* Space (4px grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+
+  /* Type */
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 14px;
+  --text-lg: 18px;
+  --text-xl: 30px;
+  --tracking-label: 0.08em;
+
+  /* Motion */
+  --press: 60ms ease-out;
 }
 
 body {
-  /* color: var(--foreground); */
-  color: black;
-  /* background: var(--background); */
-  background: white;
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+  background: var(--page-bg);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 6px;
-  background-color: #d1d5db;
-  border-radius: 4px;
+  height: 16px;
+  background: transparent;
   cursor: pointer;
-  position: relative;
 }
 
 /* WebKit (Chrome, Safari, Edge) */
+.slider::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--ink);
+}
+
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 12px;
-  height: 25px;
-  background-color: rgb(98, 98, 98);
-  border: 3px solid black;
+  width: 8px;
+  height: 16px;
+  margin-top: -7px;
+  background: var(--paper);
+  border: var(--line-strong);
   border-radius: 0;
-  cursor: pointer;
-  /* margin-top: 0px; If track is 6px high and thumb is 30px, this centers it */
-  position: relative;
-  z-index: 2;
+}
+
+.slider:active::-webkit-slider-thumb {
+  background: var(--accent);
 }
 
 /* Firefox */
-.slider::-moz-range-thumb {
-  width: 12px;
-  height: 30px;
-  background-color: rgb(98, 98, 98);
-  border: 3px solid black;
-  border-radius: 0;
-  cursor: pointer;
-  position: relative;
-  z-index: 2;
+.slider::-moz-range-track {
+  height: 2px;
+  background: var(--ink);
 }
 
-/* Firefox track (optional, just in case it’s overriding background) */
-.slider::-moz-range-track {
-  background-color: #d1d5db;
-  height: 6px;
-  border-radius: 4px;
+.slider::-moz-range-thumb {
+  width: 4px;
+  height: 12px;
+  background: var(--paper);
+  border: var(--line-strong);
+  border-radius: 0;
+}
+
+.slider:active::-moz-range-thumb {
+  background: var(--accent);
 }

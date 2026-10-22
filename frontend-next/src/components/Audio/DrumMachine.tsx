@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import DrumPad from "./DrumPad";
+import styles from "./DrumMachine.module.css";
 
 const DrumMachine = () => {
   const { samplersRef } = useAudioContext();
@@ -101,11 +102,8 @@ const DrumMachine = () => {
   }, [activePads]);
 
   return (
-    <div className="flex flex-col text-center w-1/2">
-      {/* <h3 className="bg-slate-800 w-full border-2 border-slate-800 text-white font-bold">
-        Sample Pads
-      </h3> */}
-      <div className="grid grid-cols-4 gap-0 mt-1 touch-none select-none">
+    <div className={styles.drumMachine}>
+      <div className={styles.grid}>
         {allPadIds.map((id) => {
           const samplerObj = samplersRef.current[id];
           return (

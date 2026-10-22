@@ -58,11 +58,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`font-mono
-          // ${geistSans.variable} ${geistMono.variable} antialiased
-          bg-slate-700`}
-      >
+      <body>
         <UIProvider>
           <ClientProviders>{children}</ClientProviders>
         </UIProvider>

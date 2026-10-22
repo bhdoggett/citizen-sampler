@@ -18,6 +18,7 @@ import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
+import styles from "./DrumPad.module.css";
 
 type DrumPadProps = {
   id: string;
@@ -228,19 +229,16 @@ const DrumPad = forwardRef(function DrumPad(
 
   // Get the color of the pad based on its mute/solo settings
   const getPadColor = () => {
-    if (!allSampleData[id] || !allSampleData[id].settings) return;
-    if (allSampleData[id].settings.mute) return "bg-red-400";
-    if (allSampleData[id].settings.solo) return "bg-yellow-200";
-    return "bg-slate-400";
+    if (!allSampleData[id] || !allSampleData[id].settings) return "";
+    if (allSampleData[id].settings.mute) return styles.muted;
+    if (allSampleData[id].settings.solo) return styles.soloed;
+    return "";
   };
 
-  // Get the active style based on whether the sample is playing
   const getActiveStyle = () => {
     const isActive =
       sampleIsPlaying || (id === selectedSampleId && activeMidiNotes.size > 0);
-    return isActive
-      ? "brightness-75 saturate-150 translate-x-[2px] translate-y-[1px] shadow-cyan-200 transition-all duration-25 border-cyan-400"
-      : "brightness-100 saturate-100 shadow-md shadow-slate-500 translate-x-0 translate-y-0 transition-all duration-25 border-gray-600";
+    return isActive ? styles.active : "";
   };
 
   // Convert arrow keys to symbols for display
@@ -355,7 +353,7 @@ const DrumPad = forwardRef(function DrumPad(
 
   return (
     <div
-      className={`relative flex m-auto rounded-sm w-full select-none aspect-square ${isSelected ? "border-2 border-blue-600" : "border-2 border-transparent"}`}
+      className={`${styles.cell} ${isSelected ? styles.selected : ""}`}
       onFocus={handleFocus}
     >
       <button
@@ -376,11 +374,11 @@ const DrumPad = forwardRef(function DrumPad(
         onTouchEnd={(e) => {
           e.preventDefault();
         }}
-        className={`relative flex flex-col select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-user-select:none] [-webkit-tap-highlight-color:transparent]  ${getActiveStyle()} ${getPadColor()} m-1  w-full aspect-square shadow-md shadow-slate-500 className="bg-gray-800 border-2  rounded-lg hover:shadow-lg hover:shadow-cyan-400/50 hover:border-cyan-400 transition-all duration-200 cursor-pointer"`}
+        className={`${styles.pad} ${getPadColor()} ${getActiveStyle()}`}
       >
-        <div className="flex ml-0.5 justify-between w-[95%]">
-          <span className="flex text-sm font-bold">{padNum}</span>
-          <span className="flex text-xs italic">
+        <div className={styles.labels}>
+          <span className={styles.number}>{padNum}</span>
+          <span className={styles.key}>
             {hotKeysActive ? getKeySymbol(padKey) : ""}
           </span>
         </div>

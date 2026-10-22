@@ -13,7 +13,7 @@ export default {
         foreground: "var(--foreground)",
       },
       fontFamily: {
-        mono: ["'JetBrainsMono'", "monospace"],
+        mono: ["var(--font-mono)"],
       },
     },
   },

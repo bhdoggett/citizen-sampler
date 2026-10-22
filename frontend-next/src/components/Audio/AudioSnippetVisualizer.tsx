@@ -4,6 +4,7 @@ import {
   extractPeaks,
   drawWaveform,
 } from "../../lib/audio/decodeAudio";
+import styles from "./AudioSnippetVisualizer.module.css";
 
 type AudioSnippetVisualizerProps = {
   url: string;
@@ -22,7 +23,7 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
       .then((buffer) => {
         if (cancelled || !canvas) return;
         const peaks = extractPeaks(buffer, canvas.clientWidth || 100, false);
-        drawWaveform(canvas, peaks, "#ccc");
+        drawWaveform(canvas, peaks, getComputedStyle(canvas).color);
       })
       .catch(console.warn);
     return () => {
@@ -31,9 +32,7 @@ const AudioSnippetVisualizer: React.FC<AudioSnippetVisualizerProps> = ({
   }, [url]);
 
   return (
-    <div className="relative w-full mt-2" style={{ minHeight: "1px" }}>
-      <canvas ref={canvasRef} className="w-full" style={{ height: 20 }} />
-    </div>
+    <canvas ref={canvasRef} className={styles.canvas} />
   );
 };
 
