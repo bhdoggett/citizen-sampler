@@ -21,6 +21,10 @@ const eslintConfig = defineConfig([
         "error",
         { argsIgnorePattern: "^_" },
       ],
+      // React Compiler rules new in eslint-config-next 16. Existing code has
+      // violations; warn for now and fix files as they're touched.
+      "react-hooks/refs": "warn",
+      "react-hooks/set-state-in-effect": "warn",
     },
   },
 ]);
