@@ -1,0 +1,23 @@
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* Square status LED, lit when a MIDI device is connected */
+.led {
+  width: 6px;
+  height: 6px;
+  background: var(--paper-3);
+  border: var(--line);
+}
+
+.connected .led {
+  background: var(--accent);
+}
+
+.connected {
+  color: var(--ink);
+}

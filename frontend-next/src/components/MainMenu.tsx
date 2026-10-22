@@ -8,6 +8,7 @@ import { useAuthContext } from "../app/contexts/AuthContext";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import { useUIContext } from "../app/contexts/UIContext";
 import useDownloadWavStems from "../app/hooks/useDownloadWavStems";
+import styles from "./MainMenu.module.css";
 dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -236,80 +237,51 @@ const Menu: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative flex justify-between items-center" id="main-menu">
-      {/* Main Header Container */}
-
+    <div className={styles.mainMenu} id="main-menu">
       {/* Info Section */}
-      {isAuthenticated && (
-        <div className="flex justify-between h-8 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-300 border-2 border-black shadow-inner shadow-slate-600 overflow-hidden ">
-          <div className="flex items-center divide-x-2 divide-black h-full">
-            {displayName && (
-              <div className="px-1 py-1 max-w-24 relative group">
-                <p
-                  className="text-xs font-bold tracking-wide truncate"
-                  title={displayName}
-                >
-                  {displayName}
-                </p>
-                {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
-                  {displayName}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black"></div>
-                </div>
-              </div>
-            )}
-
-            {songTitle && (
-              <div className="px-1 py-1 max-w-32 relative group">
-                <p className="text-xs font-semibold truncate" title={songTitle}>
-                  {songTitle}
-                </p>
-                {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-10">
-                  {songTitle}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black"></div>
-                </div>
-              </div>
-            )}
-          </div>
+      {isAuthenticated && (displayName || songTitle) && (
+        <div className={styles.info}>
+          {displayName && (
+            <span
+              className={`${styles.infoItem} ${styles.user}`}
+              title={displayName}
+            >
+              {displayName}
+            </span>
+          )}
+          {songTitle && (
+            <span
+              className={`${styles.infoItem} ${styles.song}`}
+              title={songTitle}
+            >
+              {songTitle}
+            </span>
+          )}
         </div>
       )}
 
       <div ref={menuRef}>
         {/* Menu Button */}
         <button
-          className="group relative flex items-center ml-1 justify-center w-8 h-8 bg-slate-500 hover:bg-slate-600 text-white border border-black  transition-all duration-200 shadow-sm shadow-slate-500 hover:shadow-md hover:shadow-slate-500 "
+          className={`${styles.menuButton} ${menuOpen ? styles.menuButtonOpen : ""}`}
           onClick={() => setMenuOpen((prev) => !prev)}
           aria-label="Menu"
+          aria-expanded={menuOpen}
         >
-          <div className="relative w-5 h-4">
-            <span
-              className={`absolute left-0 h-0.5 w-5 bg-white transform transition-all duration-300 ease-in-out ${
-                menuOpen ? "top-2 rotate-45" : "top-0"
-              }`}
-            />
-            <span
-              className={`absolute left-0 top-2 h-0.5 w-5 bg-white  transition-all duration-200 ease-in-out ${
-                menuOpen ? "opacity-0 scale-75" : "opacity-100 scale-100"
-              }`}
-            />
-            <span
-              className={`absolute left-0 h-0.5 w-5 bg-white  transform transition-all duration-300 ease-in-out ${
-                menuOpen ? "top-2 -rotate-45" : "top-4"
-              }`}
-            />
-          </div>
+          <span className={styles.bar} />
+          <span className={styles.bar} />
+          <span className={styles.bar} />
         </button>
 
         {/* --Menu Options-- */}
 
         {menuOpen && (
-          <div className="absolute right-0 top-0 mt-12 bg-white border  shadow-md shadow-slate-500 z-20 min-w-[150px]">
-            <ul className="relative flex flex-col main-menu text-sm">
+          <div className={styles.menu}>
+            <ul>
               {isAuthenticated ? (
                 <>
                   <li
-                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    className={styles.item}
                     onClick={() => {
                       confirmActionRef.current = {
                         message: "Are you sure you want to log out?",
@@ -323,13 +295,13 @@ const Menu: React.FC = () => {
                     Log Out
                   </li>
                   <li
-                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    className={styles.item}
                     onClick={handleSaveSong}
                   >
                     Save Song
                   </li>
                   <li
-                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    className={styles.item}
                     onClick={() => {
                       setShowDialog("save-new-song");
                       setMenuOpen(false);
@@ -338,7 +310,7 @@ const Menu: React.FC = () => {
                     Save As
                   </li>
                   <li
-                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    className={styles.item}
                     onClick={() => {
                       confirmActionRef.current = {
                         message: "Are you sure you want to delete this song?",
@@ -352,7 +324,7 @@ const Menu: React.FC = () => {
                     Delete Song
                   </li>
                   <li
-                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    className={styles.item}
                     onClick={() => {
                       setShowDialog("load-song");
                       setMenuOpen(false);
@@ -364,7 +336,7 @@ const Menu: React.FC = () => {
               ) : (
                 <>
                   <li
-                    className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                    className={styles.item}
                     onClick={() => {
                       setShowDialog("auth-dialog");
                       setMenuOpen(false);
@@ -375,8 +347,9 @@ const Menu: React.FC = () => {
                 </>
               )}
 
+              <li className={styles.divider} aria-hidden="true" />
               <li
-                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                className={styles.item}
                 onClick={() => {
                   setShowDialog("collection-menu");
                   setMenuOpen(false);
@@ -385,7 +358,7 @@ const Menu: React.FC = () => {
                 Load Collection
               </li>
               <li
-                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                className={styles.item}
                 onClick={() => {
                   setShowDialog("kit-menu");
                   setMenuOpen(false);
@@ -394,13 +367,13 @@ const Menu: React.FC = () => {
                 Load Drum Kit
               </li>
               <li
-                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                className={styles.item}
                 onClick={handleDownloadWavStems}
               >
                 Download Stems
               </li>
               <li
-                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                className={styles.item}
                 onClick={() => {
                   confirmActionRef.current = {
                     message:
@@ -415,7 +388,7 @@ const Menu: React.FC = () => {
                 Reset All
               </li>
               <li
-                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                className={styles.item}
                 onClick={() => {
                   setShowDialog("about");
                   setMenuOpen(false);
@@ -424,7 +397,7 @@ const Menu: React.FC = () => {
                 About
               </li>
               <li
-                className="px-1 py-1 hover:bg-slate-100 cursor-pointer text-right whitespace-nowrap"
+                className={styles.item}
                 onClick={() => {
                   setShowDialog("help-shortcuts");
                   setMenuOpen(false);

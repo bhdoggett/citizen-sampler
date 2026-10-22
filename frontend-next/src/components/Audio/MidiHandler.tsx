@@ -1,16 +1,13 @@
 "use client";
 import { useMidiContext } from "../../app/contexts/MidiContext";
+import styles from "./MidiHandler.module.css";
 
 export default function MidiHandler() {
   const { midiConnected, midiDevices } = useMidiContext();
 
   return (
-    <div className="flex items-center gap-1 text-xs text-gray-500">
-      <span
-        className={`inline-block w-2 h-2 rounded-full ${
-          midiConnected ? "bg-green-500" : "bg-gray-400"
-        }`}
-      />
+    <div className={`${styles.status} ${midiConnected ? styles.connected : ""}`}>
+      <span className={styles.led} />
       <span>{midiConnected ? midiDevices[0] : "No MIDI"}</span>
     </div>
   );
