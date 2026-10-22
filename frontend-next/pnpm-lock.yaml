@@ -45,9 +45,6 @@ importers:
         specifier: ^15.0.4
         version: 15.0.4
     devDependencies:
-      '@eslint/eslintrc':
-        specifier: ^3
-        version: 3.3.5
       '@testing-library/dom':
         specifier: 10.4.0
         version: 10.4.0
