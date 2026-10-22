@@ -1,0 +1,102 @@
+.waveform {
+  display: flex;
+  width: 100%;
+  border: var(--line);
+}
+
+.scroller {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+/* --start and --end (0-100%) mark the selected region */
+.track {
+  position: relative;
+  background: linear-gradient(
+    to right,
+    var(--paper-2) var(--start),
+    var(--accent-soft) var(--start),
+    var(--accent-soft) var(--end),
+    var(--paper-2) var(--end)
+  );
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 60px;
+  color: var(--ink);
+}
+
+.region {
+  position: absolute;
+  top: 0;
+  left: var(--start);
+  width: calc(var(--end) - var(--start));
+  height: 100%;
+  z-index: 5;
+  cursor: grab;
+}
+
+.regionDragging {
+  cursor: grabbing;
+}
+
+.handle {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  z-index: 10;
+  background: var(--ink);
+  transform: translateX(-50%);
+  cursor: ew-resize;
+}
+
+.handleStart {
+  left: var(--start);
+}
+
+.handleEnd {
+  left: var(--end);
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  display: none;
+  width: 2px;
+  height: 100%;
+  z-index: 20;
+  background: var(--accent);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.zoom {
+  display: flex;
+  flex-direction: column;
+  border-left: var(--line);
+}
+
+.zoomButton {
+  flex: 1;
+  width: 24px;
+  font-size: var(--text-md);
+  line-height: 1;
+  background: var(--paper);
+}
+
+.zoomButton + .zoomButton {
+  border-top: var(--line);
+}
+
+.zoomButton:hover:not(:disabled) {
+  background: var(--paper-3);
+}
+
+.zoomButton:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}

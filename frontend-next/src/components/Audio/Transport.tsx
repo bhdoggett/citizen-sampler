@@ -2,6 +2,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import * as Tone from "tone";
 import { Circle, Music3 } from "lucide-react";
+import styles from "./Transport.module.css";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import type { LoopName } from "../../types/audioTypes";
 import { useUIContext } from "src/app/contexts/UIContext";
@@ -140,47 +141,50 @@ const Transport = () => {
   ]);
 
   return (
-    <div className="pl-1 mb-1">
-      <div className="flex flex-col w-full mx-auto  shadow-md shadow-slate-500">
-        <div className=" w-full flex justify-between items-center border-2 gap-1 border-black p-2 shadow-inner shadow-slate-500 bg-slate-200">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill={loopIsPlaying ? "green" : "white"}
-            stroke="currentColor"
-            strokeWidth="2"
-            className=" cursor-pointer mr-0.5"
-            onClick={handlePlay}
-          >
-            <polygon points="6 3 20 12 6 21 6 3" />
-          </svg>
-          <Circle
-            fill={isRecording ? "red" : "white"}
-            className=" cursor-pointer mr-0.5"
-            onClick={handleRecord}
-          />
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="white"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="cursor-pointer"
-            onClick={handleStop}
-          >
-            <rect width="18" height="18" x="3" y="3" />
-          </svg>
-          <Music3
-            fill={metronomeActive ? "black" : "white"}
-            className="cursor-pointer"
-            onClick={handleToggleMetronome}
-          />
-        </div>
-      </div>
+    <div className={styles.transport}>
+      <button
+        className={`${styles.button} ${loopIsPlaying ? styles.playing : ""}`}
+        onClick={handlePlay}
+        title="Play (Space)"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        >
+          <polygon points="6 3 20 12 6 21 6 3" />
+        </svg>
+      </button>
+      <button
+        className={`${styles.button} ${isRecording ? styles.recording : ""}`}
+        onClick={handleRecord}
+        title="Record (Ctrl + R)"
+      >
+        <Circle size={20} strokeWidth={2} />
+      </button>
+      <button className={styles.button} onClick={handleStop} title="Stop (Space)">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <rect width="16" height="16" x="4" y="4" />
+        </svg>
+      </button>
+      <button
+        className={`${styles.button} ${metronomeActive ? styles.metronomeOn : ""}`}
+        onClick={handleToggleMetronome}
+        title="Metronome (M)"
+      >
+        <Music3 size={20} strokeWidth={2} />
+      </button>
     </div>
   );
 };

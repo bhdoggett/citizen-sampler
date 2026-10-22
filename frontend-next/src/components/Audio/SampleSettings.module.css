@@ -1,0 +1,173 @@
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 83.333%;
+  padding: var(--space-3);
+  padding-top: var(--space-6);
+  border: var(--line-strong);
+  background: var(--paper);
+}
+
+/* Sample name sits on the panel's top border like a tape label */
+.source {
+  position: absolute;
+  top: -1px;
+  left: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  min-width: 0;
+  font-size: var(--text-xs);
+  line-height: 1;
+}
+
+.collection,
+.title {
+  padding: var(--space-1) var(--space-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collection {
+  flex-shrink: 0;
+  max-width: 45%;
+  color: var(--paper);
+  background: var(--ink);
+}
+
+.title {
+  min-width: 0;
+  border: var(--line);
+  border-left: none;
+  background: var(--paper);
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.2fr) auto;
+  gap: var(--space-3) var(--space-4);
+  align-items: start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.controlHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+
+.label {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.value {
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.noteRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 24px;
+}
+
+.noteRow svg {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.select {
+  height: 24px;
+  padding: 0 var(--space-1);
+  font-size: var(--text-sm);
+  text-align: center;
+  background: var(--paper);
+  border: var(--line);
+  border-radius: 0;
+}
+
+.select:hover {
+  background: var(--paper-2);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Quantize toggle and grid size read as one control */
+.quantize {
+  display: flex;
+}
+
+.quantize .select {
+  border-left: none;
+}
+
+.toggleGroup {
+  display: flex;
+}
+
+.toggle {
+  min-width: 28px;
+  height: 24px;
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--paper);
+  border: var(--line);
+}
+
+.toggleGroup .toggle + .toggle {
+  border-left: none;
+}
+
+.toggle:hover {
+  background: var(--paper-2);
+}
+
+.toggleOn,
+.toggleOn:hover {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+.toggleMute,
+.toggleMute:hover {
+  color: var(--ink);
+  background: var(--mute);
+}
+
+.toggleSolo,
+.toggleSolo:hover {
+  color: var(--ink);
+  background: var(--solo);
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

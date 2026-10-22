@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import type { CSSProperties } from "react";
 import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import {
@@ -6,6 +7,7 @@ import {
   extractPeaks,
   drawWaveform,
 } from "../../lib/audio/decodeAudio";
+import styles from "./Waveform.module.css";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 
 type WaveformProps = {
@@ -78,7 +80,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     const peaks = peaksRef.current;
     if (!canvas || !peaks) return;
     if (canvas.clientWidth < 1) return;
-    drawWaveform(canvas, peaks, "#2026D6");
+    drawWaveform(canvas, peaks, getComputedStyle(canvas).color);
   }, []);
 
   // Load audio on url change
@@ -277,65 +279,40 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     updateSamplerStateSettings,
   ]);
 
+  const regionVars = {
+    "--start": `${startFrac * 100}%`,
+    "--end": `${endFrac * 100}%`,
+  } as CSSProperties;
+
   return (
-    <div className="flex w-full px-3 justify-center mb-2">
-      {/* Scrollable border wrapper */}
-      <div
-        className="border border-slate-600 w-full overflow-x-auto"
-        ref={containerRef}
-      >
+    <div className={styles.waveform}>
+      {/* Scrollable wrapper */}
+      <div className={styles.scroller} ref={containerRef}>
         <div
-          className="relative"
+          className={styles.track}
           ref={wrapperRef}
-          style={{
-            width: canvasPixelWidth,
-            background: `linear-gradient(to right, #ffffff ${startFrac * 100}%, #ffc8c8 ${startFrac * 100}%, #ffc8c8 ${endFrac * 100}%, #ffffff ${endFrac * 100}%)`,
-          }}
+          style={{ ...regionVars, width: canvasPixelWidth }}
         >
-          <canvas
-            ref={canvasRef}
-            height={60}
-            className="block w-full shadow-inner shadow-slate-900"
-            style={{ height: 60 }}
-          />
+          <canvas ref={canvasRef} height={60} className={styles.canvas} />
           {isReady && (
             <>
               {/* Draggable region */}
               <div
-                className="absolute top-0 h-full z-5"
-                style={{
-                  left: `${startFrac * 100}%`,
-                  width: `${(endFrac - startFrac) * 100}%`,
-                  cursor: isRegionDragging ? "grabbing" : "grab",
-                }}
+                className={`${styles.region} ${isRegionDragging ? styles.regionDragging : ""}`}
                 onPointerDown={onRegionPointerDown}
                 onPointerMove={onHandlePointerMove}
                 onPointerUp={onHandlePointerUp}
               />
               {/* Left handle */}
               <div
-                className="absolute top-0 h-full z-10"
-                style={{
-                  left: `${startFrac * 100}%`,
-                  width: 2,
-                  cursor: "ew-resize",
-                  background: "rgba(0,0,0,0.85)",
-                  transform: "translateX(-50%)",
-                }}
+                className={`${styles.handle} ${styles.handleStart}`}
                 onPointerDown={(e) => onHandlePointerDown(e, "start")}
                 onPointerMove={onHandlePointerMove}
                 onPointerUp={onHandlePointerUp}
               />
               {/* Right handle */}
               <div
-                className="absolute top-0 h-full z-10"
-                style={{
-                  left: `${endFrac * 100}%`,
-                  width: 2,
-                  cursor: "ew-resize",
-                  background: "rgba(0,0,0,0.85)",
-                  transform: "translateX(-50%)",
-                }}
+                className={`${styles.handle} ${styles.handleEnd}`}
                 onPointerDown={(e) => onHandlePointerDown(e, "end")}
                 onPointerMove={onHandlePointerMove}
                 onPointerUp={onHandlePointerUp}
@@ -343,37 +320,30 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
             </>
           )}
           {/* Playhead */}
-          <div
-            ref={playheadRef}
-            className="absolute top-0 h-full pointer-events-none z-20"
-            style={{
-              display: "none",
-              width: 2,
-              background: "rgba(255, 0, 0, 0.85)",
-              transform: "translateX(-50%)",
-            }}
-          />
+          <div ref={playheadRef} className={styles.playhead} />
         </div>
       </div>
 
       {/* Zoom buttons */}
-      <div className="flex flex-col items-center my-auto space-y-2 ml-2">
+      <div className={styles.zoom}>
         <button
           onClick={() => {
             const zoomDiff = zoom === 0 ? 100 : 20;
             setZoom((prev) => Math.min(prev + zoomDiff, 1000));
           }}
           disabled={zoom >= 1000}
-          className="text-sm px-1 bg-slate-400 hover:bg-slate-500 text-white border border-black shadow-inner shadow-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={styles.zoomButton}
+          title="Zoom in"
         >
           +
         </button>
         <button
           onClick={() => setZoom((prev) => Math.max(prev - 20, 0))}
           disabled={zoom <= 0}
-          className="text-sm px-1 bg-slate-400 hover:bg-slate-500 text-white border border-black shadow-inner shadow-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={styles.zoomButton}
+          title="Zoom out"
         >
-          -
+          −
         </button>
       </div>
     </div>

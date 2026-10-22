@@ -1,0 +1,13 @@
+/* --progress (0-1) is the playhead position in the loop */
+.track {
+  height: 4px;
+  margin-top: auto;
+  border-top: var(--line);
+  background: var(--paper-2);
+}
+
+.fill {
+  height: 100%;
+  width: calc(var(--progress) * 100%);
+  background: var(--accent);
+}

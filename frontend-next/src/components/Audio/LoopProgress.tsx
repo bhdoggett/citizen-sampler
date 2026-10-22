@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import * as Tone from "tone";
 import { useAudioContext } from "src/app/contexts/AudioContext";
+import type { CSSProperties } from "react";
+import styles from "./LoopProgress.module.css";
 
 const LoopProgressBar = () => {
   const { allLoopSettings, loopIsPlaying } = useAudioContext();
@@ -26,11 +28,11 @@ const LoopProgressBar = () => {
     if (!loopIsPlaying) rafRef.current = null;
   });
   return (
-    <div className="w-full h-2 bg-gray-300 overflow-hidden mt-2">
-      <div
-        className="h-full bg-slate-600 transition-none"
-        style={{ width: `${progress * 100}%` }}
-      />
+    <div
+      className={styles.track}
+      style={{ "--progress": progress } as CSSProperties}
+    >
+      <div className={styles.fill} />
     </div>
   );
 };

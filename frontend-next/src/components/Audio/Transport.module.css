@@ -1,0 +1,39 @@
+.transport {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: var(--line-strong);
+  background: var(--paper);
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.button + .button {
+  border-left: var(--line);
+}
+
+.button:hover {
+  background: var(--paper-2);
+}
+
+.button svg {
+  fill: transparent;
+}
+
+.playing svg {
+  fill: var(--accent);
+}
+
+.recording svg {
+  fill: var(--rec);
+}
+
+.metronomeOn svg {
+  fill: var(--ink);
+}

@@ -27,7 +27,7 @@ const PitchMeter = ({ pitch }: { pitch: PitchResult }) => {
   const hy2 = cy - r * Math.cos(delta);
 
   return (
-    <svg width="30" height="30" viewBox="0 0 56 56" className="shrink-0">
+    <svg width="24" height="24" viewBox="0 0 56 56">
       {/* Full circle outline */}
       <circle
         cx={cx}
