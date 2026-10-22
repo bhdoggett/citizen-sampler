@@ -1,0 +1,82 @@
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.segment {
+  display: flex;
+}
+
+.segment > * + * {
+  border-left: none;
+}
+
+.label {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.select {
+  height: 24px;
+  padding: 0 var(--space-1);
+  font-size: var(--text-sm);
+  background: var(--paper);
+  border: var(--line);
+  border-radius: 0;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 24px;
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  background: var(--paper);
+  border: var(--line);
+}
+
+.button:hover:not(:disabled) {
+  background: var(--paper-2);
+}
+
+.button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.buttonOn,
+.buttonOn:hover:not(:disabled) {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+.square {
+  justify-content: center;
+  width: 24px;
+  padding: 0;
+  font-size: var(--text-md);
+}
+
+.zoomValue {
+  min-width: 44px;
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.sampleId {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}

@@ -4,6 +4,7 @@ import SequencerEvent from "./SequencerEvent";
 import SequencerPadButton from "./SequencerPadButton";
 import type { GridEvent } from "./hooks/useSequencerGrid";
 import type { SampleTypeFE } from "src/types/audioTypesFE";
+import styles from "./SequencerRow.module.css";
 
 type SequencerRowProps = {
   padId: string;
@@ -117,32 +118,21 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
       }
     };
 
-    // Get row background color based on mute/solo/sharp
-    const getRowBgClass = () => {
-      if (!pianoRollMode) {
-        if (sampleData.settings.mute) return "bg-red-50";
-        if (sampleData.settings.solo) return "bg-yellow-50";
-        return isSelected ? "bg-blue-50" : "bg-white";
-      }
-      return isSharpRow ? "bg-gray-200" : "bg-white";
+    // Row state class based on mute/solo/sharp/selection
+    const getRowStateClass = () => {
+      if (pianoRollMode) return isSharpRow ? styles.sharp : "";
+      if (sampleData.settings.mute) return styles.muted;
+      if (sampleData.settings.solo) return styles.soloed;
+      return isSelected ? styles.selected : "";
     };
 
     return (
       <div
-        className={`flex items-stretch border-b border-gray-200 ${getRowBgClass()}`}
+        className={`${styles.row} ${getRowStateClass()}`}
       >
         {/* Pad label - sticky left */}
-        <div
-          className={`sticky left-0 z-20 w-20 min-w-20 flex items-center justify-between px-1.5
-            border-r-2 border-gray-300 font-medium text-sm
-            ${pianoRollMode
-              ? (isSharpRow ? "bg-gray-300" : "bg-gray-100")
-              : `${sampleData.settings.mute ? "bg-red-200 text-red-800" : ""}
-                 ${sampleData.settings.solo ? "bg-yellow-200 text-yellow-800" : ""}
-                 ${!sampleData.settings.mute && !sampleData.settings.solo ? (isSelected ? "bg-blue-100" : "bg-gray-100") : ""}`
-            }`}
-        >
-          <span className="truncate" title={rowLabel || sampleData.title}>
+        <div className={styles.label}>
+          <span className={styles.labelText} title={rowLabel || sampleData.title}>
             {rowLabel || padNumber}
           </span>
           <SequencerPadButton padId={padId} padNumber={padNumber} overrideNote={pianoRollTriggerNote} />
@@ -150,11 +140,11 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
 
         {/* Grid cells */}
         <div
-          className="relative flex-1 h-8"
+          className={styles.cells}
           style={{ width: `${totalColumns * cellWidth}px` }}
         >
           {/* Background grid cells */}
-          <div className="absolute inset-0 flex">
+          <div className={styles.cellLayer}>
             {Array.from({ length: totalColumns }, (_, i) => {
               // Border-r is on the RIGHT edge, so mark last cell of each bar/beat
               const isBarEnd = (i + 1) % cellsPerBar === 0;
@@ -163,9 +153,7 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
               return (
                 <div
                   key={i}
-                  className={`h-full border-r cursor-pointer
-                    ${isSharpRow ? "hover:bg-gray-300" : "hover:bg-gray-100"}
-                    ${isBarEnd ? "border-gray-400" : isBeatEnd ? "border-gray-300" : "border-gray-200"}`}
+                  className={`${styles.cell} ${isBarEnd ? styles.barEnd : isBeatEnd ? styles.beatEnd : ""}`}
                   style={{ width: `${cellWidth}px` }}
                   onClick={() => handleCellClick(i)}
                 />
@@ -174,7 +162,7 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
           </div>
 
           {/* Events layer - pointer-events-none allows clicks to pass through to cells */}
-          <div className="absolute inset-0 pointer-events-none">
+          <div className={styles.eventLayer}>
             {events.map((gridEvent, idx) => (
               <SequencerEvent
                 key={`${gridEvent.padId}-${gridEvent.eventIndex}-${idx}`}
@@ -198,7 +186,7 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
         {/* Clear row trash icon - drum mode only */}
         {!pianoRollMode && onClearRow && (
           <button
-            className="sticky right-0 z-20 w-7 min-w-7 flex items-center justify-center bg-gray-100 border-l border-gray-300 hover:bg-red-100 hover:text-red-600 text-gray-400 transition-colors"
+            className={styles.clear}
             onClick={() => onClearRow(padId)}
             title="Clear row"
           >

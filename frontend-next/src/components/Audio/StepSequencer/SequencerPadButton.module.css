@@ -1,0 +1,29 @@
+.padButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 20px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--paper);
+  border: var(--line);
+  box-shadow: 1px 1px 0 var(--ink);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    transform var(--press),
+    box-shadow var(--press);
+}
+
+.padButton:hover {
+  background: var(--paper-3);
+}
+
+.pressed,
+.pressed:hover {
+  background: var(--accent);
+  box-shadow: none;
+  transform: translate(1px, 1px);
+}

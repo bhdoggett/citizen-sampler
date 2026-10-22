@@ -4,6 +4,7 @@ import type { GridEvent } from "./hooks/useSequencerGrid";
 import type { Subdivision } from "./utils/gridConversions";
 import { subdivisionToCellsPerBeat } from "./utils/gridConversions";
 import { useAudioContext } from "src/app/contexts/AudioContext";
+import styles from "./SequencerGrid.module.css";
 
 type SequencerGridProps = {
   gridEvents: Map<string, GridEvent[]>;
@@ -165,11 +166,11 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     }, [bars, cellsPerBar]);
 
     return (
-      <div className="flex flex-col border border-gray-300 rounded h-full">
+      <div className={styles.grid}>
         {/* Scrollable container for both header and grid */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto overflow-y-auto h-full"
+          className={styles.scroller}
         >
           <div
             style={{
@@ -177,18 +178,18 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
             }}
           >
             {/* Column headers - inside scroll container */}
-            <div className="flex bg-gray-200 border-b-2 border-gray-400 sticky top-0 z-30">
+            <div className={styles.header}>
               {/* Spacer for pad labels column */}
-              <div className="sticky left-0 z-30 w-20 min-w-20 bg-gray-200 border-r-2 border-gray-300 flex items-center justify-center text-xs font-bold">
+              <div className={styles.corner}>
                 {pianoRollMode ? "Note" : "Pad"}
               </div>
 
               {/* Bar/beat labels */}
-              <div className="flex">
+              <div className={styles.bars}>
                 {headerLabels.map((label, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-center text-xs font-semibold border-r border-gray-400 bg-gray-200"
+                    className={styles.headerLabel}
                     style={{ width: `${label.columnSpan * cellWidth}px` }}
                   >
                     Bar {label.text}
@@ -198,7 +199,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
             </div>
 
             {/* Grid rows */}
-            <div className="relative">
+            <div className={styles.rows}>
               {rows.map((row) => {
                 const sampleData = allSampleData[row.padId];
                 if (!sampleData) return null;
@@ -244,11 +245,8 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
               {/* Playhead overlay */}
               {playheadPosition > 0 && (
                 <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-30 pointer-events-none"
-                  style={{
-                    left: `${80 + playheadPosition * cellWidth}px`,
-                    transition: "none",
-                  }}
+                  className={styles.playhead}
+                  style={{ left: `${80 + playheadPosition * cellWidth}px` }}
                 />
               )}
             </div>

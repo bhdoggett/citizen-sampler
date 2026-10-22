@@ -1,0 +1,61 @@
+/* --velocity-mix sets how much accent shows: louder notes are stronger */
+.event {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  z-index: 5;
+  border: var(--line);
+  background: color-mix(
+    in srgb,
+    var(--accent) var(--velocity-mix),
+    var(--paper)
+  );
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.active {
+  z-index: 10;
+}
+
+.selected {
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.dragging {
+  opacity: 0.7;
+}
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.resizeHandle:hover {
+  background: color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
+.resizeStart {
+  left: 0;
+}
+
+.resizeEnd {
+  right: 0;
+}
+
+.velocityBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ink);
+  transform: translateY(-50%);
+  cursor: ns-resize;
+  touch-action: none;
+  pointer-events: auto;
+}

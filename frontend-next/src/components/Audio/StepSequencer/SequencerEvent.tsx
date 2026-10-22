@@ -1,5 +1,6 @@
 import React, { useRef, useState, memo } from "react";
 import type { GridEvent } from "./hooks/useSequencerGrid";
+import styles from "./SequencerEvent.module.css";
 
 type SequencerEventProps = {
   gridEvent: GridEvent;
@@ -68,9 +69,8 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
 
   // Velocity → HSL: high velocity = darker, more saturated (blue hue ~220)
   const v = Math.max(0, Math.min(1, originalEvent.velocity));
-  const lightness = 30 + (1 - v) * 50;
-  const saturation = 40 + v * 60;
-  const velocityBg = `hsl(220, ${saturation}%, ${lightness}%)`;
+  // Share of accent color in the event fill; quiet notes fade toward paper
+  const velocityMix = `${Math.round(35 + v * 65)}%`;
   // Constrain velocity bar between a top and bottom margin inside the event
   const velocityMargin = 0.1;
   const clampedMargin = Math.max(0, Math.min(0.45, velocityMargin));
@@ -412,15 +412,14 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
   return (
     <div
       ref={eventRef}
-      className={`absolute top-0.5 bottom-0.5 rounded cursor-pointer transition-colors pointer-events-auto touch-none
-        ${isDragging || isResizing || isResizingStart ? "z-10" : "z-5"}
-        ${isSelected ? "ring-2 ring-blue-400" : ""}
-        ${isDragging ? "opacity-70" : ""}`}
-      style={{
-        left: `${displayColumn * cellWidth}px`,
-        width: `${displayWidth * cellWidth - 2}px`,
-        backgroundColor: velocityBg,
-      }}
+      className={`${styles.event} ${isDragging || isResizing || isResizingStart ? styles.active : ""} ${isSelected ? styles.selected : ""} ${isDragging ? styles.dragging : ""}`}
+      style={
+        {
+          left: `${displayColumn * cellWidth}px`,
+          width: `${displayWidth * cellWidth - 2}px`,
+          "--velocity-mix": velocityMix,
+        } as React.CSSProperties
+      }
       onClick={handleClick}
       onMouseDown={handleMouseDown}
       onMouseMove={(e) => {
@@ -434,7 +433,7 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
       {/* Resize handle on left edge */}
       {onResizeStartEnd && (
         <div
-          className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-blue-300/50 touch-none"
+          className={`${styles.resizeHandle} ${styles.resizeStart}`}
           onMouseDown={handleResizeStartMouseDown}
           onTouchStart={handleResizeStartTouchStart}
         />
@@ -442,7 +441,7 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
       {/* Resize handle on right edge */}
       {onResizeEnd && (
         <div
-          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-blue-300/50 touch-none"
+          className={`${styles.resizeHandle} ${styles.resizeEnd}`}
           onMouseDown={handleResizeMouseDown}
           onTouchStart={handleResizeTouchStart}
         />
@@ -450,11 +449,8 @@ const SequencerEvent: React.FC<SequencerEventProps> = memo(({
       {/* Velocity bar: visible when Ctrl held; drag up/down to adjust velocity */}
       {ctrlHeld && onVelocityChange && (
         <div
-          className="absolute left-0 right-0 h-0.5 cursor-ns-resize touch-none pointer-events-auto bg-black"
-          style={{
-            top: `${barPosition * 100}%`,
-            transform: "translateY(-50%)",
-          }}
+          className={styles.velocityBar}
+          style={{ top: `${barPosition * 100}%` }}
           onMouseDown={handleVelocityBarMouseDown}
           onTouchStart={handleVelocityBarTouchStart}
         />

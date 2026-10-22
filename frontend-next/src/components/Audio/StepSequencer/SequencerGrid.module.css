@@ -1,0 +1,67 @@
+.grid {
+  height: 100%;
+  border: var(--line);
+  background: var(--paper);
+}
+
+.scroller {
+  height: 100%;
+  overflow: auto;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  border-bottom: var(--line);
+  background: var(--paper-2);
+}
+
+.corner {
+  position: sticky;
+  left: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  min-width: 80px;
+  border-right: var(--line);
+  background: var(--paper-2);
+}
+
+.headerLabel,
+.corner {
+  height: 22px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bars {
+  display: flex;
+}
+
+.headerLabel {
+  display: flex;
+  align-items: center;
+  padding-left: var(--space-2);
+  border-right: var(--line);
+}
+
+.rows {
+  position: relative;
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 30;
+  width: 2px;
+  background: var(--accent);
+  pointer-events: none;
+}

@@ -6,6 +6,7 @@ import * as Tone from "tone";
 import { drumKeys } from "src/lib/constants/drumKeys";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
+import styles from "./SequencerPadButton.module.css";
 
 type SequencerPadButtonProps = {
   padId: string;
@@ -230,11 +231,7 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
       onMouseDown={handlePress}
       onMouseUp={handleRelease}
       onMouseLeave={handleRelease}
-      className={`flex items-center justify-center w-7 h-5 rounded text-[10px] font-bold cursor-pointer select-none transition-all duration-75 border border-gray-700
-        ${isPressed
-          ? "bg-cyan-400 text-white scale-95"
-          : "bg-gray-500 hover:bg-gray-600 text-white"
-        }`}
+      className={`${styles.padButton} ${isPressed ? styles.pressed : ""}`}
       title={
         overrideNote
           ? `Play ${overrideNote}`

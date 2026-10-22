@@ -1,0 +1,122 @@
+.row {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--paper-3);
+  background: var(--paper);
+}
+
+.sharp {
+  background: var(--paper-2);
+}
+
+.selected {
+  background: var(--accent-soft);
+}
+
+.muted {
+  background: color-mix(in srgb, var(--mute) 25%, var(--paper));
+}
+
+.soloed {
+  background: color-mix(in srgb, var(--solo) 30%, var(--paper));
+}
+
+.label {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 80px;
+  min-width: 80px;
+  padding: 0 var(--space-2);
+  font-size: var(--text-sm);
+  border-right: var(--line);
+  background: var(--paper-2);
+}
+
+.sharp .label {
+  background: var(--paper-3);
+}
+
+.selected .label {
+  font-weight: 700;
+  background: var(--accent-soft);
+}
+
+.muted .label {
+  background: var(--mute);
+}
+
+.soloed .label {
+  background: var(--solo);
+}
+
+.labelText {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cells {
+  position: relative;
+  flex: 1;
+  height: 32px;
+}
+
+.cellLayer,
+.eventLayer {
+  position: absolute;
+  inset: 0;
+}
+
+.cellLayer {
+  display: flex;
+}
+
+.eventLayer {
+  pointer-events: none;
+}
+
+.cell {
+  height: 100%;
+  border-right: 1px solid var(--paper-3);
+  cursor: pointer;
+}
+
+.cell:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.beatEnd {
+  border-right-color: color-mix(in srgb, var(--ink) 25%, var(--paper));
+}
+
+.barEnd {
+  border-right-color: var(--ink);
+}
+
+.clear {
+  position: sticky;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  min-width: 28px;
+  color: transparent;
+  border-left: var(--line);
+  background: var(--paper-2);
+}
+
+/* Trash only shows on the row being pointed at */
+.row:hover .clear {
+  color: var(--muted);
+}
+
+.row .clear:hover {
+  color: var(--ink);
+  background: var(--mute);
+}

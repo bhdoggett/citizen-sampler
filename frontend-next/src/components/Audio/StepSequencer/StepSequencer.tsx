@@ -26,6 +26,7 @@ import {
   generatePianoRollNotes,
 } from "src/lib/audio/util/scaleNotes";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
+import styles from "./StepSequencer.module.css";
 
 const PAD_LABEL_WIDTH = 80; // Width of the pad label column
 const CONTAINER_PADDING = 2; // 1px border on each side of the grid
@@ -508,16 +509,14 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
 
   if (!loopSettings) {
     return (
-      <div className="p-4 text-center text-gray-500">
-        No loop settings available
-      </div>
+      <div className={styles.empty}>No loop settings available</div>
     );
   }
 
   return (
     <div
       ref={containerRef}
-      className="flex flex-col w-full select-none"
+      className={styles.stepSequencer}
       style={maxHeight ? { height: maxHeight } : undefined}
     >
       <SequencerControls
@@ -542,7 +541,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
         onCancelCopy={handleCancelCopy}
       />
 
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className={styles.gridArea}>
         <SequencerGrid
           gridEvents={gridEvents}
           totalColumns={totalColumns}
