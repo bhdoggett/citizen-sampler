@@ -7,6 +7,7 @@ import { drumKeys } from "src/lib/constants/drumKeys";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
+import { useReportPadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./SequencerPadButton.module.css";
 
 type SequencerPadButtonProps = {
@@ -54,6 +55,7 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
   });
 
   const padKey = drumKeys[padNumber - 1];
+  useReportPadPlaying(padId, "sequencer", isPressed);
 
   const handlePress = useCallback(() => {
     const sampler = samplersRef.current[padId]?.sampler;

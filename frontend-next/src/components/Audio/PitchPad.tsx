@@ -15,6 +15,7 @@ import quantize from "../../lib/audio/util/quantize";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { resolvePlayNote } from "../../lib/audio/util/resolvePlayNote";
+import { usePadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./PitchPad.module.css";
 
 type PitchPadProps = {
@@ -181,8 +182,14 @@ const PitchPad = forwardRef(function PitchPad(
     }
   };
 
+  // The root note lights up while the selected pad is played from the drum
+  // pads or sequencer, since that plays the sample at its base note.
+  const isRootNote = note === allSampleData[selectedSampleId].settings.baseNote;
+  const rootPadPlaying = usePadPlaying(isRootNote ? selectedSampleId : null);
+
   const getActiveStyle = () => {
-    const isActive = pitchIsPlaying || activeMidiNotes.has(note);
+    const isActive =
+      pitchIsPlaying || rootPadPlaying || activeMidiNotes.has(note);
     return isActive ? styles.active : "";
   };
 
@@ -306,7 +313,7 @@ const PitchPad = forwardRef(function PitchPad(
       onTouchEnd={(e) => {
         e.preventDefault();
       }}
-      className={`${styles.pitchPad} ${note === allSampleData[selectedSampleId].settings.baseNote ? styles.baseNote : ""} ${getActiveStyle()}`}
+      className={`${styles.pitchPad} ${isRootNote ? styles.baseNote : ""} ${getActiveStyle()}`}
     >
       {note}
     </button>

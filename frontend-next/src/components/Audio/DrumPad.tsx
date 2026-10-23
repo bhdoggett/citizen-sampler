@@ -19,6 +19,7 @@ import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
+import { useReportPadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./DrumPad.module.css";
 
 type DrumPadProps = {
@@ -53,6 +54,7 @@ const DrumPad = forwardRef(function DrumPad(
   const { activeMidiNotes } = useMidiContext();
   const padNum = id.split("-")[1];
   const padKey = drumKeys[Number(padNum) - 1];
+  useReportPadPlaying(id, "drum-pad", sampleIsPlaying);
   const currentEvent = useRef<SampleEventFE>({
     startTime: null,
     duration: 0,
