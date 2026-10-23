@@ -151,6 +151,16 @@ const SampleSettings = () => {
         <span className={styles.title}>
           {allSampleData[selectedSampleId].title}
         </span>
+        <button
+          onClick={() => {
+            setShowDialog("choose-sample");
+          }}
+          className={styles.chooseSample}
+          title="Choose sample"
+          aria-label="Choose sample"
+        >
+          <FolderOpen size={12} strokeWidth={2} />
+        </button>
       </div>
 
       <Waveform audioUrl={allSampleData[selectedSampleId].url} />
@@ -257,10 +267,7 @@ const SampleSettings = () => {
         </div>
 
         <div className={styles.column}>
-          <div className={styles.noteRow}>
-            <label className={styles.label} htmlFor="base-note">
-              Note
-            </label>
+          <Control label="Note">
             <select
               id="base-note"
               value={settings.baseNote}
@@ -281,7 +288,7 @@ const SampleSettings = () => {
               ))}
             </select>
             <PitchMeter pitch={pitchResult} />
-          </div>
+          </Control>
           <Control
             label="Pitch"
             value={((settings.pitch || 0) * 100).toFixed(0)}
@@ -301,69 +308,66 @@ const SampleSettings = () => {
           </Control>
         </div>
 
-        <div className={styles.actions}>
-          <div className={styles.quantize}>
-            <button
-              onClick={() => updateSetting("quantize", !settings.quantize)}
-              className={`${styles.toggle} ${settings.quantize ? styles.toggleOn : ""}`}
-              title="Toggle quantize (Shift + Q)"
-            >
-              QUANT
-            </button>
-            <select
-              value={settings.quantVal}
-              onChange={(e) => {
-                updateSetting("quantVal", e.target.value as QuantizeValue);
-              }}
-              className={styles.select}
-              title="Quantize grid"
-            >
-              {QUANTIZE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  1/{option}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.toggleGroup}>
-            <button
-              className={`${styles.toggle} ${isMuted ? styles.toggleMute : ""}`}
-              onClick={handleToggleMute}
-              title="Mute"
-            >
-              M
-            </button>
-            <button
-              className={`${styles.toggle} ${isSoloed ? styles.toggleSolo : ""}`}
-              onClick={handleToggleSolo}
-              title="Solo"
-            >
-              S
-            </button>
-            <button
-              className={`${styles.toggle} ${settings.oneShot ? styles.toggleOn : ""}`}
-              onClick={() => updateSetting("oneShot", !settings.oneShot)}
-              title="One shot — always play full clip"
-            >
-              1S
-            </button>
-            <button
-              className={`${styles.toggle} ${settings.reverse ? styles.toggleOn : ""}`}
-              onClick={() => updateSetting("reverse", !settings.reverse)}
-              title="Reverse playback"
-            >
-              REV
-            </button>
-            <button
-              onClick={() => {
-                setShowDialog("choose-sample");
-              }}
-              className={`${styles.toggle} ${styles.iconButton}`}
-              title="Choose sample"
-            >
-              <FolderOpen size={14} strokeWidth={1.75} />
-            </button>
-          </div>
+        <div className={styles.column}>
+          <Control label="Quantize" group>
+            <div className={styles.strip}>
+              <button
+                onClick={() => updateSetting("quantize", !settings.quantize)}
+                className={`${styles.toggle} ${settings.quantize ? styles.toggleOn : ""}`}
+                title="Toggle quantize (Shift + Q)"
+              >
+                {settings.quantize ? "ON" : "OFF"}
+              </button>
+              <select
+                value={settings.quantVal}
+                onChange={(e) => {
+                  updateSetting("quantVal", e.target.value as QuantizeValue);
+                }}
+                className={styles.select}
+                title="Quantize grid"
+              >
+                {QUANTIZE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    1/{option}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </Control>
+          <Control label="Pad" group>
+            <div className={styles.strip}>
+              <button
+                className={`${styles.toggle} ${isMuted ? styles.toggleMute : ""}`}
+                onClick={handleToggleMute}
+                title="Mute"
+              >
+                M
+              </button>
+              <button
+                className={`${styles.toggle} ${isSoloed ? styles.toggleSolo : ""}`}
+                onClick={handleToggleSolo}
+                title="Solo"
+              >
+                S
+              </button>
+            </div>
+            <div className={styles.strip}>
+              <button
+                className={`${styles.toggle} ${settings.oneShot ? styles.toggleOn : ""}`}
+                onClick={() => updateSetting("oneShot", !settings.oneShot)}
+                title="One shot — always play full clip"
+              >
+                1S
+              </button>
+              <button
+                className={`${styles.toggle} ${settings.reverse ? styles.toggleOn : ""}`}
+                onClick={() => updateSetting("reverse", !settings.reverse)}
+                title="Reverse playback"
+              >
+                REV
+              </button>
+            </div>
+          </Control>
         </div>
       </div>
     </section>
@@ -372,19 +376,27 @@ const SampleSettings = () => {
 
 type ControlProps = {
   label: string;
-  value: string;
+  value?: string;
+  // Render as a div when the body holds several buttons, since a <label>
+  // forwards clicks on its text to the first button inside it.
+  group?: boolean;
   children: ReactNode;
 };
 
-const Control = ({ label, value, children }: ControlProps) => (
-  <label className={styles.control}>
-    <span className={styles.controlHeader}>
-      <span className={styles.label}>{label}</span>
-      <span className={styles.value}>{value}</span>
-    </span>
-    {children}
-  </label>
-);
+// Every control is a header line over a fixed-height body, so the two rows
+// line up across columns whatever the body contains.
+const Control = ({ label, value, group, children }: ControlProps) => {
+  const Root = group ? "div" : "label";
+  return (
+    <Root className={styles.control}>
+      <span className={styles.controlHeader}>
+        <span className={styles.label}>{label}</span>
+        {value !== undefined && <span className={styles.value}>{value}</span>}
+      </span>
+      <span className={styles.controlBody}>{children}</span>
+    </Root>
+  );
+};
 
 const QUANTIZE_OPTIONS: QuantizeValue[] = [
   "1",

@@ -44,9 +44,24 @@
   background: var(--paper);
 }
 
+.chooseSample {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border: var(--line);
+  border-left: none;
+  background: var(--paper);
+}
+
+.chooseSample:hover {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
 .controls {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.2fr) auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
   gap: var(--space-3) var(--space-4);
   align-items: start;
 }
@@ -67,8 +82,21 @@
 .controlHeader {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-end;
   gap: var(--space-1);
+  height: 16px;
+  line-height: 1;
+}
+
+.controlBody {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 24px;
+}
+
+.controlBody svg {
+  flex-shrink: 0;
 }
 
 .label {
@@ -82,18 +110,6 @@
 .value {
   font-size: var(--text-sm);
   white-space: nowrap;
-}
-
-.noteRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  height: 24px;
-}
-
-.noteRow svg {
-  flex-shrink: 0;
-  margin-left: auto;
 }
 
 .select {
@@ -110,27 +126,17 @@
   background: var(--paper-2);
 }
 
-.actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-/* Quantize toggle and grid size read as one control */
-.quantize {
+/* Adjacent buttons and selects read as one segmented control */
+.strip {
   display: flex;
 }
 
-.quantize .select {
+.strip > * + * {
   border-left: none;
 }
 
-.toggleGroup {
-  display: flex;
-}
-
 .toggle {
-  min-width: 28px;
+  min-width: 32px;
   height: 24px;
   padding: 0 var(--space-2);
   font-size: var(--text-xs);
@@ -138,10 +144,6 @@
   letter-spacing: 0.04em;
   background: var(--paper);
   border: var(--line);
-}
-
-.toggleGroup .toggle + .toggle {
-  border-left: none;
 }
 
 .toggle:hover {
@@ -166,8 +168,8 @@
   background: var(--solo);
 }
 
-.iconButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+.controlBody > input {
+  flex: 1;
+  min-width: 0;
 }
