@@ -1,15 +1,16 @@
 "use client";
+import styles from "./Dialog.module.css";
 
 const HelpShortcuts: React.FC = () => {
   return (
-    <section className="max-w-3xl mx-auto px-4 py-2 text-gray-200 max-h-[65vh] overflow-y-auto rounded-lg">
-      <h2 className="text-3xl font-bold mb-4">Controls &amp; Shortcuts</h2>
+    <section className={styles.prose}>
+      <h2>Controls &amp; Shortcuts</h2>
 
       {/* Global transport & navigation */}
-      <h3 className="text-xl font-semibold mt-2 mb-1">
+      <h3>
         Global transport &amp; navigation
       </h3>
-      <ul className="list-disc list-inside text-sm space-y-1 mb-3">
+      <ul>
         <li>
           <strong>Play / Stop loop</strong>: <code>Spacebar</code>
         </li>
@@ -44,10 +45,10 @@ const HelpShortcuts: React.FC = () => {
       </ul>
 
       {/* Drum Pads & Pitch Grid */}
-      <h3 className="text-xl font-semibold mt-2 mb-1">
+      <h3>
         Drum Pads &amp; Pitch Grid
       </h3>
-      <ul className="list-disc list-inside text-sm space-y-1 mb-3">
+      <ul>
         <li>
           <strong>Trigger pads</strong>: click/tap a pad, or press its key (the
           letter in the pad corner, e.g.{" "}
@@ -66,8 +67,8 @@ const HelpShortcuts: React.FC = () => {
       </ul>
 
       {/* Step Sequencer */}
-      <h3 className="text-xl font-semibold mt-2 mb-1">Step Sequencer</h3>
-      <ul className="list-disc list-inside text-sm space-y-1 mb-3">
+      <h3>Step Sequencer</h3>
+      <ul>
         <li>
           <strong>Add / remove events</strong>: click in a grid cell to add an
           event; click an event to delete it.
@@ -109,8 +110,8 @@ const HelpShortcuts: React.FC = () => {
       </ul>
 
       {/* Sample settings */}
-      <h3 className="text-xl font-semibold mt-2 mb-1">Sample settings</h3>
-      <ul className="list-disc list-inside text-sm space-y-1 mb-3">
+      <h3>Sample settings</h3>
+      <ul>
         <li>
           <strong>Waveform zoom &amp; region</strong>: zoom in on the waveform
           and drag the start/end handles to choose which part of the sample
@@ -146,8 +147,8 @@ const HelpShortcuts: React.FC = () => {
       </ul>
 
       {/* Loops & patterns */}
-      <h3 className="text-xl font-semibold mt-2 mb-1">Loops &amp; patterns</h3>
-      <ul className="list-disc list-inside text-sm space-y-1 mb-3">
+      <h3>Loops &amp; patterns</h3>
+      <ul>
         <li>
           <strong>Loop buttons A–D</strong>: switch between up to four loop
           patterns that share the same pads and settings.
@@ -163,10 +164,10 @@ const HelpShortcuts: React.FC = () => {
       </ul>
 
       {/* Saving & stems */}
-      <h3 className="text-xl font-semibold mt-2 mb-1">
+      <h3>
         Saving, loading, &amp; stems
       </h3>
-      <ul className="list-disc list-inside text-sm space-y-1 mb-4">
+      <ul>
         <li>
           <strong>Save / Save As / Load Song</strong>: use the main menu in the
           top-right to manage songs (requires an account to save).
@@ -177,7 +178,7 @@ const HelpShortcuts: React.FC = () => {
         </li>
       </ul>
 
-      <p className="text-xs text-gray-400">
+      <p>
         New to Citizen Sampler? Start by loading a collection, pressing{" "}
         <code>Space</code> to play the loop, and tapping the pads in time.
         Enable record to capture your beats to the current loop. When

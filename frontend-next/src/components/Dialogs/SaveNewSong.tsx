@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useAuthContext } from "src/app/contexts/AuthContext";
 import { useUIContext } from "src/app/contexts/UIContext";
+import styles from "./Dialog.module.css";
 dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -74,27 +75,30 @@ const SaveNewSong: React.FC = () => {
   }, []);
 
   return (
-    <form onSubmit={handleSaveNewSong}>
-      <div>
-        <label htmlFor="song-title" className="text-white">
-          Song Name:
+    <form onSubmit={handleSaveNewSong} className={styles.form}>
+      <div className={styles.field}>
+        <label htmlFor="song-title" className={styles.label}>
+          Song name
         </label>
         <input
           type="text"
           name="song-title"
           id="song-title"
-          className="pl-1 text-black shadow-inner shadow-slate-700 w-full"
+          className={styles.input}
+          autoFocus
           value={formSongTitle}
           onChange={(e) => setFormSongTitle(e.target.value)}
         />
       </div>
 
-      <button
-        type="submit"
-        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-1/4"
-      >
-        Save
-      </button>
+      <div className={styles.actions}>
+        <button
+          type="submit"
+          className={`${styles.button} ${styles.primary}`}
+        >
+          Save
+        </button>
+      </div>
     </form>
   );
 };

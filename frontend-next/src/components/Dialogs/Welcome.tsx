@@ -1,4 +1,5 @@
 "use client";
+import styles from "./Dialog.module.css";
 
 import { useUIContext } from "src/app/contexts/UIContext";
 
@@ -14,16 +15,16 @@ const Welcome: React.FC = () => {
   };
 
   return (
-    <section className="max-w-xl mx-auto px-4 py-2 text-gray-200 max-h-[65vh] overflow-y-auto rounded-lg">
-      <h2 className="text-3xl font-bold mb-4">Welcome to Citizen Sampler</h2>
+    <section className={styles.prose}>
+      <h2>Welcome to Citizen Sampler</h2>
 
-      <p className="mb-3 text-sm">
+      <p>
         Citizen Sampler is an MPC-style web instrument for building loops from
         public-domain and Creative Commons samples. Here&apos;s the 10‑second
         tour:
       </p>
 
-      <ol className="list-decimal list-inside text-sm space-y-2 mb-4">
+      <ol>
         <li>
           <strong>PADS</strong>: trigger sounds with your keyboard or mouse
           while the loop plays to record a performance.
@@ -40,23 +41,23 @@ const Welcome: React.FC = () => {
         </li>
       </ol>
 
-      <p className="mb-4 text-sm">
+      <p>
         When you&apos;re ready, open the full{" "}
         <button
           type="button"
           onClick={handleGoToHelp}
-          className="underline text-blue-300 hover:text-blue-200"
+          className={styles.link}
         >
           Controls &amp; Shortcuts
         </button>{" "}
         for a complete list of keys and tricks.
       </p>
 
-      <div className="flex justify-end gap-2 mt-4 text-sm">
+      <div className={styles.actions}>
         <button
           type="button"
           onClick={handleClose}
-          className="border border-white px-3 py-1 rounded hover:bg-white hover:text-slate-900 transition-colors"
+          className={`${styles.button} ${styles.primary}`}
         >
           Start playing
         </button>

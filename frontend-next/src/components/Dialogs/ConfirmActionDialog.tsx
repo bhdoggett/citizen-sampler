@@ -1,5 +1,6 @@
 "use client";
 import { useUIContext } from "../../app/contexts/UIContext";
+import styles from "./Dialog.module.css";
 
 const ConfirmActionDialog: React.FC = () => {
   const { setShowDialog, confirmActionRef, setHotKeysActive } = useUIContext();
@@ -8,7 +9,7 @@ const ConfirmActionDialog: React.FC = () => {
 
   return (
     <>
-      <h2 className="text-center text-lg font-bold mb-3">
+      <h2 className={styles.message}>
         {confirmActionRef.current.message}
       </h2>
       <button
@@ -19,7 +20,7 @@ const ConfirmActionDialog: React.FC = () => {
           setShowDialog(null);
           setHotKeysActive(true);
         }}
-        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
+        className={`${styles.button} ${styles.primary}`}
       >
         {confirmActionRef.current.buttonText}
       </button>

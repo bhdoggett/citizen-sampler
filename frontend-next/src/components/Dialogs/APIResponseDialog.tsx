@@ -1,15 +1,12 @@
 "use client";
 import { useUIContext } from "src/app/contexts/UIContext";
+import styles from "./Dialog.module.css";
 
 const APIResponseDialog: React.FC = () => {
   const { apiResponseMessageRef } = useUIContext();
 
   return (
-    <div className="mr-3">
-      <h2 className="text-center text-lg font-bold">
-        {apiResponseMessageRef.current}
-      </h2>
-    </div>
+    <h2 className={styles.message}>{apiResponseMessageRef.current}</h2>
   );
 };
 

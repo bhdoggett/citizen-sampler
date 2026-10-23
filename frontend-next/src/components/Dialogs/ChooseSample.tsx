@@ -17,7 +17,8 @@ import {
 import { useUIContext } from "src/app/contexts/UIContext";
 import { getTitle } from "../../lib/getTitle";
 import { SampleTypeFE } from "src/types/audioTypesFE";
-
+import dialog from "./Dialog.module.css";
+import styles from "./ChooseSample.module.css";
 
 const ChooseSample: React.FC = () => {
   const {
@@ -121,125 +122,126 @@ const ChooseSample: React.FC = () => {
   }, [sampleGroup, type]);
 
   return (
-    <>
-      <div className="flex flex-col w-full max-w-sm mx-auto">
-        {type === null && (
-          <>
-            <button
-              onClick={() => {
-                setType("loc");
-                setSampleGroup(collectionNames[0]);
-              }}
-              className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
-            >
-              Library of Congress
-            </button>
-            <button
-              onClick={() => {
-                setType("kit");
-                setSampleGroup(drumMachineNames[0]);
-              }}
-              className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
-            >
-              Drum Machines
-            </button>
-          </>
-        )}
-      </div>
-      <div>
-        <div>
-          {type === "loc" && (
-            <>
-              <label htmlFor="collection" className="mb-1">
-                Collection:
-              </label>
-              <select
-                name="collection"
-                id="collection"
-                onChange={(e) => handleSelectSampleGroup(e.target.value)}
-                className="mb-4 text-black"
-              >
-                {collectionNames.map((collection) => (
-                  <option key={collection} value={collection}>
-                    {collection}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
+    <div className={dialog.form}>
+      <h2 className={dialog.title}>Choose Sample</h2>
 
-          {type === "kit" && (
-            <>
-              <label htmlFor="kit" className="mb-1">
-                Drum Machine:
-              </label>
-              <select
-                name="kit"
-                id="kit"
-                onChange={(e) => setSampleGroup(e.target.value)}
-                className="mb-4 text-black"
-              >
-                {drumMachineNames.map((dm) => (
-                  <option key={dm} value={dm}>
-                    {dm}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
+      {type === null && (
+        <div className={styles.sourcePicker}>
+          <button
+            type="button"
+            onClick={() => {
+              setType("loc");
+              setSampleGroup(collectionNames[0]);
+            }}
+            className={`${dialog.button} ${styles.source}`}
+          >
+            Library of Congress
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setType("kit");
+              setSampleGroup(drumMachineNames[0]);
+            }}
+            className={`${dialog.button} ${styles.source}`}
+          >
+            Drum Machines
+          </button>
         </div>
+      )}
 
-        {type && (
-          <>
-            <div className="flex flex-col w-full max-w-sm mx-auto">
-              <label className="mb-1">Samples:</label>
-              <div className="position:fixed flex flex-col bg-slate-700 p-1 max-h-36 overflow-y-auto space-y-1 focus:outline-none">
-                {type &&
-                  samplesArray.map((sample, index) => (
-                    <label
-                      key={index}
-                      className={`cursor-pointer pl-1 ${
-                        selectedIndex === index
-                          ? "bg-slate-700 text-white"
-                          : "bg-white text-black"
-                      }`}
-                    >
-                      <input
-                        name="samples"
-                        type="radio"
-                        className="opacity-0 absolute"
-                        value={sample}
-                        onChange={(e) => {
-                          setSelectedIndex(index);
-                          playSample(e.target.value);
-                        }}
-                        onBlur={() => {
-                          stopAndDisposePlayer();
-                        }}
-                      />
-                      {type === "loc"
-                        ? formatLocSampleName(sample)
-                        : sample.split(".")[0].split("__")[1]}
-                    </label>
-                  ))}
-              </div>
+      {type === "loc" && (
+        <div className={dialog.field}>
+          <label htmlFor="collection" className={dialog.label}>
+            Collection
+          </label>
+          <select
+            name="collection"
+            id="collection"
+            onChange={(e) => handleSelectSampleGroup(e.target.value)}
+            className={dialog.select}
+          >
+            {collectionNames.map((collection) => (
+              <option key={collection} value={collection}>
+                {collection}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {type === "kit" && (
+        <div className={dialog.field}>
+          <label htmlFor="kit" className={dialog.label}>
+            Drum machine
+          </label>
+          <select
+            name="kit"
+            id="kit"
+            onChange={(e) => setSampleGroup(e.target.value)}
+            className={dialog.select}
+          >
+            {drumMachineNames.map((dm) => (
+              <option key={dm} value={dm}>
+                {dm}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {type && (
+        <>
+          <div className={dialog.field}>
+            <span className={dialog.label}>Samples</span>
+            <div className={styles.list}>
+              {samplesArray.map((sample, index) => (
+                <label
+                  key={index}
+                  className={`${styles.option} ${
+                    selectedIndex === index ? styles.optionSelected : ""
+                  }`}
+                >
+                  <input
+                    name="samples"
+                    type="radio"
+                    className={styles.radio}
+                    value={sample}
+                    onChange={(e) => {
+                      setSelectedIndex(index);
+                      playSample(e.target.value);
+                    }}
+                    onBlur={() => {
+                      stopAndDisposePlayer();
+                    }}
+                  />
+                  {type === "loc"
+                    ? formatLocSampleName(sample)
+                    : sample.split(".")[0].split("__")[1]}
+                </label>
+              ))}
             </div>
-            <span
-              className="absolute bottom-9 left-10 text-3xl font-bold hover:text-slate-400 hover:cursor-default"
+          </div>
+          <div className={`${dialog.actions} ${styles.footer}`}>
+            <button
+              type="button"
+              className={dialog.button}
               onClick={() => setType(null)}
             >
-              ←
-            </span>
+              ← Back
+            </button>
             <button
-              className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
+              type="button"
+              className={`${dialog.button} ${dialog.primary}`}
               onClick={handleChooseSample}
+              disabled={selectedIndex === null}
             >
               Choose Sample
             </button>
-          </>
-        )}
-      </div>
-    </>
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 

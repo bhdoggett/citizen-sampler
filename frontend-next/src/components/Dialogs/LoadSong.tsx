@@ -9,6 +9,7 @@ import { SongTypeFE } from "src/types/audioTypesFE";
 import type { LoopName } from "../../types/audioTypes";
 import Spinner from "../Spinner";
 import { migrateDrumUrls } from "src/lib/drumMachines";
+import styles from "./Dialog.module.css";
 
 dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -149,20 +150,20 @@ const LoadSong: React.FC = () => {
 
   return (
     songTitles.length > 0 && (
-      <form onSubmit={handleLoadSong}>
-        <div>
-          <label htmlFor="load-songs" className="text-white">
-            Songs:
+      <form onSubmit={handleLoadSong} className={styles.form}>
+        <div className={styles.field}>
+          <label htmlFor="song-from-db" className={styles.label}>
+            Songs
           </label>
           <select
             name="song-from-db"
             id="song-from-db"
             value={selectedSong ?? ""}
             onChange={(e) => setSelectedSong(e.target.value)}
-            className="shadow-inner text-black shadow-slate-700 w-full"
+            className={styles.select}
           >
             {songTitles.map((song: string) => (
-              <option key={song} value={song} className="w-full text-ellipsis">
+              <option key={song} value={song}>
                 {song}
               </option>
             ))}
@@ -170,16 +171,18 @@ const LoadSong: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="mt-3">
+          <div className={styles.spinnerSlot}>
             <Spinner />
           </div>
         ) : (
-          <button
-            type="submit"
-            className="flex mx-auto justify-center border border-black mt-4 px-2 py-1 bg-slate-400 hover:bg-slate-700 rounded-sm text-white w-fit"
-          >
-            Load
-          </button>
+          <div className={styles.actions}>
+            <button
+              type="submit"
+              className={`${styles.button} ${styles.primary}`}
+            >
+              Load
+            </button>
+          </div>
         )}
       </form>
     )

@@ -1,7 +1,4 @@
 @import "@fontsource/jetbrains-mono";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 /* Design tokens. Sharp corners, thin ink lines, one accent. */
 :root {
@@ -46,6 +43,101 @@
 
   /* Motion */
   --press: 60ms ease-out;
+}
+
+/* Minimal reset (replaces Tailwind preflight) */
+*,
+::before,
+::after {
+  box-sizing: border-box;
+  border: 0 solid currentColor;
+}
+
+html {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+hr,
+figure,
+blockquote,
+pre {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+ol,
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+b,
+strong {
+  font-weight: bolder;
+}
+
+button,
+input,
+select,
+textarea {
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  background: transparent;
+}
+
+button,
+select,
+[role="button"] {
+  cursor: pointer;
+}
+
+:disabled {
+  cursor: default;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  vertical-align: middle;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+[hidden] {
+  display: none;
 }
 
 body {

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useAuthContext } from "../../app/contexts/AuthContext";
+import styles from "./Dialog.module.css";
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -15,11 +16,11 @@ const AuthDialog: React.FC = () => {
   }, []);
 
   return (
-    <div className="mx-3 text-center">
-      <h2 className="text-lg font-bold mb-4">Login</h2>
+    <div className={styles.form}>
+      <h2 className={styles.title}>Login</h2>
       <a
         href={`${API_BASE_URL}/auth/google`}
-        className="flex mx-auto justify-center border border-black p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
+        className={`${styles.button} ${styles.primary}`}
       >
         Continue with Google
       </a>

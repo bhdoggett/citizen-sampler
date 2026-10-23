@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
+import styles from "./Dialog.module.css";
 import {
   DrumMachineId,
   drumMachines,
@@ -57,45 +58,43 @@ const KitMenu: React.FC = () => {
   };
 
   return (
-    <>
-      <div className="flex flex-col w-full max-w-sm mx-auto">
-        <label htmlFor="collection" className="text-white mb-1">
-          Choose a Drum Machine:
+    <div className={styles.form}>
+      <div className={styles.field}>
+        <label htmlFor="drum-machine" className={styles.label}>
+          Drum Machine
         </label>
         <select
           name="drum-machine"
           id="drum-machine"
           onChange={handleChooseDrumMachine}
-          className="shadow-inner text-black shadow-slate-700 w-full"
+          className={styles.select}
         >
           {drumMachineNames.map((drumMachine) => (
-            <option
-              key={drumMachine}
-              value={drumMachine}
-              className="w-full text-ellipsis"
-            >
+            <option key={drumMachine} value={drumMachine}>
               {drumMachine}
             </option>
           ))}
         </select>
       </div>
 
-      <button
-        onClick={() => {
-          // e.preventDefault();
-          confirmActionRef.current = {
-            message:
-              "This will replace pads 13-16 with new kit samples. Are you sure?",
-            buttonText: "You Betcha",
-            action: () => handleSelect(id),
-          };
-          setShowDialog("confirm-action");
-        }}
-        className="flex mx-auto justify-center border border-black mt-4 p-2 bg-slate-400 hover:bg-slate-700 rounded-sm text-white"
-      >
-        Load Samples
-      </button>
-    </>
+      <div className={styles.actions}>
+        <button
+          onClick={() => {
+            // e.preventDefault();
+            confirmActionRef.current = {
+              message:
+                "This will replace pads 13-16 with new kit samples. Are you sure?",
+              buttonText: "You Betcha",
+              action: () => handleSelect(id),
+            };
+            setShowDialog("confirm-action");
+          }}
+          className={`${styles.button} ${styles.primary}`}
+        >
+          Load Samples
+        </button>
+      </div>
+    </div>
   );
 };
 
