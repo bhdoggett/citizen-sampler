@@ -131,7 +131,8 @@
   display: flex;
 }
 
-.strip > * + * {
+/* :not() raises specificity above .toggle and .select, which set border */
+.strip > :not(:first-child) {
   border-left: none;
 }
 
