@@ -39,6 +39,8 @@
 
 .loopTabActive,
 .loopTabActive:hover {
+  --focus-ring: var(--ink);
+  --focus-offset: -4px;
   color: var(--on-accent);
   background: var(--accent);
 }

@@ -41,6 +41,11 @@
   --text-xl: 30px;
   --tracking-label: 0.08em;
 
+  /* Focus ring. Elements filled with the accent switch to an ink ring
+     drawn inside an accent gap so it stays visible. */
+  --focus-ring: var(--accent);
+  --focus-offset: -2px;
+
   /* Motion */
   --press: 60ms ease-out;
 }
@@ -151,8 +156,8 @@ body {
 /* Inset so the ring stays inside the element: segmented strips share
    borders, and an outside ring is covered by the next button. */
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  outline: 2px solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 a:focus-visible {

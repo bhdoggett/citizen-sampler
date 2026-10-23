@@ -94,6 +94,8 @@
 }
 
 .primary {
+  --focus-ring: var(--ink);
+  --focus-offset: -4px;
   background: var(--accent);
   color: var(--on-accent);
 }
