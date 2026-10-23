@@ -1,0 +1,43 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  max-height: 240px;
+  overflow-y: auto;
+  border: var(--line);
+  background: var(--paper);
+}
+
+.option {
+  position: relative;
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  border-bottom: 1px solid var(--paper-3);
+}
+
+.option:last-child {
+  border-bottom: 0;
+}
+
+.option:hover {
+  background: var(--accent-soft);
+}
+
+.option:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.optionSelected,
+.optionSelected:hover {
+  --focus-ring: var(--ink);
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+.radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}

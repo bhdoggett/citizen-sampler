@@ -19,6 +19,7 @@ import { getTitle } from "../../lib/getTitle";
 import { SampleTypeFE } from "src/types/audioTypesFE";
 import dialog from "./Dialog.module.css";
 import styles from "./ChooseSample.module.css";
+import OptionList from "./OptionList";
 
 const ChooseSample: React.FC = () => {
   const {
@@ -33,6 +34,7 @@ const ChooseSample: React.FC = () => {
   const [samplesArray, setSamplesArray] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const currentPlayer = useRef<Tone.Player | null>(null);
+  const groupNames = type === "loc" ? collectionNames : drumMachineNames;
 
   // Stop demo sample playback
   const stopAndDisposePlayer = () => {
@@ -150,76 +152,40 @@ const ChooseSample: React.FC = () => {
         </div>
       )}
 
-      {type === "loc" && (
-        <div className={dialog.field}>
-          <label htmlFor="collection" className={dialog.label}>
-            Collection
-          </label>
-          <select
-            name="collection"
-            id="collection"
-            onChange={(e) => handleSelectSampleGroup(e.target.value)}
-            className={dialog.select}
-          >
-            {collectionNames.map((collection) => (
-              <option key={collection} value={collection}>
-                {collection}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {type === "kit" && (
-        <div className={dialog.field}>
-          <label htmlFor="kit" className={dialog.label}>
-            Drum machine
-          </label>
-          <select
-            name="kit"
-            id="kit"
-            onChange={(e) => setSampleGroup(e.target.value)}
-            className={dialog.select}
-          >
-            {drumMachineNames.map((dm) => (
-              <option key={dm} value={dm}>
-                {dm}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
       {type && (
         <>
-          <div className={dialog.field}>
-            <span className={dialog.label}>Samples</span>
-            <div className={styles.list}>
-              {samplesArray.map((sample, index) => (
-                <label
-                  key={index}
-                  className={`${styles.option} ${
-                    selectedIndex === index ? styles.optionSelected : ""
-                  }`}
-                >
-                  <input
-                    name="samples"
-                    type="radio"
-                    className={styles.radio}
-                    value={sample}
-                    onChange={(e) => {
-                      setSelectedIndex(index);
-                      playSample(e.target.value);
-                    }}
-                    onBlur={() => {
-                      stopAndDisposePlayer();
-                    }}
-                  />
-                  {type === "loc"
-                    ? formatLocSampleName(sample)
-                    : sample.split(".")[0].split("__")[1]}
-                </label>
-              ))}
+          {/* Group on the left, its samples on the right, like a file browser */}
+          <div className={styles.browser}>
+            <div className={dialog.field}>
+              <span className={dialog.label}>
+                {type === "loc" ? "Collection" : "Drum machine"}
+              </span>
+              <OptionList
+                name="sample-group"
+                label={type === "loc" ? "Collection" : "Drum machine"}
+                items={groupNames}
+                selectedIndex={sampleGroup ? groupNames.indexOf(sampleGroup) : null}
+                onSelect={(_, group) => handleSelectSampleGroup(group)}
+              />
+            </div>
+            <div className={dialog.field}>
+              <span className={dialog.label}>Samples</span>
+              <OptionList
+                name="samples"
+                label="Samples"
+                items={samplesArray}
+                selectedIndex={selectedIndex}
+                onSelect={(index, sample) => {
+                  setSelectedIndex(index);
+                  playSample(sample);
+                }}
+                onBlur={stopAndDisposePlayer}
+                getLabel={(sample) =>
+                  type === "loc"
+                    ? (formatLocSampleName(sample) ?? "")
+                    : sample.split(".")[0].split("__")[1]
+                }
+              />
             </div>
           </div>
           <div className={`${dialog.actions} ${styles.footer}`}>

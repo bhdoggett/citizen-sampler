@@ -4,6 +4,7 @@ import { useAudioContext } from "src/app/contexts/AudioContext";
 import { collectionNames } from "src/lib/loc_collections";
 import { useUIContext } from "src/app/contexts/UIContext";
 import styles from "./Dialog.module.css";
+import OptionList from "./OptionList";
 import { SampleTypeFE } from "src/types/audioTypesFE";
 
 const CollectionMenu: React.FC = () => {
@@ -15,7 +16,8 @@ const CollectionMenu: React.FC = () => {
     storeAudioInIndexedDB,
   } = useAudioContext();
   const { confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
-  const [c, setC] = useState<string>(collectionNames[0]);
+  const [index, setIndex] = useState(0);
+  const c = collectionNames[index];
 
   const handleSelect = async (collection?: string) => {
     const newSamples = collection
@@ -47,21 +49,16 @@ const CollectionMenu: React.FC = () => {
   return (
     <div className={styles.form}>
       <div className={styles.field}>
-        <label htmlFor="collection" className={styles.label}>
+        <span className={styles.label}>
           Collection
-        </label>
-        <select
+        </span>
+        <OptionList
           name="collection"
-          id="collection"
-          onChange={(e) => setC(e.target.value)}
-          className={styles.select}
-        >
-          {collectionNames.map((collection) => (
-            <option key={collection} value={collection}>
-              {collection}
-            </option>
-          ))}
-        </select>
+          label="Collection"
+          items={collectionNames}
+          selectedIndex={index}
+          onSelect={setIndex}
+        />
       </div>
 
       <div className={styles.actions}>

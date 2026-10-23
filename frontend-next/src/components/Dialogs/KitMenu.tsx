@@ -3,11 +3,8 @@ import { useState } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import styles from "./Dialog.module.css";
-import {
-  DrumMachineId,
-  drumMachines,
-  getDrumMachineKeyByName,
-} from "src/lib/drumMachines";
+import OptionList from "./OptionList";
+import { DrumMachineId, drumMachines } from "src/lib/drumMachines";
 
 const KitMenu: React.FC = () => {
   const {
@@ -24,13 +21,6 @@ const KitMenu: React.FC = () => {
   const [id, setId] = useState<DrumMachineId>(
     drumMachineIds[0] as DrumMachineId
   );
-
-  const handleChooseDrumMachine = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const drumMachineId = getDrumMachineKeyByName(e.target.value);
-    if (drumMachineId) {
-      setId(drumMachineId as DrumMachineId);
-    }
-  };
 
   const handleSelect = async (id: DrumMachineId) => {
     const newSamples = initKitSamples(id);
@@ -60,21 +50,16 @@ const KitMenu: React.FC = () => {
   return (
     <div className={styles.form}>
       <div className={styles.field}>
-        <label htmlFor="drum-machine" className={styles.label}>
+        <span className={styles.label}>
           Drum Machine
-        </label>
-        <select
+        </span>
+        <OptionList
           name="drum-machine"
-          id="drum-machine"
-          onChange={handleChooseDrumMachine}
-          className={styles.select}
-        >
-          {drumMachineNames.map((drumMachine) => (
-            <option key={drumMachine} value={drumMachine}>
-              {drumMachine}
-            </option>
-          ))}
-        </select>
+          label="Drum machine"
+          items={drumMachineNames}
+          selectedIndex={drumMachineIds.indexOf(id)}
+          onSelect={(index) => setId(drumMachineIds[index])}
+        />
       </div>
 
       <div className={styles.actions}>
