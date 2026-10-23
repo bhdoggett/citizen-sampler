@@ -30,7 +30,8 @@
   background: var(--paper-3);
 }
 
-.selected .pad {
+.selected .pad,
+.selected .pad:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
