@@ -77,3 +77,10 @@
 .active .key {
   color: var(--ink);
 }
+
+/* Pads are played from the keyboard, so the focus ring would show up
+   on the last clicked pad whenever any hotkey is pressed. Selection and
+   press states already show which pad is in use. */
+.pad:focus-visible {
+  outline: none;
+}
