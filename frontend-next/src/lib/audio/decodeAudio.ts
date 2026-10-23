@@ -12,13 +12,19 @@ export function extractPeaks(
   normalize: boolean
 ): Float32Array {
   const data = buffer.getChannelData(0);
-  const blockSize = Math.floor(data.length / numBins);
   const peaks = new Float32Array(numBins);
   let maxPeak = 0;
   for (let i = 0; i < numBins; i++) {
+    // Proportional bin edges, at least one sample per bin, so buffers
+    // shorter than numBins still produce peaks.
+    const start = Math.floor((i * data.length) / numBins);
+    const end = Math.max(
+      start + 1,
+      Math.floor(((i + 1) * data.length) / numBins),
+    );
     let max = 0;
-    for (let j = 0; j < blockSize; j++) {
-      const v = Math.abs(data[i * blockSize + j]);
+    for (let j = start; j < end && j < data.length; j++) {
+      const v = Math.abs(data[j]);
       if (v > max) max = v;
     }
     peaks[i] = max;
