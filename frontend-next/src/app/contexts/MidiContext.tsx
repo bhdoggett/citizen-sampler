@@ -6,6 +6,7 @@ import { useMidi } from "../hooks/useMidi";
 import { SampleEventFE } from "src/types/audioTypesFE";
 import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
+import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { resolvePlayNote } from "../../lib/audio/util/resolvePlayNote";
 
 type MidiContextType = {
@@ -82,21 +83,23 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
       velocity,
     });
 
-    if (end) {
-      const duration = (end - start) / calcPlaybackRate(playNote as Tone.Unit.Frequency);
-      const timer = setTimeout(() => {
-        sampler.triggerRelease(playNote, Tone.now());
-        samplerWithFX.triggerTime = null;
-        setActiveMidiNotes((prev) => {
-          const next = new Set(prev);
-          next.delete(note);
-          return next;
-        });
-        activeNotesRef.current.delete(note);
-        activeReleaseTimersRef.current.delete(note);
-      }, duration * 1000);
-      activeReleaseTimersRef.current.set(note, timer);
-    }
+    const timer = setTimeout(() => {
+      sampler.triggerRelease(playNote, Tone.now());
+      samplerWithFX.triggerTime = null;
+      setActiveMidiNotes((prev) => {
+        const next = new Set(prev);
+        next.delete(note);
+        return next;
+      });
+      activeNotesRef.current.delete(note);
+      activeReleaseTimersRef.current.delete(note);
+    }, calcReleaseDelay(
+      start,
+      end,
+      bufDuration,
+      calcPlaybackRate(playNote as Tone.Unit.Frequency),
+    ));
+    activeReleaseTimersRef.current.set(note, timer);
   };
 
   const onNoteOff = (note: string) => {

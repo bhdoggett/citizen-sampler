@@ -16,6 +16,7 @@ import { CustomSampler } from "../../types/CustomSampler";
 import { drumKeys } from "src/lib/constants/drumKeys";
 import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
+import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 import styles from "./DrumPad.module.css";
@@ -89,18 +90,20 @@ const DrumPad = forwardRef(function DrumPad(
     setIsSelected(true);
     setSampleIsPlaying(true);
 
-    if (end) {
-      const duration = (end - start) / calcPlaybackRate(playNote as Tone.Unit.Frequency);
-      scheduledReleaseTimeoutRef.current = setTimeout(() => {
-        if (!hasReleasedRef.current) {
-          hasReleasedRef.current = true;
-          sampler.triggerRelease(playNote, Tone.now());
-          const s = samplersRef.current[id];
-          if (s) s.triggerTime = null;
-          setSampleIsPlaying(false);
-        }
-      }, duration * 1000);
-    }
+    scheduledReleaseTimeoutRef.current = setTimeout(() => {
+      if (!hasReleasedRef.current) {
+        hasReleasedRef.current = true;
+        sampler.triggerRelease(playNote, Tone.now());
+        const s = samplersRef.current[id];
+        if (s) s.triggerTime = null;
+        setSampleIsPlaying(false);
+      }
+    }, calcReleaseDelay(
+      start,
+      end,
+      bufDuration,
+      calcPlaybackRate(playNote as Tone.Unit.Frequency),
+    ));
 
     if (loopIsPlaying && isRecording) {
       currentEvent.current.startTime = Tone.getTransport().ticks;

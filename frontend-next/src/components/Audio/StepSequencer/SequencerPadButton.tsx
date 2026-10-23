@@ -6,6 +6,7 @@ import * as Tone from "tone";
 import { drumKeys } from "src/lib/constants/drumKeys";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
+import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import styles from "./SequencerPadButton.module.css";
 
 type SequencerPadButtonProps = {
@@ -83,18 +84,15 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     setSelectedSampleId(padId);
     setIsPressed(true);
 
-    if (end) {
-      const duration = end - start;
-      scheduledReleaseTimeoutRef.current = setTimeout(() => {
-        if (!hasReleasedRef.current) {
-          hasReleasedRef.current = true;
-          sampler.triggerRelease(noteToPlay, Tone.now());
-          const s = samplersRef.current[padId];
-          if (s) s.triggerTime = null;
-          setIsPressed(false);
-        }
-      }, duration * 1000);
-    }
+    scheduledReleaseTimeoutRef.current = setTimeout(() => {
+      if (!hasReleasedRef.current) {
+        hasReleasedRef.current = true;
+        sampler.triggerRelease(noteToPlay, Tone.now());
+        const s = samplersRef.current[padId];
+        if (s) s.triggerTime = null;
+        setIsPressed(false);
+      }
+    }, calcReleaseDelay(start, end, bufDuration));
 
     if (loopIsPlaying && isRecording) {
       currentEvent.current.startTime = Tone.getTransport().ticks;
@@ -196,11 +194,11 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
         setIsPressed(true);
 
         const { start, end } = allSampleData[padId].settings;
-        if (end) {
-          const duration = end - start;
+        const sampler = samplersRef.current[padId]?.sampler;
+        if (sampler) {
           keyReleaseTimeoutRef.current = setTimeout(() => {
             setIsPressed(false);
-          }, duration * 1000);
+          }, calcReleaseDelay(start, end, sampler.bufferDuration));
         }
       }
     };

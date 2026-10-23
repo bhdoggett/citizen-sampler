@@ -13,6 +13,7 @@ import { CustomSampler } from "../../types/CustomSampler";
 import { SampleEventFE } from "src/types/audioTypesFE";
 import quantize from "../../lib/audio/util/quantize";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
+import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { resolvePlayNote } from "../../lib/audio/util/resolvePlayNote";
 import styles from "./PitchPad.module.css";
 
@@ -92,18 +93,20 @@ const PitchPad = forwardRef(function PitchPad(
     }
     setPitchIsPlaying(true);
 
-    if (end) {
-      const duration = (end - start) / calcPlaybackRate(playNote as Tone.Unit.Frequency);
-      scheduledReleaseTimeoutRef.current = setTimeout(() => {
-        if (!hasReleasedRef.current) {
-          hasReleasedRef.current = true;
-          sampler.triggerRelease(playNote, Tone.now());
-          const s = samplersRef.current[selectedSampleId];
-          if (s) s.triggerTime = null;
-          setPitchIsPlaying(false);
-        }
-      }, duration * 1000);
-    }
+    scheduledReleaseTimeoutRef.current = setTimeout(() => {
+      if (!hasReleasedRef.current) {
+        hasReleasedRef.current = true;
+        sampler.triggerRelease(playNote, Tone.now());
+        const s = samplersRef.current[selectedSampleId];
+        if (s) s.triggerTime = null;
+        setPitchIsPlaying(false);
+      }
+    }, calcReleaseDelay(
+      start,
+      end,
+      bufDuration,
+      calcPlaybackRate(playNote as Tone.Unit.Frequency),
+    ));
     // If recording, create a new event for this note
     if (loopIsPlaying && isRecording) {
       currentEvent.current = {
