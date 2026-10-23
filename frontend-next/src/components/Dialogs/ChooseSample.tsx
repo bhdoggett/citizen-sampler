@@ -1,6 +1,6 @@
 "use client";
 import * as Tone from "tone";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import {
   getCollectionArrayFromName,
@@ -20,6 +20,8 @@ import { SampleTypeFE } from "src/types/audioTypesFE";
 import dialog from "./Dialog.module.css";
 import styles from "./ChooseSample.module.css";
 import OptionList from "./OptionList";
+import SamplePreview, { type PreviewState } from "./SamplePreview";
+import { extractPeaks } from "src/lib/audio/decodeAudio";
 
 const ChooseSample: React.FC = () => {
   const {
@@ -34,6 +36,7 @@ const ChooseSample: React.FC = () => {
   const [samplesArray, setSamplesArray] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [query, setQuery] = useState("");
+  const [preview, setPreview] = useState<PreviewState | null>(null);
   const currentPlayer = useRef<Tone.Player | null>(null);
   const groupNames = type === "loc" ? collectionNames : drumMachineNames;
 
@@ -46,17 +49,27 @@ const ChooseSample: React.FC = () => {
     }
   };
 
-  // Play sample demo audio
+  const isPreviewPlaying = useCallback(
+    () => currentPlayer.current?.state === "started",
+    [],
+  );
+
+  // Play sample demo audio and show its waveform once the buffer loads
   const playSample = (url: string) => {
     stopAndDisposePlayer();
-    if (type === "loc") {
-      currentPlayer.current = new Tone.Player(url).toDestination();
-    }
-
-    if (type === "kit") {
-      currentPlayer.current = new Tone.Player(drumUrl(url)).toDestination();
-    }
-    if (currentPlayer.current) currentPlayer.current.autostart = true;
+    if (!type) return;
+    const player = new Tone.Player(type === "kit" ? drumUrl(url) : url, () => {
+      if (currentPlayer.current !== player) return;
+      const buffer = player.buffer.get();
+      if (!buffer) return;
+      setPreview({
+        peaks: extractPeaks(buffer, 1000, true),
+        duration: buffer.duration,
+        startedAt: Tone.now(),
+      });
+    }).toDestination();
+    player.autostart = true;
+    currentPlayer.current = player;
   };
 
   // For populating the samples menu
@@ -78,6 +91,7 @@ const ChooseSample: React.FC = () => {
   const handleSelectSampleGroup = (collection: string) => {
     setSampleGroup(collection);
     setSelectedIndex(null);
+    setPreview(null);
   };
 
   // Update allSampleData and samplersRef when a new sample is chosen
@@ -213,12 +227,23 @@ const ChooseSample: React.FC = () => {
                 <p className={styles.empty}>No samples match “{query}”</p>
               )}
             </div>
+            <SamplePreview
+              preview={preview}
+              isPlaying={isPreviewPlaying}
+              onReplay={() => {
+                if (selectedIndex !== null) playSample(samplesArray[selectedIndex]);
+              }}
+            />
           </div>
           <div className={`${dialog.actions} ${styles.footer}`}>
             <button
               type="button"
               className={dialog.button}
-              onClick={() => setType(null)}
+              onClick={() => {
+                stopAndDisposePlayer();
+                setPreview(null);
+                setType(null);
+              }}
             >
               ← Back
             </button>

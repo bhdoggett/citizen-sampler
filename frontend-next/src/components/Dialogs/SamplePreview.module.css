@@ -1,0 +1,69 @@
+.preview {
+  position: relative;
+  display: block;
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 72px;
+  padding: 0;
+  overflow: hidden;
+  border: var(--line);
+  background: var(--paper-2);
+  cursor: pointer;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  cursor: default;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--ink);
+}
+
+.progress {
+  --progress: 0;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.progress[data-playing="true"] {
+  opacity: 1;
+}
+
+.played {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--progress) * 100%);
+  background: var(--accent);
+  mix-blend-mode: multiply;
+  opacity: 0.35;
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--progress) * 100%);
+  width: 2px;
+  margin-left: -1px;
+  background: var(--accent);
+}
+
+.duration {
+  position: absolute;
+  right: var(--space-1);
+  bottom: var(--space-1);
+  padding: 0 var(--space-1);
+  font-size: var(--text-2xs);
+  color: var(--muted);
+  background: var(--paper-2);
+}
