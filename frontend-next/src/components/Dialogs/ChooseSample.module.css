@@ -17,9 +17,28 @@
   max-width: 100%;
 }
 
-/* Same height for both panes, whatever their item count */
+/* Both panes end at the same line: the samples pane gives up the
+   filter's height (32px input + 4px gap) to its list. */
 .browser [role="radiogroup"] {
   height: 240px;
+}
+
+.browser .filter + [role="radiogroup"],
+.empty {
+  height: 204px;
+}
+
+.filter {
+  height: 32px;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--line);
+  color: var(--muted);
+  font-size: var(--text-sm);
 }
 
 .footer {

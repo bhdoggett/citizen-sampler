@@ -33,6 +33,7 @@ const ChooseSample: React.FC = () => {
   const [sampleGroup, setSampleGroup] = useState<string | null>(null);
   const [samplesArray, setSamplesArray] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [query, setQuery] = useState("");
   const currentPlayer = useRef<Tone.Player | null>(null);
   const groupNames = type === "loc" ? collectionNames : drumMachineNames;
 
@@ -123,6 +124,20 @@ const ChooseSample: React.FC = () => {
     }
   }, [sampleGroup, type]);
 
+  const getSampleLabel = (sample: string) =>
+    type === "loc"
+      ? (formatLocSampleName(sample) ?? "")
+      : sample.split(".")[0].split("__")[1];
+
+  // Filter keeps each sample's index in samplesArray, which selection uses
+  const needle = query.trim().toLowerCase();
+  const visibleSamples = samplesArray
+    .map((sample, index) => ({ sample, index }))
+    .filter(({ sample }) => getSampleLabel(sample).toLowerCase().includes(needle));
+  const visibleSelected = visibleSamples.findIndex(
+    ({ index }) => index === selectedIndex,
+  );
+
   return (
     <div className={dialog.form}>
       <h2 className={dialog.title}>Choose Sample</h2>
@@ -169,23 +184,34 @@ const ChooseSample: React.FC = () => {
               />
             </div>
             <div className={dialog.field}>
-              <span className={dialog.label}>Samples</span>
-              <OptionList
-                name="samples"
-                label="Samples"
-                items={samplesArray}
-                selectedIndex={selectedIndex}
-                onSelect={(index, sample) => {
-                  setSelectedIndex(index);
-                  playSample(sample);
-                }}
-                onBlur={stopAndDisposePlayer}
-                getLabel={(sample) =>
-                  type === "loc"
-                    ? (formatLocSampleName(sample) ?? "")
-                    : sample.split(".")[0].split("__")[1]
-                }
+              <span className={dialog.label}>
+                Samples
+                {needle && ` · ${visibleSamples.length} of ${samplesArray.length}`}
+              </span>
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Filter samples"
+                aria-label="Filter samples"
+                className={`${dialog.input} ${styles.filter}`}
               />
+              {visibleSamples.length > 0 ? (
+                <OptionList
+                  name="samples"
+                  label="Samples"
+                  items={visibleSamples.map(({ sample }) => sample)}
+                  selectedIndex={visibleSelected === -1 ? null : visibleSelected}
+                  onSelect={(position, sample) => {
+                    setSelectedIndex(visibleSamples[position].index);
+                    playSample(sample);
+                  }}
+                  onBlur={stopAndDisposePlayer}
+                  getLabel={getSampleLabel}
+                />
+              ) : (
+                <p className={styles.empty}>No samples match “{query}”</p>
+              )}
             </div>
           </div>
           <div className={`${dialog.actions} ${styles.footer}`}>
