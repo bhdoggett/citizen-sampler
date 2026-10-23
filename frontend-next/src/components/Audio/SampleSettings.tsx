@@ -310,10 +310,10 @@ const SampleSettings = () => {
 
         <div className={styles.column}>
           <Control label="Quantize" group>
-            <div className={styles.strip}>
+            <div className={`${styles.strip} ${styles.stripFill}`}>
               <button
                 onClick={() => updateSetting("quantize", !settings.quantize)}
-                className={`${styles.toggle} ${settings.quantize ? styles.toggleOn : ""}`}
+                className={`${styles.toggle} ${styles.quantizeToggle} ${settings.quantize ? styles.toggleOn : ""}`}
                 title="Toggle quantize (Shift + Q)"
               >
                 {settings.quantize ? "ON" : "OFF"}

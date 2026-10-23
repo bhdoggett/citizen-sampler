@@ -136,6 +136,20 @@
   border-left: none;
 }
 
+/* Spans the column so its right edge lines up with the Pad strips below */
+.stripFill {
+  flex: 1;
+}
+
+.stripFill .select {
+  flex: 1;
+}
+
+/* Fixed width so ON/OFF doesn't resize the strip */
+.quantizeToggle {
+  width: 44px;
+}
+
 .toggle {
   min-width: 32px;
   height: 24px;
