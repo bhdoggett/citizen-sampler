@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import * as Tone from "tone";
 import { drawWaveform } from "src/lib/audio/decodeAudio";
+import Spinner from "../Spinner";
 import styles from "./SamplePreview.module.css";
 
 export type PreviewState = {
@@ -12,6 +13,7 @@ export type PreviewState = {
 
 type SamplePreviewProps = {
   preview: PreviewState | null;
+  loading: boolean;
   isPlaying: () => boolean;
   onReplay: () => void;
 };
@@ -19,6 +21,7 @@ type SamplePreviewProps = {
 // Waveform of the previewed sample with a playhead that follows playback
 const SamplePreview: React.FC<SamplePreviewProps> = ({
   preview,
+  loading,
   isPlaying,
   onReplay,
 }) => {
@@ -50,6 +53,14 @@ const SamplePreview: React.FC<SamplePreviewProps> = ({
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [preview, isPlaying]);
+
+  if (loading) {
+    return (
+      <div className={`${styles.preview} ${styles.empty}`}>
+        <Spinner />
+      </div>
+    );
+  }
 
   if (!preview) {
     return (

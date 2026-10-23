@@ -37,6 +37,7 @@ const ChooseSample: React.FC = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [preview, setPreview] = useState<PreviewState | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const currentPlayer = useRef<Tone.Player | null>(null);
   const groupNames = type === "loc" ? collectionNames : drumMachineNames;
 
@@ -58,15 +59,27 @@ const ChooseSample: React.FC = () => {
   const playSample = (url: string) => {
     stopAndDisposePlayer();
     if (!type) return;
-    const player = new Tone.Player(type === "kit" ? drumUrl(url) : url, () => {
-      if (currentPlayer.current !== player) return;
-      const buffer = player.buffer.get();
-      if (!buffer) return;
-      setPreview({
-        peaks: extractPeaks(buffer, 1000, true),
-        duration: buffer.duration,
-        startedAt: Tone.now(),
-      });
+    // Clear the old waveform right away so it isn't shown for the new pick
+    setPreview(null);
+    setPreviewLoading(true);
+    const player = new Tone.Player({
+      url: type === "kit" ? drumUrl(url) : url,
+      onload: () => {
+        if (currentPlayer.current !== player) return;
+        setPreviewLoading(false);
+        const buffer = player.buffer.get();
+        if (!buffer) return;
+        setPreview({
+          peaks: extractPeaks(buffer, 1000, true),
+          duration: buffer.duration,
+          startedAt: Tone.now(),
+        });
+      },
+      onerror: (error) => {
+        if (currentPlayer.current !== player) return;
+        setPreviewLoading(false);
+        console.warn("Error loading preview:", error);
+      },
     }).toDestination();
     player.autostart = true;
     currentPlayer.current = player;
@@ -92,6 +105,7 @@ const ChooseSample: React.FC = () => {
     setSampleGroup(collection);
     setSelectedIndex(null);
     setPreview(null);
+    setPreviewLoading(false);
   };
 
   // Update allSampleData and samplersRef when a new sample is chosen
@@ -229,6 +243,7 @@ const ChooseSample: React.FC = () => {
             </div>
             <SamplePreview
               preview={preview}
+              loading={previewLoading}
               isPlaying={isPreviewPlaying}
               onReplay={() => {
                 if (selectedIndex !== null) playSample(samplesArray[selectedIndex]);
@@ -242,6 +257,7 @@ const ChooseSample: React.FC = () => {
               onClick={() => {
                 stopAndDisposePlayer();
                 setPreview(null);
+                setPreviewLoading(false);
                 setType(null);
               }}
             >
