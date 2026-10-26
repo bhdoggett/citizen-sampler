@@ -4,6 +4,7 @@ import * as Tone from "tone";
 import { useAudioContext } from "./AudioContext";
 import { useMidi } from "../hooks/useMidi";
 import { SampleEventFE } from "src/types/audioTypesFE";
+import type { LoopName } from "src/types/audioTypes";
 import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
@@ -26,6 +27,7 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
     loopIsPlaying,
     isRecording,
     currentLoop,
+    allLoopSettings,
   } = useAudioContext();
 
   const [activeMidiNotes, setActiveMidiNotes] = useState<Set<string>>(
@@ -131,11 +133,13 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
 
     activeNotesRef.current.delete(note);
 
-    if (!activeNote?.startTime || !isRecording) return;
+    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    if (!activeNote?.startTime || !isRecording || !loopSettings) return;
 
     const duration = calcEventDuration(
       activeNote.startTime as number,
-      Tone.getTransport().loopEnd as Tone.Unit.Time,
+      Tone.getTransport().seconds,
+      loopSettings,
       allSampleData[selectedSampleId].settings.end
     );
 

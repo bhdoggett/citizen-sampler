@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { resetTransport } from "src/test/toneMock";
 import type { SampleEventFE, SampleTypeFE } from "src/types/audioTypesFE";
 import getScheduleEvents from "./getScheduleEvents";
 
-vi.mock("tone", async () => (await import("src/test/toneMock")).toneMock);
+// 192 ticks per quarter note; at 120 BPM that is 0.5 s. Loop is 2 bars = 4 s.
+const liveTiming = { bpm: 120, beats: 4, bars: 2 };
 
-// 192 ticks per quarter note; at 120 BPM that is 0.5 s.
 const event = (
   startTime: number | null,
   overrides: Partial<SampleEventFE> = {}
@@ -30,7 +29,6 @@ const makeData = (
 
 describe("getScheduleEvents", () => {
   beforeEach(() => {
-    resetTransport();
     vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
@@ -38,7 +36,8 @@ describe("getScheduleEvents", () => {
     const result = getScheduleEvents(
       makeData([event(192, { note: "D4", velocity: 0.5 })]),
       "pad-1",
-      "A"
+      "A",
+      liveTiming
     );
     expect(result).toEqual([
       [0.5, { startTime: 0.5, duration: 0.25, note: "D4", velocity: 0.5 }],
@@ -46,7 +45,7 @@ describe("getScheduleEvents", () => {
   });
 
   it("keeps an event on the downbeat", () => {
-    const result = getScheduleEvents(makeData([event(0)]), "pad-1", "A");
+    const result = getScheduleEvents(makeData([event(0)]), "pad-1", "A", liveTiming);
     expect(result.map(([time]) => time)).toEqual([0]);
   });
 
@@ -54,7 +53,8 @@ describe("getScheduleEvents", () => {
     const result = getScheduleEvents(
       makeData([event(null), event(192)]),
       "pad-1",
-      "A"
+      "A",
+      liveTiming
     );
     expect(result.map(([time]) => time)).toEqual([0.5]);
   });
@@ -64,7 +64,8 @@ describe("getScheduleEvents", () => {
     const result = getScheduleEvents(
       makeData([event(200)], { quantize: true, quantVal: "4" }),
       "pad-1",
-      "A"
+      "A",
+      liveTiming
     );
     expect(result[0][0]).toBeCloseTo(0.5);
   });
@@ -74,7 +75,8 @@ describe("getScheduleEvents", () => {
     const result = getScheduleEvents(
       makeData([event(1530)], { quantize: true, quantVal: "4" }),
       "pad-1",
-      "A"
+      "A",
+      liveTiming
     );
     expect(result[0][0]).toBe(0);
   });
@@ -86,17 +88,18 @@ describe("getScheduleEvents", () => {
         { quantize: true, quantVal: "4" }
       ),
       "pad-1",
-      "A"
+      "A",
+      liveTiming
     );
     expect(result.map(([, e]) => e.note)).toEqual(["C4", "E4"]);
   });
 
   it("returns an empty array when the loop has no events", () => {
-    expect(getScheduleEvents(makeData([]), "pad-1", "A")).toEqual([]);
+    expect(getScheduleEvents(makeData([]), "pad-1", "A", liveTiming)).toEqual([]);
   });
 
   describe("with an explicit loop timing", () => {
-    // Live transport stays at 120 BPM in 4/4; the timing describes another loop.
+    // A slower loop in 3/4, to show the timing argument drives every result.
     const timing = { bpm: 60, beats: 3, bars: 1 };
 
     it("converts ticks with the loop's tempo", () => {

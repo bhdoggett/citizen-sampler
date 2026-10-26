@@ -19,6 +19,7 @@ import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
+import type { LoopName } from "src/types/audioTypes";
 import { useReportPadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./DrumPad.module.css";
 
@@ -40,6 +41,7 @@ const DrumPad = forwardRef(function DrumPad(
     setSelectedSampleId,
     selectedSampleId,
     currentLoop,
+    allLoopSettings,
     samplersRef,
   } = useAudioContext();
   const partRef = useRef<Tone.Part | null>(null);
@@ -277,11 +279,21 @@ const DrumPad = forwardRef(function DrumPad(
 
   // **** Schedule playback of sampler play events ****
   useEffect(() => {
-    if (!loopIsPlaying || allSampleData[id].events[currentLoop].length === 0) {
+    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    if (
+      !loopSettings ||
+      !loopIsPlaying ||
+      allSampleData[id].events[currentLoop].length === 0
+    ) {
       return;
     }
 
-    const scheduleEvents = getScheduleEvents(allSampleData, id, currentLoop);
+    const scheduleEvents = getScheduleEvents(
+      allSampleData,
+      id,
+      currentLoop,
+      loopSettings
+    );
 
     partRef.current = new Tone.Part((time, event) => {
       if (!sampler) return;
@@ -339,6 +351,7 @@ const DrumPad = forwardRef(function DrumPad(
     id,
     selectedSampleId,
     currentLoop,
+    allLoopSettings,
   ]);
 
   //Dispose part to cleanup if the loop stops playing

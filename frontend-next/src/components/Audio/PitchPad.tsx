@@ -12,6 +12,8 @@ import { useMidiContext } from "../../app/contexts/MidiContext";
 import { CustomSampler } from "../../types/CustomSampler";
 import { SampleEventFE } from "src/types/audioTypesFE";
 import quantize from "../../lib/audio/util/quantize";
+import { ticksToSeconds } from "../../lib/audio/util/timing";
+import type { LoopName } from "../../types/audioTypes";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { resolvePlayNote } from "../../lib/audio/util/resolvePlayNote";
@@ -35,6 +37,7 @@ const PitchPad = forwardRef(function PitchPad(
     loopIsPlaying,
     isRecording,
     currentLoop,
+    allLoopSettings,
     samplersRef,
   } = useAudioContext();
   const { activeMidiNotes } = useMidiContext();
@@ -209,8 +212,10 @@ const PitchPad = forwardRef(function PitchPad(
   // Schedule playback of events, strictly for visual render feedback on the PitchPad
   useEffect(() => {
     const sampleData = allSampleData[selectedSampleId];
+    const loopSettings = allLoopSettings[currentLoop as LoopName];
 
     if (
+      !loopSettings ||
       !loopIsPlaying ||
       allSampleData[selectedSampleId].events[currentLoop].length === 0
     )
@@ -220,9 +225,16 @@ const PitchPad = forwardRef(function PitchPad(
       .filter((event) => event.note === note)
       .map((event) => {
         if (!event.startTime) return;
-        const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
+        const startTimeInSeconds = ticksToSeconds(
+          event.startTime,
+          loopSettings.bpm
+        );
         const eventTime = sampleData.settings.quantize
-          ? quantize(startTimeInSeconds, sampleData.settings.quantVal)
+          ? quantize(
+              startTimeInSeconds,
+              sampleData.settings.quantVal,
+              loopSettings.bpm
+            )
           : startTimeInSeconds;
         return [
           eventTime,
@@ -267,6 +279,7 @@ const PitchPad = forwardRef(function PitchPad(
     allSampleData,
     selectedSampleId,
     currentLoop,
+    allLoopSettings,
     note,
     sampler,
   ]);
