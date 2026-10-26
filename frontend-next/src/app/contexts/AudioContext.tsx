@@ -479,6 +479,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       Object.keys(sampleData).forEach((key) => {
         cleanupSampler(key, samplersRef);
       });
+      // Drop the disposed samplers from render state too, so pads go silent
+      // while loading instead of triggering a disposed sampler
+      setSamplers({ ...samplersRef.current });
 
       // Create all samplers concurrently
       const samplerPromises = Object.entries(sampleData).map(

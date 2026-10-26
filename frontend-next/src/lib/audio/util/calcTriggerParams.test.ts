@@ -33,10 +33,11 @@ describe("calcTriggerParams", () => {
     ).toBe(1);
   });
 
-  it("lets a one-shot pad with no end point ring for 999 s", () => {
-    expect(calcTriggerParams(pad({ oneShot: true }), 1, 0.1, 3).duration).toBe(
-      999
-    );
+  it("plays a one-shot pad with no end point to the end of its buffer", () => {
+    // 2.5 s of buffer left after a 0.5 s start, at double speed: 1.25 s.
+    expect(
+      calcTriggerParams(pad({ oneShot: true, start: 0.5 }), 2, 0.1, 3).duration
+    ).toBe(1.25);
   });
 
   it("offsets a reversed pad from the end of the buffer", () => {
