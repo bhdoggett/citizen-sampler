@@ -1,9 +1,12 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import axios from "axios";
 import { useUIContext } from "./UIContext";
 import dotenv from "dotenv";
 dotenv.config();
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 type AuthContextType = {
   userId: string | null;
@@ -75,27 +78,32 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     setDisplayNameState(newDisplayName);
   };
 
+  // After Google login the backend redirects here with a one-time code,
+  // which is exchanged for the JWT so the token never appears in a URL.
+  // The code is single-use, so guard against StrictMode running this twice.
+  const loginCodeExchanged = useRef(false);
   useEffect(() => {
-    const token = searchParams.get("token");
-    const userId = searchParams.get("userId");
-    const username = searchParams.get("username");
-    const displayName = searchParams.get("displayName");
-    if (userId) {
-      setUserId(userId);
-    }
-    if (token) {
-      setToken(token);
-    }
-    if (username) {
-      setUsername(username);
-    }
-    if (displayName) {
-      setDisplayName(displayName);
-    }
+    const loginCode = searchParams.get("loginCode");
+    if (!loginCode || loginCodeExchanged.current) return;
+    loginCodeExchanged.current = true;
+    router.replace("/");
 
-    if (token || userId || username || displayName) {
-      router.replace("/");
-    }
+    const exchangeLoginCode = async () => {
+      try {
+        const res = await axios.post(`${API_BASE_URL}/auth/exchange`, {
+          code: loginCode,
+        });
+        const { token, userId, displayName } = res.data;
+        setToken(token);
+        setUserId(userId);
+        setDisplayName(displayName);
+      } catch (err) {
+        console.error("Login code exchange failed:", err);
+        apiResponseMessageRef.current = "Google login failed";
+        setShowDialog("api-response");
+      }
+    };
+    exchangeLoginCode();
   }, []);
 
   useEffect(() => {
