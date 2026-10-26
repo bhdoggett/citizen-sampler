@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
 import * as Tone from "tone";
 import {
   SampleTypeFE,
@@ -24,6 +24,7 @@ import {
   migrateDrumUrls,
 } from "../../lib/drumMachines";
 import { set, get } from "idb-keyval"; // for IndexedDB storage
+import { computeGain, normalizeAllMuteSolo } from "../../lib/audio/muteSolo";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -445,7 +446,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   >(() => {
     const savedSamples = localStorage.getItem("samples");
     return savedSamples
-      ? migrateDrumUrls(JSON.parse(savedSamples))
+      ? normalizeAllMuteSolo(migrateDrumUrls(JSON.parse(savedSamples)))
       : {
           ...initLocSamplesFromAllCollections(),
           ...initKitSamples("mpc"),
@@ -540,7 +541,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     new Tone.Gain(masterGainLevel).toDestination()
   );
   const [selectedSampleId, setSelectedSampleId] = useState<string>("pad-1");
-  const [solosExist, setSolosExist] = useState<boolean>(false);
 
   const updateSamplerStateSettings = (
     id: string,
@@ -675,14 +675,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     //
   };
 
-  // updates solosExist when a sampler's solo state changes
-  useEffect(() => {
-    if (!allSampleData) return;
-    const solosExistNow = Object.values(allSampleData).some(
-      (sample) => sample.settings.solo
-    );
-    setSolosExist(solosExistNow);
-  }, [allSampleData]);
+  // Derived from allSampleData, so it can't drift out of sync
+  const solosExist = useMemo(
+    () => Object.values(allSampleData).some((sample) => sample.settings.solo),
+    [allSampleData]
+  );
 
   // Sampler audio output based on mutes and solos:
   useEffect(() => {
@@ -690,9 +687,10 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       const sampler = samplersRef.current[id];
       if (!sampler) return;
 
-      const { mute, solo } = allSampleData[id].settings;
-
-      sampler.gain.gain.value = mute ? 0 : solosExist ? (solo ? 1 : 0) : 1;
+      sampler.gain.gain.value = computeGain(
+        allSampleData[id].settings,
+        solosExist
+      );
     });
   }, [allSampleData, solosExist]);
 

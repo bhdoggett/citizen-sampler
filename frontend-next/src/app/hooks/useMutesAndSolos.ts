@@ -1,4 +1,4 @@
-"useClient";
+"use client";
 import { useAudioContext } from "../contexts/AudioContext";
 import { SampleTypeFE } from "src/types/audioTypesFE";
 
@@ -15,6 +15,8 @@ const useMutesAndSolos = () => {
           settings: {
             ...prev[id].settings,
             solo: value,
+            // Mute and solo are mutually exclusive
+            ...(value && { mute: false }),
           },
         },
       };
@@ -31,6 +33,7 @@ const useMutesAndSolos = () => {
           settings: {
             ...prev[id].settings,
             mute: value,
+            ...(value && { solo: false }),
           },
         },
       };

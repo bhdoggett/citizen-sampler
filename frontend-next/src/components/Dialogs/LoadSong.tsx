@@ -9,6 +9,7 @@ import { SongTypeFE } from "src/types/audioTypesFE";
 import type { LoopName } from "../../types/audioTypes";
 import Spinner from "../Spinner";
 import { migrateDrumUrls } from "src/lib/drumMachines";
+import { normalizeAllMuteSolo } from "src/lib/audio/muteSolo";
 import styles from "./Dialog.module.css";
 
 dotenv.config();
@@ -92,7 +93,7 @@ const LoadSong: React.FC = () => {
       if (result.status === 200) {
         const song: SongTypeFE = result.data.song;
         const { title, loops } = song;
-        const samples = migrateDrumUrls(song.samples);
+        const samples = normalizeAllMuteSolo(migrateDrumUrls(song.samples));
 
         // Normalize loop settings for songs saved before isInitialized was added
         const normalizedLoops: Record<string, unknown> = { ...loops };
