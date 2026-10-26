@@ -7,6 +7,7 @@ import { calcRenderDuration } from "../../lib/audio/util/calcRenderDuration";
 import toWav from "audiobuffer-to-wav";
 import { applySoundSettings } from "../../lib/audio/applySoundSettings";
 import { computeGain } from "../../lib/audio/muteSolo";
+import { applyLoopSettings } from "../../lib/audio/applyLoopSettings";
 import type { LoopName } from "../../types/audioTypes";
 
 const useDownloadWavStems = () => {
@@ -31,7 +32,7 @@ const useDownloadWavStems = () => {
     if (!loopSettings || events.length === 0) return null;
 
     // Use this loop's own tempo and length, not whichever loop is live
-    const { bpm, beats, bars, swing } = loopSettings;
+    const { bpm, beats, bars } = loopSettings;
     const loopDuration = bars * beats * (60 / bpm);
 
     // Format schedule events for Tone.Part
@@ -46,12 +47,7 @@ const useDownloadWavStems = () => {
 
     const toneBuffer = await Tone.Offline(async ({ transport }) => {
       // Match the live transport setup for this loop
-      transport.bpm.value = bpm;
-      transport.swing = swing;
-      transport.timeSignature = beats;
-      transport.loop = true;
-      transport.loopStart = "0:0:0";
-      transport.loopEnd = `${bars}:0:0`;
+      applyLoopSettings(transport, loopSettings);
 
       const offlineSamplerWithFx = await makeSamplerWithFX(
         id,

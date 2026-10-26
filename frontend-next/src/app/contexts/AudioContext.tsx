@@ -26,6 +26,7 @@ import {
 import { set, get } from "idb-keyval"; // for IndexedDB storage
 import { computeGain, normalizeAllMuteSolo } from "../../lib/audio/muteSolo";
 import { applySoundSettings } from "../../lib/audio/applySoundSettings";
+import { applyLoopSettings } from "../../lib/audio/applyLoopSettings";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -603,19 +604,24 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     init();
   }, []);
 
-  // Update ToneJS Transport when switching to a different loop
+  // The one owner of the live transport's loop setup. Runs when the loop
+  // changes or when its tempo, swing, meter or length is edited.
+  const currentLoopSettings = allLoopSettings[currentLoop as LoopName];
+  useEffect(() => {
+    if (!currentLoopSettings) return;
+    applyLoopSettings(Tone.getTransport(), currentLoopSettings);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentLoop,
+    currentLoopSettings?.bpm,
+    currentLoopSettings?.swing,
+    currentLoopSettings?.beats,
+    currentLoopSettings?.bars,
+  ]);
+
+  // Restart from the top when switching to a different loop
   useEffect(() => {
     const transport = Tone.getTransport();
-    const settings = allLoopSettings[currentLoop as LoopName];
-    if (!settings) return;
-
-    transport.bpm.value = settings.bpm;
-    transport.swing = settings.swing;
-    transport.timeSignature = settings.beats;
-    transport.loop = true;
-    transport.loopStart = "0:0:0";
-    transport.loopEnd = `${settings.bars}:0:0`;
-
     const wasPlaying = transport.state === "started";
     if (wasPlaying) {
       transport.stop();
