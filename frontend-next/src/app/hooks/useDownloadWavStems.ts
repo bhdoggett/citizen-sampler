@@ -8,6 +8,7 @@ import toWav from "audiobuffer-to-wav";
 import { applySoundSettings } from "../../lib/audio/applySoundSettings";
 import { computeGain } from "../../lib/audio/muteSolo";
 import { applyLoopSettings } from "../../lib/audio/applyLoopSettings";
+import { calcTriggerParams } from "../../lib/audio/util/calcTriggerParams";
 import type { LoopName } from "../../types/audioTypes";
 
 const useDownloadWavStems = () => {
@@ -62,23 +63,18 @@ const useDownloadWavStems = () => {
       const { sampler } = offlineSamplerWithFx;
 
       const part = new Tone.Part((time, event) => {
-        const { start, end } = settings;
         if (
           typeof event === "object" &&
           event !== null &&
           "duration" in event &&
           event.duration !== null
         ) {
-          const sampleDuration = end ? (end - start) / calcPlaybackRate(event.note) : null;
-          const actualDuration = settings.oneShot
-            ? (sampleDuration ?? 999)
-            : sampleDuration !== null
-              ? Math.min(sampleDuration, event.duration)
-              : event.duration;
-          const bufDuration = sampler.bufferDuration;
-          const offset = settings.reverse
-            ? bufDuration - (end ?? bufDuration)
-            : start;
+          const { duration: actualDuration, offset } = calcTriggerParams(
+            settings,
+            calcPlaybackRate(event.note),
+            event.duration,
+            sampler.bufferDuration
+          );
           sampler.triggerAttackRelease(
             event.note,
             actualDuration,

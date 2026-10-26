@@ -18,6 +18,7 @@ import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
+import { calcTriggerParams } from "src/lib/audio/util/calcTriggerParams";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 import type { LoopName } from "src/types/audioTypes";
@@ -289,25 +290,18 @@ const DrumPad = forwardRef(function DrumPad(
 
     partRef.current = new Tone.Part((time, event) => {
       if (!sampler) return;
-      const { start, end, oneShot } = settingsRef.current;
-
       if (
         typeof event === "object" &&
         event !== null &&
         "duration" in event &&
         event.duration !== null
       ) {
-        const sampleDuration = end ? (end - start) / calcPlaybackRate(event.note) : null;
-        const actualDuration = oneShot
-          ? (sampleDuration ?? 999)
-          : sampleDuration !== null
-            ? Math.min(sampleDuration, event.duration)
-            : event.duration;
-
-        const bufDuration = sampler.bufferDuration;
-        const offset = settingsRef.current.reverse
-          ? bufDuration - (end ?? bufDuration)
-          : start;
+        const { duration: actualDuration, offset } = calcTriggerParams(
+          settingsRef.current,
+          calcPlaybackRate(event.note),
+          event.duration,
+          sampler.bufferDuration
+        );
         sampler.triggerAttackRelease(
           event.note,
           actualDuration,

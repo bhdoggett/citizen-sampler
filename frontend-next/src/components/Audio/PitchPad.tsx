@@ -14,6 +14,7 @@ import { SampleEventFE } from "src/types/audioTypesFE";
 import quantize from "../../lib/audio/util/quantize";
 import { ticksToSeconds } from "../../lib/audio/util/timing";
 import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
+import { calcTriggerParams } from "../../lib/audio/util/calcTriggerParams";
 import type { LoopName } from "../../types/audioTypes";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
@@ -237,20 +238,20 @@ const PitchPad = forwardRef(function PitchPad(
 
     partRef.current = new Tone.Part((time, event) => {
       if (!sampler) return;
-      const { start, end } = allSampleData[selectedSampleId].settings;
       if (
         typeof event === "object" &&
         event !== null &&
         "duration" in event &&
         event.duration !== null
       ) {
-        const { baseNote } = allSampleData[selectedSampleId].settings;
-        const resolvedNote = resolvePlayNote(note, String(baseNote));
-        const sampleDuration = end ? (end - start) / calcPlaybackRate(resolvedNote as Tone.Unit.Frequency) : null;
-        const actualDuration =
-          sampleDuration !== null
-            ? Math.min(sampleDuration, event.duration)
-            : event.duration;
+        const settings = allSampleData[selectedSampleId].settings;
+        const resolvedNote = resolvePlayNote(note, String(settings.baseNote));
+        const { duration: actualDuration } = calcTriggerParams(
+          settings,
+          calcPlaybackRate(resolvedNote as Tone.Unit.Frequency),
+          event.duration,
+          sampler.bufferDuration
+        );
 
         setPitchIsPlaying(true);
         setTimeout(() => {
