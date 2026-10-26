@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useAudioContext } from "src/app/contexts/AudioContext";
-import { CustomSampler } from "src/types/CustomSampler";
 import PitchPad from "./PitchPad";
 import styles from "./PitchGrid.module.css";
 import {
@@ -16,12 +15,8 @@ const SCALES: { name: ScaleName; label: string }[] = [
   { name: "pentatonic", label: "Pentatonic" },
 ];
 
-type PitchGridProps = {
-  sampler: CustomSampler | null;
-};
-
-const PitchGrid: React.FC<PitchGridProps> = () => {
-  const { selectedSampleId, allSampleData, samplersRef } = useAudioContext();
+const PitchGrid: React.FC = () => {
+  const { selectedSampleId, allSampleData, samplers } = useAudioContext();
   const { baseNote } = allSampleData[selectedSampleId].settings;
   const pitchPadsRef = useRef<Record<string, HTMLButtonElement | null>>({});
   // Rename pitchPadComponentRefs to pitchPadsHandlersRef
@@ -134,7 +129,7 @@ const PitchGrid: React.FC<PitchGridProps> = () => {
 
       <div className={styles.grid}>
           {gridNotes.map((note, i) => {
-            const samplerObj = samplersRef.current[selectedSampleId];
+            const samplerObj = samplers[selectedSampleId];
             return (
               <PitchPad
                 key={`${note}-${i}`}

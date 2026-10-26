@@ -23,13 +23,14 @@ const SampleSettings = () => {
     selectedSampleId,
     allSampleData,
     samplersRef,
+    samplers,
     updateSamplerStateSettings,
   } = useAudioContext();
   const { setShowDialog } = useUIContext();
 
   const { setSampleMute, setSampleSolo } = useMutesAndSolos();
 
-  const analyser = samplersRef.current[selectedSampleId]?.analyser ?? null;
+  const analyser = samplers[selectedSampleId]?.analyser ?? null;
 
   const [settings, setSettings] = useState<Partial<SampleSettingsFE> | null>(
     null,

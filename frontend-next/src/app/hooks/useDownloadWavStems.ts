@@ -14,13 +14,13 @@ import type { LoopName } from "../../types/audioTypes";
 const useDownloadWavStems = () => {
   const {
     allSampleData,
-    samplersRef,
+    samplers,
     allLoopSettings,
     makeSamplerWithFX,
     solosExist,
     songTitle,
   } = useAudioContext();
-  const allIds = Object.keys(samplersRef.current);
+  const allIds = Object.keys(samplers);
   const loops = ["A", "B", "C", "D"];
 
   // Function to get Audio Buffer for a given sampler's loop recording
