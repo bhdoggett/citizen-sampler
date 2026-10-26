@@ -17,6 +17,7 @@ import { drumKeys } from "src/lib/constants/drumKeys";
 import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
+import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 import type { LoopName } from "src/types/audioTypes";
@@ -150,24 +151,15 @@ const DrumPad = forwardRef(function DrumPad(
     if (!currentEvent.current.startTime || !loopIsPlaying || !isRecording)
       return;
 
-    const padReleasetime = Tone.getTransport().seconds;
-    const sampleEnd = allSampleData[selectedSampleId].settings.end;
+    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    if (!loopSettings) return;
 
-    const actualReleaseTime = sampleEnd
-      ? padReleasetime < sampleEnd
-        ? padReleasetime
-        : sampleEnd
-      : padReleasetime;
-
-    const startTimeInSeconds = Tone.Ticks(
-      currentEvent.current.startTime
-    ).toSeconds();
-    const loopEndInSeconds = Tone.Time(Tone.getTransport().loopEnd).toSeconds();
-
-    currentEvent.current.duration =
-      actualReleaseTime > startTimeInSeconds
-        ? actualReleaseTime - startTimeInSeconds
-        : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
+    currentEvent.current.duration = calcEventDuration(
+      currentEvent.current.startTime,
+      Tone.getTransport().seconds,
+      loopSettings,
+      allSampleData[id].settings.end
+    );
 
     setAllSampleData((prev) => ({
       ...prev,
@@ -191,7 +183,7 @@ const DrumPad = forwardRef(function DrumPad(
     sampler,
     currentLoop,
     sampleIsPlaying,
-    selectedSampleId,
+    allLoopSettings,
     setAllSampleData,
   ]);
 

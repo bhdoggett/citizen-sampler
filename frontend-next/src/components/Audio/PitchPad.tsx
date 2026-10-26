@@ -13,6 +13,7 @@ import { CustomSampler } from "../../types/CustomSampler";
 import { SampleEventFE } from "src/types/audioTypesFE";
 import quantize from "../../lib/audio/util/quantize";
 import { ticksToSeconds } from "../../lib/audio/util/timing";
+import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
 import type { LoopName } from "../../types/audioTypes";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
@@ -148,26 +149,15 @@ const PitchPad = forwardRef(function PitchPad(
     if (!currentEvent.current?.startTime) return;
 
     if (isRecording) {
-      const padReleasetime = Tone.getTransport().seconds;
-      const sampleEnd = allSampleData[selectedSampleId].settings.end;
+      const loopSettings = allLoopSettings[currentLoop as LoopName];
+      if (!loopSettings) return;
 
-      const actualReleaseTime = sampleEnd
-        ? padReleasetime < sampleEnd
-          ? padReleasetime
-          : sampleEnd
-        : padReleasetime;
-
-      const startTimeInSeconds = Tone.Ticks(
-        currentEvent.current.startTime
-      ).toSeconds();
-      const loopEndInSeconds = Tone.Time(
-        Tone.getTransport().loopEnd
-      ).toSeconds();
-
-      currentEvent.current.duration =
-        actualReleaseTime > startTimeInSeconds
-          ? actualReleaseTime - startTimeInSeconds
-          : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
+      currentEvent.current.duration = calcEventDuration(
+        currentEvent.current.startTime,
+        Tone.getTransport().seconds,
+        loopSettings,
+        allSampleData[selectedSampleId].settings.end
+      );
 
       setAllSampleData((prev) => ({
         ...prev,

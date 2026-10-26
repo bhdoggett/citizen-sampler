@@ -7,6 +7,8 @@ import { drumKeys } from "src/lib/constants/drumKeys";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
+import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
+import type { LoopName } from "src/types/audioTypes";
 import { useReportPadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./SequencerPadButton.module.css";
 
@@ -38,8 +40,8 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     allSampleData,
     setAllSampleData,
     setSelectedSampleId,
-    selectedSampleId,
     currentLoop,
+    allLoopSettings,
   } = useAudioContext();
   const { hotKeysActive } = useUIContext();
 
@@ -135,24 +137,15 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     if (!currentEvent.current.startTime || !loopIsPlaying || !isRecording)
       return;
 
-    const padReleasetime = Tone.getTransport().seconds;
-    const sampleEnd = allSampleData[selectedSampleId]?.settings.end;
+    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    if (!loopSettings) return;
 
-    const actualReleaseTime = sampleEnd
-      ? padReleasetime < sampleEnd
-        ? padReleasetime
-        : sampleEnd
-      : padReleasetime;
-
-    const startTimeInSeconds = Tone.Ticks(
+    currentEvent.current.duration = calcEventDuration(
       currentEvent.current.startTime,
-    ).toSeconds();
-    const loopEndInSeconds = Tone.Time(Tone.getTransport().loopEnd).toSeconds();
-
-    currentEvent.current.duration =
-      actualReleaseTime > startTimeInSeconds
-        ? actualReleaseTime - startTimeInSeconds
-        : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
+      Tone.getTransport().seconds,
+      loopSettings,
+      allSampleData[padId].settings.end,
+    );
 
     setAllSampleData((prev) => ({
       ...prev,
@@ -175,7 +168,7 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     samplersRef,
     currentLoop,
     isPressed,
-    selectedSampleId,
+    allLoopSettings,
     setAllSampleData,
     overrideNote,
   ]);
