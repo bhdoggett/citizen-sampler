@@ -25,6 +25,7 @@ import {
 } from "../../lib/drumMachines";
 import { set, get } from "idb-keyval"; // for IndexedDB storage
 import { computeGain, normalizeAllMuteSolo } from "../../lib/audio/muteSolo";
+import { applySoundSettings } from "../../lib/audio/applySoundSettings";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -38,6 +39,8 @@ type AudioContextType = {
   metronomeActive: boolean;
   setMetronomeActive: React.Dispatch<React.SetStateAction<boolean>>;
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
+  // Snapshot of samplersRef for render; updated after samplers load
+  samplers: Record<string, SamplerWithFX>;
   samplersLoading: boolean;
   setSamplersLoading: React.Dispatch<React.SetStateAction<boolean>>;
   makeSamplerWithFX: (
@@ -59,10 +62,6 @@ type AudioContextType = {
   ) => SampleTypeFE;
   initKitSamples: (kitId: DrumMachineId) => Record<string, SampleTypeFE>;
   updateSamplerData: (id: string, data: SampleTypeFE) => void;
-  applySamplerSettings: (
-    sampleData: SampleTypeFE,
-    samplerWithFX: SamplerWithFX
-  ) => void;
   loadSamplersToRef: (
     sampleData: Record<string, SampleTypeFE>
   ) => Promise<void>;
@@ -467,35 +466,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   );
 
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
-
-  const applySamplerSettings = (
-    sampleData: SampleTypeFE,
-    samplerWithFX: SamplerWithFX
-  ) => {
-    const settings = sampleData.settings;
-    if (!samplerWithFX || !settings) return;
-
-    const solosExistNow = Object.values(allSampleData).some(
-      (sample) => sample.settings.solo
-    );
-    const { sampler, gain, pitch, panVol, highpass, lowpass } = samplerWithFX;
-    gain.gain.value = solosExistNow
-      ? settings.solo
-        ? 1
-        : 0
-      : settings.mute
-        ? 0
-        : 1;
-
-    sampler.attack = settings.attack || 0;
-    sampler.release = settings.release || 0;
-    pitch.pitch = settings.pitch || 0;
-    panVol.volume.value = settings.volume || 0;
-    panVol.pan.value = settings.pan || 0;
-    highpass.frequency.value = settings.highpass[0] || 0;
-    lowpass.frequency.value = settings.lowpass[0] || 200;
-    sampler.setReverse(settings.reverse ?? false);
-  };
+  const [samplers, setSamplers] = useState<Record<string, SamplerWithFX>>({});
 
   const loadSamplersToRef = async (
     sampleData: Record<string, SampleTypeFE>
@@ -517,14 +488,15 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       );
 
       // Wait for all samplers to be created
-      const samplers = await Promise.all(samplerPromises);
+      const newSamplers = await Promise.all(samplerPromises);
 
-      // Assign samplers to ref and apply settings
-      samplers.forEach(({ key, sampler }) => {
+      // Assign samplers to ref and apply settings. Mute/solo gain is set by
+      // the gain effect, which reruns when the samplers state changes.
+      newSamplers.forEach(({ key, sampler }) => {
         samplersRef.current[key] = sampler;
-        applySamplerSettings(sampleData[key], sampler);
-        // CHECK FOR SOLOS EXIST HERE??
+        applySoundSettings(sampler, sampleData[key].settings);
       });
+      setSamplers({ ...samplersRef.current });
     } catch (error) {
       console.error("Failed to load samplers:", error);
     } finally {
@@ -692,7 +664,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         solosExist
       );
     });
-  }, [allSampleData, solosExist]);
+  }, [allSampleData, solosExist, samplers]);
 
   // if (!hasLoadedFromStorage.current) return null;
 
@@ -721,7 +693,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         makeSamplerWithFX,
         storeAudioInIndexedDB,
         getCachedAudioUrlFromIndexedDB,
-        applySamplerSettings,
         initLocSampleData,
         initKitSampleData,
         initLocSamplesFromOneCollection,
@@ -734,6 +705,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         selectedSampleId,
         setSelectedSampleId,
         samplersRef,
+        samplers,
         solosExist,
 
         cleanupSampler,

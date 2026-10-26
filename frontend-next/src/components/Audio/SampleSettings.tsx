@@ -1,6 +1,6 @@
 "use client";
 import { useAudioContext } from "../../app/contexts/AudioContext";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { FolderOpen } from "lucide-react";
 import type { SampleSettingsFE } from "src/types/audioTypesFE";
@@ -15,6 +15,7 @@ import { useUIContext } from "../../app/contexts/UIContext";
 import { QuantizeValue } from "../../types/audioTypes";
 import { usePitchDetector } from "../../app/hooks/usePitchDetector";
 import PitchMeter from "./PitchMeter";
+import { applySoundSettings } from "../../lib/audio/applySoundSettings";
 import styles from "./SampleSettings.module.css";
 
 const SampleSettings = () => {
@@ -84,31 +85,15 @@ const SampleSettings = () => {
     }
   }, [selectedSampleId, allSampleData]);
 
-  const updateSamplerRefSettings = useCallback(
-    (id: string) => {
-      if (!samplersRef.current[id]) return;
-      const samplerWithFX = samplersRef.current[id];
-      if (!samplerWithFX) return;
-      const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
-      sampler.attack = settings?.attack || 0;
-      sampler.release = settings?.release || 0;
-      sampler.setReverse(settings?.reverse ?? false);
-      pitch.pitch = settings?.pitch || 0;
-      panVol.volume.value = settings?.volume || 0;
-      panVol.pan.value = settings?.pan || 0;
-      highpass.frequency.value = settings?.highpass?.[0] || 0;
-      lowpass.frequency.value = settings?.lowpass?.[0] || 200;
-    },
-    [samplersRef, settings],
-  );
-
-  // Keep samplersRef settings in sync with UI
+  // Keep the selected sampler's sound in sync with the UI before the
+  // debounced write to allSampleData lands
   useEffect(() => {
-    if (!settings) return;
-
-    if (!selectedSampleId || !samplersRef.current[selectedSampleId]) return;
-    updateSamplerRefSettings(selectedSampleId);
-  }, [samplersRef, selectedSampleId, settings, updateSamplerRefSettings]);
+    if (!settings || !selectedSampleId) return;
+    const samplerWithFX = samplersRef.current[selectedSampleId];
+    const savedSettings = allSampleData[selectedSampleId]?.settings;
+    if (!samplerWithFX || !savedSettings) return;
+    applySoundSettings(samplerWithFX, { ...savedSettings, ...settings });
+  }, [samplersRef, selectedSampleId, settings, allSampleData]);
 
   // Keep mute and solo rendering in sync with global state
   useEffect(() => {

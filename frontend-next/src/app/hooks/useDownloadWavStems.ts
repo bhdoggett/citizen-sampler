@@ -5,6 +5,8 @@ import getScheduleEvents from "../../lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcRenderDuration } from "../../lib/audio/util/calcRenderDuration";
 import toWav from "audiobuffer-to-wav";
+import { applySoundSettings } from "../../lib/audio/applySoundSettings";
+import { computeGain } from "../../lib/audio/muteSolo";
 import type { LoopName } from "../../types/audioTypes";
 
 const useDownloadWavStems = () => {
@@ -13,7 +15,7 @@ const useDownloadWavStems = () => {
     samplersRef,
     allLoopSettings,
     makeSamplerWithFX,
-    applySamplerSettings,
+    solosExist,
     songTitle,
   } = useAudioContext();
   const allIds = Object.keys(samplersRef.current);
@@ -57,7 +59,9 @@ const useDownloadWavStems = () => {
         true
       );
 
-      applySamplerSettings(sampleData, offlineSamplerWithFx);
+      applySoundSettings(offlineSamplerWithFx, settings);
+      // Muted pads render silent stems, as in the live mix
+      offlineSamplerWithFx.gain.gain.value = computeGain(settings, solosExist);
 
       const { sampler } = offlineSamplerWithFx;
 
