@@ -16,6 +16,7 @@ import { QuantizeValue } from "../../types/audioTypes";
 import { usePitchDetector } from "../../app/hooks/usePitchDetector";
 import PitchMeter from "./PitchMeter";
 import { applySoundSettings } from "../../lib/audio/applySoundSettings";
+import { resolveSyncSettings } from "../../lib/audio/resolveSyncSettings";
 import styles from "./SampleSettings.module.css";
 
 const SampleSettings = () => {
@@ -32,6 +33,9 @@ const SampleSettings = () => {
 
   const analyser = samplers[selectedSampleId]?.analyser ?? null;
 
+  // Which pad `settings` was loaded from. Lags selectedSampleId by one
+  // render after a selection change, so effects can skip stale values.
+  const [settingsPadId, setSettingsPadId] = useState<string | null>(null);
   const [settings, setSettings] = useState<Partial<SampleSettingsFE> | null>(
     null,
   );
@@ -83,18 +87,23 @@ const SampleSettings = () => {
   useEffect(() => {
     if (selectedSampleId && allSampleData[selectedSampleId]) {
       setSettings(allSampleData[selectedSampleId].settings);
+      setSettingsPadId(selectedSampleId);
     }
   }, [selectedSampleId, allSampleData]);
 
   // Keep the selected sampler's sound in sync with the UI before the
   // debounced write to allSampleData lands
   useEffect(() => {
-    if (!settings || !selectedSampleId) return;
     const samplerWithFX = samplersRef.current[selectedSampleId];
-    const savedSettings = allSampleData[selectedSampleId]?.settings;
-    if (!samplerWithFX || !savedSettings) return;
-    applySoundSettings(samplerWithFX, { ...savedSettings, ...settings });
-  }, [samplersRef, selectedSampleId, settings, allSampleData]);
+    const fullSettings = resolveSyncSettings(
+      selectedSampleId,
+      settingsPadId,
+      settings,
+      allSampleData[selectedSampleId]?.settings
+    );
+    if (!samplerWithFX || !fullSettings) return;
+    applySoundSettings(samplerWithFX, fullSettings);
+  }, [samplersRef, selectedSampleId, settingsPadId, settings, allSampleData]);
 
   // Keep mute and solo rendering in sync with global state
   useEffect(() => {
@@ -110,6 +119,7 @@ const SampleSettings = () => {
     if (
       !selectedSampleId ||
       !allSampleData[selectedSampleId] ||
+      settingsPadId !== selectedSampleId ||
       settings === allSampleData[selectedSampleId].settings ||
       settings === null
     )
@@ -122,7 +132,13 @@ const SampleSettings = () => {
     return () => {
       clearTimeout(handler); // cancel if settings change before debounceDelay
     };
-  }, [selectedSampleId, allSampleData, settings, updateSamplerStateSettings]);
+  }, [
+    selectedSampleId,
+    settingsPadId,
+    allSampleData,
+    settings,
+    updateSamplerStateSettings,
+  ]);
 
   if (!settings) {
     return <p>Loading...</p>;
