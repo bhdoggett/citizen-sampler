@@ -81,6 +81,18 @@ describe("getScheduleEvents", () => {
     expect(result[0][0]).toBe(0);
   });
 
+  it("wraps to the loop start when rounding leaves it a hair off the loop end", () => {
+    // 1 bar of 3/4 at 150 BPM is 576 ticks. Snapping to 8t gives 1.2 s,
+    // but the loop length computes as 1.2000000000000002 s.
+    const result = getScheduleEvents(
+      makeData([event(575)], { quantize: true, quantVal: "8t" }),
+      "pad-1",
+      "A",
+      { bpm: 150, beats: 3, bars: 1 }
+    );
+    expect(result[0][0]).toBe(0);
+  });
+
   it("drops duplicates with the same time and note", () => {
     const result = getScheduleEvents(
       makeData(

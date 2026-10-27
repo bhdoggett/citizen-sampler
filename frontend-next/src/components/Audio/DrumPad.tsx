@@ -18,6 +18,7 @@ import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
+import { wrapTicks } from "src/lib/audio/util/timing";
 import { calcTriggerParams } from "src/lib/audio/util/calcTriggerParams";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
@@ -149,11 +150,17 @@ const DrumPad = forwardRef(function DrumPad(
     const samplerObj = samplersRef.current[id];
     if (samplerObj) samplerObj.triggerTime = null;
 
-    if (!currentEvent.current.startTime || !loopIsPlaying || !isRecording)
+    if (currentEvent.current.startTime == null || !loopIsPlaying || !isRecording)
       return;
 
     const loopSettings = allLoopSettings[currentLoop as LoopName];
     if (!loopSettings) return;
+
+    // Fold a hit read just past the loop end back to the loop start
+    currentEvent.current.startTime = wrapTicks(
+      currentEvent.current.startTime,
+      loopSettings
+    );
 
     currentEvent.current.duration = calcEventDuration(
       currentEvent.current.startTime,

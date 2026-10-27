@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PPQ, loopDurationSeconds, ticksToSeconds } from "./timing";
+import { PPQ, loopDurationSeconds, ticksToSeconds, wrapTicks } from "./timing";
 
 describe("ticksToSeconds", () => {
   it("converts one quarter note of ticks at 120 BPM", () => {
@@ -18,5 +18,23 @@ describe("loopDurationSeconds", () => {
 
   it("uses beats per bar for odd meters", () => {
     expect(loopDurationSeconds({ bpm: 60, beats: 3, bars: 1 })).toBeCloseTo(3);
+  });
+});
+
+describe("wrapTicks", () => {
+  // 2 bars of 4/4 is 1536 ticks.
+  const timing = { bpm: 120, beats: 4, bars: 2 };
+
+  it("leaves a position inside the loop alone", () => {
+    expect(wrapTicks(100, timing)).toBe(100);
+  });
+
+  it("wraps a position read just past the loop end", () => {
+    // Tone's transport can report up to one clock update past the end
+    expect(wrapTicks(1540, timing)).toBe(4);
+  });
+
+  it("wraps the loop end itself to 0", () => {
+    expect(wrapTicks(1536, timing)).toBe(0);
   });
 });

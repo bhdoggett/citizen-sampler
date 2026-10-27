@@ -8,6 +8,7 @@ import type { SampleEventFE } from "src/types/audioTypesFE";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
+import { wrapTicks } from "src/lib/audio/util/timing";
 import type { LoopName } from "src/types/audioTypes";
 import { useReportPadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./SequencerPadButton.module.css";
@@ -134,11 +135,17 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     const samplerObj = samplersRef.current[padId];
     if (samplerObj) samplerObj.triggerTime = null;
 
-    if (!currentEvent.current.startTime || !loopIsPlaying || !isRecording)
+    if (currentEvent.current.startTime == null || !loopIsPlaying || !isRecording)
       return;
 
     const loopSettings = allLoopSettings[currentLoop as LoopName];
     if (!loopSettings) return;
+
+    // Fold a hit read just past the loop end back to the loop start
+    currentEvent.current.startTime = wrapTicks(
+      currentEvent.current.startTime,
+      loopSettings,
+    );
 
     currentEvent.current.duration = calcEventDuration(
       currentEvent.current.startTime,

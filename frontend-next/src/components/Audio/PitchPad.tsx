@@ -12,7 +12,7 @@ import { useMidiContext } from "../../app/contexts/MidiContext";
 import { CustomSampler } from "../../types/CustomSampler";
 import { SampleEventFE } from "src/types/audioTypesFE";
 import quantize from "../../lib/audio/util/quantize";
-import { ticksToSeconds } from "../../lib/audio/util/timing";
+import { ticksToSeconds, wrapTicks } from "../../lib/audio/util/timing";
 import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
 import { calcTriggerParams } from "../../lib/audio/util/calcTriggerParams";
 import type { LoopName } from "../../types/audioTypes";
@@ -147,12 +147,17 @@ const PitchPad = forwardRef(function PitchPad(
     const samplerObj = samplersRef.current[selectedSampleId];
     if (samplerObj) samplerObj.triggerTime = null;
 
-    if (!currentEvent.current?.startTime) return;
+    if (currentEvent.current?.startTime == null) return;
 
     if (isRecording) {
       const loopSettings = allLoopSettings[currentLoop as LoopName];
       if (!loopSettings) return;
 
+      // Fold a hit read just past the loop end back to the loop start
+      currentEvent.current.startTime = wrapTicks(
+        currentEvent.current.startTime,
+        loopSettings
+      );
       currentEvent.current.duration = calcEventDuration(
         currentEvent.current.startTime,
         Tone.getTransport().seconds,
@@ -215,7 +220,7 @@ const PitchPad = forwardRef(function PitchPad(
     const events = sampleData.events[currentLoop]
       .filter((event) => event.note === note)
       .map((event) => {
-        if (!event.startTime) return;
+        if (event.startTime == null) return;
         const startTimeInSeconds = ticksToSeconds(
           event.startTime,
           loopSettings.bpm

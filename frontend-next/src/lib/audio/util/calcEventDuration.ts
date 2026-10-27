@@ -11,14 +11,17 @@ export function calcEventDuration(
   timing: LoopTiming,
   sampleEnd?: number | null
 ): number {
+  const loopEndInSeconds = loopDurationSeconds(timing);
+  // The transport can report a release a few ms past the loop end
+  const wrappedReleaseTime = releaseTime % loopEndInSeconds;
+
   const actualReleaseTime = sampleEnd
-    ? releaseTime < sampleEnd
-      ? releaseTime
+    ? wrappedReleaseTime < sampleEnd
+      ? wrappedReleaseTime
       : sampleEnd
-    : releaseTime;
+    : wrappedReleaseTime;
 
   const startTimeInSeconds = ticksToSeconds(startTicks, timing.bpm);
-  const loopEndInSeconds = loopDurationSeconds(timing);
 
   return actualReleaseTime > startTimeInSeconds
     ? actualReleaseTime - startTimeInSeconds

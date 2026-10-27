@@ -42,8 +42,10 @@ const getScheduleEvents = (
         ? quantize(startTimeInSeconds, sampleData.settings.quantVal, timing.bpm)
         : startTimeInSeconds;
 
-      // If an event is quantied to the loop end, wrap it to the loop start
-      if (eventTime === loopEnd) {
+      // If an event is quantized to the loop end, wrap it to the loop start.
+      // Compare with a tolerance: the snapped time and the loop length can
+      // differ in the last float digit.
+      if (Math.abs(eventTime - loopEnd) < 1e-9) {
         eventTime = loopStart;
       }
 
