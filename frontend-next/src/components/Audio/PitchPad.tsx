@@ -16,6 +16,7 @@ import getScheduleEvents, {
   isPlayableEvent,
 } from "../../lib/audio/util/getScheduleEvents";
 import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
+import { resolveRelease } from "../../lib/audio/padRelease";
 import { calcTriggerParams } from "../../lib/audio/util/calcTriggerParams";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
@@ -47,7 +48,9 @@ const PitchPad = forwardRef(function PitchPad(
   const currentEvent = useRef<SampleEventFE | null>(null);
   const partRef = useRef<Tone.Part | null>(null);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const hasReleasedRef = useRef<boolean>(false);
+  const hasReleasedRef = useRef(false);
+  // True from press to release, whatever the sound is doing in between
+  const heldRef = useRef(false);
   const lastPressTimeRef = useRef<number>(0);
   const lastPlayNoteRef = useRef<string | null>(null);
   const [pitchIsPlaying, setPitchIsPlaying] = useState<boolean>(false);
@@ -88,6 +91,7 @@ const PitchPad = forwardRef(function PitchPad(
     lastPlayNoteRef.current = playNote;
 
     hasReleasedRef.current = false;
+    heldRef.current = true;
     const bufDuration = sampler.bufferDuration;
     const offset = allSampleData[selectedSampleId].settings.reverse
       ? bufDuration - (end ?? bufDuration)
@@ -114,39 +118,42 @@ const PitchPad = forwardRef(function PitchPad(
       bufDuration,
       calcPlaybackRate(playNote as Tone.Unit.Frequency),
     ));
-    // If recording, create a new event for this note
-    if (loopIsPlaying && isRecording) {
-      currentEvent.current = {
-        startTime: null,
-        duration: 0,
-        note: "",
-        velocity: 1,
-      };
-      currentEvent.current.startTime = Tone.getTransport().ticks;
-      currentEvent.current.duration = 0;
-      currentEvent.current.note = playNote;
-      currentEvent.current.velocity = 1;
-    }
+    // Start a recorded hit, or clear any earlier one so it can't be saved twice
+    currentEvent.current = {
+      startTime: loopIsPlaying && isRecording ? Tone.getTransport().ticks : null,
+      duration: 0,
+      note: playNote,
+      velocity: 1,
+    };
   };
 
   const handleRelease = () => {
     if (!sampler) return;
-    if (allSampleData[selectedSampleId].settings.oneShot) return;
 
-    // Stop scheduled release
-    if (scheduledReleaseTimeoutRef.current) {
-      clearTimeout(scheduledReleaseTimeoutRef.current);
-      scheduledReleaseTimeoutRef.current = null;
+    const { releaseAudio, record } = resolveRelease({
+      held: heldRef.current,
+      oneShot: allSampleData[selectedSampleId].settings.oneShot,
+      audioReleased: hasReleasedRef.current,
+    });
+    heldRef.current = false;
+    if (!record) return;
+
+    if (releaseAudio) {
+      // Stop scheduled release
+      if (scheduledReleaseTimeoutRef.current) {
+        clearTimeout(scheduledReleaseTimeoutRef.current);
+        scheduledReleaseTimeoutRef.current = null;
+      }
+
+      hasReleasedRef.current = true;
+      setPitchIsPlaying(false);
+      // Use the playNote stored at press time — avoids stale-baseNote mismatch
+      const { baseNote } = allSampleData[selectedSampleId].settings;
+      const playNote = lastPlayNoteRef.current ?? resolvePlayNote(note, String(baseNote));
+      sampler.triggerRelease(playNote, Tone.now());
+      const samplerObj = samplersRef.current[selectedSampleId];
+      if (samplerObj) samplerObj.triggerTime = null;
     }
-
-    hasReleasedRef.current = true;
-    setPitchIsPlaying(false);
-    // Use the playNote stored at press time — avoids stale-baseNote mismatch
-    const { baseNote } = allSampleData[selectedSampleId].settings;
-    const playNote = lastPlayNoteRef.current ?? resolvePlayNote(note, String(baseNote));
-    sampler.triggerRelease(playNote, Tone.now());
-    const samplerObj = samplersRef.current[selectedSampleId];
-    if (samplerObj) samplerObj.triggerTime = null;
 
     if (currentEvent.current?.startTime == null) return;
 

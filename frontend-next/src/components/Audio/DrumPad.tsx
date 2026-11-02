@@ -19,6 +19,7 @@ import getScheduleEvents, { isPlayableEvent } from "src/lib/audio/util/getSchedu
 import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
+import { resolveRelease } from "src/lib/audio/padRelease";
 import { wrapTicks } from "src/lib/audio/util/timing";
 import { calcTriggerParams } from "src/lib/audio/util/calcTriggerParams";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
@@ -52,6 +53,8 @@ const DrumPad = forwardRef(function DrumPad(
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
+  // True from press to release, whatever the sound is doing in between
+  const heldRef = useRef(false);
   const settingsRef = useRef(allSampleData[id]?.settings);
   useEffect(() => { settingsRef.current = allSampleData[id]?.settings; }, [allSampleData, id]);
   const { baseNote } = allSampleData[id]?.settings;
@@ -83,6 +86,7 @@ const DrumPad = forwardRef(function DrumPad(
     const playNote = resolvePlayNote(String(baseNote), String(baseNote));
 
     hasReleasedRef.current = false;
+    heldRef.current = true;
     const bufDuration = sampler.bufferDuration;
     const offset = allSampleData[id].settings.reverse
       ? bufDuration - (end ?? bufDuration)
@@ -111,12 +115,13 @@ const DrumPad = forwardRef(function DrumPad(
       calcPlaybackRate(playNote as Tone.Unit.Frequency),
     ));
 
-    if (loopIsPlaying && isRecording) {
-      currentEvent.current.startTime = Tone.getTransport().ticks;
-      currentEvent.current.duration = 0;
-      currentEvent.current.note = playNote;
-      currentEvent.current.velocity = 1;
-    }
+    // Start a recorded hit, or clear any earlier one so it can't be saved twice
+    currentEvent.current = {
+      startTime: loopIsPlaying && isRecording ? Tone.getTransport().ticks : null,
+      duration: 0,
+      note: playNote,
+      velocity: 1,
+    };
   }, [
     allSampleData,
     baseNote,
@@ -131,23 +136,30 @@ const DrumPad = forwardRef(function DrumPad(
   const handleRelease = useCallback(() => {
     // const currentEvent = getCurrentEvent();
     if (!sampler) return;
-    if (allSampleData[id].settings.oneShot) return;
 
-    if (!sampleIsPlaying) return;
+    const { releaseAudio, record } = resolveRelease({
+      held: heldRef.current,
+      oneShot: allSampleData[id].settings.oneShot,
+      audioReleased: hasReleasedRef.current,
+    });
+    heldRef.current = false;
+    if (!record) return;
 
-    // Stop scheduled release
-    if (scheduledReleaseTimeoutRef.current) {
-      clearTimeout(scheduledReleaseTimeoutRef.current);
-      scheduledReleaseTimeoutRef.current = null;
+    if (releaseAudio) {
+      // Stop scheduled release
+      if (scheduledReleaseTimeoutRef.current) {
+        clearTimeout(scheduledReleaseTimeoutRef.current);
+        scheduledReleaseTimeoutRef.current = null;
+      }
+
+      hasReleasedRef.current = true;
+      setSampleIsPlaying(false);
+      // Transpose relative to C4 reference — see resolvePlayNote.ts
+      const playNote = resolvePlayNote(String(baseNote), String(baseNote));
+      sampler.triggerRelease(playNote, Tone.now());
+      const samplerObj = samplersRef.current[id];
+      if (samplerObj) samplerObj.triggerTime = null;
     }
-
-    hasReleasedRef.current = true;
-    setSampleIsPlaying(false);
-    // Transpose relative to C4 reference — see resolvePlayNote.ts
-    const playNote = resolvePlayNote(String(baseNote), String(baseNote));
-    sampler.triggerRelease(playNote, Tone.now());
-    const samplerObj = samplersRef.current[id];
-    if (samplerObj) samplerObj.triggerTime = null;
 
     if (currentEvent.current.startTime == null || !loopIsPlaying || !isRecording)
       return;
@@ -189,7 +201,6 @@ const DrumPad = forwardRef(function DrumPad(
     loopIsPlaying,
     sampler,
     currentLoop,
-    sampleIsPlaying,
     allLoopSettings,
     setAllSampleData,
   ]);

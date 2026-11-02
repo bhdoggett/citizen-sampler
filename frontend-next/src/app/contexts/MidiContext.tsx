@@ -5,6 +5,7 @@ import { useAudioContext } from "./AudioContext";
 import { useMidi } from "../hooks/useMidi";
 import { SampleEventFE } from "src/types/audioTypesFE";
 import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
+import { resolveRelease } from "../../lib/audio/padRelease";
 import { wrapTicks } from "../../lib/audio/util/timing";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
@@ -93,7 +94,8 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
         next.delete(note);
         return next;
       });
-      activeNotesRef.current.delete(note);
+      // The note stays in activeNotesRef until note-off, so the hit is
+      // still recorded when the key is held past the end of the sound
       activeReleaseTimersRef.current.delete(note);
     }, calcReleaseDelay(
       start,
@@ -107,31 +109,37 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
   const onNoteOff = (note: string) => {
     const samplerWithFX = samplersRef.current[selectedSampleId];
     if (!samplerWithFX) return;
-    if (allSampleData[selectedSampleId].settings.oneShot) return;
 
     const { sampler } = samplerWithFX;
-
+    const activeNote = activeNotesRef.current.get(note);
     const timer = activeReleaseTimersRef.current.get(note);
-    if (timer) {
+
+    const { releaseAudio, record } = resolveRelease({
+      held: activeNote !== undefined,
+      oneShot: allSampleData[selectedSampleId].settings.oneShot,
+      // The release timer is gone once the sound has stopped on its own
+      audioReleased: timer === undefined,
+    });
+    activeNotesRef.current.delete(note);
+    if (!record) return;
+
+    if (releaseAudio) {
       clearTimeout(timer);
       activeReleaseTimersRef.current.delete(note);
+
+      // Use the playNote stored at noteOn time — avoids stale-baseNote mismatch
+      const playNote =
+        activeNote?.note ??
+        resolvePlayNote(note, String(allSampleData[selectedSampleId].settings.baseNote));
+      sampler.triggerRelease(playNote, Tone.now());
+      samplerWithFX.triggerTime = null;
+
+      setActiveMidiNotes((prev) => {
+        const next = new Set(prev);
+        next.delete(note);
+        return next;
+      });
     }
-
-    // Use the playNote stored at noteOn time — avoids stale-baseNote mismatch
-    const activeNote = activeNotesRef.current.get(note);
-    const playNote =
-      activeNote?.note ??
-      resolvePlayNote(note, String(allSampleData[selectedSampleId].settings.baseNote));
-    sampler.triggerRelease(playNote, Tone.now());
-    samplerWithFX.triggerTime = null;
-
-    setActiveMidiNotes((prev) => {
-      const next = new Set(prev);
-      next.delete(note);
-      return next;
-    });
-
-    activeNotesRef.current.delete(note);
 
     const loopSettings = allLoopSettings[currentLoop];
     if (activeNote?.startTime == null || !isRecording || !loopSettings) return;

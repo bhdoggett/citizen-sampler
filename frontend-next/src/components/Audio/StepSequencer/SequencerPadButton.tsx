@@ -8,6 +8,7 @@ import type { SampleEventFE } from "src/types/audioTypesFE";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
+import { resolveRelease } from "src/lib/audio/padRelease";
 import { wrapTicks } from "src/lib/audio/util/timing";
 import { useReportPadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./SequencerPadButton.module.css";
@@ -38,6 +39,8 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
   const [isPressed, setIsPressed] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
+  // True from press to release, whatever the sound is doing in between
+  const heldRef = useRef(false);
   const lastPlayNoteRef = useRef<string | null>(null);
   const currentEvent = useRef<SampleEventFE>({
     startTime: null,
@@ -65,6 +68,7 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     lastPlayNoteRef.current = noteToPlay;
 
     hasReleasedRef.current = false;
+    heldRef.current = true;
     const bufDuration = sampler.bufferDuration;
     const offset = allSampleData[padId].settings.reverse
       ? bufDuration - (end ?? bufDuration)
@@ -88,12 +92,13 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
       }
     }, calcReleaseDelay(start, end, bufDuration));
 
-    if (loopIsPlaying && isRecording) {
-      currentEvent.current.startTime = Tone.getTransport().ticks;
-      currentEvent.current.duration = 0;
-      currentEvent.current.note = noteToPlay;
-      currentEvent.current.velocity = 1;
-    }
+    // Start a recorded hit, or clear any earlier one so it can't be saved twice
+    currentEvent.current = {
+      startTime: loopIsPlaying && isRecording ? Tone.getTransport().ticks : null,
+      duration: 0,
+      note: noteToPlay,
+      velocity: 1,
+    };
   }, [
     allSampleData,
     padId,
@@ -106,23 +111,32 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
 
   const handleRelease = useCallback(() => {
     const sampler = samplersRef.current[padId]?.sampler;
-    if (!sampler || !isPressed) return;
-    if (allSampleData[padId].settings.oneShot) return;
+    if (!sampler) return;
 
-    if (scheduledReleaseTimeoutRef.current) {
-      clearTimeout(scheduledReleaseTimeoutRef.current);
-      scheduledReleaseTimeoutRef.current = null;
+    const { releaseAudio, record } = resolveRelease({
+      held: heldRef.current,
+      oneShot: allSampleData[padId].settings.oneShot,
+      audioReleased: hasReleasedRef.current,
+    });
+    heldRef.current = false;
+    if (!record) return;
+
+    if (releaseAudio) {
+      if (scheduledReleaseTimeoutRef.current) {
+        clearTimeout(scheduledReleaseTimeoutRef.current);
+        scheduledReleaseTimeoutRef.current = null;
+      }
+
+      const { baseNote } = allSampleData[padId].settings;
+      const noteToPlay = lastPlayNoteRef.current ??
+        resolvePlayNote(overrideNote || String(baseNote), String(baseNote));
+
+      hasReleasedRef.current = true;
+      setIsPressed(false);
+      sampler.triggerRelease(noteToPlay, Tone.now());
+      const samplerObj = samplersRef.current[padId];
+      if (samplerObj) samplerObj.triggerTime = null;
     }
-
-    const { baseNote } = allSampleData[padId].settings;
-    const noteToPlay = lastPlayNoteRef.current ??
-      resolvePlayNote(overrideNote || String(baseNote), String(baseNote));
-
-    hasReleasedRef.current = true;
-    setIsPressed(false);
-    sampler.triggerRelease(noteToPlay, Tone.now());
-    const samplerObj = samplersRef.current[padId];
-    if (samplerObj) samplerObj.triggerTime = null;
 
     if (currentEvent.current.startTime == null || !loopIsPlaying || !isRecording)
       return;
@@ -163,7 +177,6 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     loopIsPlaying,
     samplersRef,
     currentLoop,
-    isPressed,
     allLoopSettings,
     setAllSampleData,
     overrideNote,
