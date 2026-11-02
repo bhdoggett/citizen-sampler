@@ -1,7 +1,7 @@
 // import Recorder from "recorder-js";
 import * as Tone from "tone";
 import { useAudioContext } from "../contexts/AudioContext";
-import getScheduleEvents from "../../lib/audio/util/getScheduleEvents";
+import getScheduleEvents, { isPlayableEvent } from "../../lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcRenderDuration } from "../../lib/audio/util/calcRenderDuration";
 import toWav from "audiobuffer-to-wav";
@@ -64,12 +64,7 @@ const useDownloadWavStems = () => {
       const { sampler } = offlineSamplerWithFx;
 
       const part = new Tone.Part((time, event) => {
-        if (
-          typeof event === "object" &&
-          event !== null &&
-          "duration" in event &&
-          event.duration !== null
-        ) {
+        if (isPlayableEvent(event)) {
           const { duration: actualDuration, offset } = calcTriggerParams(
             settings,
             calcPlaybackRate(event.note),

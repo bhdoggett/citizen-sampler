@@ -11,8 +11,10 @@ import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useMidiContext } from "../../app/contexts/MidiContext";
 import { CustomSampler } from "../../types/CustomSampler";
 import { SampleEventFE } from "src/types/audioTypesFE";
-import quantize from "../../lib/audio/util/quantize";
-import { ticksToSeconds, wrapTicks } from "../../lib/audio/util/timing";
+import { wrapTicks } from "../../lib/audio/util/timing";
+import getScheduleEvents, {
+  isPlayableEvent,
+} from "../../lib/audio/util/getScheduleEvents";
 import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
 import { calcTriggerParams } from "../../lib/audio/util/calcTriggerParams";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
@@ -206,7 +208,6 @@ const PitchPad = forwardRef(function PitchPad(
 
   // Schedule playback of events, strictly for visual render feedback on the PitchPad
   useEffect(() => {
-    const sampleData = allSampleData[selectedSampleId];
     const loopSettings = allLoopSettings[currentLoop];
 
     if (
@@ -216,38 +217,17 @@ const PitchPad = forwardRef(function PitchPad(
     )
       return;
 
-    const events = sampleData.events[currentLoop]
-      .filter((event) => event.note === note)
-      .map((event) => {
-        if (event.startTime == null) return;
-        const startTimeInSeconds = ticksToSeconds(
-          event.startTime,
-          loopSettings.bpm
-        );
-        const eventTime = sampleData.settings.quantize
-          ? quantize(
-              startTimeInSeconds,
-              sampleData.settings.quantVal,
-              loopSettings.bpm
-            )
-          : startTimeInSeconds;
-        return [
-          eventTime,
-          {
-            startTime: eventTime,
-            duration: event.duration,
-          },
-        ];
-      });
+    // Same schedule as the pad's audio, so loop-end hits wrap the same way
+    const events = getScheduleEvents(
+      allSampleData,
+      selectedSampleId,
+      currentLoop,
+      loopSettings
+    ).filter(([, event]) => event.note === note);
 
     partRef.current = new Tone.Part((time, event) => {
       if (!sampler) return;
-      if (
-        typeof event === "object" &&
-        event !== null &&
-        "duration" in event &&
-        event.duration !== null
-      ) {
+      if (isPlayableEvent(event)) {
         const settings = allSampleData[selectedSampleId].settings;
         const resolvedNote = resolvePlayNote(note, String(settings.baseNote));
         const { duration: actualDuration } = calcTriggerParams(

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SampleEventFE, SampleTypeFE } from "src/types/audioTypesFE";
-import getScheduleEvents from "./getScheduleEvents";
+import getScheduleEvents, { isPlayableEvent } from "./getScheduleEvents";
 
 // 192 ticks per quarter note; at 120 BPM that is 0.5 s. Loop is 2 bars = 4 s.
 const liveTiming = { bpm: 120, beats: 4, bars: 2 };
@@ -145,5 +145,17 @@ describe("getScheduleEvents", () => {
       );
       expect(result[0][0]).toBe(0);
     });
+  });
+});
+
+describe("isPlayableEvent", () => {
+  it("accepts an event with a duration", () => {
+    expect(isPlayableEvent({ duration: 0.25, note: "C4" })).toBe(true);
+  });
+
+  it("rejects events without a duration, and non-objects", () => {
+    expect(isPlayableEvent({ duration: null })).toBe(false);
+    expect(isPlayableEvent(null)).toBe(false);
+    expect(isPlayableEvent(undefined)).toBe(false);
   });
 });

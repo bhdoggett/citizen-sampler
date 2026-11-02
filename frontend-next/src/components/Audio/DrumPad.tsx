@@ -15,7 +15,7 @@ import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
 import { drumKeys, getKeySymbol } from "src/lib/constants/drumKeys";
 import useDrumPadHotKeys from "src/app/hooks/useDrumPadHotKeys";
-import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
+import getScheduleEvents, { isPlayableEvent } from "src/lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
@@ -254,12 +254,7 @@ const DrumPad = forwardRef(function DrumPad(
 
     partRef.current = new Tone.Part((time, event) => {
       if (!sampler) return;
-      if (
-        typeof event === "object" &&
-        event !== null &&
-        "duration" in event &&
-        event.duration !== null
-      ) {
+      if (isPlayableEvent(event)) {
         const { duration: actualDuration, offset } = calcTriggerParams(
           settingsRef.current,
           calcPlaybackRate(event.note),
