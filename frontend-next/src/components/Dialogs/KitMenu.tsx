@@ -5,6 +5,7 @@ import { useUIContext } from "src/app/contexts/UIContext";
 import styles from "./Dialog.module.css";
 import OptionList from "./OptionList";
 import { DrumMachineId, drumMachines } from "src/lib/drumMachines";
+import { KIT_PADS_LABEL } from "src/lib/constants/padLayout";
 
 const KitMenu: React.FC = () => {
   const {
@@ -68,7 +69,7 @@ const KitMenu: React.FC = () => {
             // e.preventDefault();
             confirmActionRef.current = {
               message:
-                "This will replace pads 13-16 with new kit samples. Are you sure?",
+                `This will replace ${KIT_PADS_LABEL} with new kit samples. Are you sure?`,
               buttonText: "You Betcha",
               action: () => handleSelect(id),
             };

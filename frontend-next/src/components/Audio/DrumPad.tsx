@@ -24,6 +24,7 @@ import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 import { useReportPadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./DrumPad.module.css";
+import { padNumber } from "src/lib/constants/padLayout";
 
 type DrumPadProps = {
   id: string;
@@ -56,8 +57,8 @@ const DrumPad = forwardRef(function DrumPad(
   const { baseNote } = allSampleData[id]?.settings;
   const { hotKeysActive } = useUIContext();
   const { activeMidiNotes } = useMidiContext();
-  const padNum = id.split("-")[1];
-  const padKey = drumKeys[Number(padNum) - 1];
+  const padNum = padNumber(id);
+  const padKey = drumKeys[padNum - 1];
   useReportPadPlaying(id, "drum-pad", sampleIsPlaying);
   const currentEvent = useRef<SampleEventFE>({
     startTime: null,
@@ -367,7 +368,7 @@ const DrumPad = forwardRef(function DrumPad(
       onFocus={handleFocus}
     >
       <button
-        id={padNum}
+        id={String(padNum)}
         ref={buttonRef}
         onMouseDown={handlePress}
         onMouseEnter={(e) => {

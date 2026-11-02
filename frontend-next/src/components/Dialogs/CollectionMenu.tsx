@@ -6,6 +6,7 @@ import { useUIContext } from "src/app/contexts/UIContext";
 import styles from "./Dialog.module.css";
 import OptionList from "./OptionList";
 import { SampleTypeFE } from "src/types/audioTypesFE";
+import { LOC_PADS_LABEL } from "src/lib/constants/padLayout";
 
 const CollectionMenu: React.FC = () => {
   const {
@@ -66,7 +67,7 @@ const CollectionMenu: React.FC = () => {
           onClick={() => {
             confirmActionRef.current = {
               message:
-                "This will replace pads 1-12 with new Library of Congress Samples. Are you sure?",
+                `This will replace ${LOC_PADS_LABEL} with new Library of Congress Samples. Are you sure?`,
               buttonText: "You Betcha",
               action: c === "All" ? () => handleSelect() : () => handleSelect(c),
             };

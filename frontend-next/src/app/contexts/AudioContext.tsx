@@ -9,6 +9,12 @@ import {
 import { useUIContext } from "./UIContext";
 import { LoopName } from "../../types/audioTypes";
 import { emptyLoopEvents } from "src/lib/constants/loops";
+import {
+  DEFAULT_SELECTED_PAD,
+  KIT_PAD_IDS,
+  LOC_PAD_COUNT,
+  padId,
+} from "src/lib/constants/padLayout";
 import { defaultLoopSettings, defaultSampleSettings } from "src/lib/audio/defaults";
 import { SamplerWithFX } from "src/types/SamplerWithFX";
 import { CustomSampler } from "src/types/CustomSampler";
@@ -123,7 +129,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
     // Shuffle and return k elements
     const n = workingArray.length;
-    const k = Math.min(12, n);
+    const k = Math.min(LOC_PAD_COUNT, n);
 
     for (let i = 0; i < k; i++) {
       const j = i + Math.floor(Math.random() * (n - i));
@@ -159,7 +165,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
     const locSampleData = selectedSamples.reduce(
       (acc, sample, i) => {
-        const key = `pad-${i + 1}`;
+        const key = padId(i + 1);
         acc[key] = initLocSampleData(key, sample.url, sample.collection);
         return acc;
       },
@@ -177,7 +183,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
     const locSampleData = selectedSamples.reduce(
       (acc, url, i) => {
-        const key = `pad-${i + 1}`;
+        const key = padId(i + 1);
         acc[key] = initLocSampleData(key, url, collection);
         return acc;
       },
@@ -235,7 +241,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
     return samples.reduce(
       (acc, sample, index) => {
-        const id = `pad-${index + 13}`;
+        const id = KIT_PAD_IDS[index];
         acc[id] = initKitSampleData(
           id,
           sample.url,
@@ -473,7 +479,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
   );
-  const [selectedSampleId, setSelectedSampleId] = useState<string>("pad-1");
+  const [selectedSampleId, setSelectedSampleId] = useState<string>(DEFAULT_SELECTED_PAD);
 
   const updateSamplerStateSettings = (
     id: string,

@@ -1,5 +1,6 @@
 "use client";
 import styles from "./Dialog.module.css";
+import { KIT_PADS_LABEL } from "src/lib/constants/padLayout";
 
 const HelpShortcuts: React.FC = () => {
   return (
@@ -52,8 +53,8 @@ const HelpShortcuts: React.FC = () => {
         <li>
           <strong>Trigger pads</strong>: click/tap a pad, or press its key (the
           letter in the pad corner, e.g.{" "}
-          <code>Q W E R / A S D F / Z X C V</code> and arrow keys for pads
-          13–16).
+          <code>Q W E R / A S D F / Z X C V</code> and arrow keys for{" "}
+          {KIT_PADS_LABEL}).
         </li>
         <li>
           <strong>Play pitched notes</strong>: use the Pitch Grid next to the

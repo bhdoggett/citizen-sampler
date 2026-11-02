@@ -1,12 +1,11 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import DrumPad from "./DrumPad";
+import { ALL_PAD_IDS } from "src/lib/constants/padLayout";
 import styles from "./DrumMachine.module.css";
 
 const DrumMachine = () => {
   const { samplers } = useAudioContext();
-  // Combine all pad IDs into one array
-  const allPadIds = Array.from({ length: 16 }, (_, i) => `pad-${i + 1}`);
   // Ref for imperative handles
   const drumPadsHandlersRef = useRef<
     Record<
@@ -104,7 +103,7 @@ const DrumMachine = () => {
   return (
     <div className={styles.drumMachine}>
       <div className={styles.grid}>
-        {allPadIds.map((id) => {
+        {ALL_PAD_IDS.map((id) => {
           const samplerObj = samplers[id];
           return (
             <DrumPad

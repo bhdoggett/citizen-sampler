@@ -11,6 +11,7 @@ import { applyLoopSettings } from "../../lib/audio/applyLoopSettings";
 import { calcTriggerParams } from "../../lib/audio/util/calcTriggerParams";
 import type { LoopName } from "../../types/audioTypes";
 import { LOOP_NAMES } from "src/lib/constants/loops";
+import { padNumber } from "src/lib/constants/padLayout";
 
 const useDownloadWavStems = () => {
   const {
@@ -119,7 +120,7 @@ const useDownloadWavStems = () => {
     const link = document.createElement("a");
 
     link.href = wavUrl;
-    link.download = `${songTitle}-${id.split("-")[1]}-${loop}.wav`;
+    link.download = `${songTitle}-${padNumber(id)}-${loop}.wav`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

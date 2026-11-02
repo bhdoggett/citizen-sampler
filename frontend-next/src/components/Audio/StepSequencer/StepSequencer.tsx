@@ -27,6 +27,7 @@ import {
 } from "src/lib/audio/util/scaleNotes";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import styles from "./StepSequencer.module.css";
+import { ALL_PAD_IDS } from "src/lib/constants/padLayout";
 
 const PAD_LABEL_WIDTH = 80; // Width of the pad label column
 const CONTAINER_PADDING = 2; // 1px border on each side of the grid
@@ -399,8 +400,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   // Copy loop pattern
   const handleCopyLoop = useCallback(() => {
     const snapshot: Record<string, SampleEventFE[]> = {};
-    for (let i = 1; i <= 16; i++) {
-      const padId = `pad-${i}`;
+    for (const padId of ALL_PAD_IDS) {
       snapshot[padId] = allSampleData[padId]?.events[currentLoop] || [];
     }
     copiedPatternRef.current = snapshot;
@@ -426,8 +426,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
       action: () => {
         setAllSampleData((prev) => {
           const next = { ...prev };
-          for (let i = 1; i <= 16; i++) {
-            const padId = `pad-${i}`;
+          for (const padId of ALL_PAD_IDS) {
             next[padId] = {
               ...next[padId],
               events: {
