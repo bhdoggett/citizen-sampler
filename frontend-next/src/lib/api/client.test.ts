@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AxiosError, AxiosHeaders } from "axios";
-import { api, apiErrorMessage, isServerError, updateSong } from "./client";
+import { api, apiErrorMessage, getSong, isAuthRejection, updateSong } from "./client";
 import type { SongPayload } from "./client";
 
-const serverError = (data: unknown) =>
+const serverError = (data: unknown, status = 400) =>
   new AxiosError("Request failed", "ERR_BAD_REQUEST", undefined, undefined, {
     data,
-    status: 400,
+    status,
     statusText: "Bad Request",
     headers: {},
     config: { headers: new AxiosHeaders() },
@@ -28,10 +28,16 @@ describe("apiErrorMessage", () => {
   });
 });
 
-describe("isServerError", () => {
-  it("is true only when the server responded", () => {
-    expect(isServerError(serverError({}))).toBe(true);
-    expect(isServerError(networkError())).toBe(false);
+describe("isAuthRejection", () => {
+  it("is true when the server rejects the token", () => {
+    expect(isAuthRejection(serverError({}, 401))).toBe(true);
+    expect(isAuthRejection(serverError({}, 403))).toBe(true);
+  });
+
+  it("is false when the server is down or unreachable", () => {
+    expect(isAuthRejection(serverError("<html>Bad Gateway</html>", 502))).toBe(false);
+    expect(isAuthRejection(serverError({ message: "DB down" }, 500))).toBe(false);
+    expect(isAuthRejection(networkError())).toBe(false);
   });
 });
 
@@ -45,6 +51,18 @@ describe("updateSong", () => {
     await expect(updateSong("tok", "id1", payload)).resolves.toEqual({ message: "ok" });
     expect(put).toHaveBeenCalledTimes(1);
     expect(put).toHaveBeenCalledWith("/beats/me/songs/id1", payload, {
+      headers: { Authorization: "Bearer tok" },
+    });
+  });
+});
+
+describe("getSong", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("encodes the title so punctuation stays in the path segment", async () => {
+    const get = vi.spyOn(api, "get").mockResolvedValue({ data: {} });
+    await getSong("tok", "Why? / Now");
+    expect(get).toHaveBeenCalledWith("/beats/me/songs/Why%3F%20%2F%20Now", {
       headers: { Authorization: "Bearer tok" },
     });
   });

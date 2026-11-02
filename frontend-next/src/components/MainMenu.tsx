@@ -12,7 +12,7 @@ import {
   apiErrorMessage,
   checkLogin,
   deleteSong,
-  isServerError,
+  isAuthRejection,
   updateSong,
 } from "src/lib/api/client";
 import styles from "./MainMenu.module.css";
@@ -126,8 +126,8 @@ const Menu: React.FC = () => {
 
   useEffect(() => {
     if (!token) return;
-    // Only a server answer logs the user out. A network failure leaves the
-    // session alone, since the server never saw the token.
+    // Only a rejected token logs the user out. An outage leaves the session
+    // alone.
     const verifyLogin = async () => {
       try {
         const result = await checkLogin(token);
@@ -139,7 +139,7 @@ const Menu: React.FC = () => {
           });
         }
       } catch (err) {
-        if (!isServerError(err)) return;
+        if (!isAuthRejection(err)) return;
         handleLogout();
         openDialog({
           type: "api-response",

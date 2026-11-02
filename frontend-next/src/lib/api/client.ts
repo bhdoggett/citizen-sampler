@@ -32,10 +32,11 @@ export function apiErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
-// True when the server answered with an error. False for network failures,
-// where the server never saw the request.
-export function isServerError(err: unknown): boolean {
-  return axios.isAxiosError(err) && err.response !== undefined;
+// True only when the API rejected the token. An outage (a network failure,
+// a 5xx, or a proxy error page) says nothing about the session.
+export function isAuthRejection(err: unknown): boolean {
+  const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+  return status === 401 || status === 403;
 }
 
 export async function createSong(token: string | null, song: SongPayload) {
@@ -77,9 +78,10 @@ export async function listSongTitles(token: string | null) {
   return res.data;
 }
 
-export async function getSong(token: string | null, songId: string) {
+// Songs load by title, which can hold any character, so encode it
+export async function getSong(token: string | null, title: string) {
   const res = await api.get<MessageResponse & { song: SongTypeFE }>(
-    `/beats/me/songs/${songId}`,
+    `/beats/me/songs/${encodeURIComponent(title)}`,
     auth(token)
   );
   return res.data;
