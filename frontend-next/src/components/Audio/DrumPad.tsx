@@ -13,7 +13,8 @@ import { useMidiContext } from "../../app/contexts/MidiContext";
 import * as Tone from "tone";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
-import { drumKeys } from "src/lib/constants/drumKeys";
+import { drumKeys, getKeySymbol } from "src/lib/constants/drumKeys";
+import useDrumPadHotKeys from "src/app/hooks/useDrumPadHotKeys";
 import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
@@ -212,27 +213,12 @@ const DrumPad = forwardRef(function DrumPad(
     }
   };
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (!hotKeysActive || e.metaKey || e.repeat) return;
-      if (e.key === padKey) {
-        e.preventDefault();
-        handlePress();
-      }
-    },
-    [hotKeysActive, handlePress, padKey]
-  );
-
-  const handleKeyUp = useCallback(
-    (e: KeyboardEvent) => {
-      if (!hotKeysActive) return;
-      if (e.key === padKey) {
-        e.preventDefault();
-        handleRelease();
-      }
-    },
-    [hotKeysActive, handleRelease, padKey]
-  );
+  useDrumPadHotKeys({
+    hotKeysActive,
+    padKey,
+    onPress: handlePress,
+    onRelease: handleRelease,
+  });
 
   // Get the color of the pad based on its mute/solo settings
   const getPadColor = () => {
@@ -247,35 +233,6 @@ const DrumPad = forwardRef(function DrumPad(
       sampleIsPlaying || (id === selectedSampleId && activeMidiNotes.size > 0);
     return isActive ? styles.active : "";
   };
-
-  // Convert arrow keys to symbols for display
-  const getKeySymbol = (key: string): string => {
-    const arrowMap: Record<string, string> = {
-      ArrowLeft: "←",
-      ArrowUp: "↑",
-      ArrowRight: "→",
-      ArrowDown: "↓",
-    };
-    return arrowMap[key] || key;
-  };
-
-  // Activate hotkeys for pad interaction
-  // Add event listeners for keydown and keyup events
-  // and clean up on unmount or when hotKeysActive changes
-  useEffect(() => {
-    if (hotKeysActive) {
-      window.addEventListener("keydown", handleKeyDown);
-      window.addEventListener("keyup", handleKeyUp);
-    } else {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    }
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, [hotKeysActive, handleKeyDown, handleKeyUp]);
 
   // **** Schedule playback of sampler play events ****
   useEffect(() => {

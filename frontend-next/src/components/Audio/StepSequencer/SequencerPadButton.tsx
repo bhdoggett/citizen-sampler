@@ -3,7 +3,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { useAudioContext } from "src/app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import * as Tone from "tone";
-import { drumKeys } from "src/lib/constants/drumKeys";
+import { drumKeys, getKeySymbol } from "src/lib/constants/drumKeys";
 import type { SampleEventFE } from "src/types/audioTypesFE";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
@@ -16,16 +16,6 @@ type SequencerPadButtonProps = {
   padId: string;
   padNumber: number;
   overrideNote?: string;
-};
-
-const getKeySymbol = (key: string): string => {
-  const arrowMap: Record<string, string> = {
-    ArrowLeft: "←",
-    ArrowUp: "↑",
-    ArrowRight: "→",
-    ArrowDown: "↓",
-  };
-  return arrowMap[key] || key;
 };
 
 const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({

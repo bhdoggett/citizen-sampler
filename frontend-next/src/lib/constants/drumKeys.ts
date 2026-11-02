@@ -16,3 +16,15 @@ export const drumKeys = [
   "ArrowDown",
   "ArrowRight",
 ];
+
+const arrowSymbols: Record<string, string> = {
+  ArrowLeft: "←",
+  ArrowUp: "↑",
+  ArrowRight: "→",
+  ArrowDown: "↓",
+};
+
+// The label shown on a pad for its hotkey
+export function getKeySymbol(key: string): string {
+  return arrowSymbols[key] ?? key;
+}
