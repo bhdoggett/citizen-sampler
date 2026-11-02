@@ -33,8 +33,8 @@ type UIContextType = {
   dialog: DialogState | null;
   openDialog: (next: DialogState) => void;
   closeDialog: () => void;
+  // Pad and transport hotkeys are off while any dialog is open
   hotKeysActive: boolean;
-  setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
   sequencerVisible: boolean;
   setSequencerVisible: React.Dispatch<React.SetStateAction<boolean>>;
 };
@@ -47,7 +47,7 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const openDialog = useCallback((next: DialogState) => setDialog(next), []);
   const closeDialog = useCallback(() => setDialog(null), []);
-  const [hotKeysActive, setHotKeysActive] = useState<boolean>(true);
+  const hotKeysActive = dialog === null;
   const [makeBeatsButtonPressed, setMakeBeatsButtonPressed] =
     useState<boolean>(false);
   const [sequencerVisible, setSequencerVisible] = useState<boolean>(false);
@@ -61,7 +61,6 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({
         openDialog,
         closeDialog,
         hotKeysActive,
-        setHotKeysActive,
         sequencerVisible,
         setSequencerVisible,
       }}

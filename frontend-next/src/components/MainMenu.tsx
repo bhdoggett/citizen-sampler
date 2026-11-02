@@ -26,11 +26,7 @@ const Menu: React.FC = () => {
     setDisplayName,
     setError,
   } = useAuthContext();
-  const {
-    dialog,
-    openDialog,
-    setHotKeysActive,
-  } = useUIContext();
+  const { openDialog } = useUIContext();
   const {
     songTitle,
     allLoopSettings,
@@ -164,14 +160,6 @@ const Menu: React.FC = () => {
     Tone.start();
     setMenuOpen(false);
   };
-
-  useEffect(() => {
-    if (dialog) {
-      setHotKeysActive(false);
-    } else {
-      setHotKeysActive(true);
-    }
-  }, [dialog, setHotKeysActive]);
 
   useEffect(() => {
     if (!token) return;

@@ -13,7 +13,7 @@ const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
   buttonText,
   onConfirm,
 }) => {
-  const { closeDialog, setHotKeysActive } = useUIContext();
+  const { closeDialog } = useUIContext();
 
   return (
     <>
@@ -23,7 +23,6 @@ const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
         onClick={() => {
           onConfirm();
           closeDialog();
-          setHotKeysActive(true);
         }}
         className={`${styles.button} ${styles.primary}`}
       >

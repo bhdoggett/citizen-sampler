@@ -14,7 +14,7 @@ const KitMenu: React.FC = () => {
     setAllSampleData,
     storeAudioInIndexedDB,
   } = useAudioContext();
-  const { openDialog, closeDialog, setHotKeysActive } = useUIContext();
+  const { openDialog, closeDialog } = useUIContext();
   const drumMachineNames: string[] = Object.values(drumMachines).map(
     (drumMachine) => drumMachine.name
   );
@@ -45,7 +45,6 @@ const KitMenu: React.FC = () => {
       await storeAudioInIndexedDB(sample.url, sampleId);
     }
     closeDialog();
-    setHotKeysActive(true);
   };
 
   return (

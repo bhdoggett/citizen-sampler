@@ -48,7 +48,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     setSelectedSampleId,
     loopIsPlaying,
   } = useAudioContext();
-  const { hotKeysActive, openDialog, setHotKeysActive } =
+  const { hotKeysActive, openDialog } =
     useUIContext();
 
   const [subdivision, setSubdivision] = useState<Subdivision>("8n");
@@ -386,12 +386,10 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
           }));
         },
       });
-      setHotKeysActive(false);
     },
     [
       currentLoop,
       setAllSampleData,
-      setHotKeysActive,
       openDialog,
     ],
   );
@@ -442,11 +440,9 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
         setCopiedFromLoop(null);
       },
     });
-    setHotKeysActive(false);
   }, [
     currentLoop,
     setAllSampleData,
-    setHotKeysActive,
     openDialog,
   ]);
 

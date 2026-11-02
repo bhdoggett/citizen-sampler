@@ -49,7 +49,6 @@ const DrumPad = forwardRef(function DrumPad(
     samplersRef,
   } = useAudioContext();
   const partRef = useRef<Tone.Part | null>(null);
-  const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
@@ -95,7 +94,6 @@ const DrumPad = forwardRef(function DrumPad(
       samplerObj.currentEvent.note = playNote;
     }
     setSelectedSampleId(id);
-    setIsSelected(true);
     setSampleIsPlaying(true);
 
     scheduledReleaseTimeoutRef.current = setTimeout(() => {
@@ -304,10 +302,7 @@ const DrumPad = forwardRef(function DrumPad(
     if (partRef.current && !loopIsPlaying) disposePart();
   }, [loopIsPlaying]);
 
-  // Sync isSelected state with selectedSampleId
-  useEffect(() => {
-    setIsSelected(selectedSampleId === id);
-  }, [selectedSampleId, id]);
+  const isSelected = selectedSampleId === id;
 
   useImperativeHandle(ref, () => ({
     handlePress,

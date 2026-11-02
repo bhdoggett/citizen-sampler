@@ -16,7 +16,7 @@ const CollectionMenu: React.FC = () => {
     setAllSampleData,
     storeAudioInIndexedDB,
   } = useAudioContext();
-  const { openDialog, closeDialog, setHotKeysActive } = useUIContext();
+  const { openDialog, closeDialog } = useUIContext();
   const [index, setIndex] = useState(0);
   const c = collectionNames[index];
 
@@ -44,7 +44,6 @@ const CollectionMenu: React.FC = () => {
       await storeAudioInIndexedDB(sample.url, sampleId);
     }
     closeDialog();
-    setHotKeysActive(true);
   };
 
   return (
