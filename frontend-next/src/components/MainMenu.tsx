@@ -8,6 +8,7 @@ import { useAuthContext } from "../app/contexts/AuthContext";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import { useUIContext } from "../app/contexts/UIContext";
 import useDownloadWavStems from "../app/hooks/useDownloadWavStems";
+import { defaultLoopSettings } from "src/lib/audio/defaults";
 import styles from "./MainMenu.module.css";
 dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -71,12 +72,7 @@ const Menu: React.FC = () => {
     localStorage.removeItem("loops");
     localStorage.removeItem("samples");
 
-    setAllLoopSettings({
-      A: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: true },
-      B: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-      C: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-      D: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-    });
+    setAllLoopSettings(defaultLoopSettings());
     setCurrentLoop("A");
     const locSamples = initLocSamplesFromAllCollections();
     const kitSamples = initKitSamples("mpc");

@@ -6,6 +6,7 @@ import { useSelectLoop } from "src/app/hooks/useSelectLoop";
 
 import type { LoopSettings } from "../../types/audioTypes";
 import { LOOP_NAMES } from "src/lib/constants/loops";
+import { DEFAULT_LOOP_TIMING } from "src/lib/audio/defaults";
 import styles from "./Loop.module.css";
 
 const Loop = () => {
@@ -59,7 +60,7 @@ const Loop = () => {
               type="number"
               min="40"
               max="240"
-              value={allLoopSettings[currentLoop]?.bpm ?? 120}
+              value={allLoopSettings[currentLoop]?.bpm ?? DEFAULT_LOOP_TIMING.bpm}
               onChange={(e) => updateLoopSetting("bpm", Number(e.target.value))}
               className={styles.input}
             />
@@ -74,7 +75,7 @@ const Loop = () => {
               min="0"
               max="1"
               step="0.1"
-              value={allLoopSettings[currentLoop]?.swing ?? 0}
+              value={allLoopSettings[currentLoop]?.swing ?? DEFAULT_LOOP_TIMING.swing}
               onChange={(e) => updateLoopSetting("swing", Number(e.target.value))}
               className={styles.input}
             />
@@ -88,7 +89,7 @@ const Loop = () => {
               type="number"
               min="1"
               max="32"
-              value={allLoopSettings[currentLoop]?.beats ?? 4}
+              value={allLoopSettings[currentLoop]?.beats ?? DEFAULT_LOOP_TIMING.beats}
               onChange={(e) => updateLoopSetting("beats", Number(e.target.value))}
               className={styles.input}
             />
@@ -102,7 +103,7 @@ const Loop = () => {
               type="number"
               min="1"
               max="32"
-              value={allLoopSettings[currentLoop]?.bars ?? 1}
+              value={allLoopSettings[currentLoop]?.bars ?? DEFAULT_LOOP_TIMING.bars}
               onChange={(e) => updateLoopSetting("bars", Number(e.target.value))}
               className={styles.input}
             />

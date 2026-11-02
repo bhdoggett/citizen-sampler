@@ -9,6 +9,7 @@ import {
 import { useUIContext } from "./UIContext";
 import { LoopName } from "../../types/audioTypes";
 import { emptyLoopEvents } from "src/lib/constants/loops";
+import { defaultLoopSettings, defaultSampleSettings } from "src/lib/audio/defaults";
 import { SamplerWithFX } from "src/types/SamplerWithFX";
 import { CustomSampler } from "src/types/CustomSampler";
 import {
@@ -145,27 +146,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       collectionName: collection,
       url: url,
       events: emptyLoopEvents(),
-      settings: {
-        mute: false,
-        solo: false,
-        reverse: false,
-        timeStretch: false,
-        oneShot: false,
-        loop: false,
-        start: 0,
-        end: null,
-        volume: 0,
-        pan: 0,
-        baseNote: "C4",
-        pitch: 0,
-        attack: 0,
-        release: 0,
-        quantize: false,
-        quantVal: "4",
-        highpass: [0, "highpass"] as [number, "highpass"],
-        lowpass: [20000, "lowpass"] as [number, "lowpass"],
-        ui: { zoom: 0, seekTo: 0 },
-      },
+      settings: defaultSampleSettings(),
       attribution: "",
     };
   };
@@ -220,27 +201,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       collectionName: drumMachine,
       url: url,
       events: emptyLoopEvents(),
-      settings: {
-        mute: false,
-        solo: false,
-        reverse: false,
-        timeStretch: false,
-        oneShot: false,
-        loop: false,
-        start: 0,
-        end: null,
-        volume: 0,
-        pan: 0,
-        baseNote: "C4",
-        pitch: 0,
-        attack: 0,
-        release: 0,
-        quantize: false,
-        quantVal: "4",
-        highpass: [0, "highpass"] as [number, "highpass"],
-        lowpass: [20000, "lowpass"] as [number, "lowpass"],
-        ui: { zoom: 0, seekTo: 0 },
-      },
+      settings: defaultSampleSettings(),
     };
   };
 
@@ -458,12 +419,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       const savedLoops = localStorage.getItem("loops");
       return savedLoops
         ? JSON.parse(savedLoops)
-        : {
-            A: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: true },
-            B: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-            C: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-            D: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-          };
+        : defaultLoopSettings();
     }
   );
 
@@ -534,36 +490,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       },
     }));
   };
-
-  // // Listen for user interaction to start the audio context
-  // useEffect(() => {
-  //   const initializeAudio = () => {
-  //     // Initialize on ANY user interaction, not just your buttons
-  //     const handleFirstInteraction = async () => {
-  //       if (Tone.getContext().state !== "running") {
-  //         await Tone.start();
-  //         console.log("Audio context started");
-  //       }
-  //       // Remove listeners after first successful start
-  //       document.removeEventListener("click", handleFirstInteraction);
-  //       document.removeEventListener("touchstart", handleFirstInteraction);
-  //       document.removeEventListener("keydown", handleFirstInteraction);
-  //     };
-
-  //     // Listen for ANY user interaction
-  //     document.addEventListener("click", handleFirstInteraction, {
-  //       passive: true,
-  //     });
-  //     document.addEventListener("touchstart", handleFirstInteraction, {
-  //       passive: true,
-  //     });
-  //     document.addEventListener("keydown", handleFirstInteraction, {
-  //       passive: true,
-  //     });
-  //   };
-
-  //   initializeAudio();
-  // }, []);
 
   // Load samplers to samplerRef and waveform peaks to localStorage
   useEffect(() => {
@@ -654,7 +580,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       ...prev,
       [id]: data,
     }));
-    //
   };
 
   // Derived from allSampleData, so it can't drift out of sync
@@ -676,7 +601,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     });
   }, [allSampleData, solosExist, samplers]);
 
-  // if (!hasLoadedFromStorage.current) return null;
 
   return (
     <AudioContextContext.Provider
