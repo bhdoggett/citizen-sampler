@@ -10,6 +10,7 @@ import { computeGain } from "../../lib/audio/muteSolo";
 import { applyLoopSettings } from "../../lib/audio/applyLoopSettings";
 import { calcTriggerParams } from "../../lib/audio/util/calcTriggerParams";
 import type { LoopName } from "../../types/audioTypes";
+import { LOOP_NAMES } from "src/lib/constants/loops";
 
 const useDownloadWavStems = () => {
   const {
@@ -21,7 +22,6 @@ const useDownloadWavStems = () => {
     songTitle,
   } = useAudioContext();
   const allIds = Object.keys(samplers);
-  const loops = ["A", "B", "C", "D"];
 
   // Function to get Audio Buffer for a given sampler's loop recording
   const getAudioBuffer = async (id: string, loop: LoopName) => {
@@ -103,7 +103,7 @@ const useDownloadWavStems = () => {
 
   // Download a given sampler's Wav file
   const downloadWav = async (id: string, loop: LoopName) => {
-    const toneBuffer = await getAudioBuffer(id, loop as LoopName);
+    const toneBuffer = await getAudioBuffer(id, loop);
     if (!toneBuffer) {
       console.warn(`No audio buffer generated for ID ${id} at loop ${loop}`);
       return;
@@ -129,9 +129,9 @@ const useDownloadWavStems = () => {
     // Process each ID one at a time
     for (const id of allIds) {
       // Process each loop one at a time for this ID
-      for (const loop of loops) {
+      for (const loop of LOOP_NAMES) {
         try {
-          await downloadWav(id, loop as LoopName);
+          await downloadWav(id, loop);
           // Optional: add a small delay between renders
           // await new Promise((resolve) => setTimeout(resolve, 100));
         } catch (error) {

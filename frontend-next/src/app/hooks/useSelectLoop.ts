@@ -26,7 +26,7 @@ export function useSelectLoop(): (loop: LoopName) => void {
       const currentLoopSettings = allLoopSettings[loop];
       if (!currentLoopSettings || !currentLoopSettings.isInitialized) {
         // Copy settings from current loop
-        const sourceSettings = allLoopSettings[currentLoop as LoopName];
+        const sourceSettings = allLoopSettings[currentLoop];
         setAllLoopSettings((prev) => ({
           ...prev,
           [loop]: {

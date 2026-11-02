@@ -4,7 +4,6 @@ import * as Tone from "tone";
 import { useAudioContext } from "./AudioContext";
 import { useMidi } from "../hooks/useMidi";
 import { SampleEventFE } from "src/types/audioTypesFE";
-import type { LoopName } from "src/types/audioTypes";
 import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
 import { wrapTicks } from "../../lib/audio/util/timing";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
@@ -134,7 +133,7 @@ export const MidiProvider = ({ children }: React.PropsWithChildren) => {
 
     activeNotesRef.current.delete(note);
 
-    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    const loopSettings = allLoopSettings[currentLoop];
     if (activeNote?.startTime == null || !isRecording || !loopSettings) return;
 
     // Fold a hit read just past the loop end back to the loop start

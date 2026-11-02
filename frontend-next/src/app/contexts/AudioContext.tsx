@@ -8,6 +8,7 @@ import {
 } from "src/types/audioTypesFE";
 import { useUIContext } from "./UIContext";
 import { LoopName } from "../../types/audioTypes";
+import { emptyLoopEvents } from "src/lib/constants/loops";
 import { SamplerWithFX } from "src/types/SamplerWithFX";
 import { CustomSampler } from "src/types/CustomSampler";
 import {
@@ -71,8 +72,8 @@ type AudioContextType = {
     sampleId: string,
     currentUrl: string
   ) => Promise<string | null>;
-  currentLoop: string;
-  setCurrentLoop: React.Dispatch<React.SetStateAction<string>>;
+  currentLoop: LoopName;
+  setCurrentLoop: React.Dispatch<React.SetStateAction<LoopName>>;
   loopIsPlaying: boolean;
   setLoopIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 
@@ -143,7 +144,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       type: "loc",
       collectionName: collection,
       url: url,
-      events: { A: [], B: [], C: [], D: [] },
+      events: emptyLoopEvents(),
       settings: {
         mute: false,
         solo: false,
@@ -218,7 +219,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       type: "kit",
       collectionName: drumMachine,
       url: url,
-      events: { A: [], B: [], C: [], D: [] },
+      events: emptyLoopEvents(),
       settings: {
         mute: false,
         solo: false,
@@ -511,7 +512,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [metronomeActive, setMetronomeActive] = useState(false);
-  const [currentLoop, setCurrentLoop] = useState<string>("A");
+  const [currentLoop, setCurrentLoop] = useState<LoopName>("A");
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
@@ -609,7 +610,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // The one owner of the live transport's loop setup. Runs when the loop
   // changes or when its tempo, swing, meter or length is edited.
-  const currentLoopSettings = allLoopSettings[currentLoop as LoopName];
+  const currentLoopSettings = allLoopSettings[currentLoop];
   useEffect(() => {
     if (!currentLoopSettings) return;
     applyLoopSettings(Tone.getTransport(), currentLoopSettings);

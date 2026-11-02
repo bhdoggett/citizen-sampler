@@ -22,7 +22,6 @@ import { wrapTicks } from "src/lib/audio/util/timing";
 import { calcTriggerParams } from "src/lib/audio/util/calcTriggerParams";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
-import type { LoopName } from "src/types/audioTypes";
 import { useReportPadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./DrumPad.module.css";
 
@@ -153,7 +152,7 @@ const DrumPad = forwardRef(function DrumPad(
     if (currentEvent.current.startTime == null || !loopIsPlaying || !isRecording)
       return;
 
-    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    const loopSettings = allLoopSettings[currentLoop];
     if (!loopSettings) return;
 
     // Fold a hit read just past the loop end back to the loop start
@@ -279,7 +278,7 @@ const DrumPad = forwardRef(function DrumPad(
 
   // **** Schedule playback of sampler play events ****
   useEffect(() => {
-    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    const loopSettings = allLoopSettings[currentLoop];
     if (
       !loopSettings ||
       !loopIsPlaying ||

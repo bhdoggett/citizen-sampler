@@ -9,7 +9,6 @@ import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
 import { wrapTicks } from "src/lib/audio/util/timing";
-import type { LoopName } from "src/types/audioTypes";
 import { useReportPadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./SequencerPadButton.module.css";
 
@@ -138,7 +137,7 @@ const SequencerPadButton: React.FC<SequencerPadButtonProps> = ({
     if (currentEvent.current.startTime == null || !loopIsPlaying || !isRecording)
       return;
 
-    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    const loopSettings = allLoopSettings[currentLoop];
     if (!loopSettings) return;
 
     // Fold a hit read just past the loop end back to the loop start

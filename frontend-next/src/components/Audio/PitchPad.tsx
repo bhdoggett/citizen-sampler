@@ -15,7 +15,6 @@ import quantize from "../../lib/audio/util/quantize";
 import { ticksToSeconds, wrapTicks } from "../../lib/audio/util/timing";
 import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
 import { calcTriggerParams } from "../../lib/audio/util/calcTriggerParams";
-import type { LoopName } from "../../types/audioTypes";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { resolvePlayNote } from "../../lib/audio/util/resolvePlayNote";
@@ -150,7 +149,7 @@ const PitchPad = forwardRef(function PitchPad(
     if (currentEvent.current?.startTime == null) return;
 
     if (isRecording) {
-      const loopSettings = allLoopSettings[currentLoop as LoopName];
+      const loopSettings = allLoopSettings[currentLoop];
       if (!loopSettings) return;
 
       // Fold a hit read just past the loop end back to the loop start
@@ -208,7 +207,7 @@ const PitchPad = forwardRef(function PitchPad(
   // Schedule playback of events, strictly for visual render feedback on the PitchPad
   useEffect(() => {
     const sampleData = allSampleData[selectedSampleId];
-    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    const loopSettings = allLoopSettings[currentLoop];
 
     if (
       !loopSettings ||

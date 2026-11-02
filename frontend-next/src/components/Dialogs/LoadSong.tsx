@@ -6,7 +6,7 @@ import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useAuthContext } from "src/app/contexts/AuthContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import { SongTypeFE } from "src/types/audioTypesFE";
-import type { LoopName } from "../../types/audioTypes";
+import { LOOP_NAMES } from "src/lib/constants/loops";
 import Spinner from "../Spinner";
 import { migrateDrumUrls } from "src/lib/drumMachines";
 import { normalizeAllMuteSolo } from "src/lib/audio/muteSolo";
@@ -97,7 +97,7 @@ const LoadSong: React.FC = () => {
 
         // Normalize loop settings for songs saved before isInitialized was added
         const normalizedLoops: Record<string, unknown> = { ...loops };
-        for (const key of Object.keys(normalizedLoops) as LoopName[]) {
+        for (const key of LOOP_NAMES) {
           const loop = normalizedLoops[key] as Record<string, unknown> | null;
           if (loop && !("isInitialized" in loop)) {
             normalizedLoops[key] = { ...loop, isInitialized: true };

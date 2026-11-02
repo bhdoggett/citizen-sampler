@@ -21,7 +21,7 @@ import MidiHandler from "../components/Audio/MidiHandler";
 import { useUIContext } from "./contexts/UIContext";
 import { useAudioContext } from "./contexts/AudioContext";
 import { useSelectLoop } from "./hooks/useSelectLoop";
-import type { LoopName } from "../types/audioTypes";
+import { isLoopName } from "src/lib/constants/loops";
 import About from "src/components/Dialogs/About";
 import HelpShortcuts from "src/components/Dialogs/HelpShortcuts";
 import Welcome from "src/components/Dialogs/Welcome";
@@ -98,9 +98,9 @@ export default function Home() {
 
       if (e.shiftKey) {
         const key = e.key.toUpperCase();
-        if (key === "A" || key === "B" || key === "C" || key === "D") {
+        if (isLoopName(key)) {
           e.preventDefault();
-          handleSelectLoop(key as LoopName);
+          handleSelectLoop(key);
         } else if (key === "S") {
           e.preventDefault();
           setSequencerVisible(true);

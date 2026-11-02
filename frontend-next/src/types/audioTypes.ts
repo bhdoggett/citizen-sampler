@@ -52,7 +52,7 @@ export type SampleType = {
   type: string;
   collectionName: string;
   url: string;
-  events: Record<string, SampleEvent[]>; // Indexed by loop name
+  events: Record<LoopName, SampleEvent[]>;
   settings: SampleSettings;
   attribution?: string;
 };

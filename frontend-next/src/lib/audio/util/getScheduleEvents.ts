@@ -2,6 +2,7 @@ import type * as Tone from "tone";
 import quantize from "./quantize";
 import { loopDurationSeconds, ticksToSeconds, type LoopTiming } from "./timing";
 import type { SampleTypeFE } from "src/types/audioTypesFE";
+import type { LoopName } from "src/types/audioTypes";
 
 type SampleEvent = {
   startTime: number;
@@ -20,7 +21,7 @@ export type { LoopTiming };
 const getScheduleEvents = (
   allSampleData: AllSampleData,
   id: string,
-  currentLoop: string,
+  currentLoop: LoopName,
   timing: LoopTiming
 ): ScheduleEvent[] => {
   const sampleData = allSampleData[id];

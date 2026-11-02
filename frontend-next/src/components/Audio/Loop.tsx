@@ -4,10 +4,9 @@ import { useUIContext } from "src/app/contexts/UIContext";
 import LoopProgressBar from "./LoopProgress";
 import { useSelectLoop } from "src/app/hooks/useSelectLoop";
 
-import type { LoopName, LoopSettings } from "../../types/audioTypes";
+import type { LoopSettings } from "../../types/audioTypes";
+import { LOOP_NAMES } from "src/lib/constants/loops";
 import styles from "./Loop.module.css";
-
-const loops = ["A", "B", "C", "D"];
 
 const Loop = () => {
   const { allLoopSettings, setAllLoopSettings, currentLoop, loopIsPlaying } =
@@ -28,8 +27,8 @@ const Loop = () => {
     }
     setAllLoopSettings((prev) => ({
       ...prev,
-      [currentLoop as LoopName]: {
-        ...prev[currentLoop as LoopName],
+      [currentLoop]: {
+        ...prev[currentLoop],
         [key]: value,
       },
     }));
@@ -39,11 +38,11 @@ const Loop = () => {
     <div className={styles.loop}>
       <h2 className={styles.heading}>Loop</h2>
       <div className={styles.loopTabs}>
-        {loops.map((loop) => (
+        {LOOP_NAMES.map((loop) => (
           <button
             key={loop}
             className={`${styles.loopTab} ${loop === currentLoop ? styles.loopTabActive : ""}`}
-            onClick={() => handleSelectLoop(loop as LoopName)}
+            onClick={() => handleSelectLoop(loop)}
             title={`Select loop ${loop} (Shift + ${loop})`}
           >
             {loop}
@@ -60,7 +59,7 @@ const Loop = () => {
               type="number"
               min="40"
               max="240"
-              value={allLoopSettings[currentLoop as LoopName]?.bpm ?? 120}
+              value={allLoopSettings[currentLoop]?.bpm ?? 120}
               onChange={(e) => updateLoopSetting("bpm", Number(e.target.value))}
               className={styles.input}
             />
@@ -75,7 +74,7 @@ const Loop = () => {
               min="0"
               max="1"
               step="0.1"
-              value={allLoopSettings[currentLoop as LoopName]?.swing ?? 0}
+              value={allLoopSettings[currentLoop]?.swing ?? 0}
               onChange={(e) => updateLoopSetting("swing", Number(e.target.value))}
               className={styles.input}
             />
@@ -89,7 +88,7 @@ const Loop = () => {
               type="number"
               min="1"
               max="32"
-              value={allLoopSettings[currentLoop as LoopName]?.beats ?? 4}
+              value={allLoopSettings[currentLoop]?.beats ?? 4}
               onChange={(e) => updateLoopSetting("beats", Number(e.target.value))}
               className={styles.input}
             />
@@ -103,7 +102,7 @@ const Loop = () => {
               type="number"
               min="1"
               max="32"
-              value={allLoopSettings[currentLoop as LoopName]?.bars ?? 1}
+              value={allLoopSettings[currentLoop]?.bars ?? 1}
               onChange={(e) => updateLoopSetting("bars", Number(e.target.value))}
               className={styles.input}
             />

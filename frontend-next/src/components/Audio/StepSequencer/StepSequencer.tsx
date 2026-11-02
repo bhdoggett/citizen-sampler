@@ -64,7 +64,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const rafRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const loopSettings = allLoopSettings[currentLoop as LoopName];
+  const loopSettings = allLoopSettings[currentLoop];
 
   const { totalColumns, gridEvents, bars, beats } = useSequencerGrid({
     loopSettings,
@@ -405,7 +405,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     }
     copiedPatternRef.current = snapshot;
     setHasCopiedPattern(true);
-    setCopiedFromLoop(currentLoop as LoopName);
+    setCopiedFromLoop(currentLoop);
   }, [allSampleData, currentLoop]);
 
   // Cancel copy

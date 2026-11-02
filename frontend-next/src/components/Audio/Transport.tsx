@@ -4,7 +4,6 @@ import * as Tone from "tone";
 import { Circle, Music3 } from "lucide-react";
 import styles from "./Transport.module.css";
 import { useAudioContext } from "../../app/contexts/AudioContext";
-import type { LoopName } from "../../types/audioTypes";
 import { useUIContext } from "src/app/contexts/UIContext";
 
 const Transport = () => {
@@ -86,7 +85,7 @@ const Transport = () => {
         .map(Number);
       beatCount =
         beats %
-        loopSettingsRef.current[currentLoopRef.current as LoopName]!.beats;
+        loopSettingsRef.current[currentLoopRef.current]!.beats;
 
       if (beatCount === 0) {
         metronomeRef.current.triggerAttackRelease("C6", "8n", time);
