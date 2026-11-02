@@ -1,9 +1,8 @@
 "use client";
 import { useEffect } from "react";
 import { useAuthContext } from "../../app/contexts/AuthContext";
+import { API_BASE_URL } from "src/lib/api/client";
 import styles from "./Dialog.module.css";
-
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const AuthDialog: React.FC = () => {
   const { setError } = useAuthContext();

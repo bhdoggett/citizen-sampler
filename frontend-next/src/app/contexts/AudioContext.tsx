@@ -35,8 +35,6 @@ import { set, get } from "idb-keyval"; // for IndexedDB storage
 import { computeGain, normalizeAllMuteSolo } from "../../lib/audio/muteSolo";
 import { applySoundSettings } from "../../lib/audio/applySoundSettings";
 import { applyLoopSettings } from "../../lib/audio/applyLoopSettings";
-import dotenv from "dotenv";
-dotenv.config();
 
 type AudioContextType = {
   songTitle: string;

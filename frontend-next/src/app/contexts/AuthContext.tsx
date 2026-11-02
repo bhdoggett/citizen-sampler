@@ -2,8 +2,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useUIContext } from "./UIContext";
-import dotenv from "dotenv";
-dotenv.config();
 
 type AuthContextType = {
   userId: string | null;

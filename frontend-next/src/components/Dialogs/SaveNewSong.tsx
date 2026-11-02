@@ -1,13 +1,14 @@
 "use client";
 import React, { useState } from "react";
-import axios, { AxiosError } from "axios";
-import dotenv from "dotenv";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useAuthContext } from "src/app/contexts/AuthContext";
 import { useUIContext } from "src/app/contexts/UIContext";
+import {
+  GENERIC_ERROR_MESSAGE,
+  apiErrorMessage,
+  createSong,
+} from "src/lib/api/client";
 import styles from "./Dialog.module.css";
-dotenv.config();
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const SaveNewSong: React.FC = () => {
   const [formSongTitle, setFormSongTitle] = useState<string>("");
@@ -34,23 +35,15 @@ const SaveNewSong: React.FC = () => {
     };
 
     try {
-      const result = await axios.post(`${BASE_URL}/beats/me/songs`, songData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (result.status === 201) {
-        localStorage.setItem("songId", result.data.song._id);
-        setSongTitle(formSongTitle);
-        openDialog({ type: "api-response", message: result.data.message });
-      }
+      const result = await createSong(token, songData);
+      localStorage.setItem("songId", result.song._id!);
+      setSongTitle(formSongTitle);
+      openDialog({ type: "api-response", message: result.message });
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      console.error("Error saving song to DB:", error);
+      console.error("Error saving song to DB:", err);
       openDialog({
         type: "api-response",
-        message: error.response?.data?.message ?? "An unexpeced error occurred",
+        message: apiErrorMessage(err, GENERIC_ERROR_MESSAGE),
       });
     }
   };

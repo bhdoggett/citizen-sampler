@@ -2,16 +2,20 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import * as Tone from "tone";
-import axios, { AxiosError } from "axios";
-import dotenv from "dotenv";
 import { useAuthContext } from "../app/contexts/AuthContext";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import { useUIContext } from "../app/contexts/UIContext";
 import useDownloadWavStems from "../app/hooks/useDownloadWavStems";
 import { defaultLoopSettings } from "src/lib/audio/defaults";
+import {
+  GENERIC_ERROR_MESSAGE,
+  apiErrorMessage,
+  checkLogin,
+  deleteSong,
+  isServerError,
+  updateSong,
+} from "src/lib/api/client";
 import styles from "./MainMenu.module.css";
-dotenv.config();
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const Menu: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -91,34 +95,20 @@ const Menu: React.FC = () => {
     };
 
     try {
-      const result = await axios.put(
-        `${BASE_URL}/beats/me/songs/${songId}`,
-        songData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (result.status === 201) {
-        openDialog({ type: "api-response", message: result.data.message });
-      }
+      const result = await updateSong(token, songId, songData);
+      openDialog({ type: "api-response", message: result.message });
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        console.error("Error saving song to DB:", error);
-        openDialog({ type: "api-response", message: error.response.data.message });
-      }
+      console.error("Error saving song to DB:", err);
+      openDialog({
+        type: "api-response",
+        message: apiErrorMessage(err, GENERIC_ERROR_MESSAGE),
+      });
     }
   };
 
   const handleDeleteSong = async () => {
     const songId = localStorage.getItem("songId");
+    if (!songId) return;
 
     if (!isAuthenticated) {
       console.warn("User not authenticated. Song not deleted.");
@@ -126,32 +116,18 @@ const Menu: React.FC = () => {
     }
 
     try {
-      const result = await axios.delete(
-        `${BASE_URL}/beats/me/songs/${songId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (result.status === 200) {
-        localStorage.removeItem("songTitle");
-        localStorage.removeItem("songId");
-        setSongId("");
-        setSongTitle("");
-        openDialog({ type: "api-response", message: result.data.message });
-      }
+      const result = await deleteSong(token, songId);
+      localStorage.removeItem("songTitle");
+      localStorage.removeItem("songId");
+      setSongId("");
+      setSongTitle("");
+      openDialog({ type: "api-response", message: result.message });
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        console.error("Error deleting song from DB:", error);
-        openDialog({ type: "api-response", message: error.response.data.message });
-      }
+      console.error("Error deleting song from DB:", err);
+      openDialog({
+        type: "api-response",
+        message: apiErrorMessage(err, GENERIC_ERROR_MESSAGE),
+      });
     }
   };
 
@@ -163,28 +139,28 @@ const Menu: React.FC = () => {
 
   useEffect(() => {
     if (!token) return;
-    const checkLogin = async () => {
+    // Only a server answer logs the user out. A network failure leaves the
+    // session alone, since the server never saw the token.
+    const verifyLogin = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/auth/check-login`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.data.loggedIn) {
+        const result = await checkLogin(token);
+        if (!result.loggedIn) {
           handleLogout();
-          openDialog({ type: "api-response", message: res.data.message });
+          openDialog({
+            type: "api-response",
+            message: result.message ?? "Please log in again.",
+          });
         }
       } catch (err) {
-        const error = err as AxiosError<{ message: string }>;
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.message
-        ) {
-          handleLogout();
-          openDialog({ type: "api-response", message: error.response.data.message });
-        }
+        if (!isServerError(err)) return;
+        handleLogout();
+        openDialog({
+          type: "api-response",
+          message: apiErrorMessage(err, "Please log in again."),
+        });
       }
     };
-    checkLogin();
+    verifyLogin();
     // Only run on mount or when token changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
