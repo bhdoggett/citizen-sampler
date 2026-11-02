@@ -22,6 +22,7 @@ const LoadSong: React.FC = () => {
   const [hasCheckedForSongs, setHasCheckedForSongs] = useState<boolean>(false);
   const {
     setSongTitle,
+    setSongId,
     setAllSampleData,
     setAllLoopSettings,
     loadSamplersToRef,
@@ -87,7 +88,7 @@ const LoadSong: React.FC = () => {
         }
       }
 
-      localStorage.setItem("songId", song._id!);
+      setSongId(song._id ?? "");
       setSongTitle(title);
       setAllSampleData(samples);
       setAllLoopSettings(normalizedLoops as SongTypeFE["loops"]);

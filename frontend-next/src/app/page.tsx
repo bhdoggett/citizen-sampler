@@ -22,6 +22,7 @@ import { useUIContext } from "./contexts/UIContext";
 import { useAudioContext } from "./contexts/AudioContext";
 import { useSelectLoop } from "./hooks/useSelectLoop";
 import { isLoopName } from "src/lib/constants/loops";
+import { readString, writeString } from "src/lib/storage";
 import About from "src/components/Dialogs/About";
 import HelpShortcuts from "src/components/Dialogs/HelpShortcuts";
 import Welcome from "src/components/Dialogs/Welcome";
@@ -129,12 +130,9 @@ export default function Home() {
 
   // First-run welcome dialog (shown once per browser)
   useEffect(() => {
-    if (typeof window === "undefined") return;
     if (dialog) return;
-    const KEY = "citizenSamplerHasSeenWelcome";
-    const hasSeen = window.localStorage.getItem(KEY);
-    if (!hasSeen) {
-      window.localStorage.setItem(KEY, "true");
+    if (!readString("citizenSamplerHasSeenWelcome")) {
+      writeString("citizenSamplerHasSeenWelcome", "true");
       openDialog({ type: "welcome" });
     }
   }, [dialog, openDialog]);

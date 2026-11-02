@@ -22,12 +22,9 @@ const Menu: React.FC = () => {
   const {
     isAuthenticated,
     token,
-    setToken,
     userId,
-    setUserId,
-    setUsername,
     displayName,
-    setDisplayName,
+    logout,
     setError,
   } = useAuthContext();
   const { openDialog } = useUIContext();
@@ -38,6 +35,7 @@ const Menu: React.FC = () => {
     setCurrentLoop,
     allSampleData,
     setSongTitle,
+    songId,
     setSongId,
     initLocSamplesFromAllCollections,
     initKitSamples,
@@ -49,20 +47,12 @@ const Menu: React.FC = () => {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     router.push("/");
-    setToken(null);
-    setUserId(null);
-    setUsername(null);
-    setDisplayName(null);
     if (setError) setError("Session expired. Please log in again.");
   };
 
   const handleReset = async () => {
-    // Clear persistent localStorage copies
-    localStorage.removeItem("loops");
-    localStorage.removeItem("samples");
-
     setAllLoopSettings(defaultLoopSettings());
     setCurrentLoop("A");
     const locSamples = initLocSamplesFromAllCollections();
@@ -73,7 +63,7 @@ const Menu: React.FC = () => {
   };
 
   const handleSaveSong = async () => {
-    const songId = localStorage.getItem("songId");
+    // A song with no id has never been saved, so ask for a title first
     if (!songId) {
       openDialog({ type: "save-new-song" });
       setMenuOpen(false);
@@ -107,7 +97,6 @@ const Menu: React.FC = () => {
   };
 
   const handleDeleteSong = async () => {
-    const songId = localStorage.getItem("songId");
     if (!songId) return;
 
     if (!isAuthenticated) {
@@ -117,8 +106,6 @@ const Menu: React.FC = () => {
 
     try {
       const result = await deleteSong(token, songId);
-      localStorage.removeItem("songTitle");
-      localStorage.removeItem("songId");
       setSongId("");
       setSongTitle("");
       openDialog({ type: "api-response", message: result.message });

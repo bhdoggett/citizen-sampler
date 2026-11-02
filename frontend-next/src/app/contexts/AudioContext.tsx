@@ -9,6 +9,7 @@ import {
 import { useUIContext } from "./UIContext";
 import { LoopName } from "../../types/audioTypes";
 import { emptyLoopEvents } from "src/lib/constants/loops";
+import { readJSON, readString, writeJSON, writeString } from "src/lib/storage";
 import {
   DEFAULT_SELECTED_PAD,
   KIT_PAD_IDS,
@@ -400,19 +401,17 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   };
 
   const [songTitle, setSongTitle] = useState<string>(() => {
-    const savedSongTitle = localStorage.getItem("songTitle");
-    return savedSongTitle ?? "Song001";
+    return readString("songTitle") ?? "Song001";
   });
   const [songId, setSongId] = useState<string>(() => {
-    const savedSongId = localStorage.getItem("songId");
-    return savedSongId ? savedSongId : "";
+    return readString("songId") ?? "";
   });
   const [allSampleData, setAllSampleData] = useState<
     Record<string, SampleTypeFE>
   >(() => {
-    const savedSamples = localStorage.getItem("samples");
+    const savedSamples = readJSON<Record<string, SampleTypeFE>>("samples");
     return savedSamples
-      ? normalizeAllMuteSolo(migrateDrumUrls(JSON.parse(savedSamples)))
+      ? normalizeAllMuteSolo(migrateDrumUrls(savedSamples))
       : {
           ...initLocSamplesFromAllCollections(),
           ...initKitSamples("mpc"),
@@ -420,10 +419,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   });
   const [allLoopSettings, setAllLoopSettings] = useState<AllLoopSettingsFE>(
     () => {
-      const savedLoops = localStorage.getItem("loops");
-      return savedLoops
-        ? JSON.parse(savedLoops)
-        : defaultLoopSettings();
+      return readJSON<AllLoopSettingsFE>("loops") ?? defaultLoopSettings();
     }
   );
 
@@ -506,26 +502,30 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     });
   }, []); // <===== if this empty dependency array is removed, the samplers are loaded with every update in allSampleData state
 
-  // Upload allSampleData to localStorage.samples when allSampleData state changes.
+  // This provider is the only writer of the song keys in localStorage.
   // Changes in state coming from SampleSettings are debounced in that component.
   useEffect(() => {
-    localStorage.setItem("samples", JSON.stringify(allSampleData));
+    writeJSON("samples", allSampleData);
   }, [allSampleData]);
 
-  // Upload songTitle to localStorage.songTitle when songTitle state changes
   useEffect(() => {
-    localStorage.setItem("songTitle", songTitle);
+    writeString("songTitle", songTitle);
   }, [songTitle]);
+
+  // An empty songId means the song is not saved yet, and clears the key
+  useEffect(() => {
+    writeString("songId", songId);
+  }, [songId]);
 
   // Upload allLoopSettings with debounce to localStorage.loops when allLoopSettings state changes.
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      localStorage.setItem("loops", JSON.stringify(allLoopSettings));
+      writeJSON("loops", allLoopSettings);
     }, 500);
 
     return () => {
       clearTimeout(timeoutId); // cancel if settings change before debounceDelay
-      localStorage.setItem("loops", JSON.stringify(allLoopSettings));
+      writeJSON("loops", allLoopSettings);
     };
   }, [allLoopSettings]);
 

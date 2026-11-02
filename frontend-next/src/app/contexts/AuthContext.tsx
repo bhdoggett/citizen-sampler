@@ -2,6 +2,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useUIContext } from "./UIContext";
+import { readString, writeString } from "src/lib/storage";
 
 type AuthContextType = {
   userId: string | null;
@@ -13,6 +14,7 @@ type AuthContextType = {
   token: string | null;
   setToken: (token: string | null) => void;
   isAuthenticated: boolean;
+  logout: () => void;
   error: string | null;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
 };
@@ -21,16 +23,16 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   const [userId, setUserIdState] = useState<string | null>(() =>
-    localStorage.getItem("userId")
+    readString("userId")
   );
   const [username, setUsernameState] = useState<string | null>(() =>
-    localStorage.getItem("username")
+    readString("username")
   );
   const [displayName, setDisplayNameState] = useState<string | null>(() =>
-    localStorage.getItem("displayName")
+    readString("displayName")
   );
   const [token, setTokenState] = useState<string | null>(() =>
-    localStorage.getItem("token")
+    readString("token")
   );
   const [error, setError] = useState<string | null>(null);
   const { openDialog } = useUIContext();
@@ -38,39 +40,31 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   const searchParams = useSearchParams();
 
   const setToken = (newToken: string | null) => {
-    if (newToken) {
-      localStorage.setItem("token", newToken);
-    } else {
-      localStorage.removeItem("token");
-    }
+    writeString("token", newToken);
     setTokenState(newToken);
   };
 
   const setUsername = (newUser: string | null) => {
-    if (newUser) {
-      localStorage.setItem("username", newUser);
-    } else {
-      localStorage.removeItem("username");
-    }
+    writeString("username", newUser);
     setUsernameState(newUser);
   };
 
   const setUserId = (newUserId: string | null) => {
-    if (newUserId) {
-      localStorage.setItem("userId", newUserId);
-    } else {
-      localStorage.removeItem("userId");
-    }
+    writeString("userId", newUserId);
     setUserIdState(newUserId);
   };
 
   const setDisplayName = (newDisplayName: string | null) => {
-    if (newDisplayName) {
-      localStorage.setItem("displayName", newDisplayName);
-    } else {
-      localStorage.removeItem("displayName");
-    }
+    writeString("displayName", newDisplayName);
     setDisplayNameState(newDisplayName);
+  };
+
+  // Clears the session from state and from storage
+  const logout = () => {
+    setToken(null);
+    setUserId(null);
+    setUsername(null);
+    setDisplayName(null);
   };
 
   useEffect(() => {
@@ -117,6 +111,7 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
         token,
         setToken,
         isAuthenticated: !!token,
+        logout,
         error,
         setError,
       }}

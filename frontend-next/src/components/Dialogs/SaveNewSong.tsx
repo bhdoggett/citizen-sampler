@@ -13,7 +13,8 @@ import styles from "./Dialog.module.css";
 const SaveNewSong: React.FC = () => {
   const [formSongTitle, setFormSongTitle] = useState<string>("");
   // const [apiResponse, setApiResponse] = useState<string | null>(null);
-  const { setSongTitle, allSampleData, allLoopSettings } = useAudioContext();
+  const { setSongTitle, setSongId, allSampleData, allLoopSettings } =
+    useAudioContext();
   const { isAuthenticated, token, userId } = useAuthContext();
   const { openDialog } = useUIContext();
 
@@ -36,7 +37,7 @@ const SaveNewSong: React.FC = () => {
 
     try {
       const result = await createSong(token, songData);
-      localStorage.setItem("songId", result.song._id!);
+      setSongId(result.song._id ?? "");
       setSongTitle(formSongTitle);
       openDialog({ type: "api-response", message: result.message });
     } catch (err) {
