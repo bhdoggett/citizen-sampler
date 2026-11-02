@@ -29,6 +29,21 @@ Fixed on `main`, so no action is needed:
   `backend/src/routes/beats.ts`.
 - Google Drive query injection: Drive removed; drums are served from R2.
 
+Done by the refactor plans, so only item 1 (`AudioEngine` and the
+`AudioContext` split) is still open:
+
+- `docs/superpowers/plans/2026-10-26-engine-path-refactor.md` (PR #4): 2a,
+  2b, 2f, 3.1–3.5, `solosExist` from 2e, the stale closure, the `"useClient"`
+  typo and the unused `PitchGrid` `sampler` prop.
+- `docs/superpowers/plans/2026-11-02-tpp-cleanup.md`: 2c (`lib/storage.ts`),
+  2d (`openDialog`), `hotKeysActive` and `isSelected` from 2e, the rest of 3.4
+  (`PitchPad` uses `getScheduleEvents`), 3.6 (`useTouchPads`), 3.7, 3.8 and
+  3.9 (`lib/audio/defaults.ts`), 3.10 (`lib/constants/padLayout.ts`), 3.11
+  (`lib/constants/loops.ts`), 3.12 (`lib/api/client.ts`), and the
+  commented-out `Tone.start` block.
+
+The sections below describe the code as it was audited.
+
 ## What's going well
 
 Use these as models for the rest of the refactor:
