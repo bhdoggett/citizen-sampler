@@ -1,6 +1,4 @@
 "use client";
-import { useEffect } from "react";
-import * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import LoopProgressBar from "./LoopProgress";
@@ -36,25 +34,6 @@ const Loop = () => {
       },
     }));
   };
-
-  const thisLoopSettings = allLoopSettings[currentLoop as LoopName];
-
-  // Sync BPM and swing — safe to update during playback
-  useEffect(() => {
-    if (!thisLoopSettings) return;
-    const transport = Tone.getTransport();
-    transport.bpm.value = thisLoopSettings.bpm;
-    transport.swing = thisLoopSettings.swing;
-  }, [thisLoopSettings?.bpm, thisLoopSettings?.swing]);
-
-  // Sync beats, bars, and loop boundaries — only when structural settings change
-  useEffect(() => {
-    if (!thisLoopSettings) return;
-    const transport = Tone.getTransport();
-    transport.timeSignature = thisLoopSettings.beats;
-    transport.loop = true;
-    transport.loopEnd = `${thisLoopSettings.bars}:0:0`;
-  }, [thisLoopSettings?.beats, thisLoopSettings?.bars]);
 
   return (
     <div className={styles.loop}>

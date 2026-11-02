@@ -1,0 +1,8 @@
+scripts:
+  setup: |
+    # Link env files from the primary checkout so every workspace shares one copy
+    MAIN=$(git worktree list --porcelain | head -1 | cut -d' ' -f2)
+    ln -sfn "$MAIN/frontend-next/.env.local" frontend-next/.env.local
+    ln -sfn "$MAIN/backend/.env" backend/.env
+    (cd frontend-next && pnpm install)
+    (cd backend && pnpm install)

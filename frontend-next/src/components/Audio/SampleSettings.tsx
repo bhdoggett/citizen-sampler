@@ -1,6 +1,6 @@
 "use client";
 import { useAudioContext } from "../../app/contexts/AudioContext";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { FolderOpen } from "lucide-react";
 import type { SampleSettingsFE } from "src/types/audioTypesFE";
@@ -15,6 +15,8 @@ import { useUIContext } from "../../app/contexts/UIContext";
 import { QuantizeValue } from "../../types/audioTypes";
 import { usePitchDetector } from "../../app/hooks/usePitchDetector";
 import PitchMeter from "./PitchMeter";
+import { applySoundSettings } from "../../lib/audio/applySoundSettings";
+import { resolveSyncSettings } from "../../lib/audio/resolveSyncSettings";
 import styles from "./SampleSettings.module.css";
 
 const SampleSettings = () => {
@@ -22,14 +24,18 @@ const SampleSettings = () => {
     selectedSampleId,
     allSampleData,
     samplersRef,
+    samplers,
     updateSamplerStateSettings,
   } = useAudioContext();
   const { setShowDialog } = useUIContext();
 
   const { setSampleMute, setSampleSolo } = useMutesAndSolos();
 
-  const analyser = samplersRef.current[selectedSampleId]?.analyser ?? null;
+  const analyser = samplers[selectedSampleId]?.analyser ?? null;
 
+  // Which pad `settings` was loaded from. Lags selectedSampleId by one
+  // render after a selection change, so effects can skip stale values.
+  const [settingsPadId, setSettingsPadId] = useState<string | null>(null);
   const [settings, setSettings] = useState<Partial<SampleSettingsFE> | null>(
     null,
   );
@@ -81,34 +87,23 @@ const SampleSettings = () => {
   useEffect(() => {
     if (selectedSampleId && allSampleData[selectedSampleId]) {
       setSettings(allSampleData[selectedSampleId].settings);
+      setSettingsPadId(selectedSampleId);
     }
   }, [selectedSampleId, allSampleData]);
 
-  const updateSamplerRefSettings = useCallback(
-    (id: string) => {
-      if (!samplersRef.current[id]) return;
-      const samplerWithFX = samplersRef.current[id];
-      if (!samplerWithFX) return;
-      const { sampler, pitch, panVol, highpass, lowpass } = samplerWithFX;
-      sampler.attack = settings?.attack || 0;
-      sampler.release = settings?.release || 0;
-      sampler.setReverse(settings?.reverse ?? false);
-      pitch.pitch = settings?.pitch || 0;
-      panVol.volume.value = settings?.volume || 0;
-      panVol.pan.value = settings?.pan || 0;
-      highpass.frequency.value = settings?.highpass?.[0] || 0;
-      lowpass.frequency.value = settings?.lowpass?.[0] || 200;
-    },
-    [samplersRef, settings],
-  );
-
-  // Keep samplersRef settings in sync with UI
+  // Keep the selected sampler's sound in sync with the UI before the
+  // debounced write to allSampleData lands
   useEffect(() => {
-    if (!settings) return;
-
-    if (!selectedSampleId || !samplersRef.current[selectedSampleId]) return;
-    updateSamplerRefSettings(selectedSampleId);
-  }, [samplersRef, selectedSampleId, settings, updateSamplerRefSettings]);
+    const samplerWithFX = samplersRef.current[selectedSampleId];
+    const fullSettings = resolveSyncSettings(
+      selectedSampleId,
+      settingsPadId,
+      settings,
+      allSampleData[selectedSampleId]?.settings
+    );
+    if (!samplerWithFX || !fullSettings) return;
+    applySoundSettings(samplerWithFX, fullSettings);
+  }, [samplersRef, selectedSampleId, settingsPadId, settings, allSampleData]);
 
   // Keep mute and solo rendering in sync with global state
   useEffect(() => {
@@ -124,6 +119,7 @@ const SampleSettings = () => {
     if (
       !selectedSampleId ||
       !allSampleData[selectedSampleId] ||
+      settingsPadId !== selectedSampleId ||
       settings === allSampleData[selectedSampleId].settings ||
       settings === null
     )
@@ -136,7 +132,13 @@ const SampleSettings = () => {
     return () => {
       clearTimeout(handler); // cancel if settings change before debounceDelay
     };
-  }, [selectedSampleId, allSampleData, settings, updateSamplerStateSettings]);
+  }, [
+    selectedSampleId,
+    settingsPadId,
+    allSampleData,
+    settings,
+    updateSamplerStateSettings,
+  ]);
 
   if (!settings) {
     return <p>Loading...</p>;

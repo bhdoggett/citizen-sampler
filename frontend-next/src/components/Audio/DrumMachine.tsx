@@ -4,7 +4,7 @@ import DrumPad from "./DrumPad";
 import styles from "./DrumMachine.module.css";
 
 const DrumMachine = () => {
-  const { samplersRef } = useAudioContext();
+  const { samplers } = useAudioContext();
   // Combine all pad IDs into one array
   const allPadIds = Array.from({ length: 16 }, (_, i) => `pad-${i + 1}`);
   // Ref for imperative handles
@@ -105,7 +105,7 @@ const DrumMachine = () => {
     <div className={styles.drumMachine}>
       <div className={styles.grid}>
         {allPadIds.map((id) => {
-          const samplerObj = samplersRef.current[id];
+          const samplerObj = samplers[id];
           return (
             <DrumPad
               key={id}

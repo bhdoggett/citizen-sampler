@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
 import * as Tone from "tone";
 import {
   SampleTypeFE,
@@ -24,6 +24,9 @@ import {
   migrateDrumUrls,
 } from "../../lib/drumMachines";
 import { set, get } from "idb-keyval"; // for IndexedDB storage
+import { computeGain, normalizeAllMuteSolo } from "../../lib/audio/muteSolo";
+import { applySoundSettings } from "../../lib/audio/applySoundSettings";
+import { applyLoopSettings } from "../../lib/audio/applyLoopSettings";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -37,6 +40,8 @@ type AudioContextType = {
   metronomeActive: boolean;
   setMetronomeActive: React.Dispatch<React.SetStateAction<boolean>>;
   samplersRef: React.RefObject<Record<string, SamplerWithFX>>;
+  // Snapshot of samplersRef for render; updated after samplers load
+  samplers: Record<string, SamplerWithFX>;
   samplersLoading: boolean;
   setSamplersLoading: React.Dispatch<React.SetStateAction<boolean>>;
   makeSamplerWithFX: (
@@ -58,10 +63,6 @@ type AudioContextType = {
   ) => SampleTypeFE;
   initKitSamples: (kitId: DrumMachineId) => Record<string, SampleTypeFE>;
   updateSamplerData: (id: string, data: SampleTypeFE) => void;
-  applySamplerSettings: (
-    sampleData: SampleTypeFE,
-    samplerWithFX: SamplerWithFX
-  ) => void;
   loadSamplersToRef: (
     sampleData: Record<string, SampleTypeFE>
   ) => Promise<void>;
@@ -445,7 +446,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   >(() => {
     const savedSamples = localStorage.getItem("samples");
     return savedSamples
-      ? migrateDrumUrls(JSON.parse(savedSamples))
+      ? normalizeAllMuteSolo(migrateDrumUrls(JSON.parse(savedSamples)))
       : {
           ...initLocSamplesFromAllCollections(),
           ...initKitSamples("mpc"),
@@ -466,35 +467,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   );
 
   const samplersRef = useRef<Record<string, SamplerWithFX>>({});
-
-  const applySamplerSettings = (
-    sampleData: SampleTypeFE,
-    samplerWithFX: SamplerWithFX
-  ) => {
-    const settings = sampleData.settings;
-    if (!samplerWithFX || !settings) return;
-
-    const solosExistNow = Object.values(allSampleData).some(
-      (sample) => sample.settings.solo
-    );
-    const { sampler, gain, pitch, panVol, highpass, lowpass } = samplerWithFX;
-    gain.gain.value = solosExistNow
-      ? settings.solo
-        ? 1
-        : 0
-      : settings.mute
-        ? 0
-        : 1;
-
-    sampler.attack = settings.attack || 0;
-    sampler.release = settings.release || 0;
-    pitch.pitch = settings.pitch || 0;
-    panVol.volume.value = settings.volume || 0;
-    panVol.pan.value = settings.pan || 0;
-    highpass.frequency.value = settings.highpass[0] || 0;
-    lowpass.frequency.value = settings.lowpass[0] || 200;
-    sampler.setReverse(settings.reverse ?? false);
-  };
+  const [samplers, setSamplers] = useState<Record<string, SamplerWithFX>>({});
 
   const loadSamplersToRef = async (
     sampleData: Record<string, SampleTypeFE>
@@ -506,6 +479,9 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       Object.keys(sampleData).forEach((key) => {
         cleanupSampler(key, samplersRef);
       });
+      // Drop the disposed samplers from render state too, so pads go silent
+      // while loading instead of triggering a disposed sampler
+      setSamplers({ ...samplersRef.current });
 
       // Create all samplers concurrently
       const samplerPromises = Object.entries(sampleData).map(
@@ -516,14 +492,15 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       );
 
       // Wait for all samplers to be created
-      const samplers = await Promise.all(samplerPromises);
+      const newSamplers = await Promise.all(samplerPromises);
 
-      // Assign samplers to ref and apply settings
-      samplers.forEach(({ key, sampler }) => {
+      // Assign samplers to ref and apply settings. Mute/solo gain is set by
+      // the gain effect, which reruns when the samplers state changes.
+      newSamplers.forEach(({ key, sampler }) => {
         samplersRef.current[key] = sampler;
-        applySamplerSettings(sampleData[key], sampler);
-        // CHECK FOR SOLOS EXIST HERE??
+        applySoundSettings(sampler, sampleData[key].settings);
       });
+      setSamplers({ ...samplersRef.current });
     } catch (error) {
       console.error("Failed to load samplers:", error);
     } finally {
@@ -540,7 +517,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     new Tone.Gain(masterGainLevel).toDestination()
   );
   const [selectedSampleId, setSelectedSampleId] = useState<string>("pad-1");
-  const [solosExist, setSolosExist] = useState<boolean>(false);
 
   const updateSamplerStateSettings = (
     id: string,
@@ -631,19 +607,24 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     init();
   }, []);
 
-  // Update ToneJS Transport when switching to a different loop
+  // The one owner of the live transport's loop setup. Runs when the loop
+  // changes or when its tempo, swing, meter or length is edited.
+  const currentLoopSettings = allLoopSettings[currentLoop as LoopName];
+  useEffect(() => {
+    if (!currentLoopSettings) return;
+    applyLoopSettings(Tone.getTransport(), currentLoopSettings);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentLoop,
+    currentLoopSettings?.bpm,
+    currentLoopSettings?.swing,
+    currentLoopSettings?.beats,
+    currentLoopSettings?.bars,
+  ]);
+
+  // Restart from the top when switching to a different loop
   useEffect(() => {
     const transport = Tone.getTransport();
-    const settings = allLoopSettings[currentLoop as LoopName];
-    if (!settings) return;
-
-    transport.bpm.value = settings.bpm;
-    transport.swing = settings.swing;
-    transport.timeSignature = settings.beats;
-    transport.loop = true;
-    transport.loopStart = "0:0:0";
-    transport.loopEnd = `${settings.bars}:0:0`;
-
     const wasPlaying = transport.state === "started";
     if (wasPlaying) {
       transport.stop();
@@ -675,14 +656,11 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     //
   };
 
-  // updates solosExist when a sampler's solo state changes
-  useEffect(() => {
-    if (!allSampleData) return;
-    const solosExistNow = Object.values(allSampleData).some(
-      (sample) => sample.settings.solo
-    );
-    setSolosExist(solosExistNow);
-  }, [allSampleData]);
+  // Derived from allSampleData, so it can't drift out of sync
+  const solosExist = useMemo(
+    () => Object.values(allSampleData).some((sample) => sample.settings.solo),
+    [allSampleData]
+  );
 
   // Sampler audio output based on mutes and solos:
   useEffect(() => {
@@ -690,11 +668,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       const sampler = samplersRef.current[id];
       if (!sampler) return;
 
-      const { mute, solo } = allSampleData[id].settings;
-
-      sampler.gain.gain.value = mute ? 0 : solosExist ? (solo ? 1 : 0) : 1;
+      sampler.gain.gain.value = computeGain(
+        allSampleData[id].settings,
+        solosExist
+      );
     });
-  }, [allSampleData, solosExist]);
+  }, [allSampleData, solosExist, samplers]);
 
   // if (!hasLoadedFromStorage.current) return null;
 
@@ -723,7 +702,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         makeSamplerWithFX,
         storeAudioInIndexedDB,
         getCachedAudioUrlFromIndexedDB,
-        applySamplerSettings,
         initLocSampleData,
         initKitSampleData,
         initLocSamplesFromOneCollection,
@@ -736,6 +714,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
         selectedSampleId,
         setSelectedSampleId,
         samplersRef,
+        samplers,
         solosExist,
 
         cleanupSampler,

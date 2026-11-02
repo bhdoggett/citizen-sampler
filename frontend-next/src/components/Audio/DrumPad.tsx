@@ -17,8 +17,12 @@ import { drumKeys } from "src/lib/constants/drumKeys";
 import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
+import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
+import { wrapTicks } from "src/lib/audio/util/timing";
+import { calcTriggerParams } from "src/lib/audio/util/calcTriggerParams";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
+import type { LoopName } from "src/types/audioTypes";
 import { useReportPadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./DrumPad.module.css";
 
@@ -40,6 +44,7 @@ const DrumPad = forwardRef(function DrumPad(
     setSelectedSampleId,
     selectedSampleId,
     currentLoop,
+    allLoopSettings,
     samplersRef,
   } = useAudioContext();
   const partRef = useRef<Tone.Part | null>(null);
@@ -145,27 +150,24 @@ const DrumPad = forwardRef(function DrumPad(
     const samplerObj = samplersRef.current[id];
     if (samplerObj) samplerObj.triggerTime = null;
 
-    if (!currentEvent.current.startTime || !loopIsPlaying || !isRecording)
+    if (currentEvent.current.startTime == null || !loopIsPlaying || !isRecording)
       return;
 
-    const padReleasetime = Tone.getTransport().seconds;
-    const sampleEnd = allSampleData[selectedSampleId].settings.end;
+    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    if (!loopSettings) return;
 
-    const actualReleaseTime = sampleEnd
-      ? padReleasetime < sampleEnd
-        ? padReleasetime
-        : sampleEnd
-      : padReleasetime;
+    // Fold a hit read just past the loop end back to the loop start
+    currentEvent.current.startTime = wrapTicks(
+      currentEvent.current.startTime,
+      loopSettings
+    );
 
-    const startTimeInSeconds = Tone.Ticks(
-      currentEvent.current.startTime
-    ).toSeconds();
-    const loopEndInSeconds = Tone.Time(Tone.getTransport().loopEnd).toSeconds();
-
-    currentEvent.current.duration =
-      actualReleaseTime > startTimeInSeconds
-        ? actualReleaseTime - startTimeInSeconds
-        : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
+    currentEvent.current.duration = calcEventDuration(
+      currentEvent.current.startTime,
+      Tone.getTransport().seconds,
+      loopSettings,
+      allSampleData[id].settings.end
+    );
 
     setAllSampleData((prev) => ({
       ...prev,
@@ -189,7 +191,7 @@ const DrumPad = forwardRef(function DrumPad(
     sampler,
     currentLoop,
     sampleIsPlaying,
-    selectedSampleId,
+    allLoopSettings,
     setAllSampleData,
   ]);
 
@@ -277,33 +279,36 @@ const DrumPad = forwardRef(function DrumPad(
 
   // **** Schedule playback of sampler play events ****
   useEffect(() => {
-    if (!loopIsPlaying || allSampleData[id].events[currentLoop].length === 0) {
+    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    if (
+      !loopSettings ||
+      !loopIsPlaying ||
+      allSampleData[id].events[currentLoop].length === 0
+    ) {
       return;
     }
 
-    const scheduleEvents = getScheduleEvents(allSampleData, id, currentLoop);
+    const scheduleEvents = getScheduleEvents(
+      allSampleData,
+      id,
+      currentLoop,
+      loopSettings
+    );
 
     partRef.current = new Tone.Part((time, event) => {
       if (!sampler) return;
-      const { start, end, oneShot } = settingsRef.current;
-
       if (
         typeof event === "object" &&
         event !== null &&
         "duration" in event &&
         event.duration !== null
       ) {
-        const sampleDuration = end ? (end - start) / calcPlaybackRate(event.note) : null;
-        const actualDuration = oneShot
-          ? (sampleDuration ?? 999)
-          : sampleDuration !== null
-            ? Math.min(sampleDuration, event.duration)
-            : event.duration;
-
-        const bufDuration = sampler.bufferDuration;
-        const offset = settingsRef.current.reverse
-          ? bufDuration - (end ?? bufDuration)
-          : start;
+        const { duration: actualDuration, offset } = calcTriggerParams(
+          settingsRef.current,
+          calcPlaybackRate(event.note),
+          event.duration,
+          sampler.bufferDuration
+        );
         sampler.triggerAttackRelease(
           event.note,
           actualDuration,
@@ -339,6 +344,7 @@ const DrumPad = forwardRef(function DrumPad(
     id,
     selectedSampleId,
     currentLoop,
+    allLoopSettings,
   ]);
 
   //Dispose part to cleanup if the loop stops playing

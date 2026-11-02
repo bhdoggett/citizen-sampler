@@ -1,5 +1,6 @@
-import * as Tone from "tone";
+import type * as Tone from "tone";
 import quantize from "./quantize";
+import { loopDurationSeconds, ticksToSeconds, type LoopTiming } from "./timing";
 import type { SampleTypeFE } from "src/types/audioTypesFE";
 
 type SampleEvent = {
@@ -13,26 +14,19 @@ type ScheduleEvent = [number, SampleEvent];
 
 type AllSampleData = Record<string, SampleTypeFE>;
 
-// Tempo and length of the loop being scheduled. Omit to use the live transport.
-export type LoopTiming = { bpm: number; beats: number; bars: number };
+export type { LoopTiming };
 
+// timing is the tempo and length of the loop being scheduled. Loops always start at 0.
 const getScheduleEvents = (
   allSampleData: AllSampleData,
   id: string,
   currentLoop: string,
-  timing?: LoopTiming
+  timing: LoopTiming
 ): ScheduleEvent[] => {
   const sampleData = allSampleData[id];
-  const transport = Tone.getTransport();
 
-  const ticksToSeconds = (ticks: number) =>
-    timing
-      ? (ticks / transport.PPQ) * (60 / timing.bpm)
-      : Tone.Ticks(ticks).toSeconds();
-  const loopStart = timing ? 0 : Tone.Time(transport.loopStart).toSeconds();
-  const loopEnd = timing
-    ? timing.bars * timing.beats * (60 / timing.bpm)
-    : Tone.Time(transport.loopEnd).toSeconds();
+  const loopStart = 0;
+  const loopEnd = loopDurationSeconds(timing);
 
   const events = sampleData.events[currentLoop]
     .map((event) => {
@@ -40,20 +34,18 @@ const getScheduleEvents = (
       if (event.startTime == null) return;
 
       // Convert startTime from ticks to seconds
-      const startTimeInSeconds = ticksToSeconds(event.startTime);
+      const startTimeInSeconds = ticksToSeconds(event.startTime, timing.bpm);
 
       // If quantize === true, quantize the start time
       // Otherwise, use the start time as is
       let eventTime = sampleData.settings.quantize
-        ? quantize(
-            startTimeInSeconds,
-            sampleData.settings.quantVal,
-            timing?.bpm
-          )
+        ? quantize(startTimeInSeconds, sampleData.settings.quantVal, timing.bpm)
         : startTimeInSeconds;
 
-      // If an event is quantied to the loop end, wrap it to the loop start
-      if (eventTime === loopEnd) {
+      // If an event is quantized to the loop end, wrap it to the loop start.
+      // Compare with a tolerance: the snapped time and the loop length can
+      // differ in the last float digit.
+      if (Math.abs(eventTime - loopEnd) < 1e-9) {
         eventTime = loopStart;
       }
 

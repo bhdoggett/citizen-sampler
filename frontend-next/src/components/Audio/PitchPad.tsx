@@ -12,6 +12,10 @@ import { useMidiContext } from "../../app/contexts/MidiContext";
 import { CustomSampler } from "../../types/CustomSampler";
 import { SampleEventFE } from "src/types/audioTypesFE";
 import quantize from "../../lib/audio/util/quantize";
+import { ticksToSeconds, wrapTicks } from "../../lib/audio/util/timing";
+import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
+import { calcTriggerParams } from "../../lib/audio/util/calcTriggerParams";
+import type { LoopName } from "../../types/audioTypes";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { resolvePlayNote } from "../../lib/audio/util/resolvePlayNote";
@@ -35,6 +39,7 @@ const PitchPad = forwardRef(function PitchPad(
     loopIsPlaying,
     isRecording,
     currentLoop,
+    allLoopSettings,
     samplersRef,
   } = useAudioContext();
   const { activeMidiNotes } = useMidiContext();
@@ -142,29 +147,23 @@ const PitchPad = forwardRef(function PitchPad(
     const samplerObj = samplersRef.current[selectedSampleId];
     if (samplerObj) samplerObj.triggerTime = null;
 
-    if (!currentEvent.current?.startTime) return;
+    if (currentEvent.current?.startTime == null) return;
 
     if (isRecording) {
-      const padReleasetime = Tone.getTransport().seconds;
-      const sampleEnd = allSampleData[selectedSampleId].settings.end;
+      const loopSettings = allLoopSettings[currentLoop as LoopName];
+      if (!loopSettings) return;
 
-      const actualReleaseTime = sampleEnd
-        ? padReleasetime < sampleEnd
-          ? padReleasetime
-          : sampleEnd
-        : padReleasetime;
-
-      const startTimeInSeconds = Tone.Ticks(
-        currentEvent.current.startTime
-      ).toSeconds();
-      const loopEndInSeconds = Tone.Time(
-        Tone.getTransport().loopEnd
-      ).toSeconds();
-
-      currentEvent.current.duration =
-        actualReleaseTime > startTimeInSeconds
-          ? actualReleaseTime - startTimeInSeconds
-          : loopEndInSeconds - startTimeInSeconds + actualReleaseTime;
+      // Fold a hit read just past the loop end back to the loop start
+      currentEvent.current.startTime = wrapTicks(
+        currentEvent.current.startTime,
+        loopSettings
+      );
+      currentEvent.current.duration = calcEventDuration(
+        currentEvent.current.startTime,
+        Tone.getTransport().seconds,
+        loopSettings,
+        allSampleData[selectedSampleId].settings.end
+      );
 
       setAllSampleData((prev) => ({
         ...prev,
@@ -209,8 +208,10 @@ const PitchPad = forwardRef(function PitchPad(
   // Schedule playback of events, strictly for visual render feedback on the PitchPad
   useEffect(() => {
     const sampleData = allSampleData[selectedSampleId];
+    const loopSettings = allLoopSettings[currentLoop as LoopName];
 
     if (
+      !loopSettings ||
       !loopIsPlaying ||
       allSampleData[selectedSampleId].events[currentLoop].length === 0
     )
@@ -219,10 +220,17 @@ const PitchPad = forwardRef(function PitchPad(
     const events = sampleData.events[currentLoop]
       .filter((event) => event.note === note)
       .map((event) => {
-        if (!event.startTime) return;
-        const startTimeInSeconds = Tone.Ticks(event.startTime).toSeconds();
+        if (event.startTime == null) return;
+        const startTimeInSeconds = ticksToSeconds(
+          event.startTime,
+          loopSettings.bpm
+        );
         const eventTime = sampleData.settings.quantize
-          ? quantize(startTimeInSeconds, sampleData.settings.quantVal)
+          ? quantize(
+              startTimeInSeconds,
+              sampleData.settings.quantVal,
+              loopSettings.bpm
+            )
           : startTimeInSeconds;
         return [
           eventTime,
@@ -235,20 +243,20 @@ const PitchPad = forwardRef(function PitchPad(
 
     partRef.current = new Tone.Part((time, event) => {
       if (!sampler) return;
-      const { start, end } = allSampleData[selectedSampleId].settings;
       if (
         typeof event === "object" &&
         event !== null &&
         "duration" in event &&
         event.duration !== null
       ) {
-        const { baseNote } = allSampleData[selectedSampleId].settings;
-        const resolvedNote = resolvePlayNote(note, String(baseNote));
-        const sampleDuration = end ? (end - start) / calcPlaybackRate(resolvedNote as Tone.Unit.Frequency) : null;
-        const actualDuration =
-          sampleDuration !== null
-            ? Math.min(sampleDuration, event.duration)
-            : event.duration;
+        const settings = allSampleData[selectedSampleId].settings;
+        const resolvedNote = resolvePlayNote(note, String(settings.baseNote));
+        const { duration: actualDuration } = calcTriggerParams(
+          settings,
+          calcPlaybackRate(resolvedNote as Tone.Unit.Frequency),
+          event.duration,
+          sampler.bufferDuration
+        );
 
         setPitchIsPlaying(true);
         setTimeout(() => {
@@ -267,6 +275,7 @@ const PitchPad = forwardRef(function PitchPad(
     allSampleData,
     selectedSampleId,
     currentLoop,
+    allLoopSettings,
     note,
     sampler,
   ]);

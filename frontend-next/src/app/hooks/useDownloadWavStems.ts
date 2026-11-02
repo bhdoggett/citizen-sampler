@@ -5,18 +5,22 @@ import getScheduleEvents from "../../lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcRenderDuration } from "../../lib/audio/util/calcRenderDuration";
 import toWav from "audiobuffer-to-wav";
+import { applySoundSettings } from "../../lib/audio/applySoundSettings";
+import { computeGain } from "../../lib/audio/muteSolo";
+import { applyLoopSettings } from "../../lib/audio/applyLoopSettings";
+import { calcTriggerParams } from "../../lib/audio/util/calcTriggerParams";
 import type { LoopName } from "../../types/audioTypes";
 
 const useDownloadWavStems = () => {
   const {
     allSampleData,
-    samplersRef,
+    samplers,
     allLoopSettings,
     makeSamplerWithFX,
-    applySamplerSettings,
+    solosExist,
     songTitle,
   } = useAudioContext();
-  const allIds = Object.keys(samplersRef.current);
+  const allIds = Object.keys(samplers);
   const loops = ["A", "B", "C", "D"];
 
   // Function to get Audio Buffer for a given sampler's loop recording
@@ -29,7 +33,7 @@ const useDownloadWavStems = () => {
     if (!loopSettings || events.length === 0) return null;
 
     // Use this loop's own tempo and length, not whichever loop is live
-    const { bpm, beats, bars, swing } = loopSettings;
+    const { bpm, beats, bars } = loopSettings;
     const loopDuration = bars * beats * (60 / bpm);
 
     // Format schedule events for Tone.Part
@@ -44,12 +48,7 @@ const useDownloadWavStems = () => {
 
     const toneBuffer = await Tone.Offline(async ({ transport }) => {
       // Match the live transport setup for this loop
-      transport.bpm.value = bpm;
-      transport.swing = swing;
-      transport.timeSignature = beats;
-      transport.loop = true;
-      transport.loopStart = "0:0:0";
-      transport.loopEnd = `${bars}:0:0`;
+      applyLoopSettings(transport, loopSettings);
 
       const offlineSamplerWithFx = await makeSamplerWithFX(
         id,
@@ -57,28 +56,25 @@ const useDownloadWavStems = () => {
         true
       );
 
-      applySamplerSettings(sampleData, offlineSamplerWithFx);
+      applySoundSettings(offlineSamplerWithFx, settings);
+      // Muted pads render silent stems, as in the live mix
+      offlineSamplerWithFx.gain.gain.value = computeGain(settings, solosExist);
 
       const { sampler } = offlineSamplerWithFx;
 
       const part = new Tone.Part((time, event) => {
-        const { start, end } = settings;
         if (
           typeof event === "object" &&
           event !== null &&
           "duration" in event &&
           event.duration !== null
         ) {
-          const sampleDuration = end ? (end - start) / calcPlaybackRate(event.note) : null;
-          const actualDuration = settings.oneShot
-            ? (sampleDuration ?? 999)
-            : sampleDuration !== null
-              ? Math.min(sampleDuration, event.duration)
-              : event.duration;
-          const bufDuration = sampler.bufferDuration;
-          const offset = settings.reverse
-            ? bufDuration - (end ?? bufDuration)
-            : start;
+          const { duration: actualDuration, offset } = calcTriggerParams(
+            settings,
+            calcPlaybackRate(event.note),
+            event.duration,
+            sampler.bufferDuration
+          );
           sampler.triggerAttackRelease(
             event.note,
             actualDuration,

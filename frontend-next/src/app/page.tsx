@@ -61,7 +61,7 @@ export default function Home() {
     setSequencerVisible,
     hotKeysActive,
   } = useUIContext();
-  const { samplersRef, selectedSampleId, samplersLoading, allSampleData, updateSamplerStateSettings } = useAudioContext();
+  const { selectedSampleId, samplersLoading, allSampleData, updateSamplerStateSettings } = useAudioContext();
   const handleSelectLoop = useSelectLoop();
 
   const padsViewRef = useRef<HTMLDivElement>(null);
@@ -188,11 +188,7 @@ export default function Home() {
                     className={sequencerVisible ? styles.hidden : styles.padsView}
                   >
                     <DrumMachine />
-                    <PitchGrid
-                      sampler={
-                        samplersRef.current[selectedSampleId]?.sampler ?? null
-                      }
-                    />
+                    <PitchGrid />
                   </div>
                   {sequencerVisible && (
                     <StepSequencer maxHeight={padsViewHeight} />
