@@ -2,27 +2,32 @@
 import { useUIContext } from "../../app/contexts/UIContext";
 import styles from "./Dialog.module.css";
 
-const ConfirmActionDialog: React.FC = () => {
-  const { setShowDialog, confirmActionRef, setHotKeysActive } = useUIContext();
+type ConfirmActionDialogProps = {
+  message: string;
+  buttonText: string;
+  onConfirm: () => void;
+};
 
-  if (!confirmActionRef.current) return null;
+const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
+  message,
+  buttonText,
+  onConfirm,
+}) => {
+  const { closeDialog, setHotKeysActive } = useUIContext();
 
   return (
     <>
-      <h2 className={styles.message}>
-        {confirmActionRef.current.message}
-      </h2>
+      <h2 className={styles.message}>{message}</h2>
       <button
         type="button"
         onClick={() => {
-          if (!confirmActionRef.current) return;
-          confirmActionRef.current.action();
-          setShowDialog(null);
+          onConfirm();
+          closeDialog();
           setHotKeysActive(true);
         }}
         className={`${styles.button} ${styles.primary}`}
       >
-        {confirmActionRef.current.buttonText}
+        {buttonText}
       </button>
     </>
   );

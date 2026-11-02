@@ -30,7 +30,7 @@ const ChooseSample: React.FC = () => {
     loadSamplersToRef,
     updateSamplerData,
   } = useAudioContext();
-  const { setShowDialog } = useUIContext();
+  const { closeDialog } = useUIContext();
   const [type, setType] = useState<"loc" | "kit" | null>(null);
   const [sampleGroup, setSampleGroup] = useState<string | null>(null);
   const [samplesArray, setSamplesArray] = useState<string[]>([]);
@@ -137,7 +137,7 @@ const ChooseSample: React.FC = () => {
     };
     updateSamplerData(selectedSampleId, updatedData);
     loadSamplersToRef({ [selectedSampleId]: updatedData });
-    setShowDialog(null);
+    closeDialog();
   };
 
   useEffect(() => {

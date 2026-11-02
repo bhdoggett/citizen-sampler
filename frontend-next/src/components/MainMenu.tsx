@@ -13,12 +13,6 @@ import styles from "./MainMenu.module.css";
 dotenv.config();
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export type ConfirmActionRef = {
-  message: string;
-  buttonText: string;
-  action: () => void;
-} | null;
-
 const Menu: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const {
@@ -33,10 +27,8 @@ const Menu: React.FC = () => {
     setError,
   } = useAuthContext();
   const {
-    confirmActionRef,
-    showDialog,
-    setShowDialog,
-    apiResponseMessageRef,
+    dialog,
+    openDialog,
     setHotKeysActive,
   } = useUIContext();
   const {
@@ -63,7 +55,6 @@ const Menu: React.FC = () => {
     setUserId(null);
     setUsername(null);
     setDisplayName(null);
-    setShowDialog("confirm-action");
     if (setError) setError("Session expired. Please log in again.");
   };
 
@@ -84,7 +75,7 @@ const Menu: React.FC = () => {
   const handleSaveSong = async () => {
     const songId = localStorage.getItem("songId");
     if (!songId) {
-      setShowDialog("save-new-song");
+      openDialog({ type: "save-new-song" });
       setMenuOpen(false);
       return;
     }
@@ -115,8 +106,7 @@ const Menu: React.FC = () => {
       );
 
       if (result.status === 201) {
-        apiResponseMessageRef.current = result.data.message;
-        setShowDialog("api-response");
+        openDialog({ type: "api-response", message: result.data.message });
       }
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
@@ -126,8 +116,7 @@ const Menu: React.FC = () => {
         error.response.data.message
       ) {
         console.error("Error saving song to DB:", error);
-        apiResponseMessageRef.current = error.response.data.message;
-        setShowDialog("api-response");
+        openDialog({ type: "api-response", message: error.response.data.message });
       }
     }
   };
@@ -151,12 +140,11 @@ const Menu: React.FC = () => {
       );
 
       if (result.status === 200) {
-        apiResponseMessageRef.current = result.data.message;
         localStorage.removeItem("songTitle");
         localStorage.removeItem("songId");
         setSongId("");
         setSongTitle("");
-        setShowDialog("api-response");
+        openDialog({ type: "api-response", message: result.data.message });
       }
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
@@ -166,8 +154,7 @@ const Menu: React.FC = () => {
         error.response.data.message
       ) {
         console.error("Error deleting song from DB:", error);
-        apiResponseMessageRef.current = error.response.data.message;
-        setShowDialog("api-response");
+        openDialog({ type: "api-response", message: error.response.data.message });
       }
     }
   };
@@ -179,12 +166,12 @@ const Menu: React.FC = () => {
   };
 
   useEffect(() => {
-    if (showDialog) {
+    if (dialog) {
       setHotKeysActive(false);
     } else {
       setHotKeysActive(true);
     }
-  }, [showDialog, setHotKeysActive]);
+  }, [dialog, setHotKeysActive]);
 
   useEffect(() => {
     if (!token) return;
@@ -195,8 +182,7 @@ const Menu: React.FC = () => {
         });
         if (!res.data.loggedIn) {
           handleLogout();
-          apiResponseMessageRef.current = res.data.message;
-          setShowDialog("api-response");
+          openDialog({ type: "api-response", message: res.data.message });
         }
       } catch (err) {
         const error = err as AxiosError<{ message: string }>;
@@ -206,8 +192,7 @@ const Menu: React.FC = () => {
           error.response.data.message
         ) {
           handleLogout();
-          apiResponseMessageRef.current = error.response.data.message;
-          setShowDialog("api-response");
+          openDialog({ type: "api-response", message: error.response.data.message });
         }
       }
     };
@@ -279,12 +264,12 @@ const Menu: React.FC = () => {
                   <li
                     className={styles.item}
                     onClick={() => {
-                      confirmActionRef.current = {
+                      openDialog({
+                        type: "confirm-action",
                         message: "Are you sure you want to log out?",
                         buttonText: "See Ya!",
-                        action: handleLogout,
-                      };
-                      setShowDialog("confirm-action");
+                        onConfirm: handleLogout,
+                      });
                       setMenuOpen(false);
                     }}
                   >
@@ -299,7 +284,7 @@ const Menu: React.FC = () => {
                   <li
                     className={styles.item}
                     onClick={() => {
-                      setShowDialog("save-new-song");
+                      openDialog({ type: "save-new-song" });
                       setMenuOpen(false);
                     }}
                   >
@@ -308,12 +293,12 @@ const Menu: React.FC = () => {
                   <li
                     className={styles.item}
                     onClick={() => {
-                      confirmActionRef.current = {
+                      openDialog({
+                        type: "confirm-action",
                         message: "Are you sure you want to delete this song?",
                         buttonText: "100!",
-                        action: handleDeleteSong,
-                      };
-                      setShowDialog("confirm-action");
+                        onConfirm: handleDeleteSong,
+                      });
                       setMenuOpen(false);
                     }}
                   >
@@ -322,7 +307,7 @@ const Menu: React.FC = () => {
                   <li
                     className={styles.item}
                     onClick={() => {
-                      setShowDialog("load-song");
+                      openDialog({ type: "load-song" });
                       setMenuOpen(false);
                     }}
                   >
@@ -334,7 +319,7 @@ const Menu: React.FC = () => {
                   <li
                     className={styles.item}
                     onClick={() => {
-                      setShowDialog("auth-dialog");
+                      openDialog({ type: "auth-dialog" });
                       setMenuOpen(false);
                     }}
                   >
@@ -347,7 +332,7 @@ const Menu: React.FC = () => {
               <li
                 className={styles.item}
                 onClick={() => {
-                  setShowDialog("collection-menu");
+                  openDialog({ type: "collection-menu" });
                   setMenuOpen(false);
                 }}
               >
@@ -356,7 +341,7 @@ const Menu: React.FC = () => {
               <li
                 className={styles.item}
                 onClick={() => {
-                  setShowDialog("kit-menu");
+                  openDialog({ type: "kit-menu" });
                   setMenuOpen(false);
                 }}
               >
@@ -371,13 +356,13 @@ const Menu: React.FC = () => {
               <li
                 className={styles.item}
                 onClick={() => {
-                  confirmActionRef.current = {
+                  openDialog({
+                    type: "confirm-action",
                     message:
                       "This action will replace all current samples and reset the sampler to default values. Are you sure?",
                     buttonText: "Fresh Start",
-                    action: handleReset,
-                  };
-                  setShowDialog("confirm-action");
+                    onConfirm: handleReset,
+                  });
                   setMenuOpen(false);
                 }}
               >
@@ -386,7 +371,7 @@ const Menu: React.FC = () => {
               <li
                 className={styles.item}
                 onClick={() => {
-                  setShowDialog("about");
+                  openDialog({ type: "about" });
                   setMenuOpen(false);
                 }}
               >
@@ -395,7 +380,7 @@ const Menu: React.FC = () => {
               <li
                 className={styles.item}
                 onClick={() => {
-                  setShowDialog("help-shortcuts");
+                  openDialog({ type: "help-shortcuts" });
                   setMenuOpen(false);
                 }}
               >

@@ -5,10 +5,10 @@ import { useUIContext } from "src/app/contexts/UIContext";
 import { KIT_PAD_RANGE, LOC_PAD_RANGE } from "src/lib/constants/padLayout";
 
 const About: React.FC = () => {
-  const { setShowDialog } = useUIContext();
+  const { openDialog } = useUIContext();
 
   const openHelp = () => {
-    setShowDialog("help-shortcuts");
+    openDialog({ type: "help-shortcuts" });
   };
 
   return (

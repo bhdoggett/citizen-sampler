@@ -1,13 +1,8 @@
 "use client";
-import { useUIContext } from "src/app/contexts/UIContext";
 import styles from "./Dialog.module.css";
 
-const UIWarning: React.FC = () => {
-  const { uiWarningMessageRef } = useUIContext();
-
-  return (
-    <h2 className={styles.message}>{uiWarningMessageRef.current}</h2>
-  );
+const UIWarning: React.FC<{ message: string }> = ({ message }) => {
+  return <h2 className={styles.message}>{message}</h2>;
 };
 
 export default UIWarning;

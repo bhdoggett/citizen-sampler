@@ -12,7 +12,7 @@ import styles from "./Loop.module.css";
 const Loop = () => {
   const { allLoopSettings, setAllLoopSettings, currentLoop, loopIsPlaying } =
     useAudioContext();
-  const { setShowDialog, uiWarningMessageRef } = useUIContext();
+  const { openDialog } = useUIContext();
 
   const handleSelectLoop = useSelectLoop();
 
@@ -21,9 +21,10 @@ const Loop = () => {
     value: LoopSettings[K]
   ) => {
     if (loopIsPlaying && (key === "beats" || key === "bars")) {
-      uiWarningMessageRef.current =
-        "Stop loop playback before updating beats or bars";
-      setShowDialog("ui-warning");
+      openDialog({
+        type: "ui-warning",
+        message: "Stop loop playback before updating beats or bars",
+      });
       return;
     }
     setAllLoopSettings((prev) => ({

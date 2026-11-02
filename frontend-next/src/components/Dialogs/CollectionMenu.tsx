@@ -16,7 +16,7 @@ const CollectionMenu: React.FC = () => {
     setAllSampleData,
     storeAudioInIndexedDB,
   } = useAudioContext();
-  const { confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
+  const { openDialog, closeDialog, setHotKeysActive } = useUIContext();
   const [index, setIndex] = useState(0);
   const c = collectionNames[index];
 
@@ -43,7 +43,7 @@ const CollectionMenu: React.FC = () => {
     for (const [sampleId, sample] of Object.entries(newSamples)) {
       await storeAudioInIndexedDB(sample.url, sampleId);
     }
-    setShowDialog(null);
+    closeDialog();
     setHotKeysActive(true);
   };
 
@@ -65,13 +65,13 @@ const CollectionMenu: React.FC = () => {
       <div className={styles.actions}>
         <button
           onClick={() => {
-            confirmActionRef.current = {
+            openDialog({
+              type: "confirm-action",
               message:
                 `This will replace ${LOC_PADS_LABEL} with new Library of Congress Samples. Are you sure?`,
               buttonText: "You Betcha",
-              action: c === "All" ? () => handleSelect() : () => handleSelect(c),
-            };
-            setShowDialog("confirm-action");
+              onConfirm: c === "All" ? () => handleSelect() : () => handleSelect(c),
+            });
           }}
           className={`${styles.button} ${styles.primary}`}
         >

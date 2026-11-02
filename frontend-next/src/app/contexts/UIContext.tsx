@@ -1,22 +1,38 @@
 // contexts/UIContext.tsx
 "use client";
 
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 
-export type ConfirmAction = {
-  message: string;
-  buttonText: string;
-  action: () => void;
-} | null;
+// Every dialog the app can show. Dialogs that show a message carry it with
+// them, so opening one is a single call.
+export type DialogState =
+  | {
+      type: "confirm-action";
+      message: string;
+      buttonText: string;
+      onConfirm: () => void;
+    }
+  | { type: "api-response"; message: string }
+  | { type: "ui-warning"; message: string }
+  | {
+      type:
+        | "choose-sample"
+        | "load-song"
+        | "save-new-song"
+        | "collection-menu"
+        | "kit-menu"
+        | "auth-dialog"
+        | "about"
+        | "help-shortcuts"
+        | "welcome";
+    };
 
 type UIContextType = {
   makeBeatsButtonPressed: boolean;
   setMakeBeatsButtonPressed: React.Dispatch<React.SetStateAction<boolean>>;
-  confirmActionRef: React.RefObject<ConfirmAction>;
-  apiResponseMessageRef: React.RefObject<string | null>;
-  uiWarningMessageRef: React.RefObject<string | null>;
-  showDialog: string | null;
-  setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
+  dialog: DialogState | null;
+  openDialog: (next: DialogState) => void;
+  closeDialog: () => void;
   hotKeysActive: boolean;
   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
   sequencerVisible: boolean;
@@ -28,10 +44,9 @@ const UIContext = createContext<UIContextType | undefined>(undefined);
 export const UIProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const confirmActionRef = useRef<ConfirmAction>(null);
-  const apiResponseMessageRef = useRef<string | null>(null);
-  const uiWarningMessageRef = useRef<string | null>(null);
-  const [showDialog, setShowDialog] = useState<string | null>(null);
+  const [dialog, setDialog] = useState<DialogState | null>(null);
+  const openDialog = useCallback((next: DialogState) => setDialog(next), []);
+  const closeDialog = useCallback(() => setDialog(null), []);
   const [hotKeysActive, setHotKeysActive] = useState<boolean>(true);
   const [makeBeatsButtonPressed, setMakeBeatsButtonPressed] =
     useState<boolean>(false);
@@ -42,11 +57,9 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         makeBeatsButtonPressed,
         setMakeBeatsButtonPressed,
-        confirmActionRef,
-        apiResponseMessageRef,
-        uiWarningMessageRef,
-        showDialog,
-        setShowDialog,
+        dialog,
+        openDialog,
+        closeDialog,
         hotKeysActive,
         setHotKeysActive,
         sequencerVisible,

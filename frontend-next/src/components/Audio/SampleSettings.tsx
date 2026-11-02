@@ -27,7 +27,7 @@ const SampleSettings = () => {
     samplers,
     updateSamplerStateSettings,
   } = useAudioContext();
-  const { setShowDialog } = useUIContext();
+  const { openDialog } = useUIContext();
 
   const { setSampleMute, setSampleSolo } = useMutesAndSolos();
 
@@ -155,7 +155,7 @@ const SampleSettings = () => {
         </span>
         <button
           onClick={() => {
-            setShowDialog("choose-sample");
+            openDialog({ type: "choose-sample" });
           }}
           className={styles.chooseSample}
           title="Choose sample"

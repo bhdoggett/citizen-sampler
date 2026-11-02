@@ -4,14 +4,14 @@ import styles from "./Dialog.module.css";
 import { useUIContext } from "src/app/contexts/UIContext";
 
 const Welcome: React.FC = () => {
-  const { setShowDialog } = useUIContext();
+  const { openDialog, closeDialog } = useUIContext();
 
   const handleClose = () => {
-    setShowDialog(null);
+    closeDialog();
   };
 
   const handleGoToHelp = () => {
-    setShowDialog("help-shortcuts");
+    openDialog({ type: "help-shortcuts" });
   };
 
   return (

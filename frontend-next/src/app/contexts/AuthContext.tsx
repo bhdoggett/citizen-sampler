@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     localStorage.getItem("token")
   );
   const [error, setError] = useState<string | null>(null);
-  const { apiResponseMessageRef, setShowDialog } = useUIContext();
+  const { openDialog } = useUIContext();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -101,8 +101,7 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   useEffect(() => {
     const loginError = searchParams.get("loginError");
     if (loginError === "google-auth-failed") {
-      apiResponseMessageRef.current = "Google login failed";
-      setShowDialog("api-response");
+      openDialog({ type: "api-response", message: "Google login failed" });
     }
 
     if (loginError) router.replace("/");

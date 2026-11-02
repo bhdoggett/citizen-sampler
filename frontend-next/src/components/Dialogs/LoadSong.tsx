@@ -27,7 +27,7 @@ const LoadSong: React.FC = () => {
     storeAudioInIndexedDB,
   } = useAudioContext();
   const { isAuthenticated, token } = useAuthContext();
-  const { apiResponseMessageRef, setShowDialog } = useUIContext();
+  const { openDialog } = useUIContext();
   const [loading, setLoading] = useState<boolean>(false);
 
   const getSongtitles = useCallback(async () => {
@@ -43,8 +43,7 @@ const LoadSong: React.FC = () => {
         console.warn(result.data.message);
         setSongTitles([]);
         setSelectedSong("");
-        apiResponseMessageRef.current = result.data.message;
-        setShowDialog("api-response");
+        openDialog({ type: "api-response", message: result.data.message });
         return;
       }
 
@@ -64,8 +63,7 @@ const LoadSong: React.FC = () => {
     setSongTitles,
     setSelectedSong,
     token,
-    setShowDialog,
-    apiResponseMessageRef,
+    openDialog,
   ]);
 
   const handleLoadSong = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -73,7 +71,8 @@ const LoadSong: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
-    let showDialogAfter = false;
+    // One response dialog per outcome, opened once loading finishes
+    let message: string | null = null;
 
     if (!isAuthenticated) {
       console.warn("User not authenticated. Song not saved to DB.");
@@ -114,8 +113,7 @@ const LoadSong: React.FC = () => {
         for (const [sampleId, sample] of Object.entries(samples)) {
           await storeAudioInIndexedDB(sample.url, sampleId);
         }
-        apiResponseMessageRef.current = result.data.message;
-        showDialogAfter = true;
+        message = result.data.message;
       }
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
@@ -125,15 +123,14 @@ const LoadSong: React.FC = () => {
         error.response.data.message
       ) {
         console.error("Error loading song from DB:", error);
-        apiResponseMessageRef.current = error.response.data.message;
+        message = error.response.data.message;
       } else {
-        apiResponseMessageRef.current = "An unexpected error occured";
+        message = "An unexpected error occured";
       }
-      setShowDialog("api-response");
     } finally {
       setLoading(false);
-      if (showDialogAfter) {
-        setShowDialog("api-response");
+      if (message) {
+        openDialog({ type: "api-response", message });
       }
     }
   };

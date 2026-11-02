@@ -11,14 +11,15 @@ export function useSelectLoop(): (loop: LoopName) => void {
     setCurrentLoop,
     loopIsPlaying,
   } = useAudioContext();
-  const { setShowDialog, uiWarningMessageRef } = useUIContext();
+  const { openDialog } = useUIContext();
 
   return useCallback(
     (loop: LoopName) => {
       if (loopIsPlaying) {
-        uiWarningMessageRef.current =
-          "Stop playback before selecting a different loop";
-        setShowDialog("ui-warning");
+        openDialog({
+          type: "ui-warning",
+          message: "Stop playback before selecting a different loop",
+        });
         return;
       }
 
@@ -44,8 +45,7 @@ export function useSelectLoop(): (loop: LoopName) => void {
       currentLoop,
       setAllLoopSettings,
       setCurrentLoop,
-      setShowDialog,
-      uiWarningMessageRef,
+      openDialog,
     ],
   );
 }

@@ -14,7 +14,7 @@ const KitMenu: React.FC = () => {
     setAllSampleData,
     storeAudioInIndexedDB,
   } = useAudioContext();
-  const { confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
+  const { openDialog, closeDialog, setHotKeysActive } = useUIContext();
   const drumMachineNames: string[] = Object.values(drumMachines).map(
     (drumMachine) => drumMachine.name
   );
@@ -44,7 +44,7 @@ const KitMenu: React.FC = () => {
     for (const [sampleId, sample] of Object.entries(newSamples)) {
       await storeAudioInIndexedDB(sample.url, sampleId);
     }
-    setShowDialog(null);
+    closeDialog();
     setHotKeysActive(true);
   };
 
@@ -67,13 +67,13 @@ const KitMenu: React.FC = () => {
         <button
           onClick={() => {
             // e.preventDefault();
-            confirmActionRef.current = {
+            openDialog({
+              type: "confirm-action",
               message:
                 `This will replace ${KIT_PADS_LABEL} with new kit samples. Are you sure?`,
               buttonText: "You Betcha",
-              action: () => handleSelect(id),
-            };
-            setShowDialog("confirm-action");
+              onConfirm: () => handleSelect(id),
+            });
           }}
           className={`${styles.button} ${styles.primary}`}
         >

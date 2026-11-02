@@ -48,7 +48,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     setSelectedSampleId,
     loopIsPlaying,
   } = useAudioContext();
-  const { hotKeysActive, confirmActionRef, setShowDialog, setHotKeysActive } =
+  const { hotKeysActive, openDialog, setHotKeysActive } =
     useUIContext();
 
   const [subdivision, setSubdivision] = useState<Subdivision>("8n");
@@ -369,10 +369,11 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   // Clear all events on a specific pad for current loop (via trash icon)
   const handleClearRow = useCallback(
     (padId: string) => {
-      confirmActionRef.current = {
+      openDialog({
+        type: "confirm-action",
         message: "Clear beats from this sample?",
         buttonText: "Clear",
-        action: () => {
+        onConfirm: () => {
           setAllSampleData((prev) => ({
             ...prev,
             [padId]: {
@@ -384,16 +385,14 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
             },
           }));
         },
-      };
-      setShowDialog("confirm-action");
+      });
       setHotKeysActive(false);
     },
     [
-      confirmActionRef,
       currentLoop,
       setAllSampleData,
       setHotKeysActive,
-      setShowDialog,
+      openDialog,
     ],
   );
 
@@ -419,11 +418,12 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const handlePasteLoop = useCallback(() => {
     if (!copiedPatternRef.current) return;
     const clipboard = copiedPatternRef.current;
-    confirmActionRef.current = {
+    openDialog({
+      type: "confirm-action",
       message:
         "This action will clear any existing beats in the current loop. You sure?",
       buttonText: "Paste",
-      action: () => {
+      onConfirm: () => {
         setAllSampleData((prev) => {
           const next = { ...prev };
           for (const padId of ALL_PAD_IDS) {
@@ -441,15 +441,13 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
         setHasCopiedPattern(false);
         setCopiedFromLoop(null);
       },
-    };
-    setShowDialog("confirm-action");
+    });
     setHotKeysActive(false);
   }, [
-    confirmActionRef,
     currentLoop,
     setAllSampleData,
     setHotKeysActive,
-    setShowDialog,
+    openDialog,
   ]);
 
   // Track Ctrl key for velocity bar visibility
