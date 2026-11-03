@@ -40,6 +40,8 @@ CitizenEditor::~CitizenEditor() { stopTimer(); }
 void CitizenEditor::resized() { browser_.setBounds(getLocalBounds()); }
 
 void CitizenEditor::timerCallback() {
+    // A hidden WebView drops events, so leave them queued until it shows
+    if (!browser_.isShowing()) return;
     for (const auto& event : processor_.takeEvents()) {
         browser_.emitEventIfBrowserIsVisible("engineEvent", event);
     }

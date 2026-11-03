@@ -290,6 +290,10 @@ Built on this branch:
 
 ### Follow-ups
 
+- **Release rules:** the C++ engine releases every voice of a note on a pad,
+  while Tone's sampler releases one source. Overlapping hits on the same note
+  can cut differently in the two engines.
+
 - **Tuner:** the C++ engine needs pitch detection (FFT). `setTunerPad` is a
   no-op there today.
 - **Session state:** the plugin restores its saved pads and loops into the

@@ -107,6 +107,7 @@ void Engine::handle(const Command& command) {
                 preview_.kill();
                 previewBuffer_.reset();
                 previewUrl_ = c.url;
+                previewRequest_ = c.url;
             },
             [this](const cmd::StopPreview&) {
                 if (!previewUrl_) return;
@@ -114,6 +115,7 @@ void Engine::handle(const Command& command) {
                 previewBuffer_.reset();
                 events_.push_back(evt::PreviewEnded{*previewUrl_});
                 previewUrl_.reset();
+                previewRequest_.reset();
             },
         },
         command);
@@ -142,13 +144,15 @@ void Engine::setPad(const std::string& padId, const PadState& state) {
 }
 
 void Engine::setPadBuffer(const std::string& padId, const std::string& url,
-                          std::shared_ptr<const SampleBuffer> buffer) {
+                          std::shared_ptr<const SampleBuffer> buffer,
+                          std::shared_ptr<const SampleBuffer> reversed) {
     auto it = pads_.find(padId);
     if (it == pads_.end() || it->second->state.url != url || !buffer) return;
     Pad& pad = *it->second;
     pad.buffer = buffer;
     pad.bufferUrl = url;
-    pad.channel.setBuffer(std::move(buffer));
+    pad.failedUrl.clear();
+    pad.channel.setBuffer(std::move(buffer), std::move(reversed));
     events_.push_back(evt::PadLoaded{padId, pad.buffer->duration()});
 }
 
@@ -156,13 +160,15 @@ void Engine::setPadLoadFailed(const std::string& padId, const std::string& url,
                               const std::string& message) {
     auto it = pads_.find(padId);
     if (it == pads_.end() || it->second->state.url != url) return;
+    it->second->failedUrl = url;
     events_.push_back(evt::PadLoadFailed{padId, message});
 }
 
 std::vector<std::pair<std::string, std::string>> Engine::padsNeedingAudio() const {
     std::vector<std::pair<std::string, std::string>> out;
     for (const auto& [id, pad] : pads_) {
-        if (!pad->state.url.empty() && pad->bufferUrl != pad->state.url) {
+        if (!pad->state.url.empty() && pad->bufferUrl != pad->state.url &&
+            pad->failedUrl != pad->state.url) {
             out.emplace_back(id, pad->state.url);
         }
     }

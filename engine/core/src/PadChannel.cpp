@@ -14,16 +14,17 @@ void PadChannel::prepare(double sampleRate, int maxBlockFrames) {
     setSettings(settings_);
 }
 
-void PadChannel::setBuffer(std::shared_ptr<const SampleBuffer> buffer) {
-    releaseAll();
+std::shared_ptr<const SampleBuffer> reversedCopy(const SampleBuffer& buffer) {
+    auto reversed = std::make_shared<SampleBuffer>(buffer);
+    for (auto& channel : reversed->channels) std::reverse(channel.begin(), channel.end());
+    return reversed;
+}
+
+void PadChannel::setBuffer(std::shared_ptr<const SampleBuffer> buffer,
+                           std::shared_ptr<const SampleBuffer> reversed) {
     for (auto& v : voices_) v.kill();
     buffer_ = std::move(buffer);
-    reversed_.reset();
-    if (buffer_) {
-        auto reversed = std::make_shared<SampleBuffer>(*buffer_);
-        for (auto& channel : reversed->channels) std::reverse(channel.begin(), channel.end());
-        reversed_ = std::move(reversed);
-    }
+    reversed_ = buffer_ ? (reversed ? std::move(reversed) : reversedCopy(*buffer_)) : nullptr;
 }
 
 void PadChannel::setSettings(const SampleSettings& settings) {

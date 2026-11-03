@@ -73,6 +73,7 @@ private:
     const bool logBridge_ = juce::SystemStats::getEnvironmentVariable("CITIZEN_LOG_BRIDGE", {}).isNotEmpty();
 
     // The last setPad per pad and the last setLoops, saved with the DAW session
+    std::mutex stateLock_;
     juce::DynamicObject::Ptr savedPads_ = new juce::DynamicObject();
     juce::var savedLoops_;
 

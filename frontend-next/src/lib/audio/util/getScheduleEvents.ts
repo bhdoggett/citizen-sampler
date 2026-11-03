@@ -60,6 +60,9 @@ const getScheduleEvents = (
         eventTime = loopStart;
       }
 
+      // A hit past the loop end, left from a longer loop, is never reached
+      if (eventTime > loopEnd) return;
+
       return [
         eventTime,
         {

@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "citizen/LiveInput.h"
@@ -47,8 +48,11 @@ public:
     void handle(const Command& command);
 
     // Decoded audio from the host. Ignored unless `url` is still the pad's url.
+    // Pass the reversed copy (see reversedCopy) to keep that work out of any
+    // lock the host holds around this call.
     void setPadBuffer(const std::string& padId, const std::string& url,
-                      std::shared_ptr<const SampleBuffer> buffer);
+                      std::shared_ptr<const SampleBuffer> buffer,
+                      std::shared_ptr<const SampleBuffer> reversed = nullptr);
     void setPadLoadFailed(const std::string& padId, const std::string& url,
                           const std::string& message);
     void setMetronomeBuffers(std::shared_ptr<const SampleBuffer> high,
@@ -57,8 +61,10 @@ public:
 
     // Pads, as (padId, url), whose sample the host still has to load
     std::vector<std::pair<std::string, std::string>> padsNeedingAudio() const;
-    // The sample the UI asked to preview and the host should load, if any
+    // The sample being previewed, if any
     const std::optional<std::string>& previewUrl() const { return previewUrl_; }
+    // A preview the host has not been asked to load yet. Returned once.
+    std::optional<std::string> takePreviewRequest() { return std::exchange(previewRequest_, std::nullopt); }
 
     // Writes, not adds, `numChannels` channels of `numFrames`
     void process(float* const* out, int numChannels, int numFrames);
@@ -83,6 +89,7 @@ private:
         std::vector<ScheduledHit> schedule; // for the current loop
         std::shared_ptr<const SampleBuffer> buffer;
         std::string bufferUrl;              // url `buffer` came from
+        std::string failedUrl;              // url that failed to load, not retried
     };
     struct Timer {
         double at;
@@ -133,6 +140,7 @@ private:
     std::vector<Voice> clicks_;
 
     std::optional<std::string> previewUrl_;
+    std::optional<std::string> previewRequest_;
     std::shared_ptr<const SampleBuffer> previewBuffer_;
     Voice preview_;
 

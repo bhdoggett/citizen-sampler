@@ -279,3 +279,21 @@ TEST_CASE("a sample preview plays and reports its end") {
     CHECK(rig.eventsOf<evt::PreviewEnded>().size() == 1);
     CHECK_FALSE(rig.engine.previewUrl());
 }
+
+TEST_CASE("the host is asked to load a preview once") {
+    Rig rig;
+    rig.engine.handle(cmd::PreviewSample{"https://example.com/p.wav"});
+    CHECK(rig.engine.takePreviewRequest() == std::optional<std::string>("https://example.com/p.wav"));
+    CHECK_FALSE(rig.engine.takePreviewRequest());
+    rig.engine.handle(cmd::Play{});
+    CHECK_FALSE(rig.engine.takePreviewRequest());
+}
+
+TEST_CASE("a pad whose sample failed to load is not asked for again") {
+    Rig rig;
+    rig.engine.handle(cmd::SetPad{"pad-1", PadState{"https://example.com/broken.wav"}});
+    rig.engine.setPadLoadFailed("pad-1", "https://example.com/broken.wav", "404");
+    CHECK(rig.engine.padsNeedingAudio().empty());
+    rig.engine.handle(cmd::SetPad{"pad-1", PadState{"https://example.com/other.wav"}});
+    CHECK(rig.engine.padsNeedingAudio().size() == 1);
+}

@@ -90,6 +90,7 @@ void CitizenProcessor::apply(const Command& command) {
 
 void CitizenProcessor::rememberSongCommand(const juce::var& json) {
     const auto type = json["type"].toString();
+    const std::lock_guard lock(stateLock_);
     if (type == "setPad") savedPads_->setProperty(json["padId"].toString(), json);
     else if (type == "removePad") savedPads_->removeProperty(json["padId"].toString());
     else if (type == "setLoops") savedLoops_ = json;
@@ -103,16 +104,19 @@ void CitizenProcessor::loadMissingAudio() {
     {
         std::lock_guard lock(engineLock_);
         needed = engine_.padsNeedingAudio();
-        previewUrl = engine_.previewUrl();
+        previewUrl = engine_.takePreviewRequest();
     }
 
     for (const auto& [padId, url] : needed) {
         if (!loading_.insert({padId, url}).second) continue;
         loader_.load(juce::String(url), [this, padId, url](auto buffer, juce::String error) {
             loading_.erase({padId, url});
+            // Copy the reversed audio before locking, so the audio thread
+            // only waits for pointer swaps
+            auto reversed = buffer ? reversedCopy(*buffer) : nullptr;
             {
                 std::lock_guard lock(engineLock_);
-                if (buffer) engine_.setPadBuffer(padId, url, buffer);
+                if (buffer) engine_.setPadBuffer(padId, url, buffer, std::move(reversed));
                 else engine_.setPadLoadFailed(padId, url, error.toStdString());
             }
             pushHostEvent(wire::toJson(evt::Loading{static_cast<int>(loading_.size())}));
@@ -169,8 +173,10 @@ juce::var CitizenProcessor::renderStem(const juce::String& padId, const juce::St
 // ---- Session state ----
 
 void CitizenProcessor::getStateInformation(juce::MemoryBlock& destData) {
+    // Hosts may save from any thread
+    const std::lock_guard lock(stateLock_);
     auto* state = new juce::DynamicObject();
-    state->setProperty("pads", juce::var(savedPads_.get()));
+    state->setProperty("pads", juce::var(savedPads_->clone().get()));
     state->setProperty("loops", savedLoops_);
     const auto json = juce::JSON::toString(juce::var(state), true);
     destData.replaceAll(json.toRawUTF8(), json.getNumBytesAsUTF8());

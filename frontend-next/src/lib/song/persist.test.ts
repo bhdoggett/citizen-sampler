@@ -21,11 +21,9 @@ describe("persistSong", () => {
     const { store } = setup();
     store.updateLoops((prev) => ({ ...prev, A: { ...prev.A!, bpm: 90 } }));
     store.updateLoops((prev) => ({ ...prev, A: { ...prev.A!, bpm: 91 } }));
-    expect(readJSON("loops")).toBeNull();
+    expect(readJSON<{ A: { bpm: number } }>("loops")?.A.bpm).toBe(120);
     vi.advanceTimersByTime(500);
     expect(readJSON<{ A: { bpm: number } }>("loops")?.A.bpm).toBe(91);
-    // Only what changed is written
-    expect(readJSON("samples")).toBeNull();
   });
 
   it("flushes pending changes when stopped", () => {
@@ -35,11 +33,19 @@ describe("persistSong", () => {
     expect(readJSON<{ B: { bpm: number } }>("loops")?.B.bpm).toBe(70);
   });
 
-  it("writes nothing when the song never changed", () => {
+  it("saves the song it starts with, so a new random song survives a reload", () => {
     setup();
+    expect(readJSON("samples")).toEqual({});
+    expect(readJSON("loops")).not.toBeNull();
+  });
+
+  it("does not write again when nothing changed", () => {
+    setup();
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
     window.dispatchEvent(new Event("pagehide"));
-    expect(readJSON("loops")).toBeNull();
-    expect(readJSON("samples")).toBeNull();
+    vi.advanceTimersByTime(1000);
+    expect(setItem).not.toHaveBeenCalled();
+    setItem.mockRestore();
   });
 
   it("flushes when the page is hidden", () => {

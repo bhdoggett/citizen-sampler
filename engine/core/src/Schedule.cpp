@@ -18,6 +18,8 @@ std::vector<ScheduledHit> buildSchedule(const PadState& pad, Loop loop, const Lo
         // A hit snapped onto the loop end plays at the start. The snapped time
         // and the loop length can differ in the last float digit.
         if (std::abs(time - loopEnd) < 1e-9) time = 0.0;
+        // A hit past the loop end, left from a longer loop, is never reached
+        if (time > loopEnd) continue;
 
         const bool duplicate = std::any_of(hits.begin(), hits.end(), [&](const ScheduledHit& h) {
             return h.time == time && h.note == event.note;

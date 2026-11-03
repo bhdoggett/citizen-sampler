@@ -94,6 +94,12 @@ describe("getScheduleEvents", () => {
     expect(result.map(([, e]) => e.note)).toEqual(["C4", "E4"]);
   });
 
+  it("drops hits past the loop end, which the loop never reaches", () => {
+    // Recorded in a longer loop, then bars were cut to 2 (4 s)
+    const result = getScheduleEvents(makeData([event(192), event(2000)]), "A", liveTiming);
+    expect(result.map(([time]) => time)).toEqual([0.5]);
+  });
+
   it("returns an empty array when the loop has no events", () => {
     expect(getScheduleEvents(makeData([]), "A", liveTiming)).toEqual([]);
   });

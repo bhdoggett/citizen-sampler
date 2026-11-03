@@ -372,9 +372,12 @@ export class ToneEngine implements Engine {
       );
       voice.sampler.triggerAttackRelease(event.note, duration, time, offset, event.velocity);
       const note = String(event.note);
-      const draw = Tone.getDraw();
-      draw.schedule(() => this.emit({ type: "voiceStarted", padId, note }), time);
-      draw.schedule(() => this.emit({ type: "voiceEnded", padId, note }), time + duration);
+      // Draw lines the start up with the sound, but drops callbacks that
+      // run late (a background tab, a busy main thread). The end must never
+      // be dropped or the pad stays lit, so it uses a plain timer.
+      Tone.getDraw().schedule(() => this.emit({ type: "voiceStarted", padId, note }), time);
+      const endMs = (time - Tone.now() + duration) * 1000;
+      setTimeout(() => this.emit({ type: "voiceEnded", padId, note }), Math.max(0, endMs));
     }, events);
     part.start(0);
     entry.part = part;

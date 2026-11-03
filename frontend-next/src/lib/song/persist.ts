@@ -5,8 +5,10 @@ import type { SongState, SongStore } from "./store";
 // doesn't write on every step. Pending edits are flushed when the page is
 // hidden or persistence stops.
 export function persistSong(store: SongStore, delayMs = 500): () => void {
-  // The state loaded at start is already saved
+  // Save the starting song right away: a new random song exists nowhere else
   let written: SongState = store.getState();
+  writeJSON("samples", written.samples);
+  writeJSON("loops", written.loops);
   let timer: ReturnType<typeof setTimeout> | null = null;
 
   const flush = () => {

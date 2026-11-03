@@ -141,12 +141,6 @@ const AudioSession = ({ children }: React.PropsWithChildren) => {
     engine.send({ type: "setCurrentLoop", loop: currentLoop });
   }, [engine, currentLoop]);
 
-  // The analyser feeding the tuner follows the selected pad
-  useEffect(() => {
-    engine.send({ type: "setTunerPad", padId: selectedSampleId });
-    return () => engine.send({ type: "setTunerPad", padId: null });
-  }, [engine, selectedSampleId]);
-
   const setAllSampleData = useCallback<
     React.Dispatch<React.SetStateAction<Record<string, SampleTypeFE>>>
   >((action) => store.updateSamples((prev) => resolveAction(action, prev)), [store]);

@@ -11,6 +11,9 @@
 
 namespace citizen {
 
+// The same audio back to front, for reverse playback
+std::shared_ptr<const SampleBuffer> reversedCopy(const SampleBuffer& buffer);
+
 // One pad's voices and FX chain, in Tone's order: mute/solo gain, pitch
 // shift, high-pass, low-pass, then pan and volume.
 class PadChannel {
@@ -18,7 +21,9 @@ public:
     static constexpr int kMaxVoices = 16;
 
     void prepare(double sampleRate, int maxBlockFrames);
-    void setBuffer(std::shared_ptr<const SampleBuffer> buffer);
+    // `reversed` is made here when not given
+    void setBuffer(std::shared_ptr<const SampleBuffer> buffer,
+                   std::shared_ptr<const SampleBuffer> reversed = nullptr);
     void setSettings(const SampleSettings& settings);
     void setMuteGain(float gain) { muteGain_ = gain; }
 

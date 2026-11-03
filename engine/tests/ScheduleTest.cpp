@@ -88,3 +88,9 @@ TEST_CASE("calcRenderDuration") {
     CHECK(calcRenderDuration({at(3.5, std::nullopt)}, 4) == doctest::Approx(4));
     CHECK(calcRenderDuration({}, 4) == doctest::Approx(4));
 }
+
+TEST_CASE("buildSchedule drops hits past the loop end, which the loop never reaches") {
+    // Recorded in a longer loop, then bars were cut to 2 (4 s)
+    auto hits = buildSchedule(padWith({hit(192), hit(2000)}), Loop::A, kLive);
+    CHECK(times(hits) == std::vector<double>{0.5});
+}
