@@ -12,9 +12,22 @@ namespace citizen {
 namespace {
 constexpr int kFirstPadNote = 36; // C1 plays pad 1
 
-juce::URL defaultUiUrl() {
+// CITIZEN_UI_URL points the WebView at a dev server. Otherwise release
+// builds serve the UI bundled into the binary, and dev builds without one
+// load the dev server on its default port.
+std::optional<juce::URL> uiUrlFromEnv() {
     const auto fromEnv = juce::SystemStats::getEnvironmentVariable("CITIZEN_UI_URL", {});
-    return juce::URL(fromEnv.isNotEmpty() ? fromEnv : "http://localhost:3000");
+    if (fromEnv.isNotEmpty()) return juce::URL(fromEnv);
+#if CITIZEN_BUNDLED_UI
+    return std::nullopt;
+#else
+    return juce::URL("http://localhost:3000");
+#endif
+}
+
+// Sample urls are absolute, but a relative one resolves against the site
+juce::URL sampleBaseUrl(const std::optional<juce::URL>& uiUrl) {
+    return uiUrl ? *uiUrl : juce::URL("https://www.citizensampler.com");
 }
 
 std::shared_ptr<const SampleBuffer> decodeBinary(const void* data, int size) {
@@ -25,8 +38,8 @@ std::shared_ptr<const SampleBuffer> decodeBinary(const void* data, int size) {
 
 CitizenProcessor::CitizenProcessor()
     : juce::AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      uiUrl_(defaultUiUrl()),
-      loader_(uiUrl_) {
+      uiUrl_(uiUrlFromEnv()),
+      loader_(sampleBaseUrl(uiUrl_)) {
     engine_.setMetronomeBuffers(decodeBinary(BinaryData::hiblock_wav, BinaryData::hiblock_wavSize),
                                 decodeBinary(BinaryData::loblock_wav, BinaryData::loblock_wavSize));
     startTimerHz(4);

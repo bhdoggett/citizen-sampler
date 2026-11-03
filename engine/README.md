@@ -29,4 +29,21 @@ cmake --build engine/build-juce --target CitizenSampler_Standalone
 ```
 
 In development the WebView loads `http://localhost:3000`, so run
-`pnpm dev` in `frontend-next` first.
+`pnpm dev` in `frontend-next` first. Set `CITIZEN_UI_URL` to use another
+address, and `CITIZEN_LOG_BRIDGE=1` to print every command and event.
+
+## Bundle the UI
+
+Release builds carry the web UI inside the binary, served from JUCE's own
+origin (`juce://juce.backend` on macOS, `https://juce.backend` on Windows), so
+they need no server. Export the UI as static files, then point CMake at them:
+
+```sh
+(cd frontend-next && NEXT_OUTPUT=export NEXT_PUBLIC_API_BASE_URL=https://api.citizensampler.com pnpm build)
+cmake -S engine -B engine/build-release -G Ninja -DCITIZEN_BUILD_JUCE=ON \
+  -DCMAKE_BUILD_TYPE=Release -DCITIZEN_UI_DIR="$PWD/frontend-next/out"
+cmake --build engine/build-release
+```
+
+`CITIZEN_UI_URL` still overrides the bundled UI, which helps when debugging a
+release build against the dev server.

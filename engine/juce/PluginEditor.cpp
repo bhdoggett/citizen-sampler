@@ -1,6 +1,23 @@
 #include "PluginEditor.h"
 
+#if CITIZEN_BUNDLED_UI
+#include <UiData.h>
+#endif
+
+#include "UiBundle.h"
+
 namespace citizen {
+
+namespace {
+const UiBundle& bundledUi() {
+#if CITIZEN_BUNDLED_UI
+    static const UiBundle bundle(UiData::ui_zip, static_cast<size_t>(UiData::ui_zipSize));
+#else
+    static const UiBundle bundle(nullptr, 0);
+#endif
+    return bundle;
+}
+} // namespace
 
 juce::WebBrowserComponent::Options CitizenEditor::browserOptions(CitizenProcessor& owner) {
     using Options = juce::WebBrowserComponent::Options;
@@ -9,6 +26,11 @@ juce::WebBrowserComponent::Options CitizenEditor::browserOptions(CitizenProcesso
         .withWinWebView2Options(Options::WinWebView2{}.withUserDataFolder(
             juce::File::getSpecialLocation(juce::File::tempDirectory).getChildFile("CitizenSampler")))
         .withNativeIntegrationEnabled()
+        .withResourceProvider([](const juce::String& path) -> std::optional<juce::WebBrowserComponent::Resource> {
+            auto file = bundledUi().find(path);
+            if (!file) return std::nullopt;
+            return juce::WebBrowserComponent::Resource{std::move(file->data), file->mimeType};
+        })
         .withKeepPageLoadedWhenBrowserIsHidden()
         .withEventListener("engineCommand", [&owner](const juce::var& json) {
             owner.handleCommand(json);
@@ -27,7 +49,8 @@ CitizenEditor::CitizenEditor(CitizenProcessor& owner)
       processor_(owner),
       browser_(browserOptions(owner)) {
     addAndMakeVisible(browser_);
-    browser_.goToURL(processor_.uiUrl().toString(true));
+    const auto url = processor_.uiUrl();
+    browser_.goToURL(url ? url->toString(true) : juce::WebBrowserComponent::getResourceProviderRoot());
     setResizable(true, true);
     setResizeLimits(800, 600, 2400, 1600);
     setSize(1280, 820);

@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include <mutex>
+#include <optional>
 #include <set>
 
 #include "SampleLoader.h"
@@ -27,7 +28,8 @@ public:
     juce::Array<juce::var> takeEvents();
     // { sampleRate, channels } or void when there is nothing to render
     juce::var renderStem(const juce::String& padId, const juce::String& loop);
-    juce::URL uiUrl() const { return uiUrl_; }
+    // Where the WebView loads the UI from, or nothing to serve the bundled one
+    std::optional<juce::URL> uiUrl() const { return uiUrl_; }
 
     // ---- juce::AudioProcessor ----
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -63,7 +65,7 @@ private:
 
     std::mutex engineLock_;
     Engine engine_;
-    juce::URL uiUrl_;
+    std::optional<juce::URL> uiUrl_;
     SampleLoader loader_;
 
     // Loads in flight, as padId + url, so a pad isn't fetched twice
