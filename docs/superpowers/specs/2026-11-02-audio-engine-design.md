@@ -228,8 +228,12 @@ All payloads are plain JSON values except `renderStem`'s result.
 - **Editor**: a `WebBrowserComponent` with native integration.
   - `engineCommand(json)` is a native function.
   - Engine events go to the page as the `engineEvent` event.
-  - The dev URL is `http://localhost:3000`.
-  - Bundling the static UI is a follow-up.
+  - Release builds bundle the UI's static export (`NEXT_OUTPUT=export`) as a
+    zip and serve it through JUCE's resource provider, from
+    `juce://juce.backend` (macOS) or `https://juce.backend` (Windows). The
+    backend allows both origins.
+  - Without a bundled UI, or with `CITIZEN_UI_URL` set, it loads a dev
+    server (default `http://localhost:3000`).
 
 ## Calls I made (user asleep; review these)
 
@@ -300,14 +304,16 @@ Built on this branch:
   engine, but the UI still loads its song from localStorage. The UI needs a
   `songRestored` event, or a request for the host's song, so a DAW session
   and the UI agree.
-- **UI bundling:** the WebView loads a dev server. Ship the static export
-  (`next build` already prerenders `/` as static) through a JUCE resource
-  provider.
+- **Login in the app:** Google sign-in redirects back to the website, not
+  the app. The desktop app needs its own flow, such as the system browser
+  plus a callback the app listens for.
+- **Storage per host:** on macOS each DAW gives the plugin's WebView its own
+  storage, so the UI's saved song differs between the standalone app and
+  each host. The session-state handshake above fixes this for plugins.
 - **Plugin features:** multi-out buses, host tempo and transport sync, MIDI
   out and AAX.
 - **Real-time safety:** lock-free command and event queues (see Threading).
-- **Validation:** run `auval` and the VST3 validator. These install into the
-  user's plugin folders, so they weren't run unattended.
+- **Validation:** `auval` passes. Run the VST3 validator next.
 - **Waveform:** `Waveform` and `AudioSnippetVisualizer` still decode audio in
   the UI for peaks. That works in the WebView, but downloads each sample
   twice in the desktop app.

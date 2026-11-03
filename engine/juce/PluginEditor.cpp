@@ -24,7 +24,10 @@ juce::WebBrowserComponent::Options CitizenEditor::browserOptions(CitizenProcesso
     return Options{}
         .withBackend(Options::Backend::webview2)
         .withWinWebView2Options(Options::WinWebView2{}.withUserDataFolder(
-            juce::File::getSpecialLocation(juce::File::tempDirectory).getChildFile("CitizenSampler")))
+            // Holds the UI's saved song (localStorage), so not the temp folder
+            juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                .getChildFile("Doggett Systems")
+                .getChildFile("Citizen Sampler")))
         .withNativeIntegrationEnabled()
         .withResourceProvider([](const juce::String& path) -> std::optional<juce::WebBrowserComponent::Resource> {
             auto file = bundledUi().find(path);
