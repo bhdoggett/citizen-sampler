@@ -29,8 +29,7 @@ Fixed on `main`, so no action is needed:
   `backend/src/routes/beats.ts`.
 - Google Drive query injection: Drive removed; drums are served from R2.
 
-Done by the refactor plans, so only item 1 (`AudioEngine` and the
-`AudioContext` split) is still open:
+Every item is now done:
 
 - `docs/superpowers/plans/2026-10-26-engine-path-refactor.md` (PR #4): 2a,
   2b, 2f, 3.1–3.5, `solosExist` from 2e, the stale closure, the `"useClient"`
@@ -41,6 +40,9 @@ Done by the refactor plans, so only item 1 (`AudioEngine` and the
   3.9 (`lib/audio/defaults.ts`), 3.10 (`lib/constants/padLayout.ts`), 3.11
   (`lib/constants/loops.ts`), 3.12 (`lib/api/client.ts`), and the
   commented-out `Tone.start` block.
+- `docs/superpowers/specs/2026-11-02-audio-engine-design.md`: item 1. The
+  engine boundary (`lib/engine`), the song store (`lib/song`), and
+  `AudioContext` cut down to session state.
 
 The sections below describe the code as it was audited.
 

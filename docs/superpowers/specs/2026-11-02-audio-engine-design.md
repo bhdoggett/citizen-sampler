@@ -201,11 +201,18 @@ All payloads are plain JSON values except `renderStem`'s result.
     - A delay-line pitch shifter, the same design as `Tone.PitchShift`.
 - **`Engine` class**:
   - `handle(Command)`.
-  - `process(float* const* out, int numChannels, int numFrames)`: real-time
-    safe. No allocation and no locks on the audio path. Commands are queued
-    and applied at block start.
-  - `drainEvents(callback)`.
-  - `renderStem(padId, loop)`.
+  - `process(float* const* out, int numChannels, int numFrames)`.
+  - `takeEvents()`.
+  - `stemJob(padId, loop)` plus the free `renderStem(job, sampleRate)`, so a
+    host can render outside its lock.
+- **Threading (v1):** the core is single-threaded.
+  - The JUCE processor guards it with one mutex. The message thread locks it
+    to apply commands.
+  - The audio thread only tries the lock, and outputs one silent block if the
+    lock is busy.
+  - Commands still allocate (pad state, schedules), and events are pushed on
+    the audio thread.
+  - Moving to lock-free command and event queues is a follow-up.
 - **The core never decodes files.** The host hands it decoded buffers with
   `setPadBuffer(padId, SampleBuffer)`.
 
@@ -238,3 +245,65 @@ All payloads are plain JSON values except `renderStem`'s result.
 5. `JuceBridgeEngine.renderStem` sends the request through the bridge. Writing
    stems to disk natively is deferred.
 6. The plugin's MIDI note map, 36–51 for pads 1–16, is a placeholder.
+
+## Status (end of first pass)
+
+Built on this branch:
+
+- **Web: song store, engine protocol and view, live input, ToneEngine and
+  JuceBridgeEngine.** Components now use engine commands and store hooks.
+  - The web build has no Tone nodes or `samplersRef` outside
+    `lib/engine/tone`.
+  - Smoke-tested in Chrome: loading, pad hits, recording, playback, the
+    sequencer playhead, sample preview and a settings slider.
+- **C++ core with 68 doctest cases.** The rule tests port the TypeScript
+  cases.
+- **JUCE app: Standalone, AU and VST3 build.** The standalone app ran against
+  the dev UI. The UI's commands reached the engine, and all 16 pads loaded
+  through `SampleLoader`.
+
+### Deviations from Tone.js in the C++ engine
+
+- **Pitch shift:**
+  - 0 semitones bypasses it. Tone adds a fixed delay and comb filtering
+    there.
+  - Other values shift by the exact ratio. Tone's formula scales the shift by
+    1.2, and is odd for negative values.
+- **Fades:** attack and release fades are linear. Tone's sampler uses its
+  "exponential" curve.
+- **Recording position:** a live press records the transport position
+  without Tone's 0.1 s look-ahead. The sound also starts without look-ahead,
+  so recording and playback stay consistent.
+
+### Behavior changes on the web
+
+- **Hit length:** a recorded hit's duration is the time from press to release
+  on the transport's seconds clock.
+  - Before, the start was read in ticks and the release in seconds. The two
+    can round differently, so a very short tap could be saved as a
+    whole-loop hit.
+  - The old cap at the sample end point compared a loop position with a
+    sample position. It is gone; playback already caps each hit at the
+    sample's length.
+- **MIDI highlight:** a pad stays lit while its MIDI key is held, not only
+  while its sound plays.
+
+### Follow-ups
+
+- **Tuner:** the C++ engine needs pitch detection (FFT). `setTunerPad` is a
+  no-op there today.
+- **Session state:** the plugin restores its saved pads and loops into the
+  engine, but the UI still loads its song from localStorage. The UI needs a
+  `songRestored` event, or a request for the host's song, so a DAW session
+  and the UI agree.
+- **UI bundling:** the WebView loads a dev server. Ship the static export
+  (`next build` already prerenders `/` as static) through a JUCE resource
+  provider.
+- **Plugin features:** multi-out buses, host tempo and transport sync, MIDI
+  out and AAX.
+- **Real-time safety:** lock-free command and event queues (see Threading).
+- **Validation:** run `auval` and the VST3 validator. These install into the
+  user's plugin folders, so they weren't run unattended.
+- **Waveform:** `Waveform` and `AudioSnippetVisualizer` still decode audio in
+  the UI for peaks. That works in the WebView, but downloads each sample
+  twice in the desktop app.
