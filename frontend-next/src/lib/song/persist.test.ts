@@ -24,7 +24,8 @@ describe("persistSong", () => {
     expect(readJSON("loops")).toBeNull();
     vi.advanceTimersByTime(500);
     expect(readJSON<{ A: { bpm: number } }>("loops")?.A.bpm).toBe(91);
-    expect(readJSON("samples")).toEqual({});
+    // Only what changed is written
+    expect(readJSON("samples")).toBeNull();
   });
 
   it("flushes pending changes when stopped", () => {
@@ -32,6 +33,13 @@ describe("persistSong", () => {
     store.updateLoops((prev) => ({ ...prev, B: { ...prev.B!, bpm: 70 } }));
     stop();
     expect(readJSON<{ B: { bpm: number } }>("loops")?.B.bpm).toBe(70);
+  });
+
+  it("writes nothing when the song never changed", () => {
+    setup();
+    window.dispatchEvent(new Event("pagehide"));
+    expect(readJSON("loops")).toBeNull();
+    expect(readJSON("samples")).toBeNull();
   });
 
   it("flushes when the page is hidden", () => {

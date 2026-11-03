@@ -26,8 +26,7 @@ import {
   useLoops,
   useSongStore,
 } from "src/lib/song/react";
-import { getEngine } from "src/lib/engine/createEngine";
-import { createEngineView } from "src/lib/engine/view";
+import { getEngine, getEngineView } from "src/lib/engine/createEngine";
 import { connectStoreToEngine } from "src/lib/engine/sync";
 import {
   EngineProvider,
@@ -104,13 +103,12 @@ function loadSavedSong() {
 
 export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const engine = getEngine();
-  const [view] = useState(() => createEngineView((listener) => engine.subscribe(listener)));
+  const view = getEngineView();
   const [store] = useState(() => createSongStore(loadSavedSong()));
 
   // The engine follows the song, and the song is saved as it changes
   useEffect(() => connectStoreToEngine(store, engine), [store, engine]);
   useEffect(() => persistSong(store), [store]);
-  useEffect(() => () => view.dispose(), [view]);
 
   return (
     <SongStoreProvider store={store}>

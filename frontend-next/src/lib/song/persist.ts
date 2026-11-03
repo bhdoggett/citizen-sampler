@@ -5,15 +5,16 @@ import type { SongState, SongStore } from "./store";
 // doesn't write on every step. Pending edits are flushed when the page is
 // hidden or persistence stops.
 export function persistSong(store: SongStore, delayMs = 500): () => void {
-  let written: SongState | null = null;
+  // The state loaded at start is already saved
+  let written: SongState = store.getState();
   let timer: ReturnType<typeof setTimeout> | null = null;
 
   const flush = () => {
     if (timer !== null) clearTimeout(timer);
     timer = null;
     const state = store.getState();
-    if (state.samples !== written?.samples) writeJSON("samples", state.samples);
-    if (state.loops !== written?.loops) writeJSON("loops", state.loops);
+    if (state.samples !== written.samples) writeJSON("samples", state.samples);
+    if (state.loops !== written.loops) writeJSON("loops", state.loops);
     written = state;
   };
 

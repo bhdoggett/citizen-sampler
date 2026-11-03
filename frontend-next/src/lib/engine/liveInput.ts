@@ -1,6 +1,5 @@
 import { resolveRelease } from "src/lib/audio/padRelease";
-import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
-import { wrapTicks, type LoopTiming } from "src/lib/audio/util/timing";
+import { elapsedInLoop, wrapTicks, type LoopTiming } from "src/lib/audio/util/timing";
 import type { LoopName } from "src/types/audioTypes";
 import type { EngineEvent } from "./protocol";
 
@@ -24,7 +23,14 @@ export type LiveInputDeps = {
   clearTimer: (handle: TimerHandle) => void;
 };
 
-type PendingHit = { loop: LoopName; startTicks: number; velocity: number };
+type PendingHit = {
+  loop: LoopName;
+  startTicks: number;
+  // Transport seconds at press. The duration is measured on this one clock,
+  // since ticks and seconds can round to slightly different moments.
+  startSeconds: number;
+  velocity: number;
+};
 
 type HeldNote = {
   padId: string;
@@ -80,7 +86,12 @@ export function createLiveInput(deps: LiveInputDeps): LiveInput {
       audioReleased: false,
       timer: null,
       pending: position
-        ? { loop: position.loop, startTicks: position.ticks, velocity }
+        ? {
+            loop: position.loop,
+            startTicks: position.ticks,
+            startSeconds: deps.transportSeconds(),
+            velocity,
+          }
         : null,
     };
     entry.timer = deps.setTimer(() => {
@@ -114,13 +125,9 @@ export function createLiveInput(deps: LiveInputDeps): LiveInput {
     const timing = deps.loopTiming(pending.loop);
     if (!timing) return;
 
+    // Playback caps the duration at the sample's length, so it isn't capped here
     const startTime = wrapTicks(pending.startTicks, timing);
-    const duration = calcEventDuration(
-      startTime,
-      deps.transportSeconds(),
-      timing,
-      settings.end,
-    );
+    const duration = elapsedInLoop(pending.startSeconds, deps.transportSeconds(), timing);
     deps.emit({
       type: "hitRecorded",
       padId,

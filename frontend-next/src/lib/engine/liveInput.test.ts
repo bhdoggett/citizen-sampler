@@ -174,6 +174,27 @@ describe("live input", () => {
     ]);
   });
 
+  it("records a quick tap as a short hit, not a whole loop", () => {
+    const input = createLiveInput(h.deps);
+    // The tick count can round past the seconds clock at press time
+    h.set({ ticks: 384, seconds: 0.999 });
+    input.press("pad-1", "C4", 1);
+    h.set({ seconds: 1.0 });
+    input.release("pad-1", "C4");
+    const [hit] = hits(h.events);
+    expect(hit.type === "hitRecorded" && hit.event.duration).toBeCloseTo(0.001);
+  });
+
+  it("measures a hit held across the loop end", () => {
+    const input = createLiveInput(h.deps);
+    h.set({ ticks: 1440, seconds: 3.75 });
+    input.press("pad-1", "C4", 1);
+    h.set({ seconds: 0.25 });
+    input.release("pad-1", "C4");
+    const [hit] = hits(h.events);
+    expect(hit.type === "hitRecorded" && hit.event.duration).toBeCloseTo(0.5);
+  });
+
   it("folds a start read just past the loop end back to the top", () => {
     const input = createLiveInput(h.deps);
     h.set({ ticks: 1536 + 10, seconds: 0.2 });

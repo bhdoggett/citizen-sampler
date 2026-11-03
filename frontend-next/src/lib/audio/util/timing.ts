@@ -18,3 +18,14 @@ export function loopDurationSeconds({ bpm, beats, bars }: LoopTiming): number {
 export function wrapTicks(ticks: number, { beats, bars }: LoopTiming): number {
   return ticks % (bars * beats * PPQ);
 }
+
+// Seconds from one transport reading to a later one. A negative gap means
+// the transport wrapped at the loop end in between.
+export function elapsedInLoop(
+  fromSeconds: number,
+  toSeconds: number,
+  timing: LoopTiming,
+): number {
+  const elapsed = toSeconds - fromSeconds;
+  return elapsed >= 0 ? elapsed : elapsed + loopDurationSeconds(timing);
+}
