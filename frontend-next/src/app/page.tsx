@@ -180,7 +180,7 @@ export default function Home() {
                 </div>
 
                 <div className={styles.views}>
-                  {/* DrumMachine must stay mounted for Tone.Part playback scheduling */}
+                  {/* DrumMachine stays mounted so its pad hotkeys work from the sequencer view */}
                   <div
                     ref={padsViewRef}
                     className={sequencerVisible ? styles.hidden : styles.padsView}

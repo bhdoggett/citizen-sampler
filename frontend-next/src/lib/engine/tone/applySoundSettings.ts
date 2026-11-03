@@ -1,4 +1,4 @@
-import type { SamplerWithFX } from "src/types/SamplerWithFX";
+import type { SamplerWithFX } from "./SamplerWithFX";
 import type { SampleSettingsFE } from "src/types/audioTypesFE";
 
 // Push a pad's sound settings onto its sampler and FX chain. Mute/solo gain

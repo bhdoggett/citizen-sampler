@@ -25,8 +25,6 @@ const LoadSong: React.FC = () => {
     setSongId,
     setAllSampleData,
     setAllLoopSettings,
-    loadSamplersToRef,
-    storeAudioInIndexedDB,
   } = useAudioContext();
   const { isAuthenticated, token } = useAuthContext();
   const { openDialog } = useUIContext();
@@ -90,14 +88,9 @@ const LoadSong: React.FC = () => {
 
       setSongId(song._id ?? "");
       setSongTitle(title);
+      // The engine loads the samples as it follows the store
       setAllSampleData(samples);
       setAllLoopSettings(normalizedLoops as SongTypeFE["loops"]);
-
-      await loadSamplersToRef(samples);
-      // Store all new samples in IndexedDB
-      for (const [sampleId, sample] of Object.entries(samples)) {
-        await storeAudioInIndexedDB(sample.url, sampleId);
-      }
       message = result.message;
     } catch (err) {
       console.error("Error loading song from DB:", err);

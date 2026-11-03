@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { SamplerWithFX } from "src/types/SamplerWithFX";
+import type { SamplerWithFX } from "./SamplerWithFX";
 import type { SampleSettingsFE } from "src/types/audioTypesFE";
 import { applySoundSettings } from "./applySoundSettings";
 

@@ -27,8 +27,8 @@ function fakeEngine() {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    start: async () => {},
-    renderStem: async () => null,
+    start: () => Promise.resolve(),
+    renderStem: () => Promise.resolve(null),
     dispose: () => {},
   };
   const emit = (event: EngineEvent) => listeners.forEach((l) => l(event));

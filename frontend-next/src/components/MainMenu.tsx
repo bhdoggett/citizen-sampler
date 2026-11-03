@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import * as Tone from "tone";
 import { useAuthContext } from "../app/contexts/AuthContext";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import { useUIContext } from "../app/contexts/UIContext";
@@ -40,7 +39,6 @@ const Menu: React.FC = () => {
     initLocSamplesFromAllCollections,
     initKitSamples,
     setAllSampleData,
-    loadSamplersToRef,
   } = useAudioContext();
   const downloadAllWavStems = useDownloadWavStems();
   const router = useRouter();
@@ -52,14 +50,12 @@ const Menu: React.FC = () => {
     if (setError) setError("Session expired. Please log in again.");
   };
 
-  const handleReset = async () => {
+  const handleReset = () => {
     setAllLoopSettings(defaultLoopSettings());
     setCurrentLoop("A");
     const locSamples = initLocSamplesFromAllCollections();
     const kitSamples = initKitSamples("mpc");
     setAllSampleData({ ...locSamples, ...kitSamples });
-
-    await loadSamplersToRef({ ...locSamples, ...kitSamples });
   };
 
   const handleSaveSong = async () => {
@@ -120,7 +116,6 @@ const Menu: React.FC = () => {
 
   const handleDownloadWavStems = async () => {
     await downloadAllWavStems();
-    Tone.start();
     setMenuOpen(false);
   };
 

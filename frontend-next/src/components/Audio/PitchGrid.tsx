@@ -2,6 +2,7 @@
 import { useState, useRef } from "react";
 import { useAudioContext } from "src/app/contexts/AudioContext";
 import PitchPad from "./PitchPad";
+import { usePad } from "src/lib/song/react";
 import useTouchPads, { type PadHandlers } from "src/app/hooks/useTouchPads";
 import styles from "./PitchGrid.module.css";
 import {
@@ -17,8 +18,8 @@ const SCALES: { name: ScaleName; label: string }[] = [
 ];
 
 const PitchGrid: React.FC = () => {
-  const { selectedSampleId, allSampleData, samplers } = useAudioContext();
-  const { baseNote } = allSampleData[selectedSampleId].settings;
+  const { selectedSampleId } = useAudioContext();
+  const { baseNote } = usePad(selectedSampleId).settings;
   const pitchPadsRef = useRef<Record<string, HTMLButtonElement | null>>({});
   const pitchPadsHandlersRef = useRef<Record<string, PadHandlers | null>>({});
   const [scale, setScale] = useState<ScaleName>("chromatic");
@@ -43,12 +44,10 @@ const PitchGrid: React.FC = () => {
 
       <div className={styles.grid}>
           {gridNotes.map((note, i) => {
-            const samplerObj = samplers[selectedSampleId];
             return (
               <PitchPad
                 key={`${note}-${i}`}
                 note={note}
-                sampler={samplerObj?.sampler ?? null}
                 pitchPadsRef={pitchPadsRef}
                 ref={(el) => {
                   pitchPadsHandlersRef.current[note] = el as PadHandlers | null;

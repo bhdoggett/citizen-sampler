@@ -1,4 +1,4 @@
-import * as Tone from "tone";
+import { PPQ } from "src/lib/audio/util/timing";
 import type { LoopSettingsFE } from "src/types/audioTypesFE";
 import type { Ticks } from "tone/build/esm/core/type/Units";
 
@@ -55,7 +55,7 @@ export function ticksToGridPosition(
 ): number {
   // Convert ticks to seconds using the loop's BPM (not transport BPM)
   const { bpm } = loopSettings;
-  const ppq = Tone.getTransport().PPQ; // Pulses per quarter note
+  const ppq = PPQ; // Pulses per quarter note
   const secondsPerTick = 60 / (bpm * ppq);
   const seconds = (startTime as number) * secondsPerTick;
 
@@ -82,7 +82,7 @@ export function gridPositionToTicks(
   const seconds = columnIndex * cellDuration;
 
   // Convert seconds to ticks using the loop's BPM
-  const ppq = Tone.getTransport().PPQ;
+  const ppq = PPQ;
   const ticksPerSecond = (bpm * ppq) / 60;
   return Math.round(seconds * ticksPerSecond) as Ticks;
 }

@@ -1,6 +1,5 @@
 "use client";
 import { useAudioContext } from "../../app/contexts/AudioContext";
-import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { FolderOpen } from "lucide-react";
 import type { SampleSettingsFE } from "src/types/audioTypesFE";
@@ -15,65 +14,30 @@ import { useUIContext } from "../../app/contexts/UIContext";
 import { QuantizeValue } from "../../types/audioTypes";
 import { usePitchDetector } from "../../app/hooks/usePitchDetector";
 import PitchMeter from "./PitchMeter";
-import { applySoundSettings } from "../../lib/audio/applySoundSettings";
-import { resolveSyncSettings } from "../../lib/audio/resolveSyncSettings";
+import { usePad } from "src/lib/song/react";
 import styles from "./SampleSettings.module.css";
 
 const SampleSettings = () => {
-  const {
-    selectedSampleId,
-    allSampleData,
-    samplersRef,
-    samplers,
-    updateSamplerStateSettings,
-  } = useAudioContext();
+  const { selectedSampleId, updateSamplerStateSettings } = useAudioContext();
   const { openDialog } = useUIContext();
+  const pad = usePad(selectedSampleId);
+  const { settings } = pad;
 
   const { setSampleMute, setSampleSolo } = useMutesAndSolos();
+  const pitchResult = usePitchDetector(selectedSampleId, settings.pitch ?? 0);
+  const isSoloed = settings.solo;
+  const isMuted = settings.mute;
 
-  const analyser = samplers[selectedSampleId]?.analyser ?? null;
+  const handleToggleSolo = () => setSampleSolo(selectedSampleId, !isSoloed);
+  const handleToggleMute = () => setSampleMute(selectedSampleId, !isMuted);
 
-  // Which pad `settings` was loaded from. Lags selectedSampleId by one
-  // render after a selection change, so effects can skip stale values.
-  const [settingsPadId, setSettingsPadId] = useState<string | null>(null);
-  const [settings, setSettings] = useState<Partial<SampleSettingsFE> | null>(
-    null,
-  );
-
-  const pitchResult = usePitchDetector(analyser, settings?.pitch ?? 0);
-  const [isSoloed, setIsSoloed] = useState<boolean>(false);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
-
-  // combine local and global state updates into one function for event listener
-  const handleToggleSolo = () => {
-    if (isSoloed) {
-      setSampleSolo(selectedSampleId, false);
-      setIsSoloed(false);
-    } else {
-      setSampleSolo(selectedSampleId, true);
-      setIsSoloed(true);
-    }
-  };
-
-  const handleToggleMute = () => {
-    if (isMuted) {
-      setSampleMute(selectedSampleId, false);
-      setIsMuted(false);
-    } else {
-      setSampleMute(selectedSampleId, true);
-      setIsMuted(true);
-    }
-  };
-
-  // Update settings in this component's state by setting type
+  // Edits go straight to the song; the engine applies them as it follows,
+  // and saving to localStorage is debounced there
   const updateSetting = <K extends keyof SampleSettingsFE>(
     key: K,
     value: SampleSettingsFE[K],
   ) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    updateSamplerStateSettings(selectedSampleId, { [key]: value });
   };
 
   // Render Hz or kHz based on value
@@ -83,75 +47,14 @@ const SampleSettings = () => {
     return `${value.toFixed(0)} Hz`;
   };
 
-  // Initialize settings with selected sample's settings
-  useEffect(() => {
-    if (selectedSampleId && allSampleData[selectedSampleId]) {
-      setSettings(allSampleData[selectedSampleId].settings);
-      setSettingsPadId(selectedSampleId);
-    }
-  }, [selectedSampleId, allSampleData]);
-
-  // Keep the selected sampler's sound in sync with the UI before the
-  // debounced write to allSampleData lands
-  useEffect(() => {
-    const samplerWithFX = samplersRef.current[selectedSampleId];
-    const fullSettings = resolveSyncSettings(
-      selectedSampleId,
-      settingsPadId,
-      settings,
-      allSampleData[selectedSampleId]?.settings
-    );
-    if (!samplerWithFX || !fullSettings) return;
-    applySoundSettings(samplerWithFX, fullSettings);
-  }, [samplersRef, selectedSampleId, settingsPadId, settings, allSampleData]);
-
-  // Keep mute and solo rendering in sync with global state
-  useEffect(() => {
-    if (selectedSampleId && allSampleData[selectedSampleId]) {
-      const { mute, solo } = allSampleData[selectedSampleId].settings;
-      setIsMuted(mute);
-      setIsSoloed(solo);
-    }
-  }, [selectedSampleId, allSampleData]);
-
-  // update allSampleData when settings change
-  useEffect(() => {
-    if (
-      !selectedSampleId ||
-      !allSampleData[selectedSampleId] ||
-      settingsPadId !== selectedSampleId ||
-      settings === allSampleData[selectedSampleId].settings ||
-      settings === null
-    )
-      return;
-
-    const handler = setTimeout(() => {
-      updateSamplerStateSettings(selectedSampleId, settings);
-    }, 500);
-
-    return () => {
-      clearTimeout(handler); // cancel if settings change before debounceDelay
-    };
-  }, [
-    selectedSampleId,
-    settingsPadId,
-    allSampleData,
-    settings,
-    updateSamplerStateSettings,
-  ]);
-
-  if (!settings) {
-    return <p>Loading...</p>;
-  }
-
   return (
     <section className={styles.panel}>
       <div className={styles.source}>
         <span className={styles.collection}>
-          {allSampleData[selectedSampleId].collectionName}
+          {pad.collectionName}
         </span>
         <span className={styles.title}>
-          {allSampleData[selectedSampleId].title}
+          {pad.title}
         </span>
         <button
           onClick={() => {
@@ -165,7 +68,7 @@ const SampleSettings = () => {
         </button>
       </div>
 
-      <Waveform audioUrl={allSampleData[selectedSampleId].url} />
+      <Waveform audioUrl={pad.url} />
 
       <div id="settings" className={styles.controls}>
         <div className={styles.column}>

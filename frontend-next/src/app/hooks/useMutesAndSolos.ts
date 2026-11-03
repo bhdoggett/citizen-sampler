@@ -1,48 +1,21 @@
 "use client";
-import { useAudioContext } from "../contexts/AudioContext";
-import { SampleTypeFE } from "src/types/audioTypesFE";
+import { useSongStore } from "src/lib/song/react";
 
+// Mute and solo are mutually exclusive: turning one on turns the other off
 const useMutesAndSolos = () => {
-  const { allSampleData, setAllSampleData, solosExist } = useAudioContext();
+  const store = useSongStore();
 
-  // simplify soloed samples state updates
   const setSampleSolo = (id: string, value: boolean) => {
-    setAllSampleData((prev: Record<string, SampleTypeFE>) => {
-      return {
-        ...prev,
-        [id]: {
-          ...prev[id],
-          settings: {
-            ...prev[id].settings,
-            solo: value,
-            // Mute and solo are mutually exclusive
-            ...(value && { mute: false }),
-          },
-        },
-      };
-    });
+    store.setPadSettings(id, { solo: value, ...(value && { mute: false }) });
   };
 
-  // simplify muted samples state updates
   const setSampleMute = (id: string, value: boolean) => {
-    setAllSampleData((prev: Record<string, SampleTypeFE>) => {
-      return {
-        ...prev,
-        [id]: {
-          ...prev[id],
-          settings: {
-            ...prev[id].settings,
-            mute: value,
-            ...(value && { solo: false }),
-          },
-        },
-      };
-    });
+    store.setPadSettings(id, { mute: value, ...(value && { solo: false }) });
   };
 
   // remove solo from all samples
   const clearSolos = () => {
-    Object.keys(allSampleData).forEach((id) => {
+    Object.keys(store.getState().samples).forEach((id) => {
       setSampleSolo(id, false);
     });
   };
@@ -51,7 +24,6 @@ const useMutesAndSolos = () => {
     setSampleMute,
     setSampleSolo,
     clearSolos,
-    solosExist,
   };
 };
 

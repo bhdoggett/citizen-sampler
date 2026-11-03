@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { CSSProperties } from "react";
-import * as Tone from "tone";
+import type * as Tone from "tone";
 import { useAudioContext } from "../../app/contexts/AudioContext";
+import { useLastVoice } from "src/lib/engine/react";
+import { usePad } from "src/lib/song/react";
+import { getCachedAudioUrlFromIndexedDB } from "src/lib/audio/audioCache";
 import {
   decodeAudioUrl,
   extractPeaks,
@@ -39,14 +42,11 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
 
   const {
     selectedSampleId,
-    allSampleData,
     updateSamplerStateSettings,
-    storeAudioInIndexedDB,
-    getCachedAudioUrlFromIndexedDB,
-    samplersRef,
   } = useAudioContext();
+  const lastVoice = useLastVoice(selectedSampleId);
 
-  const { settings } = allSampleData[selectedSampleId];
+  const { settings } = usePad(selectedSampleId);
 
   // Playhead
   const playheadRef = useRef<HTMLDivElement>(null);
@@ -56,15 +56,11 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
 
-  // Stable refs so the init effect only runs when audioUrl changes
+  // Read by the load effect, which should only run when audioUrl changes
   const selectedSampleIdRef = useRef(selectedSampleId);
-  const getCachedRef = useRef(getCachedAudioUrlFromIndexedDB);
-  const storeRef = useRef(storeAudioInIndexedDB);
 
   useEffect(() => {
     selectedSampleIdRef.current = selectedSampleId;
-    getCachedRef.current = getCachedAudioUrlFromIndexedDB;
-    storeRef.current = storeAudioInIndexedDB;
   });
 
   // Canvas pixel width derived from zoom + duration
@@ -94,13 +90,11 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     let cancelled = false;
 
     const load = async () => {
-      const cachedUrl = await getCachedRef.current(
+      // The engine fills the cache when it loads the pad
+      const cachedUrl = await getCachedAudioUrlFromIndexedDB(
         selectedSampleIdRef.current,
         audioUrl,
       );
-      if (!cachedUrl) {
-        storeRef.current(audioUrl, selectedSampleIdRef.current);
-      }
       const buffer = await decodeAudioUrl(cachedUrl ?? audioUrl);
       if (cancelled) return;
       audioBufferRef.current = buffer;
@@ -162,23 +156,21 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
     return () => window.removeEventListener("wheel", handleWheel);
   }, []);
 
-  // Playhead rAF loop — direct DOM mutation, no re-renders
+  // Playhead rAF loop — direct DOM mutation, no re-renders. Timed from the
+  // engine's voiceStarted event on the UI clock.
   useEffect(() => {
     const tick = () => {
       rafRef.current = requestAnimationFrame(tick);
       const el = playheadRef.current;
       if (!el) return;
 
-      const sampler = samplersRef.current[selectedSampleId];
-      const triggerTime = sampler?.triggerTime;
-      if (triggerTime == null || durationRef.current === 0) {
+      if (!lastVoice || lastVoice.endedAt !== null || durationRef.current === 0) {
         el.style.display = "none";
         return;
       }
 
-      const playedNote = sampler.currentEvent.note;
-      const rate = playedNote ? calcPlaybackRate(playedNote as Tone.Unit.Frequency) : 1;
-      const elapsed = (Tone.now() - triggerTime) * rate;
+      const rate = calcPlaybackRate(lastVoice.note as Tone.Unit.Frequency);
+      const elapsed = ((performance.now() - lastVoice.startedAt) / 1000) * rate;
       const s = settingsRef.current;
       const sampleStart = s.start ?? 0;
       const sampleEnd = s.end ?? durationRef.current;
@@ -198,7 +190,7 @@ const Waveform: React.FC<WaveformProps> = ({ audioUrl }) => {
 
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [selectedSampleId, samplersRef]);
+  }, [lastVoice]);
 
   // Region drag handlers
   const dragState = useRef<{

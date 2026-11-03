@@ -1,6 +1,5 @@
 "use client";
-import * as Tone from "tone";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import {
   getCollectionArrayFromName,
@@ -21,13 +20,13 @@ import dialog from "./Dialog.module.css";
 import styles from "./ChooseSample.module.css";
 import OptionList from "./OptionList";
 import SamplePreview, { type PreviewState } from "./SamplePreview";
-import { extractPeaks } from "src/lib/audio/decodeAudio";
+import { decodeAudioUrl, extractPeaks } from "src/lib/audio/decodeAudio";
+import { useEngine, usePreview } from "src/lib/engine/react";
 
 const ChooseSample: React.FC = () => {
   const {
     selectedSampleId,
     allSampleData,
-    loadSamplersToRef,
     updateSamplerData,
   } = useAudioContext();
   const { closeDialog } = useUIContext();
@@ -36,53 +35,57 @@ const ChooseSample: React.FC = () => {
   const [samplesArray, setSamplesArray] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [query, setQuery] = useState("");
+  const [peaks, setPeaks] = useState<{ url: string; peaks: Float32Array } | null>(null);
   const [preview, setPreview] = useState<PreviewState | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const currentPlayer = useRef<Tone.Player | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const engine = useEngine();
+  const enginePreview = usePreview();
+  const previewUrlRef = useRef<string | null>(null);
   const groupNames = type === "loc" ? collectionNames : drumMachineNames;
+  const previewLoading = previewUrl !== null && preview === null;
 
   // Stop demo sample playback
   const stopAndDisposePlayer = () => {
-    if (currentPlayer.current) {
-      currentPlayer.current.stop();
-      currentPlayer.current.dispose();
-      currentPlayer.current = null;
-    }
+    engine.send({ type: "stopPreview" });
   };
 
-  const isPreviewPlaying = useCallback(
-    () => currentPlayer.current?.state === "started",
-    [],
-  );
+  // Stop any preview when the dialog closes
+  useEffect(() => () => engine.send({ type: "stopPreview" }), [engine]);
+
+  // Show the waveform once the engine is playing the pick and its peaks are in
+  useEffect(() => {
+    if (
+      !previewUrl ||
+      enginePreview?.url !== previewUrl ||
+      peaks?.url !== previewUrl
+    )
+      return;
+    setPreview({
+      peaks: peaks.peaks,
+      duration: enginePreview.duration,
+      startedAt: enginePreview.startedAt,
+    });
+  }, [previewUrl, enginePreview, peaks]);
 
   // Play sample demo audio and show its waveform once the buffer loads
-  const playSample = (url: string) => {
-    stopAndDisposePlayer();
+  const playSample = (sample: string) => {
     if (!type) return;
+    const url = type === "kit" ? drumUrl(sample) : sample;
     // Clear the old waveform right away so it isn't shown for the new pick
     setPreview(null);
-    setPreviewLoading(true);
-    const player = new Tone.Player({
-      url: type === "kit" ? drumUrl(url) : url,
-      onload: () => {
-        if (currentPlayer.current !== player) return;
-        setPreviewLoading(false);
-        const buffer = player.buffer.get();
-        if (!buffer) return;
-        setPreview({
-          peaks: extractPeaks(buffer, 1000, true),
-          duration: buffer.duration,
-          startedAt: Tone.now(),
-        });
-      },
-      onerror: (error) => {
-        if (currentPlayer.current !== player) return;
-        setPreviewLoading(false);
+    setPreviewUrl(url);
+    previewUrlRef.current = url;
+    engine.send({ type: "previewSample", url });
+    decodeAudioUrl(url)
+      .then((buffer) => {
+        if (previewUrlRef.current !== url) return;
+        setPeaks({ url, peaks: extractPeaks(buffer, 1000, true) });
+      })
+      .catch((error) => {
+        if (previewUrlRef.current !== url) return;
         console.warn("Error loading preview:", error);
-      },
-    }).toDestination();
-    player.autostart = true;
-    currentPlayer.current = player;
+        setPreviewUrl(null);
+      });
   };
 
   // For populating the samples menu
@@ -105,7 +108,7 @@ const ChooseSample: React.FC = () => {
     setSampleGroup(collection);
     setSelectedIndex(null);
     setPreview(null);
-    setPreviewLoading(false);
+    setPreviewUrl(null);
   };
 
   // Update allSampleData and samplersRef when a new sample is chosen
@@ -135,8 +138,8 @@ const ChooseSample: React.FC = () => {
       collectionName: sampleGroup,
       attribution: type === "loc" ? "" : existing.attribution,
     };
+    // The engine loads the new sample as it follows the store
     updateSamplerData(selectedSampleId, updatedData);
-    loadSamplersToRef({ [selectedSampleId]: updatedData });
     closeDialog();
   };
 
@@ -244,7 +247,7 @@ const ChooseSample: React.FC = () => {
             <SamplePreview
               preview={preview}
               loading={previewLoading}
-              isPlaying={isPreviewPlaying}
+              playing={enginePreview !== null && enginePreview.url === previewUrl}
               onReplay={() => {
                 if (selectedIndex !== null) playSample(samplesArray[selectedIndex]);
               }}
@@ -257,7 +260,7 @@ const ChooseSample: React.FC = () => {
               onClick={() => {
                 stopAndDisposePlayer();
                 setPreview(null);
-                setPreviewLoading(false);
+                setPreviewUrl(null);
                 setType(null);
               }}
             >
