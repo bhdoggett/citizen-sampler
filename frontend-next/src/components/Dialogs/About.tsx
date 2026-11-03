@@ -2,12 +2,13 @@
 import styles from "./Dialog.module.css";
 
 import { useUIContext } from "src/app/contexts/UIContext";
+import { KIT_PAD_RANGE, LOC_PAD_RANGE } from "src/lib/constants/padLayout";
 
 const About: React.FC = () => {
-  const { setShowDialog } = useUIContext();
+  const { openDialog } = useUIContext();
 
   const openHelp = () => {
-    setShowDialog("help-shortcuts");
+    openDialog({ type: "help-shortcuts" });
   };
 
   return (
@@ -32,8 +33,8 @@ const About: React.FC = () => {
       <hr className={styles.rule} />
 
       <p>
-        By default, <strong>Drum Pads</strong> 1–12 are loaded with samples from
-        curated Library of Congress collections and Pads 13–16 are loaded with
+        By default, <strong>Drum Pads</strong> {LOC_PAD_RANGE} are loaded with samples from
+        curated Library of Congress collections and Pads {KIT_PAD_RANGE} are loaded with
         sounds from classic drum machines, but any sample can be individually
         loaded to any pad. Play the pads with your mouse, touch, or the keyboard
         keys indicated in the top right corner of each pad.

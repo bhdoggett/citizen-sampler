@@ -2,6 +2,7 @@ import type * as Tone from "tone";
 import quantize from "./quantize";
 import { loopDurationSeconds, ticksToSeconds, type LoopTiming } from "./timing";
 import type { SampleTypeFE } from "src/types/audioTypesFE";
+import type { LoopName } from "src/types/audioTypes";
 
 type SampleEvent = {
   startTime: number;
@@ -16,11 +17,24 @@ type AllSampleData = Record<string, SampleTypeFE>;
 
 export type { LoopTiming };
 
+// Tone.Part hands its callback an untyped value; this narrows it to an
+// event that can be triggered
+export function isPlayableEvent(
+  event: unknown
+): event is SampleEvent & { duration: number } {
+  return (
+    typeof event === "object" &&
+    event !== null &&
+    "duration" in event &&
+    event.duration != null
+  );
+}
+
 // timing is the tempo and length of the loop being scheduled. Loops always start at 0.
 const getScheduleEvents = (
   allSampleData: AllSampleData,
   id: string,
-  currentLoop: string,
+  currentLoop: LoopName,
   timing: LoopTiming
 ): ScheduleEvent[] => {
   const sampleData = allSampleData[id];

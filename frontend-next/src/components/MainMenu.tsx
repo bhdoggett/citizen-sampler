@@ -2,42 +2,32 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import * as Tone from "tone";
-import axios, { AxiosError } from "axios";
-import dotenv from "dotenv";
 import { useAuthContext } from "../app/contexts/AuthContext";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import { useUIContext } from "../app/contexts/UIContext";
 import useDownloadWavStems from "../app/hooks/useDownloadWavStems";
+import { defaultLoopSettings } from "src/lib/audio/defaults";
+import {
+  GENERIC_ERROR_MESSAGE,
+  apiErrorMessage,
+  checkLogin,
+  deleteSong,
+  isAuthRejection,
+  updateSong,
+} from "src/lib/api/client";
 import styles from "./MainMenu.module.css";
-dotenv.config();
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-export type ConfirmActionRef = {
-  message: string;
-  buttonText: string;
-  action: () => void;
-} | null;
 
 const Menu: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const {
     isAuthenticated,
     token,
-    setToken,
     userId,
-    setUserId,
-    setUsername,
     displayName,
-    setDisplayName,
+    logout,
     setError,
   } = useAuthContext();
-  const {
-    confirmActionRef,
-    showDialog,
-    setShowDialog,
-    apiResponseMessageRef,
-    setHotKeysActive,
-  } = useUIContext();
+  const { openDialog } = useUIContext();
   const {
     songTitle,
     allLoopSettings,
@@ -45,6 +35,7 @@ const Menu: React.FC = () => {
     setCurrentLoop,
     allSampleData,
     setSongTitle,
+    songId,
     setSongId,
     initLocSamplesFromAllCollections,
     initKitSamples,
@@ -56,27 +47,13 @@ const Menu: React.FC = () => {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     router.push("/");
-    setToken(null);
-    setUserId(null);
-    setUsername(null);
-    setDisplayName(null);
-    setShowDialog("confirm-action");
     if (setError) setError("Session expired. Please log in again.");
   };
 
   const handleReset = async () => {
-    // Clear persistent localStorage copies
-    localStorage.removeItem("loops");
-    localStorage.removeItem("samples");
-
-    setAllLoopSettings({
-      A: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: true },
-      B: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-      C: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-      D: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-    });
+    setAllLoopSettings(defaultLoopSettings());
     setCurrentLoop("A");
     const locSamples = initLocSamplesFromAllCollections();
     const kitSamples = initKitSamples("mpc");
@@ -86,9 +63,9 @@ const Menu: React.FC = () => {
   };
 
   const handleSaveSong = async () => {
-    const songId = localStorage.getItem("songId");
+    // A song with no id has never been saved, so ask for a title first
     if (!songId) {
-      setShowDialog("save-new-song");
+      openDialog({ type: "save-new-song" });
       setMenuOpen(false);
       return;
     }
@@ -108,36 +85,19 @@ const Menu: React.FC = () => {
     };
 
     try {
-      const result = await axios.put(
-        `${BASE_URL}/beats/me/songs/${songId}`,
-        songData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (result.status === 201) {
-        apiResponseMessageRef.current = result.data.message;
-        setShowDialog("api-response");
-      }
+      const result = await updateSong(token, songId, songData);
+      openDialog({ type: "api-response", message: result.message });
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        console.error("Error saving song to DB:", error);
-        apiResponseMessageRef.current = error.response.data.message;
-        setShowDialog("api-response");
-      }
+      console.error("Error saving song to DB:", err);
+      openDialog({
+        type: "api-response",
+        message: apiErrorMessage(err, GENERIC_ERROR_MESSAGE),
+      });
     }
   };
 
   const handleDeleteSong = async () => {
-    const songId = localStorage.getItem("songId");
+    if (!songId) return;
 
     if (!isAuthenticated) {
       console.warn("User not authenticated. Song not deleted.");
@@ -145,34 +105,16 @@ const Menu: React.FC = () => {
     }
 
     try {
-      const result = await axios.delete(
-        `${BASE_URL}/beats/me/songs/${songId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (result.status === 200) {
-        apiResponseMessageRef.current = result.data.message;
-        localStorage.removeItem("songTitle");
-        localStorage.removeItem("songId");
-        setSongId("");
-        setSongTitle("");
-        setShowDialog("api-response");
-      }
+      const result = await deleteSong(token, songId);
+      setSongId("");
+      setSongTitle("");
+      openDialog({ type: "api-response", message: result.message });
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        console.error("Error deleting song from DB:", error);
-        apiResponseMessageRef.current = error.response.data.message;
-        setShowDialog("api-response");
-      }
+      console.error("Error deleting song from DB:", err);
+      openDialog({
+        type: "api-response",
+        message: apiErrorMessage(err, GENERIC_ERROR_MESSAGE),
+      });
     }
   };
 
@@ -183,39 +125,29 @@ const Menu: React.FC = () => {
   };
 
   useEffect(() => {
-    if (showDialog) {
-      setHotKeysActive(false);
-    } else {
-      setHotKeysActive(true);
-    }
-  }, [showDialog, setHotKeysActive]);
-
-  useEffect(() => {
     if (!token) return;
-    const checkLogin = async () => {
+    // Only a rejected token logs the user out. An outage leaves the session
+    // alone.
+    const verifyLogin = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/auth/check-login`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.data.loggedIn) {
+        const result = await checkLogin(token);
+        if (!result.loggedIn) {
           handleLogout();
-          apiResponseMessageRef.current = res.data.message;
-          setShowDialog("api-response");
+          openDialog({
+            type: "api-response",
+            message: result.message ?? "Please log in again.",
+          });
         }
       } catch (err) {
-        const error = err as AxiosError<{ message: string }>;
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.message
-        ) {
-          handleLogout();
-          apiResponseMessageRef.current = error.response.data.message;
-          setShowDialog("api-response");
-        }
+        if (!isAuthRejection(err)) return;
+        handleLogout();
+        openDialog({
+          type: "api-response",
+          message: apiErrorMessage(err, "Please log in again."),
+        });
       }
     };
-    checkLogin();
+    verifyLogin();
     // Only run on mount or when token changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -283,12 +215,12 @@ const Menu: React.FC = () => {
                   <li
                     className={styles.item}
                     onClick={() => {
-                      confirmActionRef.current = {
+                      openDialog({
+                        type: "confirm-action",
                         message: "Are you sure you want to log out?",
                         buttonText: "See Ya!",
-                        action: handleLogout,
-                      };
-                      setShowDialog("confirm-action");
+                        onConfirm: handleLogout,
+                      });
                       setMenuOpen(false);
                     }}
                   >
@@ -303,7 +235,7 @@ const Menu: React.FC = () => {
                   <li
                     className={styles.item}
                     onClick={() => {
-                      setShowDialog("save-new-song");
+                      openDialog({ type: "save-new-song" });
                       setMenuOpen(false);
                     }}
                   >
@@ -312,12 +244,12 @@ const Menu: React.FC = () => {
                   <li
                     className={styles.item}
                     onClick={() => {
-                      confirmActionRef.current = {
+                      openDialog({
+                        type: "confirm-action",
                         message: "Are you sure you want to delete this song?",
                         buttonText: "100!",
-                        action: handleDeleteSong,
-                      };
-                      setShowDialog("confirm-action");
+                        onConfirm: handleDeleteSong,
+                      });
                       setMenuOpen(false);
                     }}
                   >
@@ -326,7 +258,7 @@ const Menu: React.FC = () => {
                   <li
                     className={styles.item}
                     onClick={() => {
-                      setShowDialog("load-song");
+                      openDialog({ type: "load-song" });
                       setMenuOpen(false);
                     }}
                   >
@@ -338,7 +270,7 @@ const Menu: React.FC = () => {
                   <li
                     className={styles.item}
                     onClick={() => {
-                      setShowDialog("auth-dialog");
+                      openDialog({ type: "auth-dialog" });
                       setMenuOpen(false);
                     }}
                   >
@@ -351,7 +283,7 @@ const Menu: React.FC = () => {
               <li
                 className={styles.item}
                 onClick={() => {
-                  setShowDialog("collection-menu");
+                  openDialog({ type: "collection-menu" });
                   setMenuOpen(false);
                 }}
               >
@@ -360,7 +292,7 @@ const Menu: React.FC = () => {
               <li
                 className={styles.item}
                 onClick={() => {
-                  setShowDialog("kit-menu");
+                  openDialog({ type: "kit-menu" });
                   setMenuOpen(false);
                 }}
               >
@@ -375,13 +307,13 @@ const Menu: React.FC = () => {
               <li
                 className={styles.item}
                 onClick={() => {
-                  confirmActionRef.current = {
+                  openDialog({
+                    type: "confirm-action",
                     message:
                       "This action will replace all current samples and reset the sampler to default values. Are you sure?",
                     buttonText: "Fresh Start",
-                    action: handleReset,
-                  };
-                  setShowDialog("confirm-action");
+                    onConfirm: handleReset,
+                  });
                   setMenuOpen(false);
                 }}
               >
@@ -390,7 +322,7 @@ const Menu: React.FC = () => {
               <li
                 className={styles.item}
                 onClick={() => {
-                  setShowDialog("about");
+                  openDialog({ type: "about" });
                   setMenuOpen(false);
                 }}
               >
@@ -399,7 +331,7 @@ const Menu: React.FC = () => {
               <li
                 className={styles.item}
                 onClick={() => {
-                  setShowDialog("help-shortcuts");
+                  openDialog({ type: "help-shortcuts" });
                   setMenuOpen(false);
                 }}
               >

@@ -21,7 +21,8 @@ import MidiHandler from "../components/Audio/MidiHandler";
 import { useUIContext } from "./contexts/UIContext";
 import { useAudioContext } from "./contexts/AudioContext";
 import { useSelectLoop } from "./hooks/useSelectLoop";
-import type { LoopName } from "../types/audioTypes";
+import { isLoopName } from "src/lib/constants/loops";
+import { readString, writeString } from "src/lib/storage";
 import About from "src/components/Dialogs/About";
 import HelpShortcuts from "src/components/Dialogs/HelpShortcuts";
 import Welcome from "src/components/Dialogs/Welcome";
@@ -53,8 +54,8 @@ const StepSequencer = dynamic(
 
 export default function Home() {
   const {
-    showDialog,
-    setShowDialog,
+    dialog,
+    openDialog,
     makeBeatsButtonPressed,
     setMakeBeatsButtonPressed,
     sequencerVisible,
@@ -98,9 +99,9 @@ export default function Home() {
 
       if (e.shiftKey) {
         const key = e.key.toUpperCase();
-        if (key === "A" || key === "B" || key === "C" || key === "D") {
+        if (isLoopName(key)) {
           e.preventDefault();
-          handleSelectLoop(key as LoopName);
+          handleSelectLoop(key);
         } else if (key === "S") {
           e.preventDefault();
           setSequencerVisible(true);
@@ -119,25 +120,22 @@ export default function Home() {
       // Help & Shortcuts: Shift + / (often '?')
       if (e.key === "?" || (e.key === "/" && e.shiftKey)) {
         e.preventDefault();
-        setShowDialog("help-shortcuts");
+        openDialog({ type: "help-shortcuts" });
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hotKeysActive, handleToggleSequencer, handleSelectLoop, setSequencerVisible, selectedSampleId, allSampleData, updateSamplerStateSettings, setShowDialog]);
+  }, [hotKeysActive, handleToggleSequencer, handleSelectLoop, setSequencerVisible, selectedSampleId, allSampleData, updateSamplerStateSettings, openDialog]);
 
   // First-run welcome dialog (shown once per browser)
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (showDialog) return;
-    const KEY = "citizenSamplerHasSeenWelcome";
-    const hasSeen = window.localStorage.getItem(KEY);
-    if (!hasSeen) {
-      window.localStorage.setItem(KEY, "true");
-      setShowDialog("welcome");
+    if (dialog) return;
+    if (!readString("citizenSamplerHasSeenWelcome")) {
+      writeString("citizenSamplerHasSeenWelcome", "true");
+      openDialog({ type: "welcome" });
     }
-  }, [showDialog, setShowDialog]);
+  }, [dialog, openDialog]);
 
   const contentHidden = samplersLoading || !makeBeatsButtonPressed;
 
@@ -229,20 +227,26 @@ export default function Home() {
 
       {/* Menu Dialogues */}
       <div>
-        {showDialog && (
+        {dialog && (
           <DialogWrapper>
-            {showDialog === "choose-sample" && <ChooseSample />}
-            {showDialog === "load-song" && <LoadSong />}
-            {showDialog === "save-new-song" && <SaveNewSong />}
-            {showDialog === "collection-menu" && <CollectionMenu />}
-            {showDialog === "kit-menu" && <KitMenu />}
-            {showDialog === "auth-dialog" && <AuthDialog />}
-            {showDialog === "confirm-action" && <ConfirmActionDialog />}
-            {showDialog === "api-response" && <APIResponseDialog />}
-            {showDialog === "ui-warning" && <UIWarning />}
-            {showDialog === "about" && <About />}
-            {showDialog === "help-shortcuts" && <HelpShortcuts />}
-            {showDialog === "welcome" && <Welcome />}
+            {dialog.type === "choose-sample" && <ChooseSample />}
+            {dialog.type === "load-song" && <LoadSong />}
+            {dialog.type === "save-new-song" && <SaveNewSong />}
+            {dialog.type === "collection-menu" && <CollectionMenu />}
+            {dialog.type === "kit-menu" && <KitMenu />}
+            {dialog.type === "auth-dialog" && <AuthDialog />}
+            {dialog.type === "confirm-action" && (
+              <ConfirmActionDialog {...dialog} />
+            )}
+            {dialog.type === "api-response" && (
+              <APIResponseDialog message={dialog.message} />
+            )}
+            {dialog.type === "ui-warning" && (
+              <UIWarning message={dialog.message} />
+            )}
+            {dialog.type === "about" && <About />}
+            {dialog.type === "help-shortcuts" && <HelpShortcuts />}
+            {dialog.type === "welcome" && <Welcome />}
           </DialogWrapper>
         )}
       </div>

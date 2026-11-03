@@ -34,7 +34,7 @@ export type SampleTypeFE = {
   type: string;
   collectionName: string;
   url: string;
-  events: Record<string, SampleEventFE[]>;
+  events: Record<LoopName, SampleEventFE[]>;
   settings: SampleSettingsFE;
   attribution?: string;
 };

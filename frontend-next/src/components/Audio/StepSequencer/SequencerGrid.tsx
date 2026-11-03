@@ -5,6 +5,7 @@ import type { Subdivision } from "./utils/gridConversions";
 import { subdivisionToCellsPerBeat } from "./utils/gridConversions";
 import { useAudioContext } from "src/app/contexts/AudioContext";
 import styles from "./SequencerGrid.module.css";
+import { ALL_PAD_IDS, padNumber as padNumberOf } from "src/lib/constants/padLayout";
 
 type SequencerGridProps = {
   gridEvents: Map<string, GridEvent[]>;
@@ -100,12 +101,6 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
       return () => container.removeEventListener("wheel", handleWheel);
     }, [onZoomIn, onZoomOut, isMinZoom, isMaxZoom]);
 
-    // Generate pad IDs in order (pad-1 through pad-16) for drum mode
-    const padIds = useMemo(
-      () => Array.from({ length: 16 }, (_, i) => `pad-${i + 1}`),
-      [],
-    );
-
     // Pre-group piano roll events by trigger note once — O(M) — so each row lookup is O(1)
     const pianoRollEventMap = useMemo(() => {
       if (!pianoRollMode || !pianoRollPadId) return null;
@@ -120,7 +115,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
       return map;
     }, [pianoRollMode, pianoRollPadId, gridEvents]);
 
-    // Build rows: either 16 drum pads or N piano roll note rows
+    // Build rows: either the drum pads or N piano roll note rows
     const rows = useMemo(() => {
       if (pianoRollMode && pianoRollPadId && pianoRollNotes.length > 0) {
         return pianoRollNotes.map((note, idx) => ({
@@ -133,8 +128,8 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
           isSharp: note.includes("#"),
         }));
       }
-      return padIds.map((padId) => {
-        const padNumber = parseInt(padId.split("-")[1], 10);
+      return ALL_PAD_IDS.map((padId) => {
+        const padNumber = padNumberOf(padId);
         return {
           key: padId,
           padId,
@@ -145,7 +140,7 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
           isSharp: false,
         };
       });
-    }, [pianoRollMode, pianoRollPadId, pianoRollNotes, pianoRollTriggerNotes, padIds]);
+    }, [pianoRollMode, pianoRollPadId, pianoRollNotes, pianoRollTriggerNotes]);
 
     const cellsPerBeat = subdivisionToCellsPerBeat[subdivision];
     const cellsPerBar = beats * cellsPerBeat;

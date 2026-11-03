@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { LoopSettingsFE, SampleEventFE } from "src/types/audioTypesFE";
+import type { LoopName } from "src/types/audioTypes";
 import {
   Subdivision,
   getTotalColumns,
@@ -22,7 +23,7 @@ type UseSequencerGridProps = {
   loopSettings: LoopSettingsFE | null;
   subdivision: Subdivision;
   allSampleData: Record<string, { events: Record<string, SampleEventFE[]>; settings?: { quantize: boolean; quantVal: string } }>;
-  currentLoop: string;
+  currentLoop: LoopName;
 };
 
 type UseSequencerGridReturn = {

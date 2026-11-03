@@ -27,6 +27,7 @@ import {
 } from "src/lib/audio/util/scaleNotes";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import styles from "./StepSequencer.module.css";
+import { ALL_PAD_IDS } from "src/lib/constants/padLayout";
 
 const PAD_LABEL_WIDTH = 80; // Width of the pad label column
 const CONTAINER_PADDING = 2; // 1px border on each side of the grid
@@ -47,7 +48,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     setSelectedSampleId,
     loopIsPlaying,
   } = useAudioContext();
-  const { hotKeysActive, confirmActionRef, setShowDialog, setHotKeysActive } =
+  const { hotKeysActive, openDialog } =
     useUIContext();
 
   const [subdivision, setSubdivision] = useState<Subdivision>("8n");
@@ -64,7 +65,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const rafRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const loopSettings = allLoopSettings[currentLoop as LoopName];
+  const loopSettings = allLoopSettings[currentLoop];
 
   const { totalColumns, gridEvents, bars, beats } = useSequencerGrid({
     loopSettings,
@@ -368,10 +369,11 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   // Clear all events on a specific pad for current loop (via trash icon)
   const handleClearRow = useCallback(
     (padId: string) => {
-      confirmActionRef.current = {
+      openDialog({
+        type: "confirm-action",
         message: "Clear beats from this sample?",
         buttonText: "Clear",
-        action: () => {
+        onConfirm: () => {
           setAllSampleData((prev) => ({
             ...prev,
             [padId]: {
@@ -383,29 +385,24 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
             },
           }));
         },
-      };
-      setShowDialog("confirm-action");
-      setHotKeysActive(false);
+      });
     },
     [
-      confirmActionRef,
       currentLoop,
       setAllSampleData,
-      setHotKeysActive,
-      setShowDialog,
+      openDialog,
     ],
   );
 
   // Copy loop pattern
   const handleCopyLoop = useCallback(() => {
     const snapshot: Record<string, SampleEventFE[]> = {};
-    for (let i = 1; i <= 16; i++) {
-      const padId = `pad-${i}`;
+    for (const padId of ALL_PAD_IDS) {
       snapshot[padId] = allSampleData[padId]?.events[currentLoop] || [];
     }
     copiedPatternRef.current = snapshot;
     setHasCopiedPattern(true);
-    setCopiedFromLoop(currentLoop as LoopName);
+    setCopiedFromLoop(currentLoop);
   }, [allSampleData, currentLoop]);
 
   // Cancel copy
@@ -419,15 +416,15 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const handlePasteLoop = useCallback(() => {
     if (!copiedPatternRef.current) return;
     const clipboard = copiedPatternRef.current;
-    confirmActionRef.current = {
+    openDialog({
+      type: "confirm-action",
       message:
         "This action will clear any existing beats in the current loop. You sure?",
       buttonText: "Paste",
-      action: () => {
+      onConfirm: () => {
         setAllSampleData((prev) => {
           const next = { ...prev };
-          for (let i = 1; i <= 16; i++) {
-            const padId = `pad-${i}`;
+          for (const padId of ALL_PAD_IDS) {
             next[padId] = {
               ...next[padId],
               events: {
@@ -442,15 +439,11 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
         setHasCopiedPattern(false);
         setCopiedFromLoop(null);
       },
-    };
-    setShowDialog("confirm-action");
-    setHotKeysActive(false);
+    });
   }, [
-    confirmActionRef,
     currentLoop,
     setAllSampleData,
-    setHotKeysActive,
-    setShowDialog,
+    openDialog,
   ]);
 
   // Track Ctrl key for velocity bar visibility

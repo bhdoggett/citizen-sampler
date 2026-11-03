@@ -5,6 +5,7 @@ import { useUIContext } from "src/app/contexts/UIContext";
 import styles from "./Dialog.module.css";
 import OptionList from "./OptionList";
 import { DrumMachineId, drumMachines } from "src/lib/drumMachines";
+import { KIT_PADS_LABEL } from "src/lib/constants/padLayout";
 
 const KitMenu: React.FC = () => {
   const {
@@ -13,7 +14,7 @@ const KitMenu: React.FC = () => {
     setAllSampleData,
     storeAudioInIndexedDB,
   } = useAudioContext();
-  const { confirmActionRef, setShowDialog, setHotKeysActive } = useUIContext();
+  const { openDialog, closeDialog } = useUIContext();
   const drumMachineNames: string[] = Object.values(drumMachines).map(
     (drumMachine) => drumMachine.name
   );
@@ -43,8 +44,7 @@ const KitMenu: React.FC = () => {
     for (const [sampleId, sample] of Object.entries(newSamples)) {
       await storeAudioInIndexedDB(sample.url, sampleId);
     }
-    setShowDialog(null);
-    setHotKeysActive(true);
+    closeDialog();
   };
 
   return (
@@ -66,13 +66,13 @@ const KitMenu: React.FC = () => {
         <button
           onClick={() => {
             // e.preventDefault();
-            confirmActionRef.current = {
+            openDialog({
+              type: "confirm-action",
               message:
-                "This will replace pads 13-16 with new kit samples. Are you sure?",
+                `This will replace ${KIT_PADS_LABEL} with new kit samples. Are you sure?`,
               buttonText: "You Betcha",
-              action: () => handleSelect(id),
-            };
-            setShowDialog("confirm-action");
+              onConfirm: () => handleSelect(id),
+            });
           }}
           className={`${styles.button} ${styles.primary}`}
         >

@@ -1,19 +1,20 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import axios, { AxiosError } from "axios";
-import dotenv from "dotenv";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useAuthContext } from "src/app/contexts/AuthContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import { SongTypeFE } from "src/types/audioTypesFE";
-import type { LoopName } from "../../types/audioTypes";
+import { LOOP_NAMES } from "src/lib/constants/loops";
 import Spinner from "../Spinner";
 import { migrateDrumUrls } from "src/lib/drumMachines";
 import { normalizeAllMuteSolo } from "src/lib/audio/muteSolo";
+import {
+  GENERIC_ERROR_MESSAGE,
+  apiErrorMessage,
+  getSong,
+  listSongTitles,
+} from "src/lib/api/client";
 import styles from "./Dialog.module.css";
-
-dotenv.config();
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const LoadSong: React.FC = () => {
   const [songTitles, setSongTitles] = useState<string[]>([]);
@@ -21,40 +22,32 @@ const LoadSong: React.FC = () => {
   const [hasCheckedForSongs, setHasCheckedForSongs] = useState<boolean>(false);
   const {
     setSongTitle,
+    setSongId,
     setAllSampleData,
     setAllLoopSettings,
     loadSamplersToRef,
     storeAudioInIndexedDB,
   } = useAudioContext();
   const { isAuthenticated, token } = useAuthContext();
-  const { apiResponseMessageRef, setShowDialog } = useUIContext();
+  const { openDialog } = useUIContext();
   const [loading, setLoading] = useState<boolean>(false);
 
   const getSongtitles = useCallback(async () => {
     try {
-      const result = await axios.get(`${BASE_URL}/beats/me/songs`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const result = await listSongTitles(token);
 
-      // If no songs are found, set songTitles to an empty array and show a message
-      if (result.data.message === "No songs found") {
-        console.warn(result.data.message);
+      // With no songs, the server sends a message instead of a list
+      if (!Array.isArray(result)) {
+        console.warn(result.message);
         setSongTitles([]);
         setSelectedSong("");
-        apiResponseMessageRef.current = result.data.message;
-        setShowDialog("api-response");
+        openDialog({ type: "api-response", message: result.message });
         return;
       }
 
-      // If we have songs, set the song titles and select the first one
-      if (result.status === 200) {
-        const titles = result.data;
-
-        setSongTitles(titles);
-        setSelectedSong(titles[0]);
-      }
+      // Select the first song
+      setSongTitles(result);
+      setSelectedSong(result[0]);
     } catch (error) {
       console.error("Error fetching song titles:", error);
     } finally {
@@ -64,76 +57,55 @@ const LoadSong: React.FC = () => {
     setSongTitles,
     setSelectedSong,
     token,
-    setShowDialog,
-    apiResponseMessageRef,
+    openDialog,
   ]);
 
   const handleLoadSong = async (e: React.FormEvent<HTMLFormElement>) => {
     // Prevent default form submission behavior
     e.preventDefault();
-    setLoading(true);
-
-    let showDialogAfter = false;
 
     if (!isAuthenticated) {
-      console.warn("User not authenticated. Song not saved to DB.");
+      console.warn("User not authenticated. Song not loaded from DB.");
       return;
     }
 
+    setLoading(true);
+    // One response dialog per outcome, opened once loading finishes
+    let message: string | null = null;
+
     try {
-      const result = await axios.get(
-        `${BASE_URL}/beats/me/songs/${selectedSong}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const result = await getSong(token, selectedSong);
+      const song: SongTypeFE = result.song;
+      const { title, loops } = song;
+      const samples = normalizeAllMuteSolo(migrateDrumUrls(song.samples));
+
+      // Normalize loop settings for songs saved before isInitialized was added
+      const normalizedLoops: Record<string, unknown> = { ...loops };
+      for (const key of LOOP_NAMES) {
+        const loop = normalizedLoops[key] as Record<string, unknown> | null;
+        if (loop && !("isInitialized" in loop)) {
+          normalizedLoops[key] = { ...loop, isInitialized: true };
         }
-      );
-
-      if (result.status === 200) {
-        const song: SongTypeFE = result.data.song;
-        const { title, loops } = song;
-        const samples = normalizeAllMuteSolo(migrateDrumUrls(song.samples));
-
-        // Normalize loop settings for songs saved before isInitialized was added
-        const normalizedLoops: Record<string, unknown> = { ...loops };
-        for (const key of Object.keys(normalizedLoops) as LoopName[]) {
-          const loop = normalizedLoops[key] as Record<string, unknown> | null;
-          if (loop && !("isInitialized" in loop)) {
-            normalizedLoops[key] = { ...loop, isInitialized: true };
-          }
-        }
-
-        localStorage.setItem("songId", song._id!);
-        setSongTitle(title);
-        setAllSampleData(samples);
-        setAllLoopSettings(normalizedLoops as SongTypeFE["loops"]);
-
-        await loadSamplersToRef(samples);
-        // Store all new samples in IndexedDB
-        for (const [sampleId, sample] of Object.entries(samples)) {
-          await storeAudioInIndexedDB(sample.url, sampleId);
-        }
-        apiResponseMessageRef.current = result.data.message;
-        showDialogAfter = true;
       }
+
+      setSongId(song._id ?? "");
+      setSongTitle(title);
+      setAllSampleData(samples);
+      setAllLoopSettings(normalizedLoops as SongTypeFE["loops"]);
+
+      await loadSamplersToRef(samples);
+      // Store all new samples in IndexedDB
+      for (const [sampleId, sample] of Object.entries(samples)) {
+        await storeAudioInIndexedDB(sample.url, sampleId);
+      }
+      message = result.message;
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        console.error("Error loading song from DB:", error);
-        apiResponseMessageRef.current = error.response.data.message;
-      } else {
-        apiResponseMessageRef.current = "An unexpected error occured";
-      }
-      setShowDialog("api-response");
+      console.error("Error loading song from DB:", err);
+      message = apiErrorMessage(err, GENERIC_ERROR_MESSAGE);
     } finally {
       setLoading(false);
-      if (showDialogAfter) {
-        setShowDialog("api-response");
+      if (message) {
+        openDialog({ type: "api-response", message });
       }
     }
   };

@@ -1,25 +1,22 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import axios, { AxiosError } from "axios";
-import dotenv from "dotenv";
+import React, { useState } from "react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useAuthContext } from "src/app/contexts/AuthContext";
 import { useUIContext } from "src/app/contexts/UIContext";
+import {
+  GENERIC_ERROR_MESSAGE,
+  apiErrorMessage,
+  createSong,
+} from "src/lib/api/client";
 import styles from "./Dialog.module.css";
-dotenv.config();
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-// type SaveNewSongProps = {
-//   setShowDialog: React.Dispatch<React.SetStateAction<string | null>>;
-//   setHotKeysActive: React.Dispatch<React.SetStateAction<boolean>>;
-// };
 
 const SaveNewSong: React.FC = () => {
   const [formSongTitle, setFormSongTitle] = useState<string>("");
   // const [apiResponse, setApiResponse] = useState<string | null>(null);
-  const { setSongTitle, allSampleData, allLoopSettings } = useAudioContext();
+  const { setSongTitle, setSongId, allSampleData, allLoopSettings } =
+    useAudioContext();
   const { isAuthenticated, token, userId } = useAuthContext();
-  const { apiResponseMessageRef, setShowDialog } = useUIContext();
+  const { openDialog } = useUIContext();
 
   const handleSaveNewSong = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,40 +36,18 @@ const SaveNewSong: React.FC = () => {
     };
 
     try {
-      const result = await axios.post(`${BASE_URL}/beats/me/songs`, songData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (result.status === 201) {
-        localStorage.setItem("songId", result.data.song._id);
-        setSongTitle(formSongTitle);
-        apiResponseMessageRef.current = result.data.message;
-        setShowDialog("api-response");
-      }
+      const result = await createSong(token, songData);
+      setSongId(result.song._id ?? "");
+      setSongTitle(formSongTitle);
+      openDialog({ type: "api-response", message: result.message });
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        console.error("Error saving song to DB:", error);
-        apiResponseMessageRef.current = error.response.data.message;
-      } else {
-        apiResponseMessageRef.current = "An unexpeced error occurred";
-      }
-      setShowDialog("api-response");
+      console.error("Error saving song to DB:", err);
+      openDialog({
+        type: "api-response",
+        message: apiErrorMessage(err, GENERIC_ERROR_MESSAGE),
+      });
     }
   };
-
-  // Set error to null when component unmounts
-  useEffect(() => {
-    return () => {
-      apiResponseMessageRef.current = null;
-    };
-  }, []);
 
   return (
     <form onSubmit={handleSaveNewSong} className={styles.form}>

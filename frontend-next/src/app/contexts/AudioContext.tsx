@@ -8,6 +8,15 @@ import {
 } from "src/types/audioTypesFE";
 import { useUIContext } from "./UIContext";
 import { LoopName } from "../../types/audioTypes";
+import { emptyLoopEvents } from "src/lib/constants/loops";
+import { readJSON, readString, writeJSON, writeString } from "src/lib/storage";
+import {
+  DEFAULT_SELECTED_PAD,
+  KIT_PAD_IDS,
+  LOC_PAD_COUNT,
+  padId,
+} from "src/lib/constants/padLayout";
+import { defaultLoopSettings, defaultSampleSettings } from "src/lib/audio/defaults";
 import { SamplerWithFX } from "src/types/SamplerWithFX";
 import { CustomSampler } from "src/types/CustomSampler";
 import {
@@ -27,8 +36,6 @@ import { set, get } from "idb-keyval"; // for IndexedDB storage
 import { computeGain, normalizeAllMuteSolo } from "../../lib/audio/muteSolo";
 import { applySoundSettings } from "../../lib/audio/applySoundSettings";
 import { applyLoopSettings } from "../../lib/audio/applyLoopSettings";
-import dotenv from "dotenv";
-dotenv.config();
 
 type AudioContextType = {
   songTitle: string;
@@ -71,8 +78,8 @@ type AudioContextType = {
     sampleId: string,
     currentUrl: string
   ) => Promise<string | null>;
-  currentLoop: string;
-  setCurrentLoop: React.Dispatch<React.SetStateAction<string>>;
+  currentLoop: LoopName;
+  setCurrentLoop: React.Dispatch<React.SetStateAction<LoopName>>;
   loopIsPlaying: boolean;
   setLoopIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 
@@ -121,7 +128,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
     // Shuffle and return k elements
     const n = workingArray.length;
-    const k = Math.min(12, n);
+    const k = Math.min(LOC_PAD_COUNT, n);
 
     for (let i = 0; i < k; i++) {
       const j = i + Math.floor(Math.random() * (n - i));
@@ -143,28 +150,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       type: "loc",
       collectionName: collection,
       url: url,
-      events: { A: [], B: [], C: [], D: [] },
-      settings: {
-        mute: false,
-        solo: false,
-        reverse: false,
-        timeStretch: false,
-        oneShot: false,
-        loop: false,
-        start: 0,
-        end: null,
-        volume: 0,
-        pan: 0,
-        baseNote: "C4",
-        pitch: 0,
-        attack: 0,
-        release: 0,
-        quantize: false,
-        quantVal: "4",
-        highpass: [0, "highpass"] as [number, "highpass"],
-        lowpass: [20000, "lowpass"] as [number, "lowpass"],
-        ui: { zoom: 0, seekTo: 0 },
-      },
+      events: emptyLoopEvents(),
+      settings: defaultSampleSettings(),
       attribution: "",
     };
   };
@@ -177,7 +164,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
     const locSampleData = selectedSamples.reduce(
       (acc, sample, i) => {
-        const key = `pad-${i + 1}`;
+        const key = padId(i + 1);
         acc[key] = initLocSampleData(key, sample.url, sample.collection);
         return acc;
       },
@@ -195,7 +182,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
     const locSampleData = selectedSamples.reduce(
       (acc, url, i) => {
-        const key = `pad-${i + 1}`;
+        const key = padId(i + 1);
         acc[key] = initLocSampleData(key, url, collection);
         return acc;
       },
@@ -218,28 +205,8 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       type: "kit",
       collectionName: drumMachine,
       url: url,
-      events: { A: [], B: [], C: [], D: [] },
-      settings: {
-        mute: false,
-        solo: false,
-        reverse: false,
-        timeStretch: false,
-        oneShot: false,
-        loop: false,
-        start: 0,
-        end: null,
-        volume: 0,
-        pan: 0,
-        baseNote: "C4",
-        pitch: 0,
-        attack: 0,
-        release: 0,
-        quantize: false,
-        quantVal: "4",
-        highpass: [0, "highpass"] as [number, "highpass"],
-        lowpass: [20000, "lowpass"] as [number, "lowpass"],
-        ui: { zoom: 0, seekTo: 0 },
-      },
+      events: emptyLoopEvents(),
+      settings: defaultSampleSettings(),
     };
   };
 
@@ -273,7 +240,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
     return samples.reduce(
       (acc, sample, index) => {
-        const id = `pad-${index + 13}`;
+        const id = KIT_PAD_IDS[index];
         acc[id] = initKitSampleData(
           id,
           sample.url,
@@ -434,19 +401,17 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   };
 
   const [songTitle, setSongTitle] = useState<string>(() => {
-    const savedSongTitle = localStorage.getItem("songTitle");
-    return savedSongTitle ?? "Song001";
+    return readString("songTitle") ?? "Song001";
   });
   const [songId, setSongId] = useState<string>(() => {
-    const savedSongId = localStorage.getItem("songId");
-    return savedSongId ? savedSongId : "";
+    return readString("songId") ?? "";
   });
   const [allSampleData, setAllSampleData] = useState<
     Record<string, SampleTypeFE>
   >(() => {
-    const savedSamples = localStorage.getItem("samples");
+    const savedSamples = readJSON<Record<string, SampleTypeFE>>("samples");
     return savedSamples
-      ? normalizeAllMuteSolo(migrateDrumUrls(JSON.parse(savedSamples)))
+      ? normalizeAllMuteSolo(migrateDrumUrls(savedSamples))
       : {
           ...initLocSamplesFromAllCollections(),
           ...initKitSamples("mpc"),
@@ -454,15 +419,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   });
   const [allLoopSettings, setAllLoopSettings] = useState<AllLoopSettingsFE>(
     () => {
-      const savedLoops = localStorage.getItem("loops");
-      return savedLoops
-        ? JSON.parse(savedLoops)
-        : {
-            A: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: true },
-            B: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-            C: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-            D: { beats: 4, bars: 2, bpm: 120, swing: 0, isInitialized: false },
-          };
+      return readJSON<AllLoopSettingsFE>("loops") ?? defaultLoopSettings();
     }
   );
 
@@ -511,12 +468,12 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
   const [loopIsPlaying, setLoopIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [metronomeActive, setMetronomeActive] = useState(false);
-  const [currentLoop, setCurrentLoop] = useState<string>("A");
+  const [currentLoop, setCurrentLoop] = useState<LoopName>("A");
   const [masterGainLevel, setMasterGainLevel] = useState<number>(1);
   const masterGainNode = useRef<Tone.Gain>(
     new Tone.Gain(masterGainLevel).toDestination()
   );
-  const [selectedSampleId, setSelectedSampleId] = useState<string>("pad-1");
+  const [selectedSampleId, setSelectedSampleId] = useState<string>(DEFAULT_SELECTED_PAD);
 
   const updateSamplerStateSettings = (
     id: string,
@@ -534,36 +491,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     }));
   };
 
-  // // Listen for user interaction to start the audio context
-  // useEffect(() => {
-  //   const initializeAudio = () => {
-  //     // Initialize on ANY user interaction, not just your buttons
-  //     const handleFirstInteraction = async () => {
-  //       if (Tone.getContext().state !== "running") {
-  //         await Tone.start();
-  //         console.log("Audio context started");
-  //       }
-  //       // Remove listeners after first successful start
-  //       document.removeEventListener("click", handleFirstInteraction);
-  //       document.removeEventListener("touchstart", handleFirstInteraction);
-  //       document.removeEventListener("keydown", handleFirstInteraction);
-  //     };
-
-  //     // Listen for ANY user interaction
-  //     document.addEventListener("click", handleFirstInteraction, {
-  //       passive: true,
-  //     });
-  //     document.addEventListener("touchstart", handleFirstInteraction, {
-  //       passive: true,
-  //     });
-  //     document.addEventListener("keydown", handleFirstInteraction, {
-  //       passive: true,
-  //     });
-  //   };
-
-  //   initializeAudio();
-  // }, []);
-
   // Load samplers to samplerRef and waveform peaks to localStorage
   useEffect(() => {
     loadSamplersToRef(allSampleData);
@@ -575,26 +502,30 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     });
   }, []); // <===== if this empty dependency array is removed, the samplers are loaded with every update in allSampleData state
 
-  // Upload allSampleData to localStorage.samples when allSampleData state changes.
+  // This provider is the only writer of the song keys in localStorage.
   // Changes in state coming from SampleSettings are debounced in that component.
   useEffect(() => {
-    localStorage.setItem("samples", JSON.stringify(allSampleData));
+    writeJSON("samples", allSampleData);
   }, [allSampleData]);
 
-  // Upload songTitle to localStorage.songTitle when songTitle state changes
   useEffect(() => {
-    localStorage.setItem("songTitle", songTitle);
+    writeString("songTitle", songTitle);
   }, [songTitle]);
+
+  // An empty songId means the song is not saved yet, and clears the key
+  useEffect(() => {
+    writeString("songId", songId);
+  }, [songId]);
 
   // Upload allLoopSettings with debounce to localStorage.loops when allLoopSettings state changes.
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      localStorage.setItem("loops", JSON.stringify(allLoopSettings));
+      writeJSON("loops", allLoopSettings);
     }, 500);
 
     return () => {
       clearTimeout(timeoutId); // cancel if settings change before debounceDelay
-      localStorage.setItem("loops", JSON.stringify(allLoopSettings));
+      writeJSON("loops", allLoopSettings);
     };
   }, [allLoopSettings]);
 
@@ -609,7 +540,7 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 
   // The one owner of the live transport's loop setup. Runs when the loop
   // changes or when its tempo, swing, meter or length is edited.
-  const currentLoopSettings = allLoopSettings[currentLoop as LoopName];
+  const currentLoopSettings = allLoopSettings[currentLoop];
   useEffect(() => {
     if (!currentLoopSettings) return;
     applyLoopSettings(Tone.getTransport(), currentLoopSettings);
@@ -653,7 +584,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
       ...prev,
       [id]: data,
     }));
-    //
   };
 
   // Derived from allSampleData, so it can't drift out of sync
@@ -675,7 +605,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
     });
   }, [allSampleData, solosExist, samplers]);
 
-  // if (!hasLoadedFromStorage.current) return null;
 
   return (
     <AudioContextContext.Provider

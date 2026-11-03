@@ -8,7 +8,7 @@ type DialogWrapperProps = {
   children: React.ReactNode;
 };
 const DialogWrapper: React.FC<DialogWrapperProps> = ({ children }) => {
-  const { setShowDialog, setHotKeysActive } = useUIContext();
+  const { closeDialog } = useUIContext();
   // const [loginError, setLoginError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -20,8 +20,7 @@ const DialogWrapper: React.FC<DialogWrapperProps> = ({ children }) => {
       if (loginError) {
         router.push("/");
       }
-      setHotKeysActive(true);
-      setShowDialog(null);
+      closeDialog();
     }
   };
 

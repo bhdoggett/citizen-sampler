@@ -11,11 +11,13 @@ import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useMidiContext } from "../../app/contexts/MidiContext";
 import { CustomSampler } from "../../types/CustomSampler";
 import { SampleEventFE } from "src/types/audioTypesFE";
-import quantize from "../../lib/audio/util/quantize";
-import { ticksToSeconds, wrapTicks } from "../../lib/audio/util/timing";
+import { wrapTicks } from "../../lib/audio/util/timing";
+import getScheduleEvents, {
+  isPlayableEvent,
+} from "../../lib/audio/util/getScheduleEvents";
 import { calcEventDuration } from "../../lib/audio/util/calcEventDuration";
+import { resolveRelease } from "../../lib/audio/padRelease";
 import { calcTriggerParams } from "../../lib/audio/util/calcTriggerParams";
-import type { LoopName } from "../../types/audioTypes";
 import { calcPlaybackRate } from "../../lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { resolvePlayNote } from "../../lib/audio/util/resolvePlayNote";
@@ -46,7 +48,9 @@ const PitchPad = forwardRef(function PitchPad(
   const currentEvent = useRef<SampleEventFE | null>(null);
   const partRef = useRef<Tone.Part | null>(null);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const hasReleasedRef = useRef<boolean>(false);
+  const hasReleasedRef = useRef(false);
+  // True from press to release, whatever the sound is doing in between
+  const heldRef = useRef(false);
   const lastPressTimeRef = useRef<number>(0);
   const lastPlayNoteRef = useRef<string | null>(null);
   const [pitchIsPlaying, setPitchIsPlaying] = useState<boolean>(false);
@@ -87,6 +91,7 @@ const PitchPad = forwardRef(function PitchPad(
     lastPlayNoteRef.current = playNote;
 
     hasReleasedRef.current = false;
+    heldRef.current = true;
     const bufDuration = sampler.bufferDuration;
     const offset = allSampleData[selectedSampleId].settings.reverse
       ? bufDuration - (end ?? bufDuration)
@@ -113,44 +118,47 @@ const PitchPad = forwardRef(function PitchPad(
       bufDuration,
       calcPlaybackRate(playNote as Tone.Unit.Frequency),
     ));
-    // If recording, create a new event for this note
-    if (loopIsPlaying && isRecording) {
-      currentEvent.current = {
-        startTime: null,
-        duration: 0,
-        note: "",
-        velocity: 1,
-      };
-      currentEvent.current.startTime = Tone.getTransport().ticks;
-      currentEvent.current.duration = 0;
-      currentEvent.current.note = playNote;
-      currentEvent.current.velocity = 1;
-    }
+    // Start a recorded hit, or clear any earlier one so it can't be saved twice
+    currentEvent.current = {
+      startTime: loopIsPlaying && isRecording ? Tone.getTransport().ticks : null,
+      duration: 0,
+      note: playNote,
+      velocity: 1,
+    };
   };
 
   const handleRelease = () => {
     if (!sampler) return;
-    if (allSampleData[selectedSampleId].settings.oneShot) return;
 
-    // Stop scheduled release
-    if (scheduledReleaseTimeoutRef.current) {
-      clearTimeout(scheduledReleaseTimeoutRef.current);
-      scheduledReleaseTimeoutRef.current = null;
+    const { releaseAudio, record } = resolveRelease({
+      held: heldRef.current,
+      oneShot: allSampleData[selectedSampleId].settings.oneShot,
+      audioReleased: hasReleasedRef.current,
+    });
+    heldRef.current = false;
+    if (!record) return;
+
+    if (releaseAudio) {
+      // Stop scheduled release
+      if (scheduledReleaseTimeoutRef.current) {
+        clearTimeout(scheduledReleaseTimeoutRef.current);
+        scheduledReleaseTimeoutRef.current = null;
+      }
+
+      hasReleasedRef.current = true;
+      setPitchIsPlaying(false);
+      // Use the playNote stored at press time — avoids stale-baseNote mismatch
+      const { baseNote } = allSampleData[selectedSampleId].settings;
+      const playNote = lastPlayNoteRef.current ?? resolvePlayNote(note, String(baseNote));
+      sampler.triggerRelease(playNote, Tone.now());
+      const samplerObj = samplersRef.current[selectedSampleId];
+      if (samplerObj) samplerObj.triggerTime = null;
     }
-
-    hasReleasedRef.current = true;
-    setPitchIsPlaying(false);
-    // Use the playNote stored at press time — avoids stale-baseNote mismatch
-    const { baseNote } = allSampleData[selectedSampleId].settings;
-    const playNote = lastPlayNoteRef.current ?? resolvePlayNote(note, String(baseNote));
-    sampler.triggerRelease(playNote, Tone.now());
-    const samplerObj = samplersRef.current[selectedSampleId];
-    if (samplerObj) samplerObj.triggerTime = null;
 
     if (currentEvent.current?.startTime == null) return;
 
     if (isRecording) {
-      const loopSettings = allLoopSettings[currentLoop as LoopName];
+      const loopSettings = allLoopSettings[currentLoop];
       if (!loopSettings) return;
 
       // Fold a hit read just past the loop end back to the loop start
@@ -207,8 +215,7 @@ const PitchPad = forwardRef(function PitchPad(
 
   // Schedule playback of events, strictly for visual render feedback on the PitchPad
   useEffect(() => {
-    const sampleData = allSampleData[selectedSampleId];
-    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    const loopSettings = allLoopSettings[currentLoop];
 
     if (
       !loopSettings ||
@@ -217,38 +224,17 @@ const PitchPad = forwardRef(function PitchPad(
     )
       return;
 
-    const events = sampleData.events[currentLoop]
-      .filter((event) => event.note === note)
-      .map((event) => {
-        if (event.startTime == null) return;
-        const startTimeInSeconds = ticksToSeconds(
-          event.startTime,
-          loopSettings.bpm
-        );
-        const eventTime = sampleData.settings.quantize
-          ? quantize(
-              startTimeInSeconds,
-              sampleData.settings.quantVal,
-              loopSettings.bpm
-            )
-          : startTimeInSeconds;
-        return [
-          eventTime,
-          {
-            startTime: eventTime,
-            duration: event.duration,
-          },
-        ];
-      });
+    // Same schedule as the pad's audio, so loop-end hits wrap the same way
+    const events = getScheduleEvents(
+      allSampleData,
+      selectedSampleId,
+      currentLoop,
+      loopSettings
+    ).filter(([, event]) => event.note === note);
 
     partRef.current = new Tone.Part((time, event) => {
       if (!sampler) return;
-      if (
-        typeof event === "object" &&
-        event !== null &&
-        "duration" in event &&
-        event.duration !== null
-      ) {
+      if (isPlayableEvent(event)) {
         const settings = allSampleData[selectedSampleId].settings;
         const resolvedNote = resolvePlayNote(note, String(settings.baseNote));
         const { duration: actualDuration } = calcTriggerParams(

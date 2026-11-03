@@ -13,18 +13,20 @@ import { useMidiContext } from "../../app/contexts/MidiContext";
 import * as Tone from "tone";
 import AudioSnippetVisualizer from "./AudioSnippetVisualizer";
 import { CustomSampler } from "../../types/CustomSampler";
-import { drumKeys } from "src/lib/constants/drumKeys";
-import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
+import { drumKeys, getKeySymbol } from "src/lib/constants/drumKeys";
+import useDrumPadHotKeys from "src/app/hooks/useDrumPadHotKeys";
+import getScheduleEvents, { isPlayableEvent } from "src/lib/audio/util/getScheduleEvents";
 import { calcPlaybackRate } from "src/lib/audio/util/calcPlaybackRate";
 import { calcReleaseDelay } from "src/lib/audio/util/calcReleaseDelay";
 import { calcEventDuration } from "src/lib/audio/util/calcEventDuration";
+import { resolveRelease } from "src/lib/audio/padRelease";
 import { wrapTicks } from "src/lib/audio/util/timing";
 import { calcTriggerParams } from "src/lib/audio/util/calcTriggerParams";
 import { resolvePlayNote } from "src/lib/audio/util/resolvePlayNote";
 import type { SampleEventFE } from "src/types/audioTypesFE";
-import type { LoopName } from "src/types/audioTypes";
 import { useReportPadPlaying } from "src/app/hooks/usePadPlaying";
 import styles from "./DrumPad.module.css";
+import { padNumber } from "src/lib/constants/padLayout";
 
 type DrumPadProps = {
   id: string;
@@ -48,17 +50,18 @@ const DrumPad = forwardRef(function DrumPad(
     samplersRef,
   } = useAudioContext();
   const partRef = useRef<Tone.Part | null>(null);
-  const [isSelected, setIsSelected] = useState(false);
   const [sampleIsPlaying, setSampleIsPlaying] = useState(false);
   const scheduledReleaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasReleasedRef = useRef(false);
+  // True from press to release, whatever the sound is doing in between
+  const heldRef = useRef(false);
   const settingsRef = useRef(allSampleData[id]?.settings);
   useEffect(() => { settingsRef.current = allSampleData[id]?.settings; }, [allSampleData, id]);
   const { baseNote } = allSampleData[id]?.settings;
   const { hotKeysActive } = useUIContext();
   const { activeMidiNotes } = useMidiContext();
-  const padNum = id.split("-")[1];
-  const padKey = drumKeys[Number(padNum) - 1];
+  const padNum = padNumber(id);
+  const padKey = drumKeys[padNum - 1];
   useReportPadPlaying(id, "drum-pad", sampleIsPlaying);
   const currentEvent = useRef<SampleEventFE>({
     startTime: null,
@@ -83,6 +86,7 @@ const DrumPad = forwardRef(function DrumPad(
     const playNote = resolvePlayNote(String(baseNote), String(baseNote));
 
     hasReleasedRef.current = false;
+    heldRef.current = true;
     const bufDuration = sampler.bufferDuration;
     const offset = allSampleData[id].settings.reverse
       ? bufDuration - (end ?? bufDuration)
@@ -94,7 +98,6 @@ const DrumPad = forwardRef(function DrumPad(
       samplerObj.currentEvent.note = playNote;
     }
     setSelectedSampleId(id);
-    setIsSelected(true);
     setSampleIsPlaying(true);
 
     scheduledReleaseTimeoutRef.current = setTimeout(() => {
@@ -112,12 +115,13 @@ const DrumPad = forwardRef(function DrumPad(
       calcPlaybackRate(playNote as Tone.Unit.Frequency),
     ));
 
-    if (loopIsPlaying && isRecording) {
-      currentEvent.current.startTime = Tone.getTransport().ticks;
-      currentEvent.current.duration = 0;
-      currentEvent.current.note = playNote;
-      currentEvent.current.velocity = 1;
-    }
+    // Start a recorded hit, or clear any earlier one so it can't be saved twice
+    currentEvent.current = {
+      startTime: loopIsPlaying && isRecording ? Tone.getTransport().ticks : null,
+      duration: 0,
+      note: playNote,
+      velocity: 1,
+    };
   }, [
     allSampleData,
     baseNote,
@@ -132,28 +136,35 @@ const DrumPad = forwardRef(function DrumPad(
   const handleRelease = useCallback(() => {
     // const currentEvent = getCurrentEvent();
     if (!sampler) return;
-    if (allSampleData[id].settings.oneShot) return;
 
-    if (!sampleIsPlaying) return;
+    const { releaseAudio, record } = resolveRelease({
+      held: heldRef.current,
+      oneShot: allSampleData[id].settings.oneShot,
+      audioReleased: hasReleasedRef.current,
+    });
+    heldRef.current = false;
+    if (!record) return;
 
-    // Stop scheduled release
-    if (scheduledReleaseTimeoutRef.current) {
-      clearTimeout(scheduledReleaseTimeoutRef.current);
-      scheduledReleaseTimeoutRef.current = null;
+    if (releaseAudio) {
+      // Stop scheduled release
+      if (scheduledReleaseTimeoutRef.current) {
+        clearTimeout(scheduledReleaseTimeoutRef.current);
+        scheduledReleaseTimeoutRef.current = null;
+      }
+
+      hasReleasedRef.current = true;
+      setSampleIsPlaying(false);
+      // Transpose relative to C4 reference — see resolvePlayNote.ts
+      const playNote = resolvePlayNote(String(baseNote), String(baseNote));
+      sampler.triggerRelease(playNote, Tone.now());
+      const samplerObj = samplersRef.current[id];
+      if (samplerObj) samplerObj.triggerTime = null;
     }
-
-    hasReleasedRef.current = true;
-    setSampleIsPlaying(false);
-    // Transpose relative to C4 reference — see resolvePlayNote.ts
-    const playNote = resolvePlayNote(String(baseNote), String(baseNote));
-    sampler.triggerRelease(playNote, Tone.now());
-    const samplerObj = samplersRef.current[id];
-    if (samplerObj) samplerObj.triggerTime = null;
 
     if (currentEvent.current.startTime == null || !loopIsPlaying || !isRecording)
       return;
 
-    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    const loopSettings = allLoopSettings[currentLoop];
     if (!loopSettings) return;
 
     // Fold a hit read just past the loop end back to the loop start
@@ -190,7 +201,6 @@ const DrumPad = forwardRef(function DrumPad(
     loopIsPlaying,
     sampler,
     currentLoop,
-    sampleIsPlaying,
     allLoopSettings,
     setAllSampleData,
   ]);
@@ -212,27 +222,12 @@ const DrumPad = forwardRef(function DrumPad(
     }
   };
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (!hotKeysActive || e.metaKey || e.repeat) return;
-      if (e.key === padKey) {
-        e.preventDefault();
-        handlePress();
-      }
-    },
-    [hotKeysActive, handlePress, padKey]
-  );
-
-  const handleKeyUp = useCallback(
-    (e: KeyboardEvent) => {
-      if (!hotKeysActive) return;
-      if (e.key === padKey) {
-        e.preventDefault();
-        handleRelease();
-      }
-    },
-    [hotKeysActive, handleRelease, padKey]
-  );
+  useDrumPadHotKeys({
+    hotKeysActive,
+    padKey,
+    onPress: handlePress,
+    onRelease: handleRelease,
+  });
 
   // Get the color of the pad based on its mute/solo settings
   const getPadColor = () => {
@@ -248,38 +243,9 @@ const DrumPad = forwardRef(function DrumPad(
     return isActive ? styles.active : "";
   };
 
-  // Convert arrow keys to symbols for display
-  const getKeySymbol = (key: string): string => {
-    const arrowMap: Record<string, string> = {
-      ArrowLeft: "←",
-      ArrowUp: "↑",
-      ArrowRight: "→",
-      ArrowDown: "↓",
-    };
-    return arrowMap[key] || key;
-  };
-
-  // Activate hotkeys for pad interaction
-  // Add event listeners for keydown and keyup events
-  // and clean up on unmount or when hotKeysActive changes
-  useEffect(() => {
-    if (hotKeysActive) {
-      window.addEventListener("keydown", handleKeyDown);
-      window.addEventListener("keyup", handleKeyUp);
-    } else {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    }
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, [hotKeysActive, handleKeyDown, handleKeyUp]);
-
   // **** Schedule playback of sampler play events ****
   useEffect(() => {
-    const loopSettings = allLoopSettings[currentLoop as LoopName];
+    const loopSettings = allLoopSettings[currentLoop];
     if (
       !loopSettings ||
       !loopIsPlaying ||
@@ -297,12 +263,7 @@ const DrumPad = forwardRef(function DrumPad(
 
     partRef.current = new Tone.Part((time, event) => {
       if (!sampler) return;
-      if (
-        typeof event === "object" &&
-        event !== null &&
-        "duration" in event &&
-        event.duration !== null
-      ) {
+      if (isPlayableEvent(event)) {
         const { duration: actualDuration, offset } = calcTriggerParams(
           settingsRef.current,
           calcPlaybackRate(event.note),
@@ -352,10 +313,7 @@ const DrumPad = forwardRef(function DrumPad(
     if (partRef.current && !loopIsPlaying) disposePart();
   }, [loopIsPlaying]);
 
-  // Sync isSelected state with selectedSampleId
-  useEffect(() => {
-    setIsSelected(selectedSampleId === id);
-  }, [selectedSampleId, id]);
+  const isSelected = selectedSampleId === id;
 
   useImperativeHandle(ref, () => ({
     handlePress,
@@ -368,7 +326,7 @@ const DrumPad = forwardRef(function DrumPad(
       onFocus={handleFocus}
     >
       <button
-        id={padNum}
+        id={String(padNum)}
         ref={buttonRef}
         onMouseDown={handlePress}
         onMouseEnter={(e) => {
