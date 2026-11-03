@@ -7,32 +7,43 @@
 
 namespace citizen {
 
-// Offline: a fresh channel with the pad's sample and settings plays the
-// loop's hits once, with that loop's own tempo and swing. Muted pads render
-// silent stems, as in the live mix.
-std::optional<SampleBuffer> Engine::renderStem(const std::string& padId, Loop loop,
-                                               double sampleRate) const {
+std::optional<StemJob> Engine::stemJob(const std::string& padId, Loop loop) const {
     auto it = pads_.find(padId);
     const auto& loopSettings = loops_[loopIndex(loop)];
     if (it == pads_.end() || !loopSettings || !it->second->buffer) return std::nullopt;
     const Pad& pad = *it->second;
     if (pad.state.events[loopIndex(loop)].empty()) return std::nullopt;
 
-    const LoopTiming& t = loopSettings->timing;
-    const auto hits = buildSchedule(pad.state, loop, t);
+    const bool solosExist = std::any_of(pads_.begin(), pads_.end(), [](const auto& entry) {
+        return entry.second->state.settings.solo;
+    });
+    const auto& s = pad.state.settings;
+    return StemJob{pad.state, pad.buffer, *loopSettings, loop,
+                   computeGain(s.mute, s.solo, solosExist) == 0.0f};
+}
+
+std::optional<SampleBuffer> Engine::renderStem(const std::string& padId, Loop loop,
+                                               double sampleRate) const {
+    const auto job = stemJob(padId, loop);
+    if (!job) return std::nullopt;
+    return citizen::renderStem(*job, sampleRate);
+}
+
+// Offline: a fresh channel with the pad's sample and settings plays the
+// loop's hits once, with that loop's own tempo and swing. Muted pads render
+// silent stems, as in the live mix.
+SampleBuffer renderStem(const StemJob& job, double sampleRate) {
+    const LoopTiming& t = job.loop.timing;
+    const auto hits = buildSchedule(job.pad, job.loopName, t);
     const double seconds = calcRenderDuration(hits, loopDurationSeconds(t));
     const int totalFrames = static_cast<int>(std::ceil(seconds * sampleRate));
 
     constexpr int kBlock = 512;
     PadChannel channel;
     channel.prepare(sampleRate, kBlock);
-    channel.setBuffer(pad.buffer);
-    channel.setSettings(pad.state.settings);
-    const bool solosExist = std::any_of(pads_.begin(), pads_.end(), [](const auto& entry) {
-        return entry.second->state.settings.solo;
-    });
-    const auto& s = pad.state.settings;
-    channel.setMuteGain(computeGain(s.mute, s.solo, solosExist));
+    channel.setBuffer(job.buffer);
+    channel.setSettings(job.pad.settings);
+    channel.setMuteGain(job.silenced ? 0.0f : 1.0f);
 
     struct Start {
         int frame;
@@ -42,7 +53,7 @@ std::optional<SampleBuffer> Engine::renderStem(const std::string& padId, Loop lo
     for (const auto& hit : hits) {
         if (!hit.duration) continue;
         const double time =
-            hit.time + swingOffsetSeconds(secondsToTicks(hit.time, t.bpm), loopSettings->swing, t.bpm);
+            hit.time + swingOffsetSeconds(secondsToTicks(hit.time, t.bpm), job.loop.swing, t.bpm);
         starts.push_back({static_cast<int>(std::floor(time * sampleRate)), &hit});
     }
     std::sort(starts.begin(), starts.end(), [](const Start& a, const Start& b) { return a.frame < b.frame; });
@@ -50,7 +61,8 @@ std::optional<SampleBuffer> Engine::renderStem(const std::string& padId, Loop lo
     SampleBuffer out;
     out.sampleRate = sampleRate;
     out.channels.assign(2, std::vector<float>(totalFrames, 0.0f));
-    const double bufferDuration = pad.buffer->duration();
+    const double bufferDuration = job.buffer ? job.buffer->duration() : 0.0;
+    const auto& s = job.pad.settings;
 
     size_t next = 0;
     for (int done = 0; done < totalFrames; done += kBlock) {

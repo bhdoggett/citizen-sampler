@@ -16,6 +16,19 @@
 
 namespace citizen {
 
+// Everything needed to render one pad's stem, copied out of the engine so a
+// host can render without holding up the audio thread
+struct StemJob {
+    PadState pad;
+    std::shared_ptr<const SampleBuffer> buffer;
+    LoopSettings loop;
+    Loop loopName = Loop::A;
+    bool silenced = false; // muted, or another pad is soloed
+};
+
+// Render a stem offline as a stereo buffer
+SampleBuffer renderStem(const StemJob& job, double sampleRate);
+
 // The sound engine behind the UI boundary: it follows the pads and loops it
 // is sent, plays and records, and reports back through events. Mirrors the
 // web's ToneEngine.
@@ -53,7 +66,9 @@ public:
     // Events since the last call, oldest first
     std::vector<Event> takeEvents();
 
-    // Render one pad's hits in one loop, offline, as a stereo buffer
+    // The stem job for one pad's hits in one loop, or nothing when the
+    // loop has no settings, the pad has no sample or no hits there
+    std::optional<StemJob> stemJob(const std::string& padId, Loop loop) const;
     std::optional<SampleBuffer> renderStem(const std::string& padId, Loop loop,
                                            double sampleRate) const;
 
