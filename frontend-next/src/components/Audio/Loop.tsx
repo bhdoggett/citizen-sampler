@@ -1,5 +1,6 @@
 "use client";
 import { useAudioContext } from "../../app/contexts/AudioContext";
+import { useLoops } from "src/lib/song/react";
 import { useUIContext } from "src/app/contexts/UIContext";
 import LoopProgressBar from "./LoopProgress";
 import { useSelectLoop } from "src/app/hooks/useSelectLoop";
@@ -10,8 +11,8 @@ import { DEFAULT_LOOP_TIMING } from "src/lib/audio/defaults";
 import styles from "./Loop.module.css";
 
 const Loop = () => {
-  const { allLoopSettings, setAllLoopSettings, currentLoop, loopIsPlaying } =
-    useAudioContext();
+  const { setAllLoopSettings, currentLoop, loopIsPlaying } = useAudioContext();
+  const allLoopSettings = useLoops();
   const { openDialog } = useUIContext();
 
   const handleSelectLoop = useSelectLoop();

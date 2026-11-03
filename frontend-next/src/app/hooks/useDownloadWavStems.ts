@@ -1,4 +1,5 @@
 import toWav from "audiobuffer-to-wav";
+import { useSongStore } from "src/lib/song/react";
 import { useAudioContext } from "../contexts/AudioContext";
 import { useEngine } from "src/lib/engine/react";
 import type { StemAudio } from "src/lib/engine/protocol";
@@ -18,7 +19,8 @@ function asAudioBuffer(stem: StemAudio): AudioBuffer {
 }
 
 const useDownloadWavStems = () => {
-  const { allSampleData, songTitle } = useAudioContext();
+  const { songTitle } = useAudioContext();
+  const store = useSongStore();
   const engine = useEngine();
 
   // Download a given pad's loop as a WAV file
@@ -39,7 +41,7 @@ const useDownloadWavStems = () => {
 
   const downloadAllWavs = async () => {
     // One render at a time
-    for (const id of Object.keys(allSampleData)) {
+    for (const id of Object.keys(store.getState().samples)) {
       for (const loop of LOOP_NAMES) {
         try {
           await downloadWav(id, loop);

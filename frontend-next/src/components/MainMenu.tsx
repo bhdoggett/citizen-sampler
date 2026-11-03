@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useSongStore } from "src/lib/song/react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "../app/contexts/AuthContext";
 import { useAudioContext } from "../app/contexts/AudioContext";
@@ -29,10 +30,8 @@ const Menu: React.FC = () => {
   const { openDialog } = useUIContext();
   const {
     songTitle,
-    allLoopSettings,
     setAllLoopSettings,
     setCurrentLoop,
-    allSampleData,
     setSongTitle,
     songId,
     setSongId,
@@ -41,6 +40,7 @@ const Menu: React.FC = () => {
     setAllSampleData,
   } = useAudioContext();
   const downloadAllWavStems = useDownloadWavStems();
+  const store = useSongStore();
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -71,11 +71,12 @@ const Menu: React.FC = () => {
       return;
     }
 
+    const { samples, loops } = store.getState();
     const songData = {
       song: {
         title: songTitle,
-        loops: allLoopSettings,
-        samples: allSampleData,
+        loops,
+        samples,
       },
       userId,
     };

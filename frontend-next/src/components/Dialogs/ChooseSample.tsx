@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useSongStore } from "src/lib/song/react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import {
   getCollectionArrayFromName,
@@ -26,7 +27,6 @@ import { useEngine, usePreview } from "src/lib/engine/react";
 const ChooseSample: React.FC = () => {
   const {
     selectedSampleId,
-    allSampleData,
     updateSamplerData,
   } = useAudioContext();
   const { closeDialog } = useUIContext();
@@ -39,6 +39,7 @@ const ChooseSample: React.FC = () => {
   const [preview, setPreview] = useState<PreviewState | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const engine = useEngine();
+  const store = useSongStore();
   const enginePreview = usePreview();
   const previewUrlRef = useRef<string | null>(null);
   const groupNames = type === "loc" ? collectionNames : drumMachineNames;
@@ -126,7 +127,7 @@ const ChooseSample: React.FC = () => {
       type === "loc"
         ? sampleSource
         : drumUrl(sampleSource);
-    const existing = allSampleData[selectedSampleId];
+    const existing = store.getState().samples[selectedSampleId];
     if (!existing) return;
 
     const updatedData: SampleTypeFE = {

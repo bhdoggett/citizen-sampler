@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import {
   SampleTypeFE,
   SampleSettingsFE,
@@ -20,12 +20,7 @@ import {
 } from "src/lib/song/initSamples";
 import { createSongStore } from "src/lib/song/store";
 import { persistSong } from "src/lib/song/persist";
-import {
-  SongStoreProvider,
-  useAllSamples,
-  useLoops,
-  useSongStore,
-} from "src/lib/song/react";
+import { SongStoreProvider, useSongStore } from "src/lib/song/react";
 import { getEngine, getEngineView } from "src/lib/engine/createEngine";
 import { connectStoreToEngine } from "src/lib/engine/sync";
 import {
@@ -38,7 +33,8 @@ import {
 
 // The song itself lives in the song store and the sound in the engine. This
 // context keeps the session around them (title, selection, current loop) and
-// offers the store under its older names for components that read all pads.
+// offers store writes under their older names. Read song data with the song
+// store hooks, so a pad edit only re-renders what shows that pad.
 type AudioContextType = {
   songTitle: string;
   setSongTitle: React.Dispatch<React.SetStateAction<string>>;
@@ -65,9 +61,7 @@ type AudioContextType = {
   loopIsPlaying: boolean;
   isRecording: boolean;
 
-  allLoopSettings: AllLoopSettingsFE;
   setAllLoopSettings: React.Dispatch<React.SetStateAction<AllLoopSettingsFE>>;
-  allSampleData: Record<string, SampleTypeFE>;
   setAllSampleData: React.Dispatch<
     React.SetStateAction<Record<string, SampleTypeFE>>
   >;
@@ -77,7 +71,6 @@ type AudioContextType = {
   ) => void;
   selectedSampleId: string;
   setSelectedSampleId: React.Dispatch<React.SetStateAction<string>>;
-  solosExist: boolean;
   initLocSamplesFromOneCollection: (
     collection: string
   ) => Record<string, SampleTypeFE>;
@@ -122,8 +115,6 @@ export const AudioProvider = ({ children }: React.PropsWithChildren) => {
 const AudioSession = ({ children }: React.PropsWithChildren) => {
   const store = useSongStore();
   const engine = useEngine();
-  const allSampleData = useAllSamples();
-  const allLoopSettings = useLoops();
   const loopIsPlaying = useLoopIsPlaying();
   const isRecording = useIsRecording();
   const samplersLoading = useSamplesLoading();
@@ -176,12 +167,6 @@ const AudioSession = ({ children }: React.PropsWithChildren) => {
     [store]
   );
 
-  // Derived from allSampleData, so it can't drift out of sync
-  const solosExist = useMemo(
-    () => Object.values(allSampleData).some((sample) => sample.settings.solo),
-    [allSampleData]
-  );
-
   return (
     <AudioContextContext.Provider
       value={{
@@ -194,7 +179,6 @@ const AudioSession = ({ children }: React.PropsWithChildren) => {
         setCurrentLoop,
         loopIsPlaying,
         isRecording,
-        allLoopSettings,
         setAllLoopSettings,
         initLocSampleData,
         initKitSampleData,
@@ -202,12 +186,10 @@ const AudioSession = ({ children }: React.PropsWithChildren) => {
         initLocSamplesFromAllCollections,
         initKitSamples,
         updateSamplerData,
-        allSampleData,
         updateSamplerStateSettings,
         setAllSampleData,
         selectedSampleId,
         setSelectedSampleId,
-        solosExist,
       }}
     >
       {children}

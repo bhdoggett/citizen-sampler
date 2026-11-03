@@ -8,6 +8,7 @@ import React, {
   useMemo,
 } from "react";
 import { useTransportAnchor } from "src/lib/engine/react";
+import { useAllSamples, useLoops } from "src/lib/song/react";
 import { currentPosition } from "src/lib/engine/transportClock";
 import { useAudioContext } from "src/app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
@@ -41,14 +42,14 @@ type StepSequencerProps = {
 
 const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const {
-    allSampleData,
     setAllSampleData,
     currentLoop,
-    allLoopSettings,
     selectedSampleId,
     setSelectedSampleId,
     loopIsPlaying,
   } = useAudioContext();
+  const allSampleData = useAllSamples();
+  const allLoopSettings = useLoops();
   const { hotKeysActive, openDialog } =
     useUIContext();
 

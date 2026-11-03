@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useSongStore } from "src/lib/song/react";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useAuthContext } from "src/app/contexts/AuthContext";
 import { useUIContext } from "src/app/contexts/UIContext";
@@ -13,8 +14,8 @@ import styles from "./Dialog.module.css";
 const SaveNewSong: React.FC = () => {
   const [formSongTitle, setFormSongTitle] = useState<string>("");
   // const [apiResponse, setApiResponse] = useState<string | null>(null);
-  const { setSongTitle, setSongId, allSampleData, allLoopSettings } =
-    useAudioContext();
+  const { setSongTitle, setSongId } = useAudioContext();
+  const store = useSongStore();
   const { isAuthenticated, token, userId } = useAuthContext();
   const { openDialog } = useUIContext();
 
@@ -26,11 +27,12 @@ const SaveNewSong: React.FC = () => {
       return;
     }
 
+    const { samples, loops } = store.getState();
     const songData = {
       song: {
         title: formSongTitle,
-        loops: allLoopSettings,
-        samples: allSampleData,
+        loops,
+        samples,
       },
       userId,
     };

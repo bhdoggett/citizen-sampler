@@ -1,4 +1,5 @@
 import React, { memo, useEffect, useMemo, useRef } from "react";
+import { useAllSamples } from "src/lib/song/react";
 import SequencerRow from "./SequencerRow";
 import type { GridEvent } from "./hooks/useSequencerGrid";
 import type { Subdivision } from "./utils/gridConversions";
@@ -78,7 +79,8 @@ const SequencerGrid: React.FC<SequencerGridProps> = memo(
     isMaxZoom = false,
     onClearRow,
   }) => {
-    const { allSampleData, selectedSampleId } = useAudioContext();
+    const { selectedSampleId } = useAudioContext();
+    const allSampleData = useAllSamples();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     // Two-finger pinch/zoom on the grid
