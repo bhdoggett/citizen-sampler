@@ -126,3 +126,19 @@ TEST_CASE("a stem becomes sample rate plus channel arrays") {
     REQUIRE(json["channels"].size() == 2);
     CHECK(static_cast<double>(json["channels"][1][1]) == doctest::Approx(-0.5));
 }
+
+TEST_CASE("session state keeps each pad's setPad and the loops") {
+    juce::DynamicObject pads;
+    pads.setProperty("pad-1", parse(R"({"type":"setPad","padId":"pad-1","pad":{"url":"a.wav"}})"));
+    pads.setProperty("pad-2", parse(R"({"type":"setPad","padId":"pad-2","pad":{"url":"b.wav"}})"));
+    const auto loops = parse(R"({"type":"setLoops","loops":{"A":null}})");
+
+    const auto saved = juce::JSON::parse(wire::sessionStateJson(pads, loops));
+    CHECK(saved["pads"]["pad-1"]["pad"]["url"].toString() == "a.wav");
+    CHECK(saved["pads"]["pad-2"]["padId"].toString() == "pad-2");
+    CHECK(saved["loops"]["type"].toString() == "setLoops");
+
+    // The saved copy doesn't change with the live pads
+    pads.removeProperty("pad-1");
+    CHECK(juce::JSON::parse(wire::sessionStateJson(pads, loops))["pads"]["pad-1"].isVoid());
+}

@@ -200,4 +200,12 @@ juce::var toJson(const SampleBuffer& stem) {
     return object({{"sampleRate", stem.sampleRate}, {"channels", channels}});
 }
 
+juce::String sessionStateJson(const juce::DynamicObject& pads, const juce::var& loops) {
+    auto* state = new juce::DynamicObject();
+    // The var owns the copy; clone()'s unique_ptr must hand it over
+    state->setProperty("pads", juce::var(pads.clone().release()));
+    state->setProperty("loops", loops);
+    return juce::JSON::toString(juce::var(state), true);
+}
+
 } // namespace citizen::wire

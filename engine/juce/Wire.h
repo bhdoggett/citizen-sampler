@@ -23,4 +23,8 @@ juce::var toJson(const Event& event);
 // { sampleRate, channels: number[][] }
 juce::var toJson(const SampleBuffer& stem);
 
+// The plugin state saved with a DAW session: the last setPad command per pad
+// (keyed by padId) and the last setLoops command
+juce::String sessionStateJson(const juce::DynamicObject& pads, const juce::var& loops);
+
 } // namespace citizen::wire

@@ -188,10 +188,7 @@ juce::var CitizenProcessor::renderStem(const juce::String& padId, const juce::St
 void CitizenProcessor::getStateInformation(juce::MemoryBlock& destData) {
     // Hosts may save from any thread
     const std::lock_guard lock(stateLock_);
-    auto* state = new juce::DynamicObject();
-    state->setProperty("pads", juce::var(savedPads_->clone().get()));
-    state->setProperty("loops", savedLoops_);
-    const auto json = juce::JSON::toString(juce::var(state), true);
+    const auto json = wire::sessionStateJson(*savedPads_, savedLoops_);
     destData.replaceAll(json.toRawUTF8(), json.getNumBytesAsUTF8());
 }
 
