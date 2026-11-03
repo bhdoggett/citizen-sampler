@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <numbers>
 
 namespace citizen::dsp {
 
@@ -11,7 +12,7 @@ public:
     enum class Type { LowPass, HighPass };
 
     void set(Type type, double frequency, double sampleRate, double q = 1.0) {
-        const double w0 = 2.0 * M_PI * frequency / sampleRate;
+        const double w0 = 2.0 * std::numbers::pi * frequency / sampleRate;
         const double cosw = std::cos(w0);
         const double alpha = std::sin(w0) / (2.0 * q);
         const double a0 = 1.0 + alpha;

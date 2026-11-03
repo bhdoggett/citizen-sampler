@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 
 #include <cmath>
+#include <numbers>
 #include <vector>
 
 #include "citizen/dsp/Biquad.h"
@@ -14,7 +15,7 @@ constexpr double kRate = 44100.0;
 
 std::vector<float> sine(double frequency, int frames) {
     std::vector<float> out(frames);
-    for (int i = 0; i < frames; ++i) out[i] = static_cast<float>(std::sin(2 * M_PI * frequency * i / kRate));
+    for (int i = 0; i < frames; ++i) out[i] = static_cast<float>(std::sin(2 * std::numbers::pi * frequency * i / kRate));
     return out;
 }
 

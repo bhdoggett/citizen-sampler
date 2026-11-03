@@ -1,5 +1,8 @@
 #include <doctest/doctest.h>
 
+#include <cmath>
+#include <numbers>
+
 #include "citizen/Rules.h"
 
 using namespace citizen;
@@ -114,5 +117,5 @@ TEST_CASE("swingOffsetSeconds follows Tone.js") {
     CHECK(swingOffsetSeconds(96, 1.0, 120) == doctest::Approx(0.5 / 3));
     CHECK(swingOffsetSeconds(96 + 192, 0.5, 120) == doctest::Approx(0.25 / 3));
     // Sixteenths are pushed less, along a sine
-    CHECK(swingOffsetSeconds(48, 1.0, 120) == doctest::Approx(std::sin(0.25 * M_PI) * 0.5 / 3));
+    CHECK(swingOffsetSeconds(48, 1.0, 120) == doctest::Approx(std::sin(0.25 * std::numbers::pi) * 0.5 / 3));
 }

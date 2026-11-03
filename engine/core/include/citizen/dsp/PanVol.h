@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <numbers>
 
 namespace citizen::dsp {
 
@@ -16,14 +17,14 @@ inline PanGains panGains(double pan, bool monoSource) {
     const double p = std::fmax(-1.0, std::fmin(1.0, pan));
     if (monoSource) {
         const double x = (p + 1.0) / 2.0;
-        const float l = static_cast<float>(std::cos(x * M_PI / 2.0));
-        const float r = static_cast<float>(std::sin(x * M_PI / 2.0));
+        const float l = static_cast<float>(std::cos(x * std::numbers::pi / 2.0));
+        const float r = static_cast<float>(std::sin(x * std::numbers::pi / 2.0));
         // Both channels carry the same signal, so read the left one only
         return {l, 0.0f, r, 0.0f};
     }
     const double x = p <= 0 ? p + 1.0 : p;
-    const float gl = static_cast<float>(std::cos(x * M_PI / 2.0));
-    const float gr = static_cast<float>(std::sin(x * M_PI / 2.0));
+    const float gl = static_cast<float>(std::cos(x * std::numbers::pi / 2.0));
+    const float gr = static_cast<float>(std::sin(x * std::numbers::pi / 2.0));
     if (p <= 0) return {1.0f, gl, 0.0f, gr};
     return {gl, 0.0f, gr, 1.0f};
 }

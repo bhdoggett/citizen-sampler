@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <limits>
 #include <string>
 
@@ -74,7 +75,7 @@ double swingOffsetSeconds(double ticks, double swing, double bpm) {
     const double t = std::round(ticks);
     if (swing <= 0 || std::fmod(t, window) == 0.0) return 0.0;
     const double progress = std::fmod(t, window) / window;
-    const double amount = std::sin(progress * M_PI) * swing;
+    const double amount = std::sin(progress * std::numbers::pi) * swing;
     return ticksToSeconds(window / 3.0, bpm) * amount;
 }
 
