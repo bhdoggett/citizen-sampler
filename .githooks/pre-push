@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Checks each part of the repo the push changes, before it leaves the machine.
+# Turned on per clone with
+#   git config core.hooksPath .githooks
+# and skipped for one push with `git push --no-verify`.
+#
+# It checks the working tree, not the commits being pushed, so commit or stash
+# anything unfinished first or it will be checked too.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+zero=0000000000000000000000000000000000000000
+changed=""
+while read -r local_ref local_sha _ remote_sha; do
+  # Tags and deletions change no code.
+  [[ "$local_ref" == refs/tags/* || "$local_sha" == "$zero" ]] && continue
+  if [[ "$remote_sha" == "$zero" ]]; then
+    # A new branch: compare with where it left main.
+    base=$(git merge-base "$local_sha" origin/main 2>/dev/null || true)
+  else
+    base=$remote_sha
+  fi
+  if [[ -n "$base" ]]; then
+    changed+=$(git diff --name-only "$base" "$local_sha")$'\n'
+  else
+    changed+=$(git ls-tree -r --name-only "$local_sha")$'\n'
+  fi
+done
+
+touches() { grep -q "^$1/" <<<"$changed"; }
+
+if touches frontend-next && [[ -d frontend-next ]]; then
+  echo "pre-push: frontend-next typecheck and tests"
+  pnpm --dir frontend-next exec tsc --noEmit
+  pnpm --dir frontend-next test
+fi
+
+if touches backend && [[ -d backend ]]; then
+  echo "pre-push: backend typecheck"
+  pnpm --dir backend run typecheck
+fi
+
+# The same two builds the release runs; both are incremental after the first.
+if touches engine && [[ -d engine ]]; then
+  echo "pre-push: engine tests"
+  cmake -S engine -B engine/build -G Ninja >/dev/null
+  cmake --build engine/build
+  engine/build/tests/citizen_core_tests
+  cmake -S engine -B engine/build-juce -G Ninja -DCITIZEN_BUILD_JUCE=ON >/dev/null
+  cmake --build engine/build-juce --target CitizenWireTests
+  engine/build-juce/juce/CitizenWireTests_artefacts/Debug/CitizenWireTests
+fi

@@ -163,6 +163,14 @@ VITE_API_BASE_URL=http://localhost:8000
 pnpm dev
 ```
 
+### 4. Turn On the Pre-Push Checks
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Before each push, the hook typechecks and tests whichever of `frontend-next`, `backend` and `engine` the push changes, and blocks the push if a check fails. `git push --no-verify` skips it.
+
 ---
 
 ## License
