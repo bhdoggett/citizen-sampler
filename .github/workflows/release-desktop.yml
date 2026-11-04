@@ -1,27 +1,26 @@
 name: Release desktop
 
-# Builds the desktop installers and attaches them to a draft GitHub Release:
-#   macOS    Citizen-Sampler-<version>-mac.pkg (universal: app, AU, VST3)
-#   Windows  Citizen-Sampler-<version>-windows-setup.exe (app, VST3)
-# Triggered by pushing a desktop version tag that matches the version in
-# engine/CMakeLists.txt, e.g.:
-#   git tag desktop-v0.1.0 && git push origin desktop-v0.1.0
-# Can also be run by hand from the Actions tab. Pull requests that touch the
-# desktop build run it too, unsigned, as a build check. Runs without a tag
-# upload the installers as workflow artifacts instead of making a release.
+# Builds the Windows installer, Citizen-Sampler-<version>-windows-setup.exe
+# (app and VST3), and attaches it to a draft GitHub Release. The Mac installer
+# is built, signed and notarized locally by scripts/package-mac.sh, and the
+# desktop-release workflow (/release, see .release.yaml) attaches it to the
+# same draft before publishing. Mac builds stay off CI to save Actions minutes.
 #
-# Signing turns on once the secrets exist; without them the installers are
-# unsigned, which is enough to check the build. The Apple and Azure secrets
-# use the same names as up-and-running's release workflow.
+# Triggered by the release tag v<version>, which must match the version in
+# engine/CMakeLists.txt. Can also be run by hand from the Actions tab, and pull
+# requests that touch the desktop build run it unsigned as a build check. Runs
+# without a tag upload the installer as a workflow artifact instead.
+#
+# Signing turns on once the Azure secrets exist; without them the installer
+# is unsigned, which is enough to check the build.
 on:
   push:
     tags:
-      - "desktop-v*"
+      - "v*"
   pull_request:
     paths:
       - "engine/**"
       - "installer/**"
-      - "scripts/package-mac.sh"
       - ".github/workflows/release-desktop.yml"
   workflow_dispatch:
 
@@ -29,119 +28,6 @@ env:
   JUCE_VERSION: "8.0.12"
 
 jobs:
-  mac:
-    runs-on: macos-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Check the tag matches the engine version
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          version=$(sed -nE 's/^project\(CitizenSamplerEngine VERSION ([0-9.]+).*/\1/p' engine/CMakeLists.txt)
-          if [[ "${GITHUB_REF_NAME#desktop-v}" != "$version" ]]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match engine version $version"
-            exit 1
-          fi
-
-      - name: Check out JUCE
-        uses: actions/checkout@v5
-        with:
-          repository: juce-framework/JUCE
-          ref: ${{ env.JUCE_VERSION }}
-          path: JUCE
-
-      - uses: pnpm/action-setup@v4
-        with:
-          package_json_file: frontend-next/package.json
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-          cache: pnpm
-          cache-dependency-path: frontend-next/pnpm-lock.yaml
-
-      - name: Install tools and frontend dependencies
-        run: |
-          brew install ninja
-          pnpm --dir frontend-next install --frozen-lockfile
-
-      # Imports both Developer ID certificates into a throwaway keychain.
-      #   APPLE_CERTIFICATE                     Developer ID Application .p12, base64
-      #   APPLE_CERTIFICATE_PASSWORD
-      #   APPLE_SIGNING_IDENTITY                "Developer ID Application: Doggett Systems LLC (9B9573H63M)"
-      #   APPLE_INSTALLER_CERTIFICATE           Developer ID Installer .p12, base64
-      #   APPLE_INSTALLER_CERTIFICATE_PASSWORD
-      #   APPLE_INSTALLER_IDENTITY              "Developer ID Installer: Doggett Systems LLC (9B9573H63M)"
-      #   APPLE_API_ISSUER, APPLE_API_KEY, APPLE_API_KEY_P8   App Store Connect API key, for notarizing
-      - name: Prepare Apple signing
-        if: github.event_name != 'pull_request'
-        env:
-          CERT: ${{ secrets.APPLE_CERTIFICATE }}
-          CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          INSTALLER_CERT: ${{ secrets.APPLE_INSTALLER_CERTIFICATE }}
-          INSTALLER_CERT_PASSWORD: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}
-          INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
-          API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          API_KEY: ${{ secrets.APPLE_API_KEY }}
-          API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
-        run: |
-          set -euo pipefail
-          if [[ -z "$CERT" ]]; then
-            echo "::warning::No Apple certificate: this Mac build is unsigned"
-            exit 0
-          fi
-          keychain="$RUNNER_TEMP/signing.keychain-db"
-          keychain_password=$(uuidgen)
-          security create-keychain -p "$keychain_password" "$keychain"
-          security set-keychain-settings -lut 21600 "$keychain"
-          security unlock-keychain -p "$keychain_password" "$keychain"
-          import() { # base64 p12, password
-            printf '%s' "$1" | base64 --decode > "$RUNNER_TEMP/cert.p12"
-            security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$2" \
-              -T /usr/bin/codesign -T /usr/bin/productbuild
-            rm "$RUNNER_TEMP/cert.p12"
-          }
-          import "$CERT" "$CERT_PASSWORD"
-          echo "MAC_SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
-          if [[ -n "$INSTALLER_CERT" ]]; then
-            import "$INSTALLER_CERT" "$INSTALLER_CERT_PASSWORD"
-            echo "MAC_INSTALLER_IDENTITY=$INSTALLER_IDENTITY" >> "$GITHUB_ENV"
-          fi
-          security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain" >/dev/null
-          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
-          if [[ -n "$API_KEY_P8" ]]; then
-            key_path="$RUNNER_TEMP/AuthKey_$API_KEY.p8"
-            printf '%s' "$API_KEY_P8" > "$key_path"
-            {
-              echo "APPLE_API_KEY_PATH=$key_path"
-              echo "APPLE_API_KEY=$API_KEY"
-              echo "APPLE_API_ISSUER=$API_ISSUER"
-            } >> "$GITHUB_ENV"
-          fi
-
-      - name: Build, sign and notarize the installer
-        env:
-          JUCE_DIR: ${{ github.workspace }}/JUCE
-        run: scripts/package-mac.sh
-
-      - name: Attach to a draft release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          name: Citizen Sampler desktop ${{ github.ref_name }}
-          files: dist/*.pkg
-
-      - name: Upload as a workflow artifact
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: mac-installer
-          path: dist/*.pkg
-
   windows:
     runs-on: windows-latest
     permissions:
@@ -156,10 +42,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Require signing for a release
+        if: startsWith(github.ref, 'refs/tags/') && env.AZURE_SIGNING != 'true'
+        run: |
+          echo "::error::A release must be signed: add the AZURE_* secrets"
+          exit 1
+
       - name: Read the engine version
         run: |
           version=$(sed -nE 's/^project\(CitizenSamplerEngine VERSION ([0-9.]+).*/\1/p' engine/CMakeLists.txt)
-          if [[ "$GITHUB_REF" == refs/tags/* && "${GITHUB_REF_NAME#desktop-v}" != "$version" ]]; then
+          if [[ "$GITHUB_REF" == refs/tags/* && "${GITHUB_REF_NAME#v}" != "$version" ]]; then
             echo "::error::Tag $GITHUB_REF_NAME does not match engine version $version"
             exit 1
           fi
@@ -251,7 +143,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          name: Citizen Sampler desktop ${{ github.ref_name }}
+          name: Citizen Sampler ${{ github.ref_name }}
           files: dist/*-setup.exe
 
       - name: Upload as a workflow artifact

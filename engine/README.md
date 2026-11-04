@@ -47,3 +47,22 @@ cmake --build engine/build-release
 
 `CITIZEN_UI_URL` still overrides the bundled UI, which helps when debugging a
 release build against the dev server.
+
+## Release
+
+Desktop releases are cut with `/release`, which runs the `desktop-release`
+workflow from `~/code/release-swamp` against `.release.yaml`. The version is
+the one in `project(CitizenSamplerEngine VERSION ...)` in
+`engine/CMakeLists.txt`, and the tag is `v<version>`.
+
+- You approve once, before anything is pushed.
+- This Mac builds, signs and notarizes the Mac installer with
+  `scripts/package-mac.sh` (the app, the AU and the VST3 in one `.pkg`).
+- The tag push runs `.github/workflows/release-desktop.yml`, which builds and
+  signs the Windows installer into a draft release.
+- The workflow attaches the Mac `.pkg` to that draft, sets the notes and
+  publishes it.
+
+To build the Mac installer by hand, run `scripts/package-mac.sh`. Signing and
+notarization run only when their settings are present; the script's header
+lists them.

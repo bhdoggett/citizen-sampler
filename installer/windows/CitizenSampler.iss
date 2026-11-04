@@ -1,6 +1,6 @@
 ; The Windows installer: the standalone app into Program Files and the VST3
 ; plugin into the shared VST3 folder, each a checkbox in the installer.
-; Built by .github/workflows/release.yml:
+; Built by .github/workflows/release-desktop.yml:
 ;   iscc /DVersion=0.1.0 /DArtefacts=<...>\CitizenSampler_artefacts\Release /DOutputDir=<...>\dist CitizenSampler.iss
 
 #ifndef Version
