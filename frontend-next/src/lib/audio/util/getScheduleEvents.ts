@@ -13,7 +13,7 @@ type SampleEvent = {
 
 type ScheduleEvent = [number, SampleEvent];
 
-type AllSampleData = Record<string, SampleTypeFE>;
+type SchedulablePad = Pick<SampleTypeFE, "events" | "settings">;
 
 export type { LoopTiming };
 
@@ -32,17 +32,14 @@ export function isPlayableEvent(
 
 // timing is the tempo and length of the loop being scheduled. Loops always start at 0.
 const getScheduleEvents = (
-  allSampleData: AllSampleData,
-  id: string,
+  sampleData: SchedulablePad,
   currentLoop: LoopName,
   timing: LoopTiming
 ): ScheduleEvent[] => {
-  const sampleData = allSampleData[id];
-
   const loopStart = 0;
   const loopEnd = loopDurationSeconds(timing);
 
-  const events = sampleData.events[currentLoop]
+  const events = (sampleData.events[currentLoop] ?? [])
     .map((event) => {
       // Check for null/undefined but allow 0 (start of loop)
       if (event.startTime == null) return;
@@ -63,6 +60,9 @@ const getScheduleEvents = (
         eventTime = loopStart;
       }
 
+      // A hit past the loop end, left from a longer loop, is never reached
+      if (eventTime > loopEnd) return;
+
       return [
         eventTime,
         {
@@ -76,7 +76,7 @@ const getScheduleEvents = (
     .filter((e): e is ScheduleEvent => !!e);
 
   // Filter out undefined events and remove events that occur at the same start time AND same note
-  const eventsNoDuplicates = events.filter((event, index, arr) => {
+  return events.filter((event, index, arr) => {
     if (!event) return false;
     // Check if there is a previous event with the same start time and note
     for (let i = 0; i < index; i++) {
@@ -90,14 +90,6 @@ const getScheduleEvents = (
     }
     return true;
   });
-
-  if (!eventsNoDuplicates || eventsNoDuplicates.length === 0) {
-    console.warn(
-      `No valid events found for sample ID ${id} in loop ${currentLoop}.`
-    );
-    return [];
-  }
-  return eventsNoDuplicates;
 };
 
 export default getScheduleEvents;

@@ -7,7 +7,9 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import * as Tone from "tone";
+import { useTransportAnchor } from "src/lib/engine/react";
+import { useAllSamples, useLoops } from "src/lib/song/react";
+import { currentPosition } from "src/lib/engine/transportClock";
 import { useAudioContext } from "src/app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
 import SequencerGrid from "./SequencerGrid";
@@ -40,14 +42,14 @@ type StepSequencerProps = {
 
 const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const {
-    allSampleData,
     setAllSampleData,
     currentLoop,
-    allLoopSettings,
     selectedSampleId,
     setSelectedSampleId,
     loopIsPlaying,
   } = useAudioContext();
+  const allSampleData = useAllSamples();
+  const allLoopSettings = useLoops();
   const { hotKeysActive, openDialog } =
     useUIContext();
 
@@ -62,7 +64,7 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const [copiedFromLoop, setCopiedFromLoop] = useState<LoopName | null>(null);
   const [ctrlHeld, setCtrlHeld] = useState(false);
   const copiedPatternRef = useRef<Record<string, SampleEventFE[]> | null>(null);
-  const rafRef = useRef<number | null>(null);
+  const transportAnchor = useTransportAnchor();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const loopSettings = allLoopSettings[currentLoop];
@@ -128,34 +130,27 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
     return () => window.removeEventListener("resize", updateContainerWidth);
   }, []);
 
-  // Playhead animation
+  // Playhead animation, worked out from the last transport anchor
   useEffect(() => {
-    if (!loopIsPlaying || !loopSettings) {
+    if (!transportAnchor.playing || !loopSettings) {
       setPlayheadPosition(0);
       return;
     }
 
+    let frame = 0;
     const updatePlayhead = () => {
-      const transport = Tone.getTransport();
-      const loopEndSeconds = Tone.Time(transport.loopEnd).toSeconds();
-      const currentSeconds = transport.seconds % loopEndSeconds;
       const position = secondsToGridPosition(
-        currentSeconds,
+        currentPosition(transportAnchor, performance.now()),
         loopSettings,
         subdivision,
       );
       setPlayheadPosition(position);
-      rafRef.current = requestAnimationFrame(updatePlayhead);
+      frame = requestAnimationFrame(updatePlayhead);
     };
 
-    rafRef.current = requestAnimationFrame(updatePlayhead);
-
-    return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-    };
-  }, [loopIsPlaying, loopSettings, subdivision]);
+    frame = requestAnimationFrame(updatePlayhead);
+    return () => cancelAnimationFrame(frame);
+  }, [transportAnchor, loopSettings, subdivision]);
 
   // Handle cell click to create new event
   const handleCellClick = useCallback(

@@ -1,105 +1,40 @@
 "use client";
-import { useEffect, useRef, useCallback } from "react";
-import * as Tone from "tone";
+import { useEffect, useState, useCallback } from "react";
 import { Circle, Music3 } from "lucide-react";
 import styles from "./Transport.module.css";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
+import { useEngine } from "src/lib/engine/react";
 
 const Transport = () => {
-  const {
-    loopIsPlaying,
-    setLoopIsPlaying,
-    isRecording,
-    setIsRecording,
-    metronomeActive,
-    setMetronomeActive,
-    allLoopSettings,
-    currentLoop,
-  } = useAudioContext();
-
-  const metronomeRef = useRef<Tone.Sampler | null>(null);
-  const gainNodeRef = useRef<Tone.Gain | null>(null);
+  const { loopIsPlaying, isRecording } = useAudioContext();
+  const engine = useEngine();
+  const [metronomeActive, setMetronomeActive] = useState(false);
 
   useEffect(() => {
-    metronomeRef.current = new Tone.Sampler({
-      urls: { C6: "hi-block.wav", G5: "lo-block.wav" },
-      baseUrl: "/samples/metronome/",
-    });
-    gainNodeRef.current = new Tone.Gain(0).toDestination();
-    metronomeRef.current.connect(gainNodeRef.current);
-  }, []);
+    engine.send({ type: "setMetronome", on: metronomeActive });
+  }, [engine, metronomeActive]);
 
   const handlePlay = useCallback(async () => {
     if (loopIsPlaying) return;
-    await Tone.start();
-    Tone.getTransport().start();
-    setLoopIsPlaying(true);
-  }, [loopIsPlaying, setLoopIsPlaying]);
+    await engine.start();
+    engine.send({ type: "play" });
+  }, [engine, loopIsPlaying]);
 
   const handleRecord = useCallback(() => {
-    setIsRecording((prev) => !prev);
+    engine.send({ type: "setRecording", on: !isRecording });
     if (!loopIsPlaying) handlePlay();
-  }, [loopIsPlaying, handlePlay, setIsRecording]);
+  }, [engine, isRecording, loopIsPlaying, handlePlay]);
 
+  // Stopping also ends recording
   const handleStop = useCallback(() => {
     if (!loopIsPlaying) return;
-    Tone.getTransport().stop();
-    setLoopIsPlaying(false);
-    setIsRecording(false);
-  }, [loopIsPlaying, setLoopIsPlaying, setIsRecording]);
+    engine.send({ type: "stop" });
+  }, [engine, loopIsPlaying]);
 
   const handleToggleMetronome = useCallback(() => {
     setMetronomeActive((prev) => !prev);
-  }, [setMetronomeActive]);
-  // Schedule metronome playback based on time signature
-
-  useEffect(() => {
-    if (!gainNodeRef.current) return;
-    if (!metronomeActive) {
-      gainNodeRef.current.gain.setValueAtTime(0, Tone.now());
-    } else {
-      gainNodeRef.current.gain.setValueAtTime(1, Tone.now());
-    }
-  }, [metronomeActive]);
-
-  const loopSettingsRef = useRef(allLoopSettings);
-  useEffect(() => {
-    loopSettingsRef.current = allLoopSettings;
-  }, [allLoopSettings]);
-
-  const currentLoopRef = useRef(currentLoop);
-  useEffect(() => {
-    currentLoopRef.current = currentLoop;
-  }, [currentLoop]);
-
-  useEffect(() => {
-    // beatsCount will increment to keep track of when down-beat or off-beat should play
-    let beatCount = 0;
-
-    const metronomeLoop = Tone.getTransport().scheduleRepeat((time) => {
-      if (!loopIsPlaying || !metronomeRef.current) return;
-
-      const [, beats] = (Tone.getTransport().position as string)
-        .split(":")
-        .map(Number);
-      beatCount =
-        beats %
-        loopSettingsRef.current[currentLoopRef.current]!.beats;
-
-      if (beatCount === 0) {
-        metronomeRef.current.triggerAttackRelease("C6", "8n", time);
-      } else {
-        metronomeRef.current.triggerAttackRelease("G5", "8n", time);
-      }
-    }, "4n");
-
-    const transportForCleanup = Tone.getTransport();
-
-    return () => {
-      transportForCleanup.clear(metronomeLoop);
-    };
-  }, [loopIsPlaying]);
+  }, []);
 
   const { hotKeysActive } = useUIContext();
 

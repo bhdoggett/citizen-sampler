@@ -1,11 +1,12 @@
 import { useCallback } from "react";
+import { useLoops } from "src/lib/song/react";
 import { useAudioContext } from "../contexts/AudioContext";
 import { useUIContext } from "../contexts/UIContext";
 import type { LoopName } from "../../types/audioTypes";
 
 export function useSelectLoop(): (loop: LoopName) => void {
+  const allLoopSettings = useLoops();
   const {
-    allLoopSettings,
     setAllLoopSettings,
     currentLoop,
     setCurrentLoop,

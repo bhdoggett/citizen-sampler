@@ -12,15 +12,13 @@ const CollectionMenu: React.FC = () => {
   const {
     initLocSamplesFromAllCollections,
     initLocSamplesFromOneCollection,
-    loadSamplersToRef,
     setAllSampleData,
-    storeAudioInIndexedDB,
   } = useAudioContext();
   const { openDialog, closeDialog } = useUIContext();
   const [index, setIndex] = useState(0);
   const c = collectionNames[index];
 
-  const handleSelect = async (collection?: string) => {
+  const handleSelect = (collection?: string) => {
     const newSamples = collection
       ? initLocSamplesFromOneCollection(collection)
       : initLocSamplesFromAllCollections();
@@ -38,11 +36,7 @@ const CollectionMenu: React.FC = () => {
       };
     });
 
-    await loadSamplersToRef(newSamples);
-    // Store all new samples in IndexedDB
-    for (const [sampleId, sample] of Object.entries(newSamples)) {
-      await storeAudioInIndexedDB(sample.url, sampleId);
-    }
+    // The engine loads the new samples as it follows the store
     closeDialog();
   };
 

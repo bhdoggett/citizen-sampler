@@ -10,7 +10,10 @@ import beats from "./routes/beats.js";
 const app = new Hono();
 
 app.use(logger());
-app.use(cors({ origin: env.FRONTEND_URL }));
+// The desktop app serves its bundled UI from JUCE's own origin: juce:// on
+// macOS, https://juce.backend on Windows (WebView2).
+const DESKTOP_ORIGINS = ["juce://juce.backend", "https://juce.backend"];
+app.use(cors({ origin: [env.FRONTEND_URL, ...DESKTOP_ORIGINS] }));
 
 app.get("/health", (c) =>
   c.json({ ok: true, db: mongoose.connection.readyState === 1 })

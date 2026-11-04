@@ -10,9 +10,7 @@ import { KIT_PADS_LABEL } from "src/lib/constants/padLayout";
 const KitMenu: React.FC = () => {
   const {
     initKitSamples,
-    loadSamplersToRef,
     setAllSampleData,
-    storeAudioInIndexedDB,
   } = useAudioContext();
   const { openDialog, closeDialog } = useUIContext();
   const drumMachineNames: string[] = Object.values(drumMachines).map(
@@ -23,7 +21,7 @@ const KitMenu: React.FC = () => {
     drumMachineIds[0] as DrumMachineId
   );
 
-  const handleSelect = async (id: DrumMachineId) => {
+  const handleSelect = (id: DrumMachineId) => {
     const newSamples = initKitSamples(id);
 
     setAllSampleData((prev) => {
@@ -39,11 +37,7 @@ const KitMenu: React.FC = () => {
       };
     });
 
-    await loadSamplersToRef(newSamples);
-    // Store all new samples in IndexedDB
-    for (const [sampleId, sample] of Object.entries(newSamples)) {
-      await storeAudioInIndexedDB(sample.url, sampleId);
-    }
+    // The engine loads the new samples as it follows the store
     closeDialog();
   };
 

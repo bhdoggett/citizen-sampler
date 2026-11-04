@@ -1,32 +1,30 @@
-import { useEffect, useRef, useState } from "react";
-import * as Tone from "tone";
-import { useAudioContext } from "src/app/contexts/AudioContext";
+import { useEffect, useState } from "react";
+import { useTransportAnchor } from "src/lib/engine/react";
+import { currentPosition } from "src/lib/engine/transportClock";
 import type { CSSProperties } from "react";
 import styles from "./LoopProgress.module.css";
 
 const LoopProgressBar = () => {
-  const { allLoopSettings, loopIsPlaying } = useAudioContext();
+  const anchor = useTransportAnchor();
   const [progress, setProgress] = useState(0);
-  const rafRef = useRef<number | null>(null);
 
+  // Worked out from the last transport anchor each frame, so nothing is read
+  // from the engine while playing
   useEffect(() => {
-    const updateProgress = () => {
-      const transport = Tone.getTransport();
-      const loopEndSeconds = Tone.Time(transport.loopEnd).toSeconds();
-      const current = transport.seconds % loopEndSeconds;
-      setProgress(current / loopEndSeconds);
-      rafRef.current = requestAnimationFrame(updateProgress);
+    if (anchor.loopDuration <= 0) return;
+    if (!anchor.playing) {
+      setProgress(anchor.position / anchor.loopDuration);
+      return;
+    }
+    let frame = 0;
+    const update = () => {
+      setProgress(currentPosition(anchor, performance.now()) / anchor.loopDuration);
+      frame = requestAnimationFrame(update);
     };
+    frame = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(frame);
+  }, [anchor]);
 
-    rafRef.current = requestAnimationFrame(updateProgress);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [allLoopSettings]);
-
-  useEffect(() => {
-    if (!loopIsPlaying) rafRef.current = null;
-  });
   return (
     <div
       className={styles.track}

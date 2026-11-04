@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useCallback, useState } from "react";
+import { useSongStore } from "src/lib/song/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import styles from "./page.module.css";
@@ -62,7 +63,8 @@ export default function Home() {
     setSequencerVisible,
     hotKeysActive,
   } = useUIContext();
-  const { selectedSampleId, samplersLoading, allSampleData, updateSamplerStateSettings } = useAudioContext();
+  const { selectedSampleId, samplersLoading, updateSamplerStateSettings } = useAudioContext();
+  const store = useSongStore();
   const handleSelectLoop = useSelectLoop();
 
   const padsViewRef = useRef<HTMLDivElement>(null);
@@ -110,8 +112,9 @@ export default function Home() {
           setSequencerVisible(false);
         } else if (key === "Q") {
           e.preventDefault();
-          if (selectedSampleId && allSampleData[selectedSampleId]) {
-            const current = allSampleData[selectedSampleId].settings.quantize;
+          const pad = store.getState().samples[selectedSampleId];
+          if (pad) {
+            const current = pad.settings.quantize;
             updateSamplerStateSettings(selectedSampleId, { quantize: !current });
           }
         }
@@ -126,7 +129,7 @@ export default function Home() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hotKeysActive, handleToggleSequencer, handleSelectLoop, setSequencerVisible, selectedSampleId, allSampleData, updateSamplerStateSettings, openDialog]);
+  }, [hotKeysActive, handleToggleSequencer, handleSelectLoop, setSequencerVisible, selectedSampleId, store, updateSamplerStateSettings, openDialog]);
 
   // First-run welcome dialog (shown once per browser)
   useEffect(() => {
@@ -180,7 +183,7 @@ export default function Home() {
                 </div>
 
                 <div className={styles.views}>
-                  {/* DrumMachine must stay mounted for Tone.Part playback scheduling */}
+                  {/* DrumMachine stays mounted so its pad hotkeys work from the sequencer view */}
                   <div
                     ref={padsViewRef}
                     className={sequencerVisible ? styles.hidden : styles.padsView}

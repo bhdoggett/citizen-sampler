@@ -1,0 +1,154 @@
+name: Release desktop
+
+# Builds the Windows installer, Citizen-Sampler-<version>-windows-setup.exe
+# (app and VST3), and attaches it to a draft GitHub Release. The Mac installer
+# is built, signed and notarized locally by scripts/package-mac.sh, and the
+# desktop-release workflow (/release, see .release.yaml) attaches it to the
+# same draft before publishing. Mac builds stay off CI to save Actions minutes.
+#
+# Triggered by the release tag v<version>, which must match the version in
+# engine/CMakeLists.txt. Can also be run by hand from the Actions tab, and pull
+# requests that touch the desktop build run it unsigned as a build check. Runs
+# without a tag upload the installer as a workflow artifact instead.
+#
+# Signing turns on once the Azure secrets exist; without them the installer
+# is unsigned, which is enough to check the build.
+on:
+  push:
+    tags:
+      - "v*"
+  pull_request:
+    paths:
+      - "engine/**"
+      - "installer/**"
+      - ".github/workflows/release-desktop.yml"
+  workflow_dispatch:
+
+env:
+  JUCE_VERSION: "8.0.12"
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      # Windows signing turns on once the Azure app registration's secrets
+      # exist; without them the Windows build stays unsigned.
+      AZURE_SIGNING: ${{ github.event_name != 'pull_request' && secrets.AZURE_CLIENT_SECRET != '' }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Require signing for a release
+        if: startsWith(github.ref, 'refs/tags/') && env.AZURE_SIGNING != 'true'
+        run: |
+          echo "::error::A release must be signed: add the AZURE_* secrets"
+          exit 1
+
+      - name: Read the engine version
+        run: |
+          version=$(sed -nE 's/^project\(CitizenSamplerEngine VERSION ([0-9.]+).*/\1/p' engine/CMakeLists.txt)
+          if [[ "$GITHUB_REF" == refs/tags/* && "${GITHUB_REF_NAME#v}" != "$version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match engine version $version"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Check out JUCE
+        uses: actions/checkout@v5
+        with:
+          repository: juce-framework/JUCE
+          ref: ${{ env.JUCE_VERSION }}
+          path: JUCE
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend-next/package.json
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend-next/pnpm-lock.yaml
+
+      - name: Export the web UI
+        working-directory: frontend-next
+        env:
+          NEXT_OUTPUT: export
+          NEXT_PUBLIC_API_BASE_URL: https://api.citizensampler.com
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      # JUCE links WebView2's loader statically, from the NuGet package
+      - name: Fetch the WebView2 SDK
+        shell: pwsh
+        run: nuget install Microsoft.Web.WebView2 -OutputDirectory "$env:RUNNER_TEMP\nuget"
+
+      - name: Build the app and plugin
+        run: |
+          # No -G: CMake picks the newest Visual Studio on the runner
+          cmake -S engine -B engine/build-win -A x64 \
+            -DCITIZEN_BUILD_JUCE=ON -DCITIZEN_BUILD_TESTS=OFF \
+            -DJUCE_DIR="$GITHUB_WORKSPACE/JUCE" \
+            -DJUCE_WEBVIEW2_PACKAGE_LOCATION="$RUNNER_TEMP/nuget" \
+            -DCITIZEN_UI_DIR="$GITHUB_WORKSPACE/frontend-next/out"
+          cmake --build engine/build-win --config Release \
+            --target CitizenSampler_Standalone CitizenSampler_VST3
+
+      # Azure Artifact Signing, as in up-and-running. The secret behind
+      # AZURE_CLIENT_SECRET expires; renew it in Entra ID under App
+      # registrations.
+      - name: Install Windows signing tool
+        if: env.AZURE_SIGNING == 'true'
+        run: cargo install trusted-signing-cli --locked
+
+      - name: Sign the app and plugin
+        if: env.AZURE_SIGNING == 'true'
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          artefacts=engine/build-win/juce/CitizenSampler_artefacts/Release
+          for file in "$artefacts/Standalone/Citizen Sampler.exe" \
+                      "$artefacts/VST3/Citizen Sampler.vst3/Contents/x86_64-win/Citizen Sampler.vst3"; do
+            trusted-signing-cli -e https://eus.codesigning.azure.net/ -a doggett-codesigning \
+              -c doggett-systems-public -d "Citizen Sampler" "$file"
+          done
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $artefacts = "$env:GITHUB_WORKSPACE\engine\build-win\juce\CitizenSampler_artefacts\Release"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DVersion=$env:VERSION `
+            "/DArtefacts=$artefacts" "/DOutputDir=$env:GITHUB_WORKSPACE\dist" installer\windows\CitizenSampler.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Sign the installer
+        if: env.AZURE_SIGNING == 'true'
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          trusted-signing-cli -e https://eus.codesigning.azure.net/ -a doggett-codesigning \
+            -c doggett-systems-public -d "Citizen Sampler" dist/*-setup.exe
+
+      - name: Attach to a draft release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: Citizen Sampler ${{ github.ref_name }}
+          files: dist/*-setup.exe
+
+      - name: Upload as a workflow artifact
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: dist/*-setup.exe

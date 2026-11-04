@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef } from "react";
-import * as Tone from "tone";
 import { drawWaveform } from "src/lib/audio/decodeAudio";
 import Spinner from "../Spinner";
 import styles from "./SamplePreview.module.css";
@@ -8,13 +7,13 @@ import styles from "./SamplePreview.module.css";
 export type PreviewState = {
   peaks: Float32Array;
   duration: number;
-  startedAt: number; // Tone.now() when playback started
+  startedAt: number; // performance.now() when playback started
 };
 
 type SamplePreviewProps = {
   preview: PreviewState | null;
   loading: boolean;
-  isPlaying: () => boolean;
+  playing: boolean;
   onReplay: () => void;
 };
 
@@ -22,7 +21,7 @@ type SamplePreviewProps = {
 const SamplePreview: React.FC<SamplePreviewProps> = ({
   preview,
   loading,
-  isPlaying,
+  playing,
   onReplay,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -42,17 +41,17 @@ const SamplePreview: React.FC<SamplePreviewProps> = ({
     let frame = 0;
     const tick = () => {
       const fraction = Math.min(
-        (Tone.now() - preview.startedAt) / preview.duration,
+        (performance.now() - preview.startedAt) / 1000 / preview.duration,
         1,
       );
-      const playing = isPlaying() && fraction < 1;
-      el.style.setProperty("--progress", String(playing ? fraction : 0));
-      el.dataset.playing = String(playing);
-      if (playing) frame = requestAnimationFrame(tick);
+      const moving = playing && fraction < 1;
+      el.style.setProperty("--progress", String(moving ? fraction : 0));
+      el.dataset.playing = String(moving);
+      if (moving) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [preview, isPlaying]);
+  }, [preview, playing]);
 
   if (loading) {
     return (

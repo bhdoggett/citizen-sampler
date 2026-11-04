@@ -1,0 +1,51 @@
+# Desktop releases (app, AU and VST3), cut with /release and the
+# desktop-release workflow in ~/code/release-swamp. The web app deploys on its
+# own and is not versioned here.
+#
+# The engine version in engine/CMakeLists.txt is the release version; the
+# installers and the plugin read it from there.
+versionFiles:
+  - { path: engine/CMakeLists.txt, kind: cmake }
+docsVersionFiles: []
+verify:
+  - pnpm --dir frontend-next install --frozen-lockfile
+  - pnpm --dir frontend-next exec tsc --noEmit
+  - pnpm --dir frontend-next test
+  - cmake -S engine -B engine/build -G Ninja && cmake --build engine/build && engine/build/tests/citizen_core_tests
+  - >-
+    cmake -S engine -B engine/build-juce -G Ninja -DCITIZEN_BUILD_JUCE=ON &&
+    cmake --build engine/build-juce --target CitizenWireTests &&
+    engine/build-juce/juce/CitizenWireTests_artefacts/Debug/CitizenWireTests
+# The Mac installer is built, signed and notarized on this Mac (signing
+# identities from the login keychain, the notary key from the 1Password vault
+# behind swamp's release-1p); CI builds only Windows, to save Actions minutes.
+build: mixed
+localBuild:
+  command: scripts/package-mac.sh
+  assetGlobs:
+    - "dist/*.pkg"
+  expectedAssets:
+    - "Citizen-Sampler-{version}-mac.pkg"
+  env:
+    MAC_SIGN_IDENTITY: "Developer ID Application: Doggett Systems LLC (9B9573H63M)"
+    MAC_INSTALLER_IDENTITY: "Developer ID Installer: Doggett Systems LLC (9B9573H63M)"
+    APPLE_API_KEY: "2YFTGJA2Q3"
+  secrets:
+    APPLE_API_ISSUER: "AuthKey_2YFTGJA2Q3/issuer id"
+  secretFiles:
+    APPLE_API_KEY_PATH: "AuthKey_2YFTGJA2Q3/AuthKey_2YFTGJA2Q3.p8"
+  verify:
+    - pkgutil --check-signature "dist/Citizen-Sampler-{version}-mac.pkg"
+    - xcrun stapler validate "dist/Citizen-Sampler-{version}-mac.pkg"
+    - spctl -a -vv -t install "dist/Citizen-Sampler-{version}-mac.pkg"
+ciWorkflow: release-desktop.yml
+ciTimeoutMinutes: 45
+# The repo is public, so the one approval comes before anything is pushed.
+release: draft
+approval: beforePush
+notes: release
+expectedAssets:
+  - "Citizen-Sampler-{version}-mac.pkg"
+  - "Citizen-Sampler-{version}-windows-setup.exe"
+installNote: |
+  Both installers are signed; the Mac one is notarized by Apple. On macOS, open the .pkg and choose any of the standalone app, the Audio Unit and the VST3 plugin. On Windows, run the setup and choose the app, the VST3 plugin or both. Windows SmartScreen may show a notice while the new signature builds reputation; if it does, choose More info, then Run anyway. Rescan plugins in your DAW after installing.

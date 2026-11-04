@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { SampleEventFE, SampleTypeFE } from "src/types/audioTypesFE";
 import getScheduleEvents, { isPlayableEvent } from "./getScheduleEvents";
 
@@ -21,21 +21,14 @@ const makeData = (
   settings: { quantize?: boolean; quantVal?: string } = {}
 ) =>
   ({
-    "pad-1": {
-      events: { A: events },
-      settings: { quantize: false, quantVal: "4", ...settings },
-    },
-  }) as unknown as Record<string, SampleTypeFE>;
+    events: { A: events },
+    settings: { quantize: false, quantVal: "4", ...settings },
+  }) as unknown as SampleTypeFE;
 
 describe("getScheduleEvents", () => {
-  beforeEach(() => {
-    vi.spyOn(console, "warn").mockImplementation(() => {});
-  });
-
   it("converts tick start times to seconds", () => {
     const result = getScheduleEvents(
       makeData([event(192, { note: "D4", velocity: 0.5 })]),
-      "pad-1",
       "A",
       liveTiming
     );
@@ -45,14 +38,13 @@ describe("getScheduleEvents", () => {
   });
 
   it("keeps an event on the downbeat", () => {
-    const result = getScheduleEvents(makeData([event(0)]), "pad-1", "A", liveTiming);
+    const result = getScheduleEvents(makeData([event(0)]), "A", liveTiming);
     expect(result.map(([time]) => time)).toEqual([0]);
   });
 
   it("skips events without a start time", () => {
     const result = getScheduleEvents(
       makeData([event(null), event(192)]),
-      "pad-1",
       "A",
       liveTiming
     );
@@ -63,7 +55,6 @@ describe("getScheduleEvents", () => {
     // 200 ticks ≈ 0.52 s, which snaps to the 0.5 s quarter note.
     const result = getScheduleEvents(
       makeData([event(200)], { quantize: true, quantVal: "4" }),
-      "pad-1",
       "A",
       liveTiming
     );
@@ -74,7 +65,6 @@ describe("getScheduleEvents", () => {
     // Loop is 2 bars = 4 s. 1530 ticks ≈ 3.98 s, which snaps to 4 s.
     const result = getScheduleEvents(
       makeData([event(1530)], { quantize: true, quantVal: "4" }),
-      "pad-1",
       "A",
       liveTiming
     );
@@ -86,7 +76,6 @@ describe("getScheduleEvents", () => {
     // but the loop length computes as 1.2000000000000002 s.
     const result = getScheduleEvents(
       makeData([event(575)], { quantize: true, quantVal: "8t" }),
-      "pad-1",
       "A",
       { bpm: 150, beats: 3, bars: 1 }
     );
@@ -99,15 +88,20 @@ describe("getScheduleEvents", () => {
         [event(190), event(194), event(194, { note: "E4" })],
         { quantize: true, quantVal: "4" }
       ),
-      "pad-1",
       "A",
       liveTiming
     );
     expect(result.map(([, e]) => e.note)).toEqual(["C4", "E4"]);
   });
 
+  it("drops hits past the loop end, which the loop never reaches", () => {
+    // Recorded in a longer loop, then bars were cut to 2 (4 s)
+    const result = getScheduleEvents(makeData([event(192), event(2000)]), "A", liveTiming);
+    expect(result.map(([time]) => time)).toEqual([0.5]);
+  });
+
   it("returns an empty array when the loop has no events", () => {
-    expect(getScheduleEvents(makeData([]), "pad-1", "A", liveTiming)).toEqual([]);
+    expect(getScheduleEvents(makeData([]), "A", liveTiming)).toEqual([]);
   });
 
   describe("with an explicit loop timing", () => {
@@ -117,7 +111,6 @@ describe("getScheduleEvents", () => {
     it("converts ticks with the loop's tempo", () => {
       const result = getScheduleEvents(
         makeData([event(192)]),
-        "pad-1",
         "A",
         timing
       );
@@ -128,7 +121,6 @@ describe("getScheduleEvents", () => {
       // 250 ticks ≈ 1.3 s at 60 BPM, which snaps to the 1 s quarter note.
       const result = getScheduleEvents(
         makeData([event(250)], { quantize: true, quantVal: "4" }),
-        "pad-1",
         "A",
         timing
       );
@@ -139,7 +131,6 @@ describe("getScheduleEvents", () => {
       // 1 bar of 3/4 at 60 BPM is 3 s. 570 ticks ≈ 2.97 s snaps to 3 s.
       const result = getScheduleEvents(
         makeData([event(570)], { quantize: true, quantVal: "4" }),
-        "pad-1",
         "A",
         timing
       );

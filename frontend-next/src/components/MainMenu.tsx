@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useSongStore } from "src/lib/song/react";
 import { useRouter } from "next/navigation";
-import * as Tone from "tone";
 import { useAuthContext } from "../app/contexts/AuthContext";
 import { useAudioContext } from "../app/contexts/AudioContext";
 import { useUIContext } from "../app/contexts/UIContext";
@@ -30,19 +30,17 @@ const Menu: React.FC = () => {
   const { openDialog } = useUIContext();
   const {
     songTitle,
-    allLoopSettings,
     setAllLoopSettings,
     setCurrentLoop,
-    allSampleData,
     setSongTitle,
     songId,
     setSongId,
     initLocSamplesFromAllCollections,
     initKitSamples,
     setAllSampleData,
-    loadSamplersToRef,
   } = useAudioContext();
   const downloadAllWavStems = useDownloadWavStems();
+  const store = useSongStore();
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -52,14 +50,12 @@ const Menu: React.FC = () => {
     if (setError) setError("Session expired. Please log in again.");
   };
 
-  const handleReset = async () => {
+  const handleReset = () => {
     setAllLoopSettings(defaultLoopSettings());
     setCurrentLoop("A");
     const locSamples = initLocSamplesFromAllCollections();
     const kitSamples = initKitSamples("mpc");
     setAllSampleData({ ...locSamples, ...kitSamples });
-
-    await loadSamplersToRef({ ...locSamples, ...kitSamples });
   };
 
   const handleSaveSong = async () => {
@@ -75,11 +71,12 @@ const Menu: React.FC = () => {
       return;
     }
 
+    const { samples, loops } = store.getState();
     const songData = {
       song: {
         title: songTitle,
-        loops: allLoopSettings,
-        samples: allSampleData,
+        loops,
+        samples,
       },
       userId,
     };
@@ -120,7 +117,6 @@ const Menu: React.FC = () => {
 
   const handleDownloadWavStems = async () => {
     await downloadAllWavStems();
-    Tone.start();
     setMenuOpen(false);
   };
 
