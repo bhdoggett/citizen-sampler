@@ -84,6 +84,10 @@ void Engine::prepare(double sampleRate, int maxBlockFrames) {
     }
 }
 
+namespace {
+constexpr double kTempoStep = 0.01;
+}
+
 std::optional<LoopTiming> Engine::timing(Loop loop) const {
     const auto& settings = loops_[loopIndex(loop)];
     if (!settings) return std::nullopt;
@@ -107,11 +111,17 @@ void Engine::emitHostContext() {
     events_.push_back(evt::HostContext{host_.isPlugin, layout_, host_.tempo, host_.playing});
 }
 
-void Engine::setHost(const HostState& host) {
-    const bool contextChanged = host.isPlugin != host_.isPlugin || host.playing != host_.playing ||
-                                host.tempo.has_value() != host_.tempo.has_value() ||
-                                (host.tempo && std::abs(*host.tempo - *host_.tempo) > 1e-6);
-    if (!contextChanged) return;
+void Engine::setHost(const HostState& incoming) {
+    // A host can report no tempo as 0 or NaN before its transport is valid
+    HostState host = incoming;
+    if (host.tempo && !(std::isfinite(*host.tempo) && *host.tempo > 0.0)) host.tempo.reset();
+    // Tempo automation moves every block: follow only changes of 0.01 BPM or
+    // more from the tempo last applied
+    if (host.tempo && host_.tempo && std::abs(*host.tempo - *host_.tempo) < kTempoStep) {
+        host.tempo = host_.tempo;
+    }
+    const bool tempoChanged = host.tempo != host_.tempo;
+    if (host.isPlugin == host_.isPlugin && host.playing == host_.playing && !tempoChanged) return;
 
     const auto oldTempo = hostTempo();
     const bool hostStarted = host.playing && !host_.playing;
@@ -120,8 +130,7 @@ void Engine::setHost(const HostState& host) {
 
     emitHostContext();
     if (hostStarted) stop(); // also ends recording
-    if (oldTempo.has_value() != newTempo.has_value() ||
-        (newTempo && std::abs(*newTempo - *oldTempo) > 1e-6)) {
+    if (oldTempo != newTempo) {
         rebuildSchedules();
         if (const auto t = timing(currentLoop_)) {
             position_ = std::fmod(position_, loopDurationSeconds(*t));
@@ -148,11 +157,18 @@ void Engine::handle(const Command& command) {
             [this](const cmd::SetLoops& c) { setLoops(c.loops); },
             [this](const cmd::SetCurrentLoop& c) { setCurrentLoop(c.loop); },
             [this](const cmd::Play&) {
-                if (!host_.playing) play();
+                if (host_.playing) {
+                    emitTransport();
+                    return;
+                }
+                play();
             },
             [this](const cmd::Stop&) { stop(); },
             [this](const cmd::SetRecording& c) {
-                if (c.on && host_.playing) return;
+                if (c.on && host_.playing) {
+                    emitTransport();
+                    return;
+                }
                 recording_ = c.on;
                 emitTransport();
             },

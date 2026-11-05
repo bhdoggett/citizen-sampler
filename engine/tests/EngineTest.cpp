@@ -515,6 +515,7 @@ TEST_CASE("host tempo change while playing keeps position inside the loop") {
     rig.engine.handle(cmd::Play{});
     rig.run(3.5);
     rig.engine.setHost(pluginHost(240.0)); // 2 s loop
+    CHECK(rig.engine.position() < 2.0); // wrapped by setHost itself
     rig.events.clear();
     rig.run(0.1);
     auto transport = rig.eventsOf<evt::Transport>();
@@ -599,4 +600,53 @@ TEST_CASE("stem jobs use the host tempo") {
     auto job = rig.engine.stemJob("pad-1", Loop::A);
     REQUIRE(job);
     CHECK(job->loop.timing.bpm == doctest::Approx(60.0));
+}
+
+TEST_CASE("a host tempo of zero or NaN is no override") {
+    for (double bad : {0.0, -10.0, std::nan("")}) {
+        Rig rig;
+        rig.engine.handle(cmd::Play{});
+        rig.run(1.0);
+        rig.engine.setHost(pluginHost(bad));
+        rig.run(0.1);
+        CHECK(lastLoopDuration(rig) == doctest::Approx(4.0));
+        CHECK(std::isfinite(rig.engine.position()));
+        CHECK(rig.engine.position() == doctest::Approx(1.1));
+    }
+}
+
+TEST_CASE("host tempo changes under 0.01 BPM are ignored") {
+    Rig rig;
+    rig.engine.takeEvents();
+    auto count = [&] {
+        size_t n = 0;
+        for (auto& e : rig.engine.takeEvents()) n += std::holds_alternative<evt::HostContext>(e);
+        return n;
+    };
+    rig.engine.setHost(pluginHost(120.0));
+    CHECK(count() == 1);
+    rig.engine.setHost(pluginHost(120.005));
+    CHECK(count() == 0);
+    rig.engine.setHost(pluginHost(120.009)); // still within 0.01 of the applied 120.0
+    CHECK(count() == 0);
+    rig.engine.setHost(pluginHost(120.02));
+    CHECK(count() == 1);
+}
+
+TEST_CASE("an ignored play or record while the host plays resyncs the transport") {
+    Rig rig;
+    rig.engine.setHost(pluginHost(std::nullopt, true));
+    rig.engine.takeEvents();
+    rig.engine.handle(cmd::Play{});
+    auto events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    auto* t = std::get_if<evt::Transport>(&events[0]);
+    REQUIRE(t);
+    CHECK_FALSE(t->playing);
+    rig.engine.handle(cmd::SetRecording{true});
+    events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    t = std::get_if<evt::Transport>(&events[0]);
+    REQUIRE(t);
+    CHECK_FALSE(t->recording);
 }
