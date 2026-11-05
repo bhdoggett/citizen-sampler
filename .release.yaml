@@ -15,7 +15,7 @@ verify:
   - >-
     cmake -S engine -B engine/build-juce -G Ninja -DCITIZEN_BUILD_JUCE=ON &&
     cmake --build engine/build-juce --target CitizenWireTests &&
-    engine/build-juce/juce/CitizenWireTests_artefacts/Debug/CitizenWireTests
+    engine/build-juce/juce/CitizenWireTests_artefacts/CitizenWireTests
 # The Mac installer is built, signed and notarized on this Mac (signing
 # identities from the login keychain, the notary key from the 1Password vault
 # behind swamp's release-1p); CI builds only Windows, to save Actions minutes.
