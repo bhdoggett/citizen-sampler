@@ -43,3 +43,16 @@
   touch-action: none;
   user-select: none;
 }
+
+/* Pitched notes cannot reach the host in the kit layout; pads still audition */
+.unavailable .scaleTabs,
+.unavailable .grid {
+  opacity: 0.5;
+}
+
+.note {
+  padding: var(--space-1);
+  font-size: var(--text-2xs);
+  color: var(--paper);
+  background: var(--ink);
+}

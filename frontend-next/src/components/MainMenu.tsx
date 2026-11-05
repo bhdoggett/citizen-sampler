@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useSongStore } from "src/lib/song/react";
+import { useHostContext } from "src/lib/engine/react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "../app/contexts/AuthContext";
 import { useAudioContext } from "../app/contexts/AudioContext";
@@ -41,6 +42,7 @@ const Menu: React.FC = () => {
   } = useAudioContext();
   const downloadAllWavStems = useDownloadWavStems();
   const store = useSongStore();
+  const { isPlugin } = useHostContext();
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -121,7 +123,8 @@ const Menu: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!token) return;
+    // Accounts do not exist inside the plugin
+    if (!token || isPlugin) return;
     // Only a rejected token logs the user out. An outage leaves the session
     // alone.
     const verifyLogin = async () => {
@@ -146,7 +149,7 @@ const Menu: React.FC = () => {
     verifyLogin();
     // Only run on mount or when token changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, isPlugin]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -206,7 +209,7 @@ const Menu: React.FC = () => {
         {menuOpen && (
           <div className={styles.menu}>
             <ul>
-              {isAuthenticated ? (
+              {isPlugin ? null : isAuthenticated ? (
                 <>
                   <li
                     className={styles.item}
@@ -275,7 +278,7 @@ const Menu: React.FC = () => {
                 </>
               )}
 
-              <li className={styles.divider} aria-hidden="true" />
+              {!isPlugin && <li className={styles.divider} aria-hidden="true" />}
               <li
                 className={styles.item}
                 onClick={() => {
