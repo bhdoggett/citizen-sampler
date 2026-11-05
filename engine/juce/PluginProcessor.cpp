@@ -2,6 +2,7 @@
 
 #include <BinaryData.h>
 
+#include <algorithm>
 #include <iostream>
 
 #include "PluginEditor.h"
@@ -10,7 +11,7 @@
 namespace citizen {
 
 namespace {
-constexpr int kFirstPadNote = 36; // C1 plays pad 1
+constexpr int kPadBuses = 16;
 
 // CITIZEN_UI_URL points the WebView at a dev server. Otherwise release
 // builds serve the UI bundled into the binary, and dev builds without one
@@ -37,7 +38,7 @@ std::shared_ptr<const SampleBuffer> decodeBinary(const void* data, int size) {
 } // namespace
 
 CitizenProcessor::CitizenProcessor()
-    : juce::AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
+    : juce::AudioProcessor(padBuses()),
       uiUrl_(uiUrlFromEnv()),
       loader_(sampleBaseUrl(uiUrl_)) {
     engine_.setMetronomeBuffers(decodeBinary(BinaryData::hiblock_wav, BinaryData::hiblock_wavSize),
@@ -47,14 +48,46 @@ CitizenProcessor::CitizenProcessor()
 
 CitizenProcessor::~CitizenProcessor() = default;
 
+// "Pad 1" carries the kit mix; hosts enable "Pad 2".."Pad 16" for multi-out
+juce::AudioProcessor::BusesProperties CitizenProcessor::padBuses() {
+    BusesProperties buses;
+    for (int i = 1; i <= kPadBuses; ++i)
+        buses = buses.withOutput("Pad " + juce::String(i), juce::AudioChannelSet::stereo(), i == 1);
+    return buses;
+}
+
+// Kit: a mono or stereo main bus with the rest off. Multi-out: all 16 stereo.
 bool CitizenProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const {
-    const auto out = layouts.getMainOutputChannelSet();
-    return out == juce::AudioChannelSet::stereo() || out == juce::AudioChannelSet::mono();
+    const auto& buses = layouts.outputBuses;
+    if (buses.size() != kPadBuses) return false;
+    const bool allStereo = std::all_of(buses.begin(), buses.end(),
+                                       [](const auto& bus) { return bus == juce::AudioChannelSet::stereo(); });
+    if (allStereo) return true;
+    const bool othersOff =
+        std::all_of(buses.begin() + 1, buses.end(), [](const auto& bus) { return bus.isDisabled(); });
+    const auto main = buses.getReference(0);
+    return othersOff && (main == juce::AudioChannelSet::stereo() || main == juce::AudioChannelSet::mono());
+}
+
+PadLayout CitizenProcessor::layoutFromBuses() const {
+    for (int i = 0; i < getBusCount(false); ++i) {
+        if (!getBus(false, i)->isEnabled()) return PadLayout::Kit;
+    }
+    return getBusCount(false) == kPadBuses ? PadLayout::MultiOut : PadLayout::Kit;
+}
+
+void CitizenProcessor::applyBusLayout() { engine_.setPadLayout(layoutFromBuses()); }
+
+// Hosts may change buses off the audio thread, so this waits for the lock
+void CitizenProcessor::processorLayoutsChanged() {
+    std::lock_guard lock(engineLock_);
+    applyBusLayout();
 }
 
 void CitizenProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
     std::lock_guard lock(engineLock_);
     engine_.prepare(sampleRate, juce::jmax(samplesPerBlock, 32));
+    applyBusLayout();
 }
 
 void CitizenProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi) {
@@ -65,18 +98,27 @@ void CitizenProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
         return;
     }
 
+    HostState host;
+    host.isPlugin = wrapperType != wrapperType_Standalone;
+    if (auto* playHead = getPlayHead()) {
+        if (const auto position = playHead->getPosition()) {
+            if (const auto bpm = position->getBpm()) host.tempo = *bpm;
+            host.playing = position->getIsPlaying();
+        }
+    }
+    engine_.setHost(host);
+
     for (const auto metadata : midi) {
         const auto message = metadata.getMessage();
-        const int pad = message.getNoteNumber() - kFirstPadNote + 1;
-        if (pad < 1 || pad > 16) continue;
-        const std::string padId = "pad-" + std::to_string(pad);
+        // A note-on with velocity 0 counts as a note-off
         if (message.isNoteOn()) {
-            engine_.handle(cmd::Press{padId, "C4", message.getFloatVelocity()});
+            engine_.midiNoteOn(message.getChannel(), message.getNoteNumber(), message.getFloatVelocity());
         } else if (message.isNoteOff()) {
-            engine_.handle(cmd::Release{padId, "C4"});
+            engine_.midiNoteOff(message.getChannel(), message.getNoteNumber());
         }
     }
 
+    // In multi-out the buffer holds every bus, a stereo pair per pad
     engine_.process(buffer.getArrayOfWritePointers(), buffer.getNumChannels(), buffer.getNumSamples());
 }
 
@@ -202,7 +244,14 @@ void CitizenProcessor::setStateInformation(const void* data, int sizeInBytes) {
     }
 }
 
-juce::AudioProcessorEditor* CitizenProcessor::createEditor() { return new CitizenEditor(*this); }
+juce::AudioProcessorEditor* CitizenProcessor::createEditor() {
+    // The new page needs the host context; it also asks with requestHostContext
+    {
+        std::lock_guard lock(engineLock_);
+        engine_.emitHostContext();
+    }
+    return new CitizenEditor(*this);
+}
 
 } // namespace citizen
 

@@ -12,7 +12,9 @@
 namespace citizen {
 
 // Hosts the C++ engine. The WebView UI drives it with the same commands the
-// web engine takes; MIDI notes 36-51 play pads 1-16.
+// web engine takes; MIDI goes to the engine, which maps it per pad layout.
+// Output bus 1 carries the kit mix; enabling all 16 stereo buses switches
+// to one bus per pad.
 //
 // Threading: the engine core is single-threaded, so one mutex guards it.
 // The message thread locks it to apply commands; the audio thread only
@@ -35,6 +37,7 @@ public:
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override {}
     bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
+    void processorLayoutsChanged() override;
     void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     juce::AudioProcessorEditor* createEditor() override;
@@ -56,12 +59,17 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
 private:
+    static BusesProperties padBuses();
     // With no editor open, nobody reads events, so drop them
     void timerCallback() override;
     void apply(const Command& command);
     void loadMissingAudio();
     void pushHostEvent(juce::var event);
     void rememberSongCommand(const juce::var& json);
+    // MultiOut when all 16 output buses are enabled, else Kit
+    PadLayout layoutFromBuses() const;
+    // Call with engineLock_ held
+    void applyBusLayout();
 
     std::mutex engineLock_;
     Engine engine_;
