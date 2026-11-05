@@ -29,6 +29,7 @@ function fakeEngine() {
     },
     start: () => Promise.resolve(),
     renderStem: () => Promise.resolve(null),
+    saveMidi: () => Promise.resolve(),
     dispose: () => {},
   };
   const emit = (event: EngineEvent) => listeners.forEach((l) => l(event));

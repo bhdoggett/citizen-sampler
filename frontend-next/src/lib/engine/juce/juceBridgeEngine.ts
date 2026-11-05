@@ -30,6 +30,15 @@ const COMPLETE_EVENT = "__juce__complete";
 
 type WireStem = { sampleRate: number; channels: number[][] } | null;
 
+function toBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const step = 0x8000;
+  for (let i = 0; i < bytes.length; i += step) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + step));
+  }
+  return btoa(binary);
+}
+
 // The desktop engine: commands go to the C++ engine through the JUCE
 // WebView, and its events come back the same way.
 export class JuceBridgeEngine implements Engine {
@@ -81,6 +90,15 @@ export class JuceBridgeEngine implements Engine {
       sampleRate: result.sampleRate,
       channels: result.channels.map((channel) => Float32Array.from(channel)),
     };
+  }
+
+  async saveMidi(fileName: string, bytes: Uint8Array): Promise<void> {
+    const saved = await this.invoke("saveMidi", [fileName, toBase64(bytes)]);
+    if (saved !== true) throw new Error(`Could not save ${fileName}`);
+  }
+
+  dragMidi(fileName: string, bytes: Uint8Array): void {
+    void this.invoke("dragMidi", [fileName, toBase64(bytes)]);
   }
 
   dispose(): void {

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useSongStore } from "src/lib/song/react";
-import { useHostContext } from "src/lib/engine/react";
+import { useEngine, useHostContext } from "src/lib/engine/react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "../app/contexts/AuthContext";
 import { useAudioContext } from "../app/contexts/AudioContext";
@@ -42,7 +42,8 @@ const Menu: React.FC = () => {
   } = useAudioContext();
   const downloadAllWavStems = useDownloadWavStems();
   const store = useSongStore();
-  const { isPlugin } = useHostContext();
+  const engine = useEngine();
+  const { isPlugin, layout } = useHostContext();
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -278,7 +279,31 @@ const Menu: React.FC = () => {
                 </>
               )}
 
-              {!isPlugin && <li className={styles.divider} aria-hidden="true" />}
+              {isPlugin && (
+                <>
+                  <li
+                    className={`${styles.item} ${styles.check}`}
+                    role="menuitemcheckbox"
+                    aria-checked={layout === "multiOut"}
+                    onClick={() =>
+                      engine.send({
+                        type: "setPadLayout",
+                        layout: layout === "multiOut" ? "kit" : "multiOut",
+                      })
+                    }
+                  >
+                    <span className={styles.checkBox} aria-hidden="true">
+                      {layout === "multiOut" ? "\u2713" : ""}
+                    </span>
+                    16 outputs (one per pad)
+                  </li>
+                  <li className={styles.hint}>
+                    Also pick Multi-Output (16xStereo) when you add Citizen
+                    Sampler in your DAW.
+                  </li>
+                </>
+              )}
+              <li className={styles.divider} aria-hidden="true" />
               <li
                 className={styles.item}
                 onClick={() => {

@@ -74,5 +74,10 @@ export interface Engine {
   // Browsers only allow audio after a user gesture
   start(): Promise<void>;
   renderStem(padId: string, loop: LoopName): Promise<StemAudio | null>;
+  // Browser download on the web; a file in ~/Music/Citizen Sampler/MIDI in
+  // the desktop app and plugin
+  saveMidi(fileName: string, bytes: Uint8Array): Promise<void>;
+  // Desktop app and plugin only: drag the file out of the window, into a DAW
+  dragMidi?(fileName: string, bytes: Uint8Array): void;
   dispose(): void;
 }

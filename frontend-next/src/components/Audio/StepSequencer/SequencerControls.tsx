@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { Copy, ClipboardPaste, X } from "lucide-react";
 import { Subdivision, subdivisionLabels } from "./utils/gridConversions";
 import type { ScaleName } from "src/lib/audio/util/scaleNotes";
+import MidiExport from "./MidiExport";
 import styles from "./SequencerControls.module.css";
 
 type SequencerControlsProps = {
@@ -143,6 +144,12 @@ const SequencerControls: React.FC<SequencerControlsProps> = memo(
             )}
           </div>
         )}
+
+        {/* Whole loop as a MIDI file */}
+        <div className={styles.group}>
+          <span className={styles.label}>Export</span>
+          <MidiExport unit={{ kind: "kit" }} />
+        </div>
 
         {/* Zoom controls */}
         <div className={styles.group}>

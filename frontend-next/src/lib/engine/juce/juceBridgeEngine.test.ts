@@ -116,6 +116,41 @@ describe("JuceBridgeEngine", () => {
     expect(await pending).toBeNull();
   });
 
+  it("saves MIDI through the native function as base64", async () => {
+    const { emitted, fire } = installBackend();
+    const engine = new JuceBridgeEngine();
+    const pending = engine.saveMidi("song-loop-A.mid", Uint8Array.from([77, 84, 104, 100, 255]));
+    const call = emitted.find((e) => e.id === "__juce__invoke");
+    expect(call?.payload).toMatchObject({
+      name: "saveMidi",
+      params: ["song-loop-A.mid", "TVRoZP8="],
+    });
+    const { resultId } = call!.payload as { resultId: number };
+    fire("__juce__complete", { promiseId: resultId, result: true });
+    await expect(pending).resolves.toBeUndefined();
+  });
+
+  it("rejects when the native side could not save the MIDI file", async () => {
+    const { emitted, fire } = installBackend();
+    const engine = new JuceBridgeEngine();
+    const pending = engine.saveMidi("song-loop-A.mid", Uint8Array.from([1]));
+    const call = emitted.find((e) => e.id === "__juce__invoke");
+    const { resultId } = call!.payload as { resultId: number };
+    fire("__juce__complete", { promiseId: resultId, result: false });
+    await expect(pending).rejects.toThrow("Could not save song-loop-A.mid");
+  });
+
+  it("drags MIDI out through the native function", () => {
+    const { emitted } = installBackend();
+    const engine = new JuceBridgeEngine();
+    engine.dragMidi("song-loop-A.mid", Uint8Array.from([1, 2, 3]));
+    const call = emitted.find((e) => e.id === "__juce__invoke");
+    expect(call?.payload).toMatchObject({
+      name: "dragMidi",
+      params: ["song-loop-A.mid", "AQID"],
+    });
+  });
+
   it("stops listening when disposed", () => {
     const { listeners } = installBackend();
     const engine = new JuceBridgeEngine();

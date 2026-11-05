@@ -1,0 +1,79 @@
+.export {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.segment {
+  display: flex;
+}
+
+.segment > * + * {
+  border-left: none;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 24px;
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  background: var(--paper);
+  border: var(--line);
+}
+
+.button:hover:not(:disabled) {
+  background: var(--paper-2);
+}
+
+.button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.handle {
+  justify-content: center;
+  width: 20px;
+  padding: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.handle:active:not(:disabled) {
+  cursor: grabbing;
+}
+
+.note {
+  font-size: var(--text-2xs);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact {
+  gap: var(--space-1);
+}
+
+.compact .button {
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.compact .handle {
+  width: 16px;
+}
+
+.flag {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--accent);
+  cursor: help;
+}

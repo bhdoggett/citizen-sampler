@@ -71,4 +71,41 @@ describe("MainMenu", () => {
     expect(screen.getByText("Login")).toBeTruthy();
     expect(checkLogin).toHaveBeenCalled();
   });
+
+  it("hides the 16 outputs toggle on the web", () => {
+    const { wrapper } = hostWrapper(WEB_HOST);
+    render(<Menu />, { wrapper });
+    fireEvent.click(screen.getByLabelText("Menu"));
+    expect(screen.queryByText("16 outputs (one per pad)")).toBeNull();
+  });
+
+  it("shows the 16 outputs toggle in the plugin, checked in multi-out", () => {
+    const { wrapper } = hostWrapper({ ...PLUGIN, layout: "multiOut" });
+    render(<Menu />, { wrapper });
+    fireEvent.click(screen.getByLabelText("Menu"));
+    const toggle = screen.getByRole("menuitemcheckbox", { name: "16 outputs (one per pad)" });
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    expect(
+      screen.getByText(
+        "Also pick Multi-Output (16xStereo) when you add Citizen Sampler in your DAW.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("switches the plugin to the other pad layout", () => {
+    const kit = hostWrapper(PLUGIN);
+    render(<Menu />, { wrapper: kit.wrapper });
+    fireEvent.click(screen.getByLabelText("Menu"));
+    const toggle = screen.getByRole("menuitemcheckbox", { name: "16 outputs (one per pad)" });
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    fireEvent.click(toggle);
+    expect(kit.sent).toContainEqual({ type: "setPadLayout", layout: "multiOut" });
+    cleanup();
+
+    const multi = hostWrapper({ ...PLUGIN, layout: "multiOut" });
+    render(<Menu />, { wrapper: multi.wrapper });
+    fireEvent.click(screen.getByLabelText("Menu"));
+    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "16 outputs (one per pad)" }));
+    expect(multi.sent).toContainEqual({ type: "setPadLayout", layout: "kit" });
+  });
 });
