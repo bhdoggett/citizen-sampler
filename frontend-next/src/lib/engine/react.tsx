@@ -36,6 +36,7 @@ export function useEngineView<T>(selector: (state: EngineViewState) => T): T {
 }
 
 export const useTransportAnchor = () => useEngineView((state) => state.transport);
+export const useHostContext = () => useEngineView((state) => state.host);
 export const useLoopIsPlaying = () => useEngineView((state) => state.transport.playing);
 export const useIsRecording = () => useEngineView((state) => state.transport.recording);
 export const useSamplesLoading = () => useEngineView((state) => state.loadingPads > 0);

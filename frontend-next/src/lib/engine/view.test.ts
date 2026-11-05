@@ -81,4 +81,21 @@ describe("createEngineView", () => {
     emit({ type: "loading", pending: 1 });
     expect(listener).toHaveBeenCalledTimes(1);
   });
+
+  it("starts as a standalone kit and follows hostContext events", () => {
+    const { view, emit } = setup();
+    expect(view.getState().host).toEqual({
+      isPlugin: false,
+      layout: "kit",
+      tempo: null,
+      hostPlaying: false,
+    });
+    emit({ type: "hostContext", isPlugin: true, layout: "multiOut", tempo: 128, hostPlaying: true });
+    expect(view.getState().host).toEqual({
+      isPlugin: true,
+      layout: "multiOut",
+      tempo: 128,
+      hostPlaying: true,
+    });
+  });
 });

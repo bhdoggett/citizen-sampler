@@ -37,8 +37,17 @@ export type TransportEvent = {
   loopDuration: number;
 };
 
+export type HostContext = {
+  isPlugin: boolean;
+  layout: "kit" | "multiOut";
+  // BPM reported by the host, null when there is none
+  tempo: number | null;
+  hostPlaying: boolean;
+};
+
 export type EngineEvent =
   | TransportEvent
+  | ({ type: "hostContext" } & HostContext)
   | { type: "voiceStarted"; padId: string; note: string }
   | { type: "voiceEnded"; padId: string; note: string }
   | { type: "hitRecorded"; padId: string; loop: LoopName; event: SampleEventFE }
