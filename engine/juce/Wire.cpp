@@ -1,5 +1,7 @@
 #include "Wire.h"
 
+#include "citizen/Notes.h"
+
 namespace citizen::wire {
 
 namespace {
@@ -37,6 +39,10 @@ SampleSettings parseSettings(const juce::var& json) {
     s.pitch = number(json["pitch"]);
     s.attack = number(json["attack"]);
     s.release = number(json["release"]);
+    if (json["baseNote"].isString()) {
+        const auto note = json["baseNote"].toString().toStdString();
+        if (noteToMidi(note)) s.baseNote = note;
+    }
     s.highpass = filterFrequency(json["highpass"], 0.0);
     s.lowpass = filterFrequency(json["lowpass"], 20000.0);
     return s;

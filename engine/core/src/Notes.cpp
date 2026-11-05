@@ -35,6 +35,14 @@ std::optional<int> noteToMidi(std::string_view note) {
     return (octave + 1) * 12 + semitone;
 }
 
+std::string midiToNote(int midi) {
+    static constexpr const char* kNames[] = {"C", "C#", "D", "D#", "E", "F",
+                                             "F#", "G", "G#", "A", "A#", "B"};
+    const int octave = (midi >= 0 ? midi / 12 : -((11 - midi) / 12)) - 1;
+    const int semitone = ((midi % 12) + 12) % 12;
+    return std::string(kNames[semitone]) + std::to_string(octave);
+}
+
 double midiToFrequency(double midi) { return 440.0 * std::pow(2.0, (midi - 69.0) / 12.0); }
 
 double playbackRate(std::string_view note) {

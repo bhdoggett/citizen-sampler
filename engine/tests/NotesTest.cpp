@@ -34,3 +34,11 @@ TEST_CASE("playbackRate is relative to C4") {
 TEST_CASE("midiToFrequency puts A4 at 440 Hz") {
     CHECK(midiToFrequency(69) == doctest::Approx(440.0));
 }
+
+TEST_CASE("midiToNote spells notes like Tone") {
+    CHECK(midiToNote(60) == "C4");
+    CHECK(midiToNote(61) == "C#4");
+    CHECK(midiToNote(24) == "C1");
+    CHECK(midiToNote(0) == "C-1");
+    CHECK(noteToMidi(midiToNote(127)) == 127);
+}

@@ -53,6 +53,7 @@ struct SampleSettings {
     double release = 0.0;            // seconds
     double highpass = 0.0;           // Hz
     double lowpass = 20000.0;        // Hz
+    std::string baseNote = "C4";     // the note the sample sounds at unpitched
 };
 
 struct PadState {

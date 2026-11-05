@@ -53,6 +53,32 @@ TEST_CASE("setPad carries the pad's url, settings and events") {
     CHECK_FALSE(pad.events[1][0].duration.has_value());
 }
 
+TEST_CASE("pad settings without baseNote default to C4") {
+    auto command = wire::parseCommand(
+        parse(R"({"type":"setPad","padId":"p","pad":{"url":"a.wav","settings":{}}})"));
+    REQUIRE(command);
+    auto* setPad = std::get_if<cmd::SetPad>(&*command);
+    REQUIRE(setPad);
+    CHECK(setPad->pad.settings.baseNote == "C4");
+}
+
+TEST_CASE("pad settings read baseNote") {
+    auto command = wire::parseCommand(parse(
+        R"({"type":"setPad","padId":"p","pad":{"url":"a.wav","settings":{"baseNote":"A3"}}})"));
+    REQUIRE(command);
+    auto* setPad = std::get_if<cmd::SetPad>(&*command);
+    REQUIRE(setPad);
+    CHECK(setPad->pad.settings.baseNote == "A3");
+
+    // Anything unparseable keeps the default
+    for (const char* bad : {R"(440)", R"("nope")"}) {
+        auto c = wire::parseCommand(parse(
+            (juce::String(R"({"type":"setPad","padId":"p","pad":{"url":"a.wav","settings":{"baseNote":)") + bad + "}}}").toRawUTF8()));
+        REQUIRE(c);
+        CHECK(std::get<cmd::SetPad>(*c).pad.settings.baseNote == "C4");
+    }
+}
+
 TEST_CASE("setLoops keeps set loops and leaves null ones unset") {
     auto command = wire::parseCommand(parse(R"({
       "type": "setLoops",
