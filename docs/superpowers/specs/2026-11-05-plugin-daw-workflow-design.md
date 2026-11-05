@@ -58,7 +58,8 @@ APIs apply, but are not tested targets.
     (User's choice; it also rules out doubled pads.)
 - **Pitch grid follows the layout.** In mono/stereo layout the plugin
   sequencer's pitch grid (keyboard mode, which records pitched notes for a
-  pad) is greyed out, with a short note: pitched notes need the 16-out
+  pad) is greyed out and its pitch pads are disabled (no sound, no
+  recording), with a short note: pitched notes need the 16-out
   layout, because in mono/stereo the MIDI note number picks the pad. In
   16-out layout and in the standalone and web apps it works as today.
   (User's choice.)
@@ -128,7 +129,7 @@ APIs apply, but are not tested targets.
 ## Decisions made in conversation
 
 - 16-out layout: each pad on its own output only, no full-mix bus.
-- Pitch grid greyed out with an explanation in mono/stereo layout.
+- Pitch grid greyed out, pads disabled, with an explanation in mono/stereo layout.
 - Plugin drops accounts. Desktop app saving is a separate design.
 
 - Chromatic pad playing comes from per-pad DAW tracks on MIDI channels 1–16.
@@ -163,8 +164,7 @@ APIs apply, but are not tested targets.
 - Pitched notes that already exist in mono/stereo layout (from a session
   saved before this change) are kept in the song. They play and export at
   the pad's kit note, and the export shows a warning that pitch was dropped.
-- Clicking the on-screen pitch keys still auditions pitched sound in every
-  layout; only recording into the pitch grid is greyed out.
+- In mono/stereo the on-screen pitch pads are disabled (user's choice).
 - "Ignore the export from web" was read as deferring web-song-to-plugin
   transfer. Web MIDI export stays in scope.
 

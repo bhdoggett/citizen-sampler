@@ -10,7 +10,9 @@ vi.mock("src/lib/song/react", () => ({
   usePad: () => ({ settings: { baseNote: "C3" } }),
 }));
 vi.mock("src/app/hooks/useTouchPads", () => ({ default: () => {} }));
-vi.mock("./PitchPad", () => ({ default: () => <button>pad</button> }));
+vi.mock("./PitchPad", () => ({
+  default: ({ disabled }: { disabled?: boolean }) => <button disabled={disabled}>pad</button>,
+}));
 
 const NOTE =
   "Pitched notes need the 16-output layout. In mono or stereo, each MIDI note plays a different pad.";
@@ -18,7 +20,7 @@ const NOTE =
 describe("PitchGrid", () => {
   afterEach(cleanup);
 
-  it("explains itself in the plugin's kit layout, pads still clickable", () => {
+  it("explains itself in the plugin's kit layout, pads disabled", () => {
     const { wrapper } = hostWrapper({
       isPlugin: true,
       layout: "kit",
@@ -28,7 +30,7 @@ describe("PitchGrid", () => {
     render(<PitchGrid />, { wrapper });
     expect(screen.getByText(NOTE)).toBeTruthy();
     for (const pad of screen.getAllByText("pad")) {
-      expect((pad as HTMLButtonElement).disabled).toBe(false);
+      expect((pad as HTMLButtonElement).disabled).toBe(true);
     }
   });
 

@@ -44,7 +44,7 @@
   user-select: none;
 }
 
-/* Pitched notes cannot reach the host in the kit layout; pads still audition */
+/* Pitched notes cannot reach the host in the kit layout; the pads are disabled */
 .unavailable .scaleTabs,
 .unavailable .grid {
   opacity: 0.5;

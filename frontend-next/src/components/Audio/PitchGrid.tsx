@@ -59,6 +59,7 @@ const PitchGrid: React.FC = () => {
               <PitchPad
                 key={`${note}-${i}`}
                 note={note}
+                disabled={needsMultiOut}
                 pitchPadsRef={pitchPadsRef}
                 ref={(el) => {
                   pitchPadsHandlersRef.current[note] = el as PadHandlers | null;
