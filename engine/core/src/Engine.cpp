@@ -209,16 +209,16 @@ void Engine::handle(const Command& command) {
         command);
 }
 
-// In the kit layout a pad plays one sound, so a pitched press is heard but
-// not recorded
+// In the plugin's kit layout a pad plays one sound, so a pitched press is
+// heard but not recorded. The standalone app records it as the web app does.
 void Engine::press(const std::string& padId, const std::string& note, double velocity) {
-    suppressRecording_ = layout_ == PadLayout::Kit && note != "C4";
+    suppressRecording_ = host_.isPlugin && layout_ == PadLayout::Kit && note != "C4";
     live_->press(padId, note, velocity);
     suppressRecording_ = false;
 }
 
 void Engine::release(const std::string& padId, const std::string& note) {
-    suppressRecording_ = layout_ == PadLayout::Kit && note != "C4";
+    suppressRecording_ = host_.isPlugin && layout_ == PadLayout::Kit && note != "C4";
     live_->release(padId, note);
     suppressRecording_ = false;
 }

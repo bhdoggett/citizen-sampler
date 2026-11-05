@@ -405,14 +405,25 @@ TEST_CASE("extreme chromatic notes do not crash") {
     rig.run(0.1);
 }
 
-TEST_CASE("kit layout does not record pitched presses") {
+TEST_CASE("kit layout in the plugin does not record pitched presses") {
     Rig rig;
     rig.addPad("pad-1");
+    rig.engine.setIsPlugin(true);
     recordPress(rig, "D4");
     CHECK(rig.eventsOf<evt::VoiceStarted>().size() == 1);
     CHECK(hitsOf(rig).empty());
     recordPress(rig, "C4");
     CHECK(hitsOf(rig).size() == 1);
+}
+
+TEST_CASE("the standalone app records pitched presses in the kit layout") {
+    Rig rig;
+    rig.addPad("pad-1");
+    CHECK(rig.engine.padLayout() == PadLayout::Kit);
+    recordPress(rig, "D4");
+    auto hits = hitsOf(rig);
+    REQUIRE(hits.size() == 1);
+    CHECK(hits[0].event.note == "D4");
 }
 
 TEST_CASE("multi-out records pitched presses") {
