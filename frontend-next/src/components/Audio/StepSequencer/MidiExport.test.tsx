@@ -175,6 +175,22 @@ describe("MidiExport", () => {
     expect(contains(saveMidi.mock.calls[0][1], [0x81, 0x40, 0x80])).toBe(true);
   });
 
+  it.each([
+    ["no end point", undefined],
+    ["an end of 0, which means the buffer end", 0],
+  ])("gives a hit with no length the rest of the sample for %s", (_, end) => {
+    const untimed = { ...hit(), duration: null };
+    const loose = pad("pad-1", [untimed]);
+    const settings = { ...loose.settings, end } as SampleTypeFE["settings"];
+    const { saveMidi, wrapper } = setup({ "pad-1": { ...loose, settings } }, WEB_HOST, {}, [
+      { type: "padLoaded", padId: "pad-1", duration: 0.5 },
+    ]);
+    render(<MidiExport unit={{ kind: "kit" }} />, { wrapper });
+    fireEvent.click(screen.getByRole("button", { name: "Export MIDI" }));
+    // 0.5 s at 120 bpm is 192 ticks (VLQ 0x81 0x40), then a note-off on channel 1
+    expect(contains(saveMidi.mock.calls[0][1], [0x81, 0x40, 0x80])).toBe(true);
+  });
+
   it("notes the dropped pitch for a pitched pattern in the plugin's kit layout", () => {
     const { wrapper } = setup({ "pad-1": pad("pad-1", [hit("D4")]) }, PLUGIN_KIT);
     render(<MidiExport unit={{ kind: "kit" }} />, { wrapper });

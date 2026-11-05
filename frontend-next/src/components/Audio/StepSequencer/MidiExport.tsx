@@ -26,12 +26,12 @@ type MidiExportProps = {
 
 // Seconds for a hit recorded without a length: the rest of the pad's sample
 // from its start point (or its trimmed part), or a sixteenth note while the
-// sample has not loaded
+// sample has not loaded. An end of 0, like no end, means the buffer end.
 function fallbackDuration(samples: Samples, durations: Record<string, number>, bpm: number) {
   return (padId: string) => {
     const settings = samples[padId]?.settings;
     const sampleLength = durations[padId];
-    if (settings && settings.end !== null) return Math.max(0, settings.end - settings.start);
+    if (settings?.end) return Math.max(0, settings.end - settings.start);
     if (sampleLength !== undefined) return Math.max(0, sampleLength - (settings?.start ?? 0));
     return 60 / bpm / 4;
   };
