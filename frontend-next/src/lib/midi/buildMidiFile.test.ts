@@ -76,7 +76,7 @@ const ev = (over: Partial<SampleEventFE>): SampleEventFE => ({
   ...over,
 });
 const makeSamples = (
-  pads: Record<string, { events: SampleEventFE[]; baseNote?: string }>,
+  pads: Record<string, { events: SampleEventFE[]; baseNote?: string; quantVal?: string }>,
 ): Samples =>
   Object.fromEntries(
     Object.entries(pads).map(([id, p]) => [
@@ -84,7 +84,11 @@ const makeSamples = (
       {
         url: "",
         events: { A: p.events, B: [], C: [], D: [] },
-        settings: { baseNote: p.baseNote ?? "C4" },
+        settings: {
+          baseNote: p.baseNote ?? "C4",
+          quantize: p.quantVal !== undefined,
+          quantVal: p.quantVal ?? "16",
+        },
       },
     ]),
   ) as unknown as Samples;
@@ -160,6 +164,63 @@ describe("buildMidiFile", () => {
   it("applies swing to off-beat events", () => {
     const r = build(
       makeSamples({ "pad-1": { events: [ev({ startTime: 96 })] } }),
+      { loopSettings: { ...loopSettings, swing: 0.5 } },
+    )!;
+    expect(notesOf(r)[0].tick).toBe(128);
+  });
+
+  // The engine snaps hits when it plays them (buildSchedule in
+  // engine/core/src/Schedule.cpp), so the file must hold the same times
+  it("snaps hits to the pad's quantize grid", () => {
+    const r = build(makeSamples({ "pad-1": { events: [ev({ startTime: 100 })], quantVal: "4" } }))!;
+    expect(notesOf(r)[0]).toMatchObject({ tick: 192, kind: "on" });
+  });
+
+  it("leaves hits where they are with quantize off", () => {
+    const r = build(makeSamples({ "pad-1": { events: [ev({ startTime: 100 })] } }))!;
+    expect(notesOf(r)[0]).toMatchObject({ tick: 100, kind: "on" });
+  });
+
+  it("snaps triplet grids like the engine", () => {
+    // An eighth-note triplet is 64 ticks
+    const r = build(makeSamples({ "pad-1": { events: [ev({ startTime: 100 })], quantVal: "8t" } }))!;
+    expect(notesOf(r)[0]).toMatchObject({ tick: 128, kind: "on" });
+  });
+
+  it("plays a hit snapped onto the loop end at the start", () => {
+    // One 4/4 bar is 768 ticks; a whole-note grid snaps 700 to 768
+    const r = build(makeSamples({ "pad-1": { events: [ev({ startTime: 700 })], quantVal: "1" } }))!;
+    expect(notesOf(r)[0]).toMatchObject({ tick: 0, kind: "on" });
+  });
+
+  it("drops hits past the loop end", () => {
+    const r = build(
+      makeSamples({ "pad-1": { events: [ev({ startTime: 800 }), ev({ startTime: 96 })] } }),
+    )!;
+    expect(notesOf(r).filter((n) => n.kind === "on").map((n) => n.tick)).toEqual([96]);
+  });
+
+  it("drops a hit that lands on another with the same note", () => {
+    const r = build(
+      makeSamples({
+        "pad-1": { events: [ev({ startTime: 0 }), ev({ startTime: 20 })], quantVal: "4" },
+      }),
+    )!;
+    expect(notesOf(r).filter((n) => n.kind === "on")).toHaveLength(1);
+  });
+
+  it("keeps hits at the same time with different notes", () => {
+    const r = build(
+      makeSamples({ "pad-1": { events: [ev({}), ev({ note: "D4" })] } }),
+      { layout: "multiOut" },
+    )!;
+    expect(notesOf(r).filter((n) => n.kind === "on").map((n) => n.note)).toEqual([60, 62]);
+  });
+
+  it("swings a hit after snapping it", () => {
+    // 90 snaps to the eighth at 96, which a 0.5 swing moves to 128
+    const r = build(
+      makeSamples({ "pad-1": { events: [ev({ startTime: 90 })], quantVal: "8" } }),
       { loopSettings: { ...loopSettings, swing: 0.5 } },
     )!;
     expect(notesOf(r)[0].tick).toBe(128);

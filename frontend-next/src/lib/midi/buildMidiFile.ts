@@ -1,9 +1,10 @@
 import * as Tone from "tone";
 import type { LoopName } from "src/types/audioTypes";
-import type { LoopSettingsFE, SampleEventFE } from "src/types/audioTypesFE";
+import type { LoopSettingsFE } from "src/types/audioTypesFE";
 import type { Samples } from "src/lib/song/store";
+import getScheduleEvents from "src/lib/audio/util/getScheduleEvents";
+import { PPQ } from "src/lib/audio/util/timing";
 
-const PPQ = 192;
 const KIT_BASE_NOTE = 35; // pad N sounds at 35 + N, so pad 1 is 36
 const DEFAULT_BASE_MIDI = 60;
 
@@ -106,7 +107,11 @@ function padMessages(
   number: number,
 ): { messages: NoteMessage[]; droppedPitch: boolean } {
   const pad = input.samples[padId];
-  const events: SampleEventFE[] = pad?.events[input.loop] ?? [];
+  // The hits as the engine plays them: snapped to the pad's quantize grid,
+  // wrapped at the loop end, with duplicates dropped (buildSchedule in
+  // engine/core/src/Schedule.cpp)
+  const timing = { ...input.loopSettings, bpm: input.bpm };
+  const hits = pad ? getScheduleEvents(pad, input.loop, timing) : [];
   const multiOut = input.layout === "multiOut";
   const channel = multiOut ? number : 1;
   const baseMidi = multiOut
@@ -116,8 +121,8 @@ function padMessages(
   const messages: NoteMessage[] = [];
   let droppedPitch = false;
 
-  for (const event of events) {
-    if (event.startTime === null) continue;
+  for (const [seconds, event] of hits) {
+    const tick = seconds * ticksPerSecond;
     const eventMidi = toMidi(event.note, DEFAULT_BASE_MIDI);
     let note: number;
     if (multiOut) {
@@ -126,11 +131,10 @@ function padMessages(
       note = KIT_BASE_NOTE + number;
       if (eventMidi !== DEFAULT_BASE_MIDI) droppedPitch = true;
     }
-    const start = Math.round(
-      event.startTime + swingOffsetTicks(event.startTime, input.loopSettings.swing),
-    );
-    const seconds = event.duration ?? input.fallbackDuration(padId);
-    const length = Math.max(1, Math.round(seconds * ticksPerSecond));
+    // Swing moves the snapped time, as in Engine::runSegment
+    const start = Math.round(tick + swingOffsetTicks(tick, input.loopSettings.swing));
+    const duration = event.duration ?? input.fallbackDuration(padId);
+    const length = Math.max(1, Math.round(duration * ticksPerSecond));
     const velocity = clamp(Math.round(event.velocity * 127), 1, 127);
     const clampedNote = clamp(note, 0, 127);
     messages.push(
