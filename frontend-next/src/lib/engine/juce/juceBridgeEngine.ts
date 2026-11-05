@@ -92,6 +92,15 @@ export class JuceBridgeEngine implements Engine {
     };
   }
 
+  async saveStems(songTitle: string): Promise<{ saved: number; folder?: string }> {
+    const result = (await this.invoke("saveStems", [songTitle])) as {
+      saved?: number;
+      folder?: string;
+    } | null;
+    if (!result || !result.saved) return { saved: 0 };
+    return { saved: result.saved, folder: result.folder };
+  }
+
   async saveMidi(fileName: string, bytes: Uint8Array): Promise<void> {
     const saved = await this.invoke("saveMidi", [fileName, toBase64(bytes)]);
     if (saved !== true) throw new Error(`Could not save ${fileName}`);

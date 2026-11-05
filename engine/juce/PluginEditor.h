@@ -8,7 +8,8 @@ namespace citizen {
 
 // The web UI in a WebView, wired to the processor: engineCommand events go
 // to the engine, engine events come back as engineEvent, and renderStem,
-// saveMidi and dragMidi are native functions. Event ids match frontend-next/src/lib/engine/juce.
+// saveStems, saveMidi and dragMidi are native functions. Event ids match
+// frontend-next/src/lib/engine/juce.
 class CitizenEditor : public juce::AudioProcessorEditor, private juce::Timer {
 public:
     explicit CitizenEditor(CitizenProcessor& owner);

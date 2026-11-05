@@ -86,6 +86,18 @@ juce::WebBrowserComponent::Options CitizenEditor::browserOptions(CitizenProcesso
             }
             complete(owner.renderStem(args[0].toString(), args[1].toString()));
         })
+        // saveStems(songTitle): writes every stem as a WAV under
+        // ~/Music/Citizen Sampler/Stems and shows the folder. Completes with
+        // { saved, folder } once written, or { saved: 0 } with nothing to export.
+        .withNativeFunction("saveStems", [&owner, &editor](const juce::Array<juce::var>& args, auto complete) {
+            const auto songTitle = args.isEmpty() ? juce::String() : args[0].toString();
+            // Rendering finishes on a background thread, maybe after the
+            // window has closed
+            juce::Component::SafePointer<CitizenEditor> safeEditor(&editor);
+            owner.saveStems(songTitle, [safeEditor, complete](juce::var result) {
+                if (safeEditor != nullptr) complete(result);
+            });
+        })
         // saveMidi(fileName, base64): saves into ~/Music/Citizen Sampler/MIDI
         // under a fresh name and shows it in the Finder. Completes with true
         // once written.

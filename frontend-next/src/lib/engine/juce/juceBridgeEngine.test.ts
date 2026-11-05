@@ -140,6 +140,33 @@ describe("JuceBridgeEngine", () => {
     await expect(pending).rejects.toThrow("Could not save song-loop-A.mid");
   });
 
+  it("saves stems through the native function", async () => {
+    const { emitted, fire } = installBackend();
+    const engine = new JuceBridgeEngine();
+    const pending = engine.saveStems("My Song");
+    const call = emitted.find((e) => e.id === "__juce__invoke");
+    expect(call?.payload).toMatchObject({ name: "saveStems", params: ["My Song"] });
+    const { resultId } = call!.payload as { resultId: number };
+    fire("__juce__complete", {
+      promiseId: resultId,
+      result: { saved: 2, folder: "/Music/Citizen Sampler/Stems/My Song" },
+    });
+    await expect(pending).resolves.toEqual({
+      saved: 2,
+      folder: "/Music/Citizen Sampler/Stems/My Song",
+    });
+  });
+
+  it("reports nothing saved when the native side returns no result", async () => {
+    const { emitted, fire } = installBackend();
+    const engine = new JuceBridgeEngine();
+    const pending = engine.saveStems("");
+    const call = emitted.find((e) => e.id === "__juce__invoke");
+    const { resultId } = call!.payload as { resultId: number };
+    fire("__juce__complete", { promiseId: resultId, result: null });
+    await expect(pending).resolves.toEqual({ saved: 0 });
+  });
+
   it("drags MIDI out through the native function", () => {
     const { emitted } = installBackend();
     const engine = new JuceBridgeEngine();

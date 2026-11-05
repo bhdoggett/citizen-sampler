@@ -71,6 +71,7 @@ target_sources(CitizenSampler PRIVATE
   PluginProcessor.cpp
   PluginEditor.cpp
   SampleLoader.cpp
+  StemFiles.cpp
   UiBundle.cpp
   Wire.cpp
 )
@@ -98,7 +99,8 @@ target_link_libraries(CitizenSampler
 # Wire format and UI bundle tests, against juce_core only
 if(CITIZEN_BUILD_TESTS)
   juce_add_console_app(CitizenWireTests PRODUCT_NAME "CitizenWireTests")
-  target_sources(CitizenWireTests PRIVATE Wire.cpp UiBundle.cpp tests/WireTest.cpp tests/UiBundleTest.cpp)
+  target_sources(CitizenWireTests PRIVATE Wire.cpp UiBundle.cpp StemFiles.cpp
+    tests/WireTest.cpp tests/UiBundleTest.cpp tests/StemFilesTest.cpp)
   target_compile_definitions(CitizenWireTests PRIVATE JUCE_STANDALONE_APPLICATION=1)
   target_link_libraries(CitizenWireTests PRIVATE citizen_core juce::juce_core doctest::doctest
     juce::juce_recommended_config_flags)

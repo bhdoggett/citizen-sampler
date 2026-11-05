@@ -77,6 +77,10 @@ export interface Engine {
   // Browser download on the web; a file in ~/Music/Citizen Sampler/MIDI in
   // the desktop app and plugin
   saveMidi(fileName: string, bytes: Uint8Array): Promise<void>;
+  // Desktop app and plugin only: write every stem as a WAV file under
+  // ~/Music/Citizen Sampler/Stems and show the folder. The web downloads
+  // each stem from renderStem instead.
+  saveStems?(songTitle: string): Promise<{ saved: number; folder?: string }>;
   // Desktop app and plugin only: drag the file out of the window, into a DAW
   dragMidi?(fileName: string, bytes: Uint8Array): void;
   dispose(): void;

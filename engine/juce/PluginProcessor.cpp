@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "PluginEditor.h"
+#include "StemFiles.h"
 #include "Wire.h"
 
 namespace citizen {
@@ -24,6 +25,28 @@ std::optional<juce::URL> uiUrlFromEnv() {
 #else
     return juce::URL("http://localhost:3000");
 #endif
+}
+
+juce::File stemsRoot() {
+    return juce::File::getSpecialLocation(juce::File::userMusicDirectory)
+        .getChildFile("Citizen Sampler")
+        .getChildFile("Stems");
+}
+
+bool writeWav(const juce::File& file, const SampleBuffer& stem) {
+    const int channels = static_cast<int>(stem.channels.size());
+    if (channels == 0) return false;
+    std::unique_ptr<juce::OutputStream> stream = file.createOutputStream();
+    if (!stream) return false;
+    const auto options = juce::AudioFormatWriterOptions{}
+                             .withSampleRate(stem.sampleRate)
+                             .withNumChannels(channels)
+                             .withBitsPerSample(24);
+    auto writer = juce::WavAudioFormat().createWriterFor(stream, options);
+    if (!writer) return false;
+    std::vector<const float*> data;
+    for (const auto& channel : stem.channels) data.push_back(channel.data());
+    return writer->writeFromFloatArrays(data.data(), channels, stem.numFrames());
 }
 
 // Sample urls are absolute, but a relative one resolves against the site
@@ -211,6 +234,50 @@ juce::var CitizenProcessor::renderStem(const juce::String& padId, const juce::St
     // Rendered outside the lock, so playback carries on
     if (!job) return {};
     return wire::toJson(citizen::renderStem(*job, sampleRate));
+}
+
+void CitizenProcessor::saveStems(const juce::String& songTitle, std::function<void(juce::var)> done) {
+    struct Export {
+        stems::Target target;
+        StemJob job;
+    };
+    std::vector<Export> exports;
+    double sampleRate;
+    {
+        std::lock_guard lock(engineLock_);
+        for (auto& target : stems::targets()) {
+            if (auto job = engine_.stemJob(target.padId, target.loop)) exports.push_back({target, std::move(*job)});
+        }
+        sampleRate = engine_.sampleRate();
+    }
+    if (exports.empty()) {
+        auto* result = new juce::DynamicObject();
+        result->setProperty("saved", 0);
+        done(juce::var(result));
+        return;
+    }
+    const auto folder = stems::exportFolder(stemsRoot(), songTitle, juce::Time::getCurrentTime());
+    // The jobs own copies of everything they need, so rendering never
+    // touches the engine
+    stemPool_.addJob([jobs = std::move(exports), sampleRate, folder, finish = std::move(done)]() mutable {
+        const auto out = folder.exists() ? folder.getNonexistentSibling() : folder;
+        int saved = 0;
+        if (out.createDirectory()) {
+            for (const auto& e : jobs) {
+                const auto file = out.getChildFile(stems::fileName(e.target.padId, e.target.loop));
+                if (writeWav(file, citizen::renderStem(e.job, sampleRate))) ++saved;
+            }
+        }
+        juce::MessageManager::callAsync([saved, out, reply = std::move(finish)] {
+            auto* result = new juce::DynamicObject();
+            result->setProperty("saved", saved);
+            if (saved > 0) {
+                result->setProperty("folder", out.getFullPathName());
+                out.revealToUser();
+            }
+            reply(juce::var(result));
+        });
+    });
 }
 
 // ---- Session state ----

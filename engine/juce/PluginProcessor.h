@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#include <functional>
 #include <mutex>
 #include <optional>
 #include <set>
@@ -32,6 +33,12 @@ public:
     juce::Array<juce::var> takeEvents();
     // { sampleRate, channels } or void when there is nothing to render
     juce::var renderStem(const juce::String& padId, const juce::String& loop);
+    // Writes every stem with hits as a 24-bit WAV into a fresh folder,
+    // ~/Music/Citizen Sampler/Stems/<song>/<date time>/pad-N-loop-X.wav,
+    // and shows it in the Finder. Renders on a background thread from jobs
+    // copied out under the engine lock; done runs on the message thread
+    // with { saved, folder }, or { saved: 0 } when there is nothing to export.
+    void saveStems(const juce::String& songTitle, std::function<void(juce::var)> done);
     // Where the WebView loads the UI from, or nothing to serve the bundled one
     std::optional<juce::URL> uiUrl() const { return uiUrl_; }
 
@@ -86,6 +93,10 @@ private:
     juce::DynamicObject::Ptr savedPads_ = new juce::DynamicObject();
     juce::var savedLoops_;
     PadLayout savedLayout_ = PadLayout::Kit;
+
+    // Stem exports. Its jobs never touch the processor; declared last so it
+    // finishes them before anything else goes away.
+    juce::ThreadPool stemPool_{juce::ThreadPool::Options{}.withThreadName("Citizen stems").withNumberOfThreads(1)};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CitizenProcessor)
 };

@@ -1,6 +1,7 @@
 import toWav from "audiobuffer-to-wav";
 import { useSongStore } from "src/lib/song/react";
 import { useAudioContext } from "../contexts/AudioContext";
+import { useUIContext } from "../contexts/UIContext";
 import { useEngine } from "src/lib/engine/react";
 import type { StemAudio } from "src/lib/engine/protocol";
 import type { LoopName } from "../../types/audioTypes";
@@ -22,6 +23,7 @@ const useDownloadWavStems = () => {
   const { songTitle } = useAudioContext();
   const store = useSongStore();
   const engine = useEngine();
+  const { openDialog } = useUIContext();
 
   // Download a given pad's loop as a WAV file
   const downloadWav = async (id: string, loop: LoopName) => {
@@ -39,7 +41,24 @@ const useDownloadWavStems = () => {
     URL.revokeObjectURL(url);
   };
 
+  // The desktop app and plugin write the files natively: a WebView ignores
+  // browser downloads
+  const saveStemsNatively = async (saveStems: NonNullable<typeof engine.saveStems>) => {
+    const { saved, folder } = await saveStems(songTitle);
+    openDialog({
+      type: "api-response",
+      message:
+        saved > 0
+          ? `Saved ${saved} ${saved === 1 ? "stem" : "stems"} to ${folder}`
+          : "No stems to export: add hits to a loop first.",
+    });
+  };
+
   const downloadAllWavs = async () => {
+    if (engine.saveStems) {
+      await saveStemsNatively(engine.saveStems.bind(engine));
+      return;
+    }
     // One render at a time
     for (const id of Object.keys(store.getState().samples)) {
       for (const loop of LOOP_NAMES) {
