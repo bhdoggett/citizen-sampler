@@ -48,5 +48,5 @@ if touches engine && [[ -d engine ]]; then
   engine/build/tests/citizen_core_tests
   cmake -S engine -B engine/build-juce -G Ninja -DCITIZEN_BUILD_JUCE=ON >/dev/null
   cmake --build engine/build-juce --target CitizenWireTests
-  engine/build-juce/juce/CitizenWireTests_artefacts/Debug/CitizenWireTests
+  engine/build-juce/juce/CitizenWireTests_artefacts/CitizenWireTests
 fi
