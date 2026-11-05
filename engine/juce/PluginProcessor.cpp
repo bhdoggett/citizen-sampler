@@ -72,6 +72,7 @@ bool CitizenProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const 
 
 void CitizenProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
     std::lock_guard lock(engineLock_);
+    engine_.setIsPlugin(isPlugin());
     engine_.prepare(sampleRate, juce::jmax(samplesPerBlock, 32));
 }
 
@@ -84,7 +85,7 @@ void CitizenProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
     }
 
     HostState host;
-    host.isPlugin = wrapperType != wrapperType_Standalone;
+    host.isPlugin = isPlugin();
     if (auto* playHead = getPlayHead()) {
         if (const auto position = playHead->getPosition()) {
             if (const auto bpm = position->getBpm()) host.tempo = *bpm;
@@ -237,9 +238,12 @@ void CitizenProcessor::setStateInformation(const void* data, int sizeInBytes) {
 }
 
 juce::AudioProcessorEditor* CitizenProcessor::createEditor() {
-    // The new page needs the host context; it also asks with requestHostContext
+    // The new page needs the host context; it also asks with requestHostContext.
+    // The host may not have processed audio yet, so say whether this is a
+    // plugin before the context goes out.
     {
         std::lock_guard lock(engineLock_);
+        engine_.setIsPlugin(isPlugin());
         engine_.emitHostContext();
     }
     return new CitizenEditor(*this);

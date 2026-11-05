@@ -143,6 +143,13 @@ void Engine::setHost(const HostState& incoming) {
     }
 }
 
+void Engine::setIsPlugin(bool isPlugin) {
+    if (isPlugin == host_.isPlugin) return;
+    HostState host = host_;
+    host.isPlugin = isPlugin;
+    setHost(host);
+}
+
 double Engine::swing() const {
     const auto& settings = loops_[loopIndex(currentLoop_)];
     return settings ? settings->swing : 0.0;

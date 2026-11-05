@@ -591,6 +591,24 @@ TEST_CASE("hostContext is emitted on change only") {
     CHECK_FALSE(ctx->hostPlaying);
 }
 
+TEST_CASE("setIsPlugin reports a change once") {
+    Rig rig;
+    rig.engine.takeEvents();
+    rig.engine.setIsPlugin(true);
+    rig.engine.setIsPlugin(true);
+    auto events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    auto* ctx = std::get_if<evt::HostContext>(&events[0]);
+    REQUIRE(ctx);
+    CHECK(ctx->isPlugin);
+    CHECK(ctx->layout == PadLayout::Kit);
+    rig.engine.setIsPlugin(false);
+    events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    REQUIRE(std::get_if<evt::HostContext>(&events[0]));
+    CHECK_FALSE(std::get_if<evt::HostContext>(&events[0])->isPlugin);
+}
+
 TEST_CASE("requestHostContext emits one hostContext") {
     Rig rig;
     rig.engine.setHost(pluginHost(100.0));

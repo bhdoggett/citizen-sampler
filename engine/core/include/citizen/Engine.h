@@ -90,6 +90,9 @@ public:
     PadLayout padLayout() const { return layout_; }
     // Called every block: acts and emits only when something changed
     void setHost(const HostState& host);
+    // Whether this is a plugin, known before the host processes any audio.
+    // Emits a host context when it changes.
+    void setIsPlugin(bool isPlugin);
     // Queues the current host context, e.g. when an editor opens
     void emitHostContext();
     // MIDI from the host. `channel` is 1 to 16, `velocity` 0 to 1.

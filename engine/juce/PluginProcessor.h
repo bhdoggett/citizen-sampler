@@ -61,6 +61,7 @@ public:
 
 private:
     static BusesProperties padBuses();
+    bool isPlugin() const { return wrapperType != wrapperType_Standalone; }
     // With no editor open, nobody reads events, so drop them
     void timerCallback() override;
     void apply(const Command& command);
