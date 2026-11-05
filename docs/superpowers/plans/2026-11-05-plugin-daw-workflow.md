@@ -332,3 +332,29 @@ Shape the drag part by Task 1 answer 2: if WebView drag failed, skip `dragMidi` 
   6. Login/Save/Load hidden in the plugin; still present in the standalone app.
   7. Open a project saved before this branch: same sound, stereo/kit.
   8. App icon in Dock and Finder matches the web favicon.
+
+---
+
+### Task 11: Plugin window — smaller, resizable, UI fills it (added mid-run at the user's request)
+
+User feedback from Logic: the window is too big, too much grey background around the UI, and it should be resizable. The web frame is a fixed 800px wide (`frontend-next/src/app/page.module.css` `.frame`), while the editor opens at 1280×820.
+
+**Files:**
+- Modify: `engine/juce/PluginEditor.cpp` (size, limits, aspect ratio)
+- Modify: `frontend-next/src/app/page.tsx`, `frontend-next/src/app/page.module.css`
+- Create: `frontend-next/src/lib/useFitToWindow.ts` (+ `.test.ts`)
+
+**Interfaces:**
+- Consumes: `hasJuceBackend()` (`frontend-next/src/lib/engine/juce/juceBridgeEngine.ts`).
+- Produces: `useFitToWindow(ref: RefObject<HTMLElement>, enabled: boolean): number` — returns the scale that fits the element's natural size (measured unscaled) inside the window, minus the outer margin; re-computes on `resize`.
+
+Behavior:
+- In JUCE builds (`hasJuceBackend()`), `.page` uses a minimal outer margin (`var(--space-2)`), the frame is scaled with CSS `zoom` set through a CSS custom property (`--fit-scale`) on the frame's class — no inline style objects beyond setting that one variable via `style.setProperty` in the hook's effect — and the footer credit stays, compact, directly under the frame.
+- The web build is unchanged (hook disabled).
+- Editor: default size = the frame's natural size at scale 1 plus margins (measure in the Standalone; about 860×700 expected), `setResizable(true, true)`, fixed aspect ratio from that default (`getConstrainer()->setFixedAspectRatio`), limits 60%–200% of the default.
+
+- [ ] **Step 1: Failing test** — `useFitToWindow.test.ts`: element natural 800×600, window 400×300 minus margin → scale ≈ 0.5 − margin effect; window 1600×1200 → ≈ 2; disabled → 1; resize event recomputes.
+- [ ] **Step 2:** Run `pnpm --dir frontend-next exec vitest run src/lib/useFitToWindow.test.ts` — FAIL.
+- [ ] **Step 3:** Implement hook, page wiring, CSS, and editor sizing.
+- [ ] **Step 4:** vitest + `tsc --noEmit` pass; Standalone builds; open the Standalone, drag the corner from smallest to largest: no clipping, no sideways scroll, grey border stays thin. Screenshot smallest and default into the report.
+- [ ] **Step 5:** Commit `Fit the UI to a smaller, resizable plugin window`.
