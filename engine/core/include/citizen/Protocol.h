@@ -40,6 +40,12 @@ struct Transport {
     double position;     // seconds into the loop
     double loopDuration; // seconds
 };
+struct HostContext {
+    bool isPlugin;
+    PadLayout layout;
+    std::optional<double> tempo; // the host's tempo, when it reports one
+    bool hostPlaying;
+};
 struct VoiceStarted { std::string padId; std::string note; };
 struct VoiceEnded { std::string padId; std::string note; };
 struct HitRecorded { std::string padId; Loop loop; SampleEvent event; };
@@ -53,6 +59,6 @@ struct PreviewEnded { std::string url; };
 
 using Event = std::variant<evt::Transport, evt::VoiceStarted, evt::VoiceEnded, evt::HitRecorded,
                            evt::Loading, evt::PadLoaded, evt::PadLoadFailed, evt::Pitch,
-                           evt::PreviewStarted, evt::PreviewEnded>;
+                           evt::PreviewStarted, evt::PreviewEnded, evt::HostContext>;
 
 } // namespace citizen

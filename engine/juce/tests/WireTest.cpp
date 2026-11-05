@@ -139,6 +139,13 @@ TEST_CASE("events become the JSON the UI expects") {
     CHECK(juce::JSON::toString(transport, true) ==
           R"({"type": "transport", "playing": true, "recording": false, "loop": "D", "position": 1.5, "loopDuration": 4.0})");
 
+    auto host = wire::toJson(Event{evt::HostContext{true, PadLayout::MultiOut, 96.5, false}});
+    CHECK(juce::JSON::toString(host, true) ==
+          R"({"type": "hostContext", "isPlugin": true, "layout": "multiOut", "tempo": 96.5, "hostPlaying": false})");
+    auto hostNoTempo = wire::toJson(Event{evt::HostContext{false, PadLayout::Kit, std::nullopt, true}});
+    CHECK(hostNoTempo["tempo"].isVoid());
+    CHECK(static_cast<juce::String>(hostNoTempo["layout"]) == "kit");
+
     auto pitch = wire::toJson(Event{evt::Pitch{"pad-1", std::nullopt}});
     CHECK(pitch["frequency"].isVoid());
 }

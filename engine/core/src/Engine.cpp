@@ -87,7 +87,47 @@ void Engine::prepare(double sampleRate, int maxBlockFrames) {
 std::optional<LoopTiming> Engine::timing(Loop loop) const {
     const auto& settings = loops_[loopIndex(loop)];
     if (!settings) return std::nullopt;
-    return settings->timing;
+    LoopTiming t = settings->timing;
+    if (const auto tempo = hostTempo()) t.bpm = *tempo;
+    return t;
+}
+
+std::optional<double> Engine::hostTempo() const {
+    if (host_.isPlugin) return host_.tempo;
+    return std::nullopt;
+}
+
+void Engine::setPadLayout(PadLayout layout) {
+    if (layout == layout_) return;
+    layout_ = layout;
+    emitHostContext();
+}
+
+void Engine::emitHostContext() {
+    events_.push_back(evt::HostContext{host_.isPlugin, layout_, host_.tempo, host_.playing});
+}
+
+void Engine::setHost(const HostState& host) {
+    const bool contextChanged = host.isPlugin != host_.isPlugin || host.playing != host_.playing ||
+                                host.tempo.has_value() != host_.tempo.has_value() ||
+                                (host.tempo && std::abs(*host.tempo - *host_.tempo) > 1e-6);
+    if (!contextChanged) return;
+
+    const auto oldTempo = hostTempo();
+    const bool hostStarted = host.playing && !host_.playing;
+    host_ = host;
+    const auto newTempo = hostTempo();
+
+    emitHostContext();
+    if (hostStarted) stop(); // also ends recording
+    if (oldTempo.has_value() != newTempo.has_value() ||
+        (newTempo && std::abs(*newTempo - *oldTempo) > 1e-6)) {
+        rebuildSchedules();
+        if (const auto t = timing(currentLoop_)) {
+            position_ = std::fmod(position_, loopDurationSeconds(*t));
+        }
+        emitTransport();
+    }
 }
 
 double Engine::swing() const {
@@ -107,9 +147,12 @@ void Engine::handle(const Command& command) {
             },
             [this](const cmd::SetLoops& c) { setLoops(c.loops); },
             [this](const cmd::SetCurrentLoop& c) { setCurrentLoop(c.loop); },
-            [this](const cmd::Play&) { play(); },
+            [this](const cmd::Play&) {
+                if (!host_.playing) play();
+            },
             [this](const cmd::Stop&) { stop(); },
             [this](const cmd::SetRecording& c) {
+                if (c.on && host_.playing) return;
                 recording_ = c.on;
                 emitTransport();
             },

@@ -472,3 +472,131 @@ TEST_CASE("kit layout with 32 channels still mixes into the first pair") {
     CHECK(peak(out[0]) > 0.5);
     for (int ch = 2; ch < 32; ++ch) CHECK(peak(out[ch]) == 0.0);
 }
+
+namespace {
+HostState pluginHost(std::optional<double> tempo, bool playing = false) {
+    HostState host;
+    host.isPlugin = true;
+    host.tempo = tempo;
+    host.playing = playing;
+    return host;
+}
+
+double lastLoopDuration(Rig& rig) {
+    auto transport = rig.eventsOf<evt::Transport>();
+    return transport.back().loopDuration;
+}
+} // namespace
+
+TEST_CASE("host tempo overrides loop bpm in a plugin") {
+    Rig rig;
+    rig.engine.setHost(pluginHost(60.0));
+    rig.engine.handle(cmd::SetLoops{loops()});
+    rig.run(0.0);
+    CHECK(lastLoopDuration(rig) == doctest::Approx(8.0));
+}
+
+TEST_CASE("host tempo is ignored outside a plugin") {
+    Rig rig;
+    HostState host;
+    host.tempo = 60.0;
+    rig.engine.setHost(host);
+    rig.engine.handle(cmd::SetLoops{loops()});
+    rig.run(0.0);
+    CHECK(lastLoopDuration(rig) == doctest::Approx(4.0));
+}
+
+TEST_CASE("host tempo change while playing keeps position inside the loop") {
+    Rig rig;
+    PadState pad;
+    pad.events[0] = {hitAt(0)};
+    rig.addPad("pad-1", pad);
+    rig.engine.setHost(pluginHost(120.0));
+    rig.engine.handle(cmd::Play{});
+    rig.run(3.5);
+    rig.engine.setHost(pluginHost(240.0)); // 2 s loop
+    rig.events.clear();
+    rig.run(0.1);
+    auto transport = rig.eventsOf<evt::Transport>();
+    REQUIRE_FALSE(transport.empty());
+    CHECK(transport.back().loopDuration == doctest::Approx(2.0));
+    CHECK(transport.back().position < 2.0);
+    CHECK(rig.engine.position() < 2.0);
+    // Hits still fire in the new loop
+    rig.run(2.0);
+    CHECK_FALSE(rig.eventsOf<evt::VoiceStarted>().empty());
+}
+
+TEST_CASE("host starting playback stops the plugin pattern") {
+    Rig rig;
+    rig.engine.handle(cmd::SetRecording{true});
+    rig.engine.handle(cmd::Play{});
+    rig.run(0.5);
+    rig.engine.setHost(pluginHost(std::nullopt, true));
+    rig.run(0.1);
+    auto transport = rig.eventsOf<evt::Transport>();
+    REQUIRE_FALSE(transport.empty());
+    CHECK_FALSE(transport.back().playing);
+    CHECK_FALSE(transport.back().recording);
+    CHECK_FALSE(rig.engine.playing());
+}
+
+TEST_CASE("plugin play is ignored while the host plays") {
+    Rig rig;
+    rig.engine.setHost(pluginHost(std::nullopt, true));
+    rig.engine.handle(cmd::Play{});
+    CHECK_FALSE(rig.engine.playing());
+    rig.engine.handle(cmd::SetRecording{true});
+    rig.engine.handle(cmd::Stop{});
+    rig.engine.setHost(pluginHost(std::nullopt, false));
+    rig.engine.handle(cmd::Play{});
+    CHECK(rig.engine.playing());
+    for (auto& e : rig.engine.takeEvents()) {
+        if (auto* t = std::get_if<evt::Transport>(&e)) CHECK_FALSE(t->recording);
+    }
+}
+
+TEST_CASE("host stopping does not start the plugin pattern") {
+    Rig rig;
+    rig.engine.setHost(pluginHost(std::nullopt, true));
+    rig.engine.setHost(pluginHost(std::nullopt, false));
+    CHECK_FALSE(rig.engine.playing());
+}
+
+TEST_CASE("hostContext is emitted on change only") {
+    Rig rig;
+    rig.engine.takeEvents();
+    rig.engine.setHost(pluginHost(120.0));
+    rig.engine.setHost(pluginHost(120.0));
+    auto count = [&] {
+        size_t n = 0;
+        for (auto& e : rig.engine.takeEvents()) n += std::holds_alternative<evt::HostContext>(e);
+        return n;
+    };
+    CHECK(count() == 1);
+    rig.engine.setHost(pluginHost(90.0));
+    CHECK(count() == 1);
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    CHECK(count() == 1);
+    rig.engine.emitHostContext();
+    auto events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    auto* ctx = std::get_if<evt::HostContext>(&events[0]);
+    REQUIRE(ctx);
+    CHECK(ctx->isPlugin);
+    CHECK(ctx->layout == PadLayout::MultiOut);
+    CHECK(*ctx->tempo == doctest::Approx(90.0));
+    CHECK_FALSE(ctx->hostPlaying);
+}
+
+TEST_CASE("stem jobs use the host tempo") {
+    Rig rig;
+    PadState pad;
+    pad.events[0] = {hitAt(0)};
+    rig.addPad("pad-1", pad);
+    rig.engine.setHost(pluginHost(60.0));
+    auto job = rig.engine.stemJob("pad-1", Loop::A);
+    REQUIRE(job);
+    CHECK(job->loop.timing.bpm == doctest::Approx(60.0));
+}

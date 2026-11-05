@@ -160,6 +160,13 @@ juce::var toJson(const Event& event) {
                                {"position", e.position},
                                {"loopDuration", e.loopDuration}});
             },
+            [](const evt::HostContext& e) {
+                return object({{"type", "hostContext"},
+                               {"isPlugin", e.isPlugin},
+                               {"layout", e.layout == PadLayout::MultiOut ? "multiOut" : "kit"},
+                               {"tempo", optional(e.tempo)},
+                               {"hostPlaying", e.hostPlaying}});
+            },
             [](const evt::VoiceStarted& e) {
                 return object({{"type", "voiceStarted"}, {"padId", str(e.padId)}, {"note", str(e.note)}});
             },
