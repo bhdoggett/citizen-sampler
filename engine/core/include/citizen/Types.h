@@ -10,6 +10,15 @@
 // event start times in ticks (192 per quarter note), durations in seconds.
 namespace citizen {
 
+// How a host maps MIDI onto pads: one note per pad (a drum kit), or one
+// channel per pad played chromatically
+enum class PadLayout { Kit, MultiOut };
+
+inline constexpr int kPadCount = 16;
+
+// "pad-7" is 7. Anything else, or outside 1 to kPadCount, is nothing.
+std::optional<int> padNumber(const std::string& padId);
+
 enum class Loop { A = 0, B = 1, C = 2, D = 3 };
 inline constexpr int kLoopCount = 4;
 

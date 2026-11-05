@@ -297,3 +297,130 @@ TEST_CASE("a pad whose sample failed to load is not asked for again") {
     rig.engine.handle(cmd::SetPad{"pad-1", PadState{"https://example.com/other.wav"}});
     CHECK(rig.engine.padsNeedingAudio().size() == 1);
 }
+
+namespace {
+std::vector<evt::HitRecorded> hitsOf(const Rig& rig) { return rig.eventsOf<evt::HitRecorded>(); }
+
+void recordPress(Rig& rig, const std::string& note) {
+    rig.engine.handle(cmd::SetRecording{true});
+    rig.engine.handle(cmd::Play{});
+    rig.run(0.5);
+    rig.engine.handle(cmd::Press{"pad-1", note, 1.0});
+    rig.run(0.1);
+    rig.engine.handle(cmd::Release{"pad-1", note});
+    rig.run(0.01);
+}
+} // namespace
+
+TEST_CASE("padNumber reads pad-1 to pad-16 only") {
+    CHECK(padNumber("pad-7") == 7);
+    CHECK(padNumber("pad-16") == 16);
+    CHECK(!padNumber("pad-0"));
+    CHECK(!padNumber("pad-17"));
+    CHECK(!padNumber("pad-"));
+    CHECK(!padNumber("pad-1x"));
+    CHECK(!padNumber("kick"));
+}
+
+TEST_CASE("kit layout maps notes 36-51 to pads 1-16 on any channel") {
+    Rig rig;
+    rig.addPad("pad-1");
+    rig.addPad("pad-16");
+    CHECK(rig.engine.padLayout() == PadLayout::Kit);
+    rig.engine.midiNoteOn(5, 36, 1.0);
+    rig.engine.midiNoteOn(1, 51, 1.0);
+    rig.run(0.01);
+    auto started = rig.eventsOf<evt::VoiceStarted>();
+    REQUIRE(started.size() == 2);
+    CHECK(started[0].padId == "pad-1");
+    CHECK(started[0].note == "C4");
+    CHECK(started[1].padId == "pad-16");
+}
+
+TEST_CASE("kit layout ignores notes outside 36-51") {
+    Rig rig;
+    rig.addPad("pad-1");
+    rig.addPad("pad-16");
+    rig.engine.midiNoteOn(1, 35, 1.0);
+    rig.engine.midiNoteOn(1, 52, 1.0);
+    rig.run(0.01);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().empty());
+}
+
+TEST_CASE("multi-out maps channel to pad and transposes against baseNote") {
+    Rig rig;
+    PadState pad;
+    pad.settings.baseNote = "A3"; // MIDI 57
+    rig.addPad("pad-3", pad);
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.midiNoteOn(3, 57, 1.0);
+    rig.engine.midiNoteOn(3, 59, 1.0);
+    rig.engine.midiNoteOn(2, 57, 1.0); // no pad-2
+    rig.run(0.01);
+    auto started = rig.eventsOf<evt::VoiceStarted>();
+    REQUIRE(started.size() == 2);
+    CHECK(started[0].padId == "pad-3");
+    CHECK(started[0].note == "C4");
+    CHECK(started[1].note == "D4");
+}
+
+TEST_CASE("multi-out note-off releases the note the note-on started") {
+    Rig rig;
+    rig.addPad("pad-3", {}, 5.0);
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.midiNoteOn(3, 62, 1.0);
+    rig.run(0.05);
+    PadState changed;
+    changed.url = "https://example.com/pad-3.wav";
+    changed.settings.baseNote = "C2";
+    rig.engine.handle(cmd::SetPad{"pad-3", changed});
+    rig.engine.midiNoteOff(3, 62);
+    rig.run(0.2);
+    CHECK(rig.eventsOf<evt::VoiceEnded>().size() == 1);
+}
+
+TEST_CASE("MIDI for a pad with no sample is silent and records nothing") {
+    Rig rig;
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.handle(cmd::SetRecording{true});
+    rig.engine.handle(cmd::Play{});
+    rig.run(0.2);
+    rig.engine.midiNoteOn(7, 60, 1.0);
+    rig.run(0.1);
+    rig.engine.midiNoteOff(7, 60);
+    rig.run(0.01);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().empty());
+    CHECK(hitsOf(rig).empty());
+}
+
+TEST_CASE("extreme chromatic notes do not crash") {
+    Rig rig;
+    rig.addPad("pad-1");
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.midiNoteOn(1, 0, 1.0);
+    rig.engine.midiNoteOn(1, 127, 1.0);
+    rig.run(0.1);
+    rig.engine.midiNoteOff(1, 0);
+    rig.engine.midiNoteOff(1, 127);
+    rig.run(0.1);
+}
+
+TEST_CASE("kit layout does not record pitched presses") {
+    Rig rig;
+    rig.addPad("pad-1");
+    recordPress(rig, "D4");
+    CHECK(rig.eventsOf<evt::VoiceStarted>().size() == 1);
+    CHECK(hitsOf(rig).empty());
+    recordPress(rig, "C4");
+    CHECK(hitsOf(rig).size() == 1);
+}
+
+TEST_CASE("multi-out records pitched presses") {
+    Rig rig;
+    rig.addPad("pad-1");
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    recordPress(rig, "D4");
+    auto hits = hitsOf(rig);
+    REQUIRE(hits.size() == 1);
+    CHECK(hits[0].event.note == "D4");
+}

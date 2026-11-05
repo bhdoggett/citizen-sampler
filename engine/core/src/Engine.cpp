@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string_view>
 
 #include "citizen/Notes.h"
 #include "citizen/Rules.h"
@@ -21,6 +22,21 @@ template <class... Ts>
 Overloaded(Ts...) -> Overloaded<Ts...>;
 } // namespace
 
+std::optional<int> padNumber(const std::string& padId) {
+    constexpr std::string_view kPrefix = "pad-";
+    if (padId.size() <= kPrefix.size() || padId.size() > kPrefix.size() + 2 ||
+        padId.compare(0, kPrefix.size(), kPrefix) != 0) {
+        return std::nullopt;
+    }
+    int n = 0;
+    for (size_t i = kPrefix.size(); i < padId.size(); ++i) {
+        if (padId[i] < '0' || padId[i] > '9') return std::nullopt;
+        n = n * 10 + (padId[i] - '0');
+    }
+    if (n < 1 || n > kPadCount) return std::nullopt;
+    return n;
+}
+
 Engine::Engine() : clicks_(kMetronomeVoices) {
     LiveInput::Deps deps;
     deps.attack = [this](const std::string& padId, const std::string& note, double velocity) {
@@ -37,10 +53,10 @@ Engine::Engine() : clicks_(kMetronomeVoices) {
     };
     deps.recordingPosition = [this]() -> std::optional<LiveInput::Position> {
         const auto t = timing(currentLoop_);
-        if (!playing_ || !recording_ || !t) return std::nullopt;
+        if (suppressRecording_ || !playing_ || !recording_ || !t) return std::nullopt;
         return LiveInput::Position{currentLoop_, secondsToTicks(position_, t->bpm)};
     };
-    deps.isRecording = [this] { return playing_ && recording_; };
+    deps.isRecording = [this] { return !suppressRecording_ && playing_ && recording_; };
     deps.transportSeconds = [this] { return position_; };
     deps.loopTiming = [this](Loop loop) { return timing(loop); };
     deps.emit = [this](Event event) { events_.push_back(std::move(event)); };
@@ -98,8 +114,8 @@ void Engine::handle(const Command& command) {
                 emitTransport();
             },
             [this](const cmd::SetMetronome& c) { metronomeOn_ = c.on; },
-            [this](const cmd::Press& c) { live_->press(c.padId, c.note, c.velocity); },
-            [this](const cmd::Release& c) { live_->release(c.padId, c.note); },
+            [this](const cmd::Press& c) { press(c.padId, c.note, c.velocity); },
+            [this](const cmd::Release& c) { release(c.padId, c.note); },
             // The tuner has no native pitch detection yet
             [](const cmd::SetTunerPad&) {},
             [this](const cmd::PreviewSample& c) {
@@ -119,6 +135,47 @@ void Engine::handle(const Command& command) {
             },
         },
         command);
+}
+
+// In the kit layout a pad plays one sound, so a pitched press is heard but
+// not recorded
+void Engine::press(const std::string& padId, const std::string& note, double velocity) {
+    suppressRecording_ = layout_ == PadLayout::Kit && note != "C4";
+    live_->press(padId, note, velocity);
+    suppressRecording_ = false;
+}
+
+void Engine::release(const std::string& padId, const std::string& note) {
+    suppressRecording_ = layout_ == PadLayout::Kit && note != "C4";
+    live_->release(padId, note);
+    suppressRecording_ = false;
+}
+
+void Engine::midiNoteOn(int channel, int note, double velocity) {
+    if (channel < 1 || channel > kPadCount || note < 0 || note > 127) return;
+    std::string padId;
+    std::string trigger;
+    if (layout_ == PadLayout::Kit) {
+        if (note < 36 || note > 51) return;
+        padId = "pad-" + std::to_string(note - 35);
+        trigger = "C4";
+    } else {
+        padId = "pad-" + std::to_string(channel);
+        const auto pad = pads_.find(padId);
+        if (pad == pads_.end()) return;
+        trigger = midiToNote(note + 60 - midiOf(pad->second->state.settings.baseNote));
+    }
+    auto& held = heldMidi_[(channel - 1) * 128 + note];
+    held.emplace(padId, trigger);
+    press(padId, trigger, velocity);
+}
+
+void Engine::midiNoteOff(int channel, int note) {
+    if (channel < 1 || channel > kPadCount || note < 0 || note > 127) return;
+    auto& held = heldMidi_[(channel - 1) * 128 + note];
+    if (!held) return;
+    release(held->first, held->second);
+    held.reset();
 }
 
 void Engine::setPad(const std::string& padId, const PadState& state) {

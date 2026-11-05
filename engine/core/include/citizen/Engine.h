@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <functional>
 #include <map>
 #include <memory>
@@ -78,6 +79,12 @@ public:
     std::optional<SampleBuffer> renderStem(const std::string& padId, Loop loop,
                                            double sampleRate) const;
 
+    void setPadLayout(PadLayout layout) { layout_ = layout; }
+    PadLayout padLayout() const { return layout_; }
+    // MIDI from the host. `channel` is 1 to 16, `velocity` 0 to 1.
+    void midiNoteOn(int channel, int note, double velocity);
+    void midiNoteOff(int channel, int note);
+
     double sampleRate() const { return sampleRate_; }
     bool playing() const { return playing_; }
     double position() const { return position_; }
@@ -101,6 +108,8 @@ private:
         Event event;
     };
 
+    void press(const std::string& padId, const std::string& note, double velocity);
+    void release(const std::string& padId, const std::string& note);
     void setPad(const std::string& padId, const PadState& state);
     void setLoops(const AllLoopSettings& loops);
     void setCurrentLoop(Loop loop);
@@ -129,6 +138,14 @@ private:
     bool metronomeOn_ = false;
     double position_ = 0.0;      // seconds into the current loop
     long long frameClock_ = 0;   // frames processed since prepare
+
+    // The pad and trigger note each held MIDI note started, by channel and
+    // note, so its note-off releases the same voice
+    using HeldMidi = std::optional<std::pair<std::string, std::string>>;
+    std::array<HeldMidi, kPadCount * 128> heldMidi_;
+    PadLayout layout_ = PadLayout::Kit;
+    // Set while a press that must not be recorded is going through live_
+    bool suppressRecording_ = false;
 
     std::unique_ptr<LiveInput> live_;
     std::vector<Timer> timers_;
