@@ -25,12 +25,14 @@ struct Release { std::string padId; std::string note; };
 struct SetTunerPad { std::optional<std::string> padId; };
 struct PreviewSample { std::string url; };
 struct StopPreview {};
+// The UI asks again for the hostContext it may have missed while loading
+struct RequestHostContext {};
 } // namespace cmd
 
 using Command = std::variant<cmd::SetPad, cmd::RemovePad, cmd::SetLoops, cmd::SetCurrentLoop,
                              cmd::Play, cmd::Stop, cmd::SetRecording, cmd::SetMetronome,
                              cmd::Press, cmd::Release, cmd::SetTunerPad, cmd::PreviewSample,
-                             cmd::StopPreview>;
+                             cmd::StopPreview, cmd::RequestHostContext>;
 
 namespace evt {
 struct Transport {

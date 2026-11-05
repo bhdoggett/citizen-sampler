@@ -25,7 +25,7 @@ function installBackend() {
   };
   const fire = (id: string, payload: unknown) =>
     listeners.get(id)?.forEach((fn) => fn(payload));
-  return { emitted, fire, listeners };
+  return { backend, emitted, fire, listeners };
 }
 
 afterEach(() => {
@@ -44,9 +44,27 @@ describe("hasJuceBackend", () => {
 });
 
 describe("JuceBridgeEngine", () => {
+  it("asks the engine for the host context once its listeners are attached", () => {
+    const { backend, emitted, listeners } = installBackend();
+    // Events sent before the page listens are lost, so the request must
+    // go out after the engineEvent listener is attached
+    const listenersAtEmit: number[] = [];
+    const emit = backend.emitEvent;
+    vi.spyOn(backend, "emitEvent").mockImplementation((id, payload) => {
+      listenersAtEmit.push(listeners.get("engineEvent")?.size ?? 0);
+      return emit(id, payload);
+    });
+    new JuceBridgeEngine();
+    expect(emitted).toEqual([
+      { id: "engineCommand", payload: { type: "requestHostContext" } },
+    ]);
+    expect(listenersAtEmit).toEqual([1]);
+  });
+
   it("sends commands to the backend as engineCommand events", () => {
     const { emitted } = installBackend();
     const engine = new JuceBridgeEngine();
+    emitted.length = 0;
     engine.send({ type: "press", padId: "pad-1", note: "C4", velocity: 1 });
     expect(emitted).toEqual([
       {
@@ -92,7 +110,8 @@ describe("JuceBridgeEngine", () => {
     const { emitted, fire } = installBackend();
     const engine = new JuceBridgeEngine();
     const pending = engine.renderStem("pad-1", "A");
-    const { resultId } = emitted[0].payload as { resultId: number };
+    const call = emitted.find((e) => e.id === "__juce__invoke");
+    const { resultId } = call!.payload as { resultId: number };
     fire("__juce__complete", { promiseId: resultId, result: null });
     expect(await pending).toBeNull();
   });

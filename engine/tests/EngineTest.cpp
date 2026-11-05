@@ -591,6 +591,19 @@ TEST_CASE("hostContext is emitted on change only") {
     CHECK_FALSE(ctx->hostPlaying);
 }
 
+TEST_CASE("requestHostContext emits one hostContext") {
+    Rig rig;
+    rig.engine.setHost(pluginHost(100.0));
+    rig.engine.takeEvents();
+    rig.engine.handle(cmd::RequestHostContext{});
+    auto events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    auto* ctx = std::get_if<evt::HostContext>(&events[0]);
+    REQUIRE(ctx);
+    CHECK(ctx->isPlugin);
+    CHECK(*ctx->tempo == doctest::Approx(100.0));
+}
+
 TEST_CASE("stem jobs use the host tempo") {
     Rig rig;
     PadState pad;

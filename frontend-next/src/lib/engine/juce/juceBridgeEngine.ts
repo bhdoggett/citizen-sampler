@@ -53,6 +53,9 @@ export class JuceBridgeEngine implements Engine {
         this.pending.delete(promiseId);
       }),
     ];
+    // The engine's startup hostContext may have gone out before the page
+    // was listening
+    this.send({ type: "requestHostContext" });
   }
 
   send(command: EngineCommand): void {

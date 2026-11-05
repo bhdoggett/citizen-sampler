@@ -100,6 +100,8 @@ TEST_CASE("setLoops keeps set loops and leaves null ones unset") {
 TEST_CASE("simple commands") {
     CHECK(std::holds_alternative<cmd::Play>(*wire::parseCommand(parse(R"({"type":"play"})"))));
     CHECK(std::holds_alternative<cmd::Stop>(*wire::parseCommand(parse(R"({"type":"stop"})"))));
+    CHECK(std::holds_alternative<cmd::RequestHostContext>(
+        *wire::parseCommand(parse(R"({"type":"requestHostContext"})"))));
 
     auto press = wire::parseCommand(parse(R"({"type":"press","padId":"pad-1","note":"E4","velocity":0.5})"));
     auto* p = std::get_if<cmd::Press>(&*press);

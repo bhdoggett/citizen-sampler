@@ -192,6 +192,7 @@ void Engine::handle(const Command& command) {
                 previewUrl_.reset();
                 previewRequest_.reset();
             },
+            [this](const cmd::RequestHostContext&) { emitHostContext(); },
         },
         command);
 }

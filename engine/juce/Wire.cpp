@@ -146,6 +146,7 @@ std::optional<Command> parseCommand(const juce::var& json) {
     }
     if (type == "previewSample") return cmd::PreviewSample{json["url"].toString().toStdString()};
     if (type == "stopPreview") return cmd::StopPreview{};
+    if (type == "requestHostContext") return cmd::RequestHostContext{};
     return std::nullopt;
 }
 
