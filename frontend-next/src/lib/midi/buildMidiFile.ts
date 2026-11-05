@@ -44,6 +44,7 @@ function toMidi(note: unknown, fallback: number): number {
 
 // Same rule as swingOffsetSeconds in engine/core/src/Rules.cpp
 function swingOffsetTicks(tick: number, swing: number): number {
+  if (swing <= 0) return 0;
   const progress = (((Math.round(tick) % PPQ) + PPQ) % PPQ) / PPQ;
   return (PPQ / 3) * Math.sin(progress * Math.PI) * swing;
 }

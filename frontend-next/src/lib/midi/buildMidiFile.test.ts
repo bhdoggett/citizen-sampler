@@ -169,6 +169,14 @@ describe("buildMidiFile", () => {
     expect(notesOf(r)[0].tick).toBe(128);
   });
 
+  it("adds no swing offset for a negative swing", () => {
+    const r = build(
+      makeSamples({ "pad-1": { events: [ev({ startTime: 96 })] } }),
+      { loopSettings: { ...loopSettings, swing: -0.5 } },
+    )!;
+    expect(notesOf(r)[0].tick).toBe(96);
+  });
+
   // The engine snaps hits when it plays them (buildSchedule in
   // engine/core/src/Schedule.cpp), so the file must hold the same times
   it("snaps hits to the pad's quantize grid", () => {
