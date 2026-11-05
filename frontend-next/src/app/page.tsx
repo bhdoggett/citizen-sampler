@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import styles from "./page.module.css";
 import MainMenu from "../components/MainMenu";
+import DesktopDownload from "../components/DesktopDownload";
 import Spinner from "../components/Spinner";
 import DialogWrapper from "../components/Dialogs/DialogWrapper";
 import ChooseSample from "../components/Dialogs/ChooseSample";
@@ -149,6 +150,7 @@ export default function Home() {
           {/* Header - NOT blurred */}
           <header className={styles.header}>
             <h1 className={styles.title}>Citizen Sampler</h1>
+            <DesktopDownload />
             <MidiHandler />
             <MainMenu />
           </header>
