@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import styles from "./page.module.css";
 import MainMenu from "../components/MainMenu";
+import DesktopDownload from "../components/DesktopDownload";
 import Spinner from "../components/Spinner";
 import DialogWrapper from "../components/Dialogs/DialogWrapper";
 import ChooseSample from "../components/Dialogs/ChooseSample";
@@ -24,6 +25,7 @@ import { useAudioContext } from "./contexts/AudioContext";
 import { useSelectLoop } from "./hooks/useSelectLoop";
 import { isLoopName } from "src/lib/constants/loops";
 import { readString, writeString } from "src/lib/storage";
+import { needsAudioUnlock } from "src/lib/desktop";
 import About from "src/components/Dialogs/About";
 import HelpShortcuts from "src/components/Dialogs/HelpShortcuts";
 import Welcome from "src/components/Dialogs/Welcome";
@@ -140,7 +142,8 @@ export default function Home() {
     }
   }, [dialog, openDialog]);
 
-  const contentHidden = samplersLoading || !makeBeatsButtonPressed;
+  const contentHidden =
+    samplersLoading || needsAudioUnlock(makeBeatsButtonPressed);
 
   return (
     <>
@@ -149,6 +152,7 @@ export default function Home() {
           {/* Header - NOT blurred */}
           <header className={styles.header}>
             <h1 className={styles.title}>Citizen Sampler</h1>
+            <DesktopDownload />
             <MidiHandler />
             <MainMenu />
           </header>
