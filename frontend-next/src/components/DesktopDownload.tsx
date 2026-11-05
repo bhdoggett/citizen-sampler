@@ -1,13 +1,13 @@
+import { isDesktopApp } from "src/lib/desktop";
 import styles from "./DesktopDownload.module.css";
 
 export const RELEASES_URL =
   "https://github.com/bhdoggett/citizen-sampler/releases/latest";
 
-// Points website visitors at the desktop app and plugins. The desktop app's
-// own build sets NEXT_PUBLIC_DESKTOP_APP (see next.config.ts), so the link
-// never shows inside the app.
+// Points website visitors at the desktop app and plugins. Never shows inside
+// the app.
 const DesktopDownload: React.FC = () => {
-  if (process.env.NEXT_PUBLIC_DESKTOP_APP) return null;
+  if (isDesktopApp()) return null;
   return (
     <a
       className={styles.download}

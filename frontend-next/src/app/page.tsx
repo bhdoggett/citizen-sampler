@@ -25,6 +25,7 @@ import { useAudioContext } from "./contexts/AudioContext";
 import { useSelectLoop } from "./hooks/useSelectLoop";
 import { isLoopName } from "src/lib/constants/loops";
 import { readString, writeString } from "src/lib/storage";
+import { needsAudioUnlock } from "src/lib/desktop";
 import About from "src/components/Dialogs/About";
 import HelpShortcuts from "src/components/Dialogs/HelpShortcuts";
 import Welcome from "src/components/Dialogs/Welcome";
@@ -141,7 +142,8 @@ export default function Home() {
     }
   }, [dialog, openDialog]);
 
-  const contentHidden = samplersLoading || !makeBeatsButtonPressed;
+  const contentHidden =
+    samplersLoading || needsAudioUnlock(makeBeatsButtonPressed);
 
   return (
     <>
