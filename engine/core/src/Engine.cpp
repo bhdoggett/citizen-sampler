@@ -419,12 +419,29 @@ void Engine::process(float* const* out, int numChannels, int numFrames) {
             position_ = from;
         }
 
-        std::fill_n(mixL_.begin(), n, 0.0f);
-        std::fill_n(mixR_.begin(), n, 0.0f);
-        for (auto& [id, pad] : pads_) pad->channel.process(mixL_.data(), mixR_.data(), n);
-        for (auto& click : clicks_) click.render(mixL_.data(), mixR_.data(), n);
+        const bool multiOut = layout_ == PadLayout::MultiOut && numChannels >= 2 * kPadCount;
+        float* mixL = mixL_.data();
+        float* mixR = mixR_.data();
+        if (multiOut) {
+            // Each pad renders straight into its own pair; clicks and preview
+            // go to the first pair
+            for (int ch = 0; ch < numChannels; ++ch) std::fill_n(out[ch] + done, n, 0.0f);
+            for (auto& [id, pad] : pads_) {
+                if (const auto number = padNumber(id)) {
+                    const int ch = 2 * (*number - 1);
+                    pad->channel.process(out[ch] + done, out[ch + 1] + done, n);
+                }
+            }
+            mixL = out[0] + done;
+            mixR = out[1] + done;
+        } else {
+            std::fill_n(mixL, n, 0.0f);
+            std::fill_n(mixR, n, 0.0f);
+            for (auto& [id, pad] : pads_) pad->channel.process(mixL, mixR, n);
+        }
+        for (auto& click : clicks_) click.render(mixL, mixR, n);
         if (preview_.active()) {
-            preview_.render(mixL_.data(), mixR_.data(), n);
+            preview_.render(mixL, mixR, n);
             if (!preview_.active() && previewUrl_) {
                 events_.push_back(evt::PreviewEnded{*previewUrl_});
                 previewUrl_.reset();
@@ -432,16 +449,18 @@ void Engine::process(float* const* out, int numChannels, int numFrames) {
             }
         }
 
-        for (int ch = 0; ch < numChannels; ++ch) {
-            float* dest = out[ch] + done;
-            if (numChannels == 1) {
-                for (int i = 0; i < n; ++i) dest[i] = 0.5f * (mixL_[i] + mixR_[i]);
-            } else if (ch == 0) {
-                std::copy_n(mixL_.begin(), n, dest);
-            } else if (ch == 1) {
-                std::copy_n(mixR_.begin(), n, dest);
-            } else {
-                std::fill_n(dest, n, 0.0f);
+        if (!multiOut) {
+            for (int ch = 0; ch < numChannels; ++ch) {
+                float* dest = out[ch] + done;
+                if (numChannels == 1) {
+                    for (int i = 0; i < n; ++i) dest[i] = 0.5f * (mixL_[i] + mixR_[i]);
+                } else if (ch == 0) {
+                    std::copy_n(mixL_.begin(), n, dest);
+                } else if (ch == 1) {
+                    std::copy_n(mixR_.begin(), n, dest);
+                } else {
+                    std::fill_n(dest, n, 0.0f);
+                }
             }
         }
 

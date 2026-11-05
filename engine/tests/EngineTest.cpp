@@ -424,3 +424,51 @@ TEST_CASE("multi-out records pitched presses") {
     REQUIRE(hits.size() == 1);
     CHECK(hits[0].event.note == "D4");
 }
+
+namespace {
+// Process `frames` into `channels` channels; returns one buffer per channel
+std::vector<std::vector<float>> runChannels(Rig& rig, int channels, int frames) {
+    std::vector<std::vector<float>> bufs(channels, std::vector<float>(frames, 0.7f)); // dirty on purpose
+    std::vector<float*> ptrs;
+    for (auto& b : bufs) ptrs.push_back(b.data());
+    rig.engine.process(ptrs.data(), channels, frames);
+    for (auto& e : rig.engine.takeEvents()) rig.events.push_back(std::move(e));
+    return bufs;
+}
+} // namespace
+
+TEST_CASE("multi-out renders each pad to its own channel pair") {
+    Rig rig;
+    rig.addPad("pad-1");
+    rig.addPad("pad-3");
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.handle(cmd::Press{"pad-1", "C4", 1.0});
+    rig.engine.handle(cmd::Press{"pad-3", "C4", 1.0});
+    auto out = runChannels(rig, 32, 100);
+    CHECK(peak(out[0]) > 0.5);
+    CHECK(peak(out[1]) > 0.5);
+    CHECK(peak(out[4]) > 0.5);
+    CHECK(peak(out[5]) > 0.5);
+    CHECK(peak(out[2]) == 0.0);
+    CHECK(peak(out[3]) == 0.0);
+    for (int ch = 6; ch < 32; ++ch) CHECK(peak(out[ch]) == 0.0);
+}
+
+TEST_CASE("multi-out sends preview to the first pair") {
+    Rig rig;
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.handle(cmd::PreviewSample{"https://example.com/p.wav"});
+    rig.engine.setPreviewBuffer("https://example.com/p.wav", constant(0.1));
+    auto out = runChannels(rig, 32, 50);
+    CHECK(peak(out[0]) > 0.5);
+    CHECK(peak(out[2]) == 0.0);
+}
+
+TEST_CASE("kit layout with 32 channels still mixes into the first pair") {
+    Rig rig;
+    rig.addPad("pad-3");
+    rig.engine.handle(cmd::Press{"pad-3", "C4", 1.0});
+    auto out = runChannels(rig, 32, 100);
+    CHECK(peak(out[0]) > 0.5);
+    for (int ch = 2; ch < 32; ++ch) CHECK(peak(out[ch]) == 0.0);
+}
