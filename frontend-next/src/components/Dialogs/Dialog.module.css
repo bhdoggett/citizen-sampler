@@ -115,7 +115,8 @@
 /* Long-form text dialogs (About, Help, Welcome) */
 .prose {
   max-width: 640px;
-  max-height: 65vh;
+  /* 65% of the window, also when the dialog is zoomed (--fit-scale) */
+  max-height: calc(65vh / var(--fit-scale, 1));
   overflow-y: auto;
   padding-right: var(--space-2);
   font-size: var(--text-sm);

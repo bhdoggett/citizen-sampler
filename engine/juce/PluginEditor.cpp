@@ -46,6 +46,12 @@ bool writeMidi(const juce::File& file, const juce::String& base64) {
     return file.replaceWithData(bytes.getData(), bytes.getDataSize());
 }
 
+// The UI's natural size at scale 1 plus its margins (frontend-next
+// page.module.css .pageFit). The UI scales to fill the window, so the
+// window keeps this shape.
+constexpr int defaultWidth = 816;
+constexpr int defaultHeight = 700;
+
 juce::String legalMidiName(const juce::String& requested) {
     auto name = juce::File::createLegalFileName(requested);
     if (name.isEmpty()) name = "citizen-sampler";
@@ -119,8 +125,9 @@ CitizenEditor::CitizenEditor(CitizenProcessor& owner)
     const auto url = processor_.uiUrl();
     browser_.goToURL(url ? url->toString(true) : juce::WebBrowserComponent::getResourceProviderRoot());
     setResizable(true, true);
-    setResizeLimits(800, 600, 2400, 1600);
-    setSize(1280, 820);
+    setResizeLimits(defaultWidth * 6 / 10, defaultHeight * 6 / 10, defaultWidth * 2, defaultHeight * 2);
+    getConstrainer()->setFixedAspectRatio(static_cast<double>(defaultWidth) / defaultHeight);
+    setSize(defaultWidth, defaultHeight);
     // Engine events reach the UI about 60 times a second
     startTimerHz(60);
 }
