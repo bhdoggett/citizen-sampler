@@ -604,6 +604,50 @@ TEST_CASE("requestHostContext emits one hostContext") {
     CHECK(*ctx->tempo == doctest::Approx(100.0));
 }
 
+TEST_CASE("setPadLayout changes the layout and reports it") {
+    Rig rig;
+    rig.engine.takeEvents();
+    rig.engine.handle(cmd::SetPadLayout{PadLayout::MultiOut});
+    CHECK(rig.engine.padLayout() == PadLayout::MultiOut);
+    auto events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    auto* ctx = std::get_if<evt::HostContext>(&events[0]);
+    REQUIRE(ctx);
+    CHECK(ctx->layout == PadLayout::MultiOut);
+    rig.engine.handle(cmd::SetPadLayout{PadLayout::Kit});
+    CHECK(rig.engine.padLayout() == PadLayout::Kit);
+}
+
+TEST_CASE("host tempo change while stopped applies when play starts") {
+    Rig rig;
+    PadState pad;
+    pad.events[0] = {hitAt(192)}; // beat 2: 0.5 s at 120 BPM, 1 s at 60 BPM
+    rig.engine.setHost(pluginHost(120.0));
+    rig.addPad("pad-1", pad);
+    rig.engine.setHost(pluginHost(60.0));
+    rig.engine.handle(cmd::Play{});
+    rig.run(0.75);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().empty());
+    rig.run(0.5);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().size() == 1);
+}
+
+TEST_CASE("host tempo change while stopped applies to a pad set before play") {
+    Rig rig;
+    PadState pad;
+    pad.events[0] = {hitAt(192)};
+    rig.engine.setHost(pluginHost(120.0));
+    rig.addPad("pad-1", pad);
+    rig.addPad("pad-2");
+    rig.engine.setHost(pluginHost(60.0));
+    rig.addPad("pad-2"); // setPad on another pad must not leave pad-1 stale
+    rig.engine.handle(cmd::Play{});
+    rig.run(0.75);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().empty());
+    rig.run(0.5);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().size() == 1);
+}
+
 TEST_CASE("stem jobs use the host tempo") {
     Rig rig;
     PadState pad;

@@ -78,6 +78,7 @@ void Engine::prepare(double sampleRate, int maxBlockFrames) {
     maxBlockFrames_ = std::max(1, maxBlockFrames);
     mixL_.assign(maxBlockFrames_, 0.0f);
     mixR_.assign(maxBlockFrames_, 0.0f);
+    events_.reserve(kEventCapacity);
     for (auto& [id, pad] : pads_) {
         pad->channel.prepare(sampleRate_, maxBlockFrames_);
         pad->channel.setSettings(pad->state.settings);
@@ -131,7 +132,10 @@ void Engine::setHost(const HostState& incoming) {
     emitHostContext();
     if (hostStarted) stop(); // also ends recording
     if (oldTempo != newTempo) {
-        rebuildSchedules();
+        // Rebuilding allocates, so on the audio thread it waits until the
+        // pattern plays, unless it already does
+        if (playing_) rebuildSchedules();
+        else schedulesStale_ = true;
         if (const auto t = timing(currentLoop_)) {
             position_ = std::fmod(position_, loopDurationSeconds(*t));
         }
@@ -192,6 +196,7 @@ void Engine::handle(const Command& command) {
                 previewUrl_.reset();
                 previewRequest_.reset();
             },
+            [this](const cmd::SetPadLayout& c) { setPadLayout(c.layout); },
             [this](const cmd::RequestHostContext&) { emitHostContext(); },
         },
         command);
@@ -254,7 +259,9 @@ void Engine::setPad(const std::string& padId, const PadState& state) {
         pad.bufferUrl.clear();
         pad.channel.setBuffer(nullptr);
     }
-    if (const auto t = timing(currentLoop_)) {
+    if (schedulesStale_) {
+        rebuildSchedules();
+    } else if (const auto t = timing(currentLoop_)) {
         pad.schedule = buildSchedule(pad.state, currentLoop_, *t);
     }
     applyGains();
@@ -320,6 +327,7 @@ void Engine::applyGains() {
 }
 
 void Engine::rebuildSchedules() {
+    schedulesStale_ = false;
     const auto t = timing(currentLoop_);
     for (auto& [id, pad] : pads_) {
         pad->schedule = t ? buildSchedule(pad->state, currentLoop_, *t) : std::vector<ScheduledHit>{};
@@ -346,6 +354,7 @@ void Engine::setCurrentLoop(Loop loop) {
 
 void Engine::play() {
     if (playing_) return;
+    if (schedulesStale_) rebuildSchedules();
     playing_ = true;
     emitTransport();
 }
@@ -540,6 +549,8 @@ void Engine::process(float* const* out, int numChannels, int numFrames) {
 std::vector<Event> Engine::takeEvents() {
     std::vector<Event> out;
     out.swap(events_);
+    // Keep room so the audio thread's events don't allocate
+    events_.reserve(kEventCapacity);
     return out;
 }
 

@@ -48,7 +48,7 @@ CitizenProcessor::CitizenProcessor()
 
 CitizenProcessor::~CitizenProcessor() = default;
 
-// "Pad 1" carries the kit mix; hosts enable "Pad 2".."Pad 16" for multi-out
+// "Pad 1" carries the kit mix; in multi-out "Pad N" carries pad N
 juce::AudioProcessor::BusesProperties CitizenProcessor::padBuses() {
     BusesProperties buses;
     for (int i = 1; i <= kPadBuses; ++i)
@@ -56,7 +56,8 @@ juce::AudioProcessor::BusesProperties CitizenProcessor::padBuses() {
     return buses;
 }
 
-// Kit: a mono or stereo main bus with the rest off. Multi-out: all 16 stereo.
+// A mono or stereo main bus with the rest off, or all 16 stereo. This only
+// limits what hosts may enable; the layout setting decides the routing.
 bool CitizenProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const {
     const auto& buses = layouts.outputBuses;
     if (buses.size() != kPadBuses) return false;
@@ -69,25 +70,9 @@ bool CitizenProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const 
     return othersOff && (main == juce::AudioChannelSet::stereo() || main == juce::AudioChannelSet::mono());
 }
 
-PadLayout CitizenProcessor::layoutFromBuses() const {
-    for (int i = 0; i < getBusCount(false); ++i) {
-        if (!getBus(false, i)->isEnabled()) return PadLayout::Kit;
-    }
-    return getBusCount(false) == kPadBuses ? PadLayout::MultiOut : PadLayout::Kit;
-}
-
-void CitizenProcessor::applyBusLayout() { engine_.setPadLayout(layoutFromBuses()); }
-
-// Hosts may change buses off the audio thread, so this waits for the lock
-void CitizenProcessor::processorLayoutsChanged() {
-    std::lock_guard lock(engineLock_);
-    applyBusLayout();
-}
-
 void CitizenProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
     std::lock_guard lock(engineLock_);
     engine_.prepare(sampleRate, juce::jmax(samplesPerBlock, 32));
-    applyBusLayout();
 }
 
 void CitizenProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi) {
@@ -118,7 +103,8 @@ void CitizenProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
         }
     }
 
-    // In multi-out the buffer holds every bus, a stereo pair per pad
+    // The buffer holds every enabled bus. In multi-out with all 16 enabled
+    // each pad gets its own pair; with fewer, the engine renders the mix.
     engine_.process(buffer.getArrayOfWritePointers(), buffer.getNumChannels(), buffer.getNumSamples());
 }
 
@@ -149,6 +135,7 @@ void CitizenProcessor::rememberSongCommand(const juce::var& json) {
     if (type == "setPad") savedPads_->setProperty(json["padId"].toString(), json);
     else if (type == "removePad") savedPads_->removeProperty(json["padId"].toString());
     else if (type == "setLoops") savedLoops_ = json;
+    else if (type == "setPadLayout") savedLayout_ = wire::parseLayout(json["layout"].toString()).value_or(PadLayout::Kit);
 }
 
 void CitizenProcessor::pushHostEvent(juce::var event) { hostEvents_.add(std::move(event)); }
@@ -230,14 +217,19 @@ juce::var CitizenProcessor::renderStem(const juce::String& padId, const juce::St
 void CitizenProcessor::getStateInformation(juce::MemoryBlock& destData) {
     // Hosts may save from any thread
     const std::lock_guard lock(stateLock_);
-    const auto json = wire::sessionStateJson(*savedPads_, savedLoops_);
+    const auto json = wire::sessionStateJson(*savedPads_, savedLoops_, savedLayout_);
     destData.replaceAll(json.toRawUTF8(), json.getNumBytesAsUTF8());
 }
 
 void CitizenProcessor::setStateInformation(const void* data, int sizeInBytes) {
     const auto json = juce::JSON::parse(juce::String::fromUTF8(static_cast<const char*>(data), sizeInBytes));
     if (!json.isObject()) return;
-    // Replay the saved commands, so pads play from MIDI before the UI opens
+    // Replay the saved commands, so pads play from MIDI before the UI opens.
+    // Sessions saved before the layout setting load as kit.
+    auto* layout = new juce::DynamicObject();
+    layout->setProperty("type", "setPadLayout");
+    layout->setProperty("layout", wire::layoutName(wire::sessionLayout(json)));
+    handleCommand(juce::var(layout));
     if (json["loops"].isObject()) handleCommand(json["loops"]);
     if (auto* pads = json["pads"].getDynamicObject()) {
         for (const auto& property : pads->getProperties()) handleCommand(property.value);

@@ -164,7 +164,11 @@ private:
     std::vector<Timer> timers_;
     int nextTimer_ = 1;
     std::vector<Due> due_;
+    // Reserved in prepare() and after every takeEvents()
+    static constexpr size_t kEventCapacity = 256;
     std::vector<Event> events_;
+    // A host tempo change while stopped; rebuilt on the message thread
+    bool schedulesStale_ = false;
 
     std::shared_ptr<const SampleBuffer> clickHigh_, clickLow_;
     std::vector<Voice> clicks_;

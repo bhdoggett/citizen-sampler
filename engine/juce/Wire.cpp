@@ -121,6 +121,14 @@ juce::String loopName(Loop loop) {
     return names[loopIndex(loop)];
 }
 
+std::optional<PadLayout> parseLayout(const juce::String& name) {
+    if (name == "kit") return PadLayout::Kit;
+    if (name == "multiOut") return PadLayout::MultiOut;
+    return std::nullopt;
+}
+
+juce::String layoutName(PadLayout layout) { return layout == PadLayout::MultiOut ? "multiOut" : "kit"; }
+
 std::optional<Command> parseCommand(const juce::var& json) {
     const juce::String type = json["type"].toString();
     const std::string padId = json["padId"].toString().toStdString();
@@ -146,6 +154,10 @@ std::optional<Command> parseCommand(const juce::var& json) {
     }
     if (type == "previewSample") return cmd::PreviewSample{json["url"].toString().toStdString()};
     if (type == "stopPreview") return cmd::StopPreview{};
+    if (type == "setPadLayout") {
+        if (auto layout = parseLayout(json["layout"].toString())) return cmd::SetPadLayout{*layout};
+        return std::nullopt;
+    }
     if (type == "requestHostContext") return cmd::RequestHostContext{};
     return std::nullopt;
 }
@@ -164,7 +176,7 @@ juce::var toJson(const Event& event) {
             [](const evt::HostContext& e) {
                 return object({{"type", "hostContext"},
                                {"isPlugin", e.isPlugin},
-                               {"layout", e.layout == PadLayout::MultiOut ? "multiOut" : "kit"},
+                               {"layout", layoutName(e.layout)},
                                {"tempo", optional(e.tempo)},
                                {"hostPlaying", e.hostPlaying}});
             },
@@ -214,12 +226,17 @@ juce::var toJson(const SampleBuffer& stem) {
     return object({{"sampleRate", stem.sampleRate}, {"channels", channels}});
 }
 
-juce::String sessionStateJson(const juce::DynamicObject& pads, const juce::var& loops) {
+juce::String sessionStateJson(const juce::DynamicObject& pads, const juce::var& loops, PadLayout layout) {
     auto* state = new juce::DynamicObject();
     // The var owns the copy; clone()'s unique_ptr must hand it over
     state->setProperty("pads", juce::var(pads.clone().release()));
     state->setProperty("loops", loops);
+    state->setProperty("layout", layoutName(layout));
     return juce::JSON::toString(juce::var(state), true);
+}
+
+PadLayout sessionLayout(const juce::var& state) {
+    return parseLayout(state["layout"].toString()).value_or(PadLayout::Kit);
 }
 
 } // namespace citizen::wire

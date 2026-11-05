@@ -13,8 +13,10 @@ namespace citizen {
 
 // Hosts the C++ engine. The WebView UI drives it with the same commands the
 // web engine takes; MIDI goes to the engine, which maps it per pad layout.
-// Output bus 1 carries the kit mix; enabling all 16 stereo buses switches
-// to one bus per pad.
+// It declares 16 stereo output buses. In the kit layout bus 1 carries the
+// mix; in multi-out, a plugin setting saved with the session, pad N plays
+// on bus N. Hosts may enable any number of buses (JUCE's AU wrapper enables
+// them all), so the layout never comes from the buses.
 //
 // Threading: the engine core is single-threaded, so one mutex guards it.
 // The message thread locks it to apply commands; the audio thread only
@@ -37,7 +39,6 @@ public:
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override {}
     bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
-    void processorLayoutsChanged() override;
     void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     juce::AudioProcessorEditor* createEditor() override;
@@ -66,10 +67,6 @@ private:
     void loadMissingAudio();
     void pushHostEvent(juce::var event);
     void rememberSongCommand(const juce::var& json);
-    // MultiOut when all 16 output buses are enabled, else Kit
-    PadLayout layoutFromBuses() const;
-    // Call with engineLock_ held
-    void applyBusLayout();
 
     std::mutex engineLock_;
     Engine engine_;
@@ -82,10 +79,12 @@ private:
     // Set CITIZEN_LOG_BRIDGE=1 to print bridge traffic to stderr
     const bool logBridge_ = juce::SystemStats::getEnvironmentVariable("CITIZEN_LOG_BRIDGE", {}).isNotEmpty();
 
-    // The last setPad per pad and the last setLoops, saved with the DAW session
+    // The last setPad per pad, the last setLoops and the pad layout, saved
+    // with the DAW session
     std::mutex stateLock_;
     juce::DynamicObject::Ptr savedPads_ = new juce::DynamicObject();
     juce::var savedLoops_;
+    PadLayout savedLayout_ = PadLayout::Kit;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CitizenProcessor)
 };

@@ -26,6 +26,8 @@ export type EngineCommand =
   | { type: "setTunerPad"; padId: string | null }
   | { type: "previewSample"; url: string }
   | { type: "stopPreview" }
+  // Plugin only: kit, or one output pair per pad
+  | { type: "setPadLayout"; layout: HostContext["layout"] }
   // Asks for a fresh hostContext event, in case the first was sent before
   // the UI was listening
   | { type: "requestHostContext" };

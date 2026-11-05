@@ -138,7 +138,8 @@ export class ToneEngine implements Engine {
         return this.previewSample(command.url);
       case "stopPreview":
         return this.stopPreview();
-      // The web engine has no host
+      // The web engine has no host and one output
+      case "setPadLayout":
       case "requestHostContext":
         return;
     }

@@ -100,6 +100,10 @@ TEST_CASE("setLoops keeps set loops and leaves null ones unset") {
 TEST_CASE("simple commands") {
     CHECK(std::holds_alternative<cmd::Play>(*wire::parseCommand(parse(R"({"type":"play"})"))));
     CHECK(std::holds_alternative<cmd::Stop>(*wire::parseCommand(parse(R"({"type":"stop"})"))));
+    CHECK(std::get<cmd::SetPadLayout>(*wire::parseCommand(parse(R"({"type":"setPadLayout","layout":"kit"})")))
+              .layout == PadLayout::Kit);
+    CHECK(std::get<cmd::SetPadLayout>(*wire::parseCommand(parse(R"({"type":"setPadLayout","layout":"multiOut"})")))
+              .layout == PadLayout::MultiOut);
     CHECK(std::holds_alternative<cmd::RequestHostContext>(
         *wire::parseCommand(parse(R"({"type":"requestHostContext"})"))));
 
@@ -122,6 +126,8 @@ TEST_CASE("simple commands") {
 TEST_CASE("unknown commands and loops are rejected") {
     CHECK_FALSE(wire::parseCommand(parse(R"({"type":"explode"})")));
     CHECK_FALSE(wire::parseCommand(parse(R"({"type":"setCurrentLoop","loop":"Z"})")));
+    CHECK_FALSE(wire::parseCommand(parse(R"({"type":"setPadLayout","layout":"surround"})")));
+    CHECK_FALSE(wire::parseCommand(parse(R"({"type":"setPadLayout"})")));
 }
 
 TEST_CASE("events become the JSON the UI expects") {
@@ -168,12 +174,24 @@ TEST_CASE("session state keeps each pad's setPad and the loops") {
     pads.setProperty("pad-2", parse(R"({"type":"setPad","padId":"pad-2","pad":{"url":"b.wav"}})"));
     const auto loops = parse(R"({"type":"setLoops","loops":{"A":null}})");
 
-    const auto saved = juce::JSON::parse(wire::sessionStateJson(pads, loops));
+    const auto saved = juce::JSON::parse(wire::sessionStateJson(pads, loops, PadLayout::Kit));
     CHECK(saved["pads"]["pad-1"]["pad"]["url"].toString() == "a.wav");
     CHECK(saved["pads"]["pad-2"]["padId"].toString() == "pad-2");
     CHECK(saved["loops"]["type"].toString() == "setLoops");
 
     // The saved copy doesn't change with the live pads
     pads.removeProperty("pad-1");
-    CHECK(juce::JSON::parse(wire::sessionStateJson(pads, loops))["pads"]["pad-1"].isVoid());
+    CHECK(juce::JSON::parse(wire::sessionStateJson(pads, loops, PadLayout::Kit))["pads"]["pad-1"].isVoid());
+}
+
+TEST_CASE("session state keeps the pad layout, and reads kit when it is absent") {
+    juce::DynamicObject pads;
+    const auto saved = juce::JSON::parse(wire::sessionStateJson(pads, {}, PadLayout::MultiOut));
+    CHECK(saved["layout"].toString() == "multiOut");
+    CHECK(wire::sessionLayout(saved) == PadLayout::MultiOut);
+    CHECK(wire::sessionLayout(juce::JSON::parse(wire::sessionStateJson(pads, {}, PadLayout::Kit))) == PadLayout::Kit);
+
+    // Sessions saved before the setting existed, or with a value we don't know
+    CHECK(wire::sessionLayout(parse(R"({"pads":{},"loops":null})")) == PadLayout::Kit);
+    CHECK(wire::sessionLayout(parse(R"({"layout":"surround"})")) == PadLayout::Kit);
 }
