@@ -2,7 +2,12 @@
 import { useRef, useState } from "react";
 import { Download, GripVertical } from "lucide-react";
 import { useAudioContext } from "src/app/contexts/AudioContext";
-import { useEngine, useHostContext, usePadDurations } from "src/lib/engine/react";
+import {
+  useEffectiveLoopSettings,
+  useEngine,
+  useHostContext,
+  usePadDurations,
+} from "src/lib/engine/react";
 import { useLoops, useSongSelector, useSongStore } from "src/lib/song/react";
 import { buildMidiFile, type MidiExportUnit } from "src/lib/midi/buildMidiFile";
 import type { Samples } from "src/lib/song/store";
@@ -44,7 +49,7 @@ const MidiExport: React.FC<MidiExportProps> = ({ unit, compact = false }) => {
   const padDurations = usePadDurations();
   const store = useSongStore();
   const { songTitle, currentLoop } = useAudioContext();
-  const loopSettings = useLoops()[currentLoop];
+  const loopSettings = useEffectiveLoopSettings(useLoops()[currentLoop]);
   const unitPad = unit.kind === "pad" ? unit.padId : null;
   const canExport = useSongSelector((state) => hasHits(state.samples, currentLoop, unitPad));
   // Known after an export or drag, from that file
@@ -55,7 +60,7 @@ const MidiExport: React.FC<MidiExportProps> = ({ unit, compact = false }) => {
   }.mid`;
 
   const build = () => {
-    const bpm = host.isPlugin && host.tempo ? host.tempo : loopSettings?.bpm;
+    const bpm = loopSettings?.bpm;
     if (!loopSettings || !bpm) return null;
     const { samples } = store.getState();
     const midi = buildMidiFile({

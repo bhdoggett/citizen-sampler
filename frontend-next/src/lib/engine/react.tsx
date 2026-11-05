@@ -1,6 +1,7 @@
 "use client";
-import { createContext, useContext, useSyncExternalStore } from "react";
+import { createContext, useContext, useMemo, useSyncExternalStore } from "react";
 import type { Engine } from "./protocol";
+import type { LoopSettingsFE } from "src/types/audioTypesFE";
 import type { EngineView, EngineViewState } from "./view";
 
 type EngineContextValue = { engine: Engine; view: EngineView };
@@ -37,6 +38,16 @@ export function useEngineView<T>(selector: (state: EngineViewState) => T): T {
 
 export const useTransportAnchor = () => useEngineView((state) => state.transport);
 export const useHostContext = () => useEngineView((state) => state.host);
+// The loop as it plays: in the plugin the host tempo replaces the stored
+// bpm, which is never written
+export function useEffectiveLoopSettings<T extends LoopSettingsFE | null | undefined>(loop: T): T {
+  const host = useHostContext();
+  const tempo = host.isPlugin ? host.tempo : null;
+  return useMemo(
+    () => (loop && tempo !== null && tempo !== loop.bpm ? { ...loop, bpm: tempo } : loop),
+    [loop, tempo],
+  );
+}
 export const useLoopIsPlaying = () => useEngineView((state) => state.transport.playing);
 export const useIsRecording = () => useEngineView((state) => state.transport.recording);
 export const useSamplesLoading = () => useEngineView((state) => state.loadingPads > 0);
