@@ -71,7 +71,7 @@ describe("useDownloadWavStems", () => {
     expect(clicked).toEqual([]);
     expect(openDialog).toHaveBeenCalledWith({
       type: "api-response",
-      message: "Saved 3 stems to /Users/me/Music/Citizen Sampler/Stems/My Song",
+      message: "Saved 3 stems to /Users/me/Music/Citizen Sampler/Stems/My Song.",
     });
   });
 
@@ -86,6 +86,46 @@ describe("useDownloadWavStems", () => {
     expect(openDialog).toHaveBeenCalledWith({
       type: "api-response",
       message: "No stems to export: add hits to a loop first.",
+    });
+  });
+
+  it("reports stems that could not be written", async () => {
+    engine = {
+      start: vi.fn(() => Promise.resolve()),
+      renderStem: vi.fn(() => Promise.resolve(null)),
+      saveStems: vi.fn(() => Promise.resolve({ saved: 0, failed: 2, folder: "/Stems/My Song" })),
+    };
+    await run();
+    expect(openDialog).toHaveBeenCalledWith({
+      type: "api-response",
+      message: "Could not save stems to /Stems/My Song.",
+    });
+  });
+
+  it("counts failures alongside saved stems", async () => {
+    engine = {
+      start: vi.fn(() => Promise.resolve()),
+      renderStem: vi.fn(() => Promise.resolve(null)),
+      saveStems: vi.fn(() => Promise.resolve({ saved: 3, failed: 1, folder: "/Stems/My Song" })),
+    };
+    await run();
+    expect(openDialog).toHaveBeenCalledWith({
+      type: "api-response",
+      message: "Saved 3 stems to /Stems/My Song (1 failed).",
+    });
+  });
+
+  it("shows an error when the native export fails", async () => {
+    engine = {
+      start: vi.fn(() => Promise.resolve()),
+      renderStem: vi.fn(() => Promise.resolve(null)),
+      saveStems: vi.fn(() => Promise.reject(new Error("boom"))),
+    };
+    await run();
+    expect(clicked).toEqual([]);
+    expect(openDialog).toHaveBeenCalledWith({
+      type: "api-response",
+      message: "Could not export stems.",
     });
   });
 });

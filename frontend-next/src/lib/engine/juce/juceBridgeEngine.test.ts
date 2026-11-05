@@ -157,6 +157,19 @@ describe("JuceBridgeEngine", () => {
     });
   });
 
+  it("passes on stems the native side could not write", async () => {
+    const { emitted, fire } = installBackend();
+    const engine = new JuceBridgeEngine();
+    const pending = engine.saveStems("My Song");
+    const call = emitted.find((e) => e.id === "__juce__invoke");
+    const { resultId } = call!.payload as { resultId: number };
+    fire("__juce__complete", {
+      promiseId: resultId,
+      result: { saved: 0, failed: 2, folder: "/Stems/My Song" },
+    });
+    await expect(pending).resolves.toEqual({ saved: 0, failed: 2, folder: "/Stems/My Song" });
+  });
+
   it("reports nothing saved when the native side returns no result", async () => {
     const { emitted, fire } = installBackend();
     const engine = new JuceBridgeEngine();

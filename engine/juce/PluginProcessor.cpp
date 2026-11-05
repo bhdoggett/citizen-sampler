@@ -33,20 +33,28 @@ juce::File stemsRoot() {
         .getChildFile("Stems");
 }
 
+// Replaces the file; false unless it ends up holding the whole stem
 bool writeWav(const juce::File& file, const SampleBuffer& stem) {
     const int channels = static_cast<int>(stem.channels.size());
     if (channels == 0) return false;
-    std::unique_ptr<juce::OutputStream> stream = file.createOutputStream();
-    if (!stream) return false;
-    const auto options = juce::AudioFormatWriterOptions{}
-                             .withSampleRate(stem.sampleRate)
-                             .withNumChannels(channels)
-                             .withBitsPerSample(24);
-    auto writer = juce::WavAudioFormat().createWriterFor(stream, options);
-    if (!writer) return false;
-    std::vector<const float*> data;
-    for (const auto& channel : stem.channels) data.push_back(channel.data());
-    return writer->writeFromFloatArrays(data.data(), channels, stem.numFrames());
+    // createOutputStream appends to an existing file
+    if (!file.deleteFile()) return false;
+    bool written = false;
+    {
+        std::unique_ptr<juce::OutputStream> stream = file.createOutputStream();
+        if (!stream) return false;
+        const auto options = juce::AudioFormatWriterOptions{}
+                                 .withSampleRate(stem.sampleRate)
+                                 .withNumChannels(channels)
+                                 .withBitsPerSample(24);
+        auto writer = juce::WavAudioFormat().createWriterFor(stream, options);
+        if (!writer) return false;
+        std::vector<const float*> data;
+        for (const auto& channel : stem.channels) data.push_back(channel.data());
+        written = writer->writeFromFloatArrays(data.data(), channels, stem.numFrames()) && writer->flush();
+        // The writer finishes the header as it goes away
+    }
+    return written && file.getSize() > 0;
 }
 
 // Sample urls are absolute, but a relative one resolves against the site
@@ -69,7 +77,10 @@ CitizenProcessor::CitizenProcessor()
     startTimerHz(4);
 }
 
-CitizenProcessor::~CitizenProcessor() = default;
+CitizenProcessor::~CitizenProcessor() {
+    // An export in progress stops after its current stem
+    if (stemPool_) stemPool_->removeAllJobs(true, 10000);
+}
 
 // "Pad 1" carries the kit mix; in multi-out "Pad N" carries pad N
 juce::AudioProcessor::BusesProperties CitizenProcessor::padBuses() {
@@ -257,24 +268,36 @@ void CitizenProcessor::saveStems(const juce::String& songTitle, std::function<vo
         return;
     }
     const auto folder = stems::exportFolder(stemsRoot(), songTitle, juce::Time::getCurrentTime());
+    if (!stemPool_) {
+        stemPool_ = std::make_unique<juce::ThreadPool>(
+            juce::ThreadPool::Options{}.withThreadName("Citizen stems").withNumberOfThreads(1));
+    }
     // The jobs own copies of everything they need, so rendering never
     // touches the engine
-    stemPool_.addJob([jobs = std::move(exports), sampleRate, folder, finish = std::move(done)]() mutable {
+    stemPool_->addJob([jobs = std::move(exports), sampleRate, folder, finish = std::move(done)]() mutable {
         const auto out = folder.exists() ? folder.getNonexistentSibling() : folder;
         int saved = 0;
+        int failed = 0;
         if (out.createDirectory()) {
             for (const auto& e : jobs) {
+                // The processor is going away
+                if (auto* job = juce::ThreadPoolJob::getCurrentThreadPoolJob(); job != nullptr && job->shouldExit())
+                    return;
                 const auto file = out.getChildFile(stems::fileName(e.target.padId, e.target.loop));
-                if (writeWav(file, citizen::renderStem(e.job, sampleRate))) ++saved;
+                if (writeWav(file, citizen::renderStem(e.job, sampleRate)))
+                    ++saved;
+                else
+                    ++failed;
             }
+        } else {
+            failed = static_cast<int>(jobs.size());
         }
-        juce::MessageManager::callAsync([saved, out, reply = std::move(finish)] {
+        juce::MessageManager::callAsync([saved, failed, out, reply = std::move(finish)] {
             auto* result = new juce::DynamicObject();
             result->setProperty("saved", saved);
-            if (saved > 0) {
-                result->setProperty("folder", out.getFullPathName());
-                out.revealToUser();
-            }
+            if (failed > 0) result->setProperty("failed", failed);
+            result->setProperty("folder", out.getFullPathName());
+            if (saved > 0) out.revealToUser();
             reply(juce::var(result));
         });
     });

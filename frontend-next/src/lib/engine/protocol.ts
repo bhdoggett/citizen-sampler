@@ -68,6 +68,9 @@ export type StemAudio = {
   channels: Float32Array[];
 };
 
+// What a native stem export wrote; failed counts stems it could not write
+export type SavedStems = { saved: number; failed?: number; folder?: string };
+
 export interface Engine {
   send(command: EngineCommand): void;
   subscribe(listener: (event: EngineEvent) => void): () => void;
@@ -80,7 +83,7 @@ export interface Engine {
   // Desktop app and plugin only: write every stem as a WAV file under
   // ~/Music/Citizen Sampler/Stems and show the folder. The web downloads
   // each stem from renderStem instead.
-  saveStems?(songTitle: string): Promise<{ saved: number; folder?: string }>;
+  saveStems?(songTitle: string): Promise<SavedStems>;
   // Desktop app and plugin only: drag the file out of the window, into a DAW
   dragMidi?(fileName: string, bytes: Uint8Array): void;
   dispose(): void;

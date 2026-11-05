@@ -1,5 +1,5 @@
 import type { LoopName } from "src/types/audioTypes";
-import type { Engine, EngineCommand, EngineEvent, StemAudio } from "../protocol";
+import type { Engine, EngineCommand, EngineEvent, SavedStems, StemAudio } from "../protocol";
 
 // The object JUCE's WebBrowserComponent injects when native integration is on
 type ListenerToken = unknown;
@@ -92,13 +92,12 @@ export class JuceBridgeEngine implements Engine {
     };
   }
 
-  async saveStems(songTitle: string): Promise<{ saved: number; folder?: string }> {
-    const result = (await this.invoke("saveStems", [songTitle])) as {
-      saved?: number;
-      folder?: string;
-    } | null;
-    if (!result || !result.saved) return { saved: 0 };
-    return { saved: result.saved, folder: result.folder };
+  async saveStems(songTitle: string): Promise<SavedStems> {
+    const result = (await this.invoke("saveStems", [songTitle])) as SavedStems | null;
+    const saved = result?.saved ?? 0;
+    const failed = result?.failed ?? 0;
+    if (saved === 0 && failed === 0) return { saved: 0 };
+    return { saved, ...(failed > 0 && { failed }), folder: result?.folder };
   }
 
   async saveMidi(fileName: string, bytes: Uint8Array): Promise<void> {

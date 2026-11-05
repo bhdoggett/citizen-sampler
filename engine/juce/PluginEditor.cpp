@@ -88,7 +88,8 @@ juce::WebBrowserComponent::Options CitizenEditor::browserOptions(CitizenProcesso
         })
         // saveStems(songTitle): writes every stem as a WAV under
         // ~/Music/Citizen Sampler/Stems and shows the folder. Completes with
-        // { saved, folder } once written, or { saved: 0 } with nothing to export.
+        // { saved, failed?, folder } once written, or { saved: 0 } with
+        // nothing to export.
         .withNativeFunction("saveStems", [&owner, &editor](const juce::Array<juce::var>& args, auto complete) {
             const auto songTitle = args.isEmpty() ? juce::String() : args[0].toString();
             // Rendering finishes on a background thread, maybe after the

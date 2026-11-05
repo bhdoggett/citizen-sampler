@@ -3,7 +3,7 @@ import { useSongStore } from "src/lib/song/react";
 import { useAudioContext } from "../contexts/AudioContext";
 import { useUIContext } from "../contexts/UIContext";
 import { useEngine } from "src/lib/engine/react";
-import type { StemAudio } from "src/lib/engine/protocol";
+import type { SavedStems, StemAudio } from "src/lib/engine/protocol";
 import type { LoopName } from "../../types/audioTypes";
 import { LOOP_NAMES } from "src/lib/constants/loops";
 import { padNumber } from "src/lib/constants/padLayout";
@@ -17,6 +17,15 @@ function asAudioBuffer(stem: StemAudio): AudioBuffer {
     duration: (stem.channels[0]?.length ?? 0) / stem.sampleRate,
     getChannelData: (channel: number) => stem.channels[channel],
   } as AudioBuffer;
+}
+
+function savedStemsMessage({ saved, failed = 0, folder }: SavedStems): string {
+  if (saved > 0) {
+    const stems = `${saved} ${saved === 1 ? "stem" : "stems"}`;
+    return `Saved ${stems} to ${folder}${failed > 0 ? ` (${failed} failed)` : ""}.`;
+  }
+  if (failed > 0) return `Could not save stems to ${folder}.`;
+  return "No stems to export: add hits to a loop first.";
 }
 
 const useDownloadWavStems = () => {
@@ -44,14 +53,14 @@ const useDownloadWavStems = () => {
   // The desktop app and plugin write the files natively: a WebView ignores
   // browser downloads
   const saveStemsNatively = async (saveStems: NonNullable<typeof engine.saveStems>) => {
-    const { saved, folder } = await saveStems(songTitle);
-    openDialog({
-      type: "api-response",
-      message:
-        saved > 0
-          ? `Saved ${saved} ${saved === 1 ? "stem" : "stems"} to ${folder}`
-          : "No stems to export: add hits to a loop first.",
-    });
+    let message: string;
+    try {
+      message = savedStemsMessage(await saveStems(songTitle));
+    } catch (error) {
+      console.error("Failed to export stems:", error);
+      message = "Could not export stems.";
+    }
+    openDialog({ type: "api-response", message });
   };
 
   const downloadAllWavs = async () => {

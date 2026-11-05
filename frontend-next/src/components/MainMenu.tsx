@@ -118,9 +118,10 @@ const Menu: React.FC = () => {
     }
   };
 
+  // Exports can take a while, so close the menu as they start
   const handleDownloadWavStems = async () => {
-    await downloadAllWavStems();
     setMenuOpen(false);
+    await downloadAllWavStems();
   };
 
   useEffect(() => {

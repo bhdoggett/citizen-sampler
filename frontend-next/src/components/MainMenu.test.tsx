@@ -32,7 +32,9 @@ vi.mock("../app/contexts/AudioContext", () => ({
 vi.mock("../app/contexts/UIContext", () => ({
   useUIContext: () => ({ openDialog: vi.fn() }),
 }));
-vi.mock("../app/hooks/useDownloadWavStems", () => ({ default: () => vi.fn() }));
+// Never settles, like a long stem export
+const downloadStems = vi.fn(() => new Promise<void>(() => {}));
+vi.mock("../app/hooks/useDownloadWavStems", () => ({ default: () => downloadStems }));
 
 const PLUGIN = {
   isPlugin: true,
@@ -56,6 +58,15 @@ describe("MainMenu", () => {
     }
     expect(screen.getByText("Load Collection")).toBeTruthy();
     expect(screen.getByText("Download Stems")).toBeTruthy();
+  });
+
+  it("closes the menu as soon as a stem export starts", () => {
+    const { wrapper } = hostWrapper(PLUGIN);
+    render(<Menu />, { wrapper });
+    fireEvent.click(screen.getByLabelText("Menu"));
+    fireEvent.click(screen.getByText("Download Stems"));
+    expect(downloadStems).toHaveBeenCalled();
+    expect(screen.queryByText("Download Stems")).toBeNull();
   });
 
   it("skips the login check in the plugin", () => {

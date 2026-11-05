@@ -37,7 +37,8 @@ public:
     // ~/Music/Citizen Sampler/Stems/<song>/<date time>/pad-N-loop-X.wav,
     // and shows it in the Finder. Renders on a background thread from jobs
     // copied out under the engine lock; done runs on the message thread
-    // with { saved, folder }, or { saved: 0 } when there is nothing to export.
+    // with { saved, failed?, folder }, or { saved: 0 } when there is nothing
+    // to export. Never calls done if the processor goes away mid-export.
     void saveStems(const juce::String& songTitle, std::function<void(juce::var)> done);
     // Where the WebView loads the UI from, or nothing to serve the bundled one
     std::optional<juce::URL> uiUrl() const { return uiUrl_; }
@@ -94,9 +95,9 @@ private:
     juce::var savedLoops_;
     PadLayout savedLayout_ = PadLayout::Kit;
 
-    // Stem exports. Its jobs never touch the processor; declared last so it
-    // finishes them before anything else goes away.
-    juce::ThreadPool stemPool_{juce::ThreadPool::Options{}.withThreadName("Citizen stems").withNumberOfThreads(1)};
+    // Stem exports, created on the first one. Its jobs never touch the
+    // processor; declared last so it goes away first.
+    std::unique_ptr<juce::ThreadPool> stemPool_;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CitizenProcessor)
 };
