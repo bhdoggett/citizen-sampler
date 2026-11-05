@@ -85,11 +85,11 @@ describe("MainMenu", () => {
     fireEvent.click(screen.getByLabelText("Menu"));
     const toggle = screen.getByRole("menuitemcheckbox", { name: "16 outputs (one per pad)" });
     expect(toggle.getAttribute("aria-checked")).toBe("true");
-    expect(
-      screen.getByText(
-        "Also pick Multi-Output (16xStereo) when you add Citizen Sampler in your DAW.",
-      ),
-    ).toBeTruthy();
+    const hint = screen.getByText(
+      "Also pick Multi-Output (16xStereo) when you add Citizen Sampler in your DAW.",
+    );
+    expect(hint.getAttribute("role")).toBe("none");
+    expect(toggle.getAttribute("aria-describedby")).toBe(hint.id);
   });
 
   it("switches the plugin to the other pad layout", () => {

@@ -6,7 +6,7 @@ import { hostWrapper, WEB_HOST } from "../hostTestUtil";
 import { SongStoreProvider } from "src/lib/song/react";
 import { createSongStore, type Samples } from "src/lib/song/store";
 import { defaultLoopSettings, defaultSampleSettings } from "src/lib/audio/defaults";
-import type { Engine, HostContext } from "src/lib/engine/protocol";
+import type { Engine, EngineEvent, HostContext } from "src/lib/engine/protocol";
 import type { SampleEventFE, SampleTypeFE } from "src/types/audioTypesFE";
 
 // jsdom has no PointerEvent, so fireEvent would drop clientX/clientY
@@ -56,9 +56,10 @@ function setup(
   samples: Samples,
   host: HostContext = WEB_HOST,
   overrides: Partial<Engine> = {},
+  events: EngineEvent[] = [],
 ) {
   const saveMidi = vi.fn<Engine["saveMidi"]>(() => Promise.resolve());
-  const { wrapper: EngineWrapper } = hostWrapper(host, { saveMidi, ...overrides });
+  const { wrapper: EngineWrapper } = hostWrapper(host, { saveMidi, ...overrides }, events);
   const store = createSongStore({ samples, loops: defaultLoopSettings() });
   const wrapper = ({ children }: PropsWithChildren) => (
     <SongStoreProvider store={store}>
@@ -66,6 +67,10 @@ function setup(
     </SongStoreProvider>
   );
   return { saveMidi, wrapper };
+}
+
+function contains(bytes: Uint8Array, want: number[]): boolean {
+  return Array.from(bytes).some((_, i) => want.every((b, j) => bytes[i + j] === b));
 }
 
 function containsTempo(bytes: Uint8Array, bpm: number): boolean {
@@ -152,9 +157,28 @@ describe("MidiExport", () => {
     expect(bytes.length).toBeGreaterThan(0);
   });
 
+  it("disables a pad's Export when only other pads have hits", () => {
+    const { wrapper } = setup({ "pad-1": pad("pad-1", [hit()]), "pad-2": pad("pad-2", []) });
+    render(<MidiExport unit={{ kind: "pad", padId: "pad-2" }} />, { wrapper });
+    const button = screen.getByRole("button", { name: "Export MIDI" }) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+  });
+
+  it("gives a hit with no length the rest of the pad's sample", () => {
+    const untimed = { ...hit(), duration: null };
+    const { saveMidi, wrapper } = setup({ "pad-1": pad("pad-1", [untimed]) }, WEB_HOST, {}, [
+      { type: "padLoaded", padId: "pad-1", duration: 0.5 },
+    ]);
+    render(<MidiExport unit={{ kind: "kit" }} />, { wrapper });
+    fireEvent.click(screen.getByRole("button", { name: "Export MIDI" }));
+    // 0.5 s at 120 bpm is 192 ticks (VLQ 0x81 0x40), then a note-off on channel 1
+    expect(contains(saveMidi.mock.calls[0][1], [0x81, 0x40, 0x80])).toBe(true);
+  });
+
   it("notes the dropped pitch for a pitched pattern in the plugin's kit layout", () => {
     const { wrapper } = setup({ "pad-1": pad("pad-1", [hit("D4")]) }, PLUGIN_KIT);
     render(<MidiExport unit={{ kind: "kit" }} />, { wrapper });
+    fireEvent.click(screen.getByRole("button", { name: "Export MIDI" }));
     expect(
       screen.getByText("Pitch dropped: kit layout plays each pad at its own pitch."),
     ).toBeTruthy();
@@ -163,6 +187,7 @@ describe("MidiExport", () => {
   it("keeps the pitch on the web", () => {
     const { wrapper } = setup({ "pad-1": pad("pad-1", [hit("D4")]) });
     render(<MidiExport unit={{ kind: "kit" }} />, { wrapper });
+    fireEvent.click(screen.getByRole("button", { name: "Export MIDI" }));
     expect(screen.queryByText(/Pitch dropped/)).toBeNull();
   });
 });

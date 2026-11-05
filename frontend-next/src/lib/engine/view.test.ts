@@ -98,4 +98,13 @@ describe("createEngineView", () => {
       hostPlaying: true,
     });
   });
+
+  it("keeps each pad's loaded sample length", () => {
+    const { view, emit } = setup();
+    expect(view.getState().padDurations).toEqual({});
+    emit({ type: "padLoaded", padId: "pad-1", duration: 1.5 });
+    emit({ type: "padLoaded", padId: "pad-2", duration: 0.5 });
+    emit({ type: "padLoaded", padId: "pad-1", duration: 2 });
+    expect(view.getState().padDurations).toEqual({ "pad-1": 2, "pad-2": 0.5 });
+  });
 });

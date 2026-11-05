@@ -501,7 +501,8 @@ export class ToneEngine implements Engine {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // Some browsers start the download after click() returns
+    setTimeout(() => URL.revokeObjectURL(url), 0);
     return Promise.resolve();
   }
 }

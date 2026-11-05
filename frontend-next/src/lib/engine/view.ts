@@ -12,6 +12,8 @@ export type EngineViewState = {
   // Latest voice per pad, for the waveform playhead
   lastVoice: Record<string, VoiceStart>;
   loadingPads: number;
+  // Seconds of each pad's loaded sample
+  padDurations: Record<string, number>;
   pitch: { padId: string; frequency: number | null } | null;
   preview: { url: string; duration: number; startedAt: number } | null;
 };
@@ -38,6 +40,7 @@ const initialState = (now: number): EngineViewState => ({
   voices: {},
   lastVoice: {},
   loadingPads: 0,
+  padDurations: {},
   pitch: null,
   preview: null,
 });
@@ -85,6 +88,10 @@ function reduce(
     }
     case "loading":
       return { ...state, loadingPads: event.pending };
+    case "padLoaded":
+      return state.padDurations[event.padId] === event.duration
+        ? state
+        : { ...state, padDurations: { ...state.padDurations, [event.padId]: event.duration } };
     case "pitch":
       return { ...state, pitch: { padId: event.padId, frequency: event.frequency } };
     case "previewStarted":

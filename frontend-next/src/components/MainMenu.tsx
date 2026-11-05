@@ -285,6 +285,7 @@ const Menu: React.FC = () => {
                     className={`${styles.item} ${styles.check}`}
                     role="menuitemcheckbox"
                     aria-checked={layout === "multiOut"}
+                    aria-describedby="pad-layout-hint"
                     onClick={() =>
                       engine.send({
                         type: "setPadLayout",
@@ -297,7 +298,7 @@ const Menu: React.FC = () => {
                     </span>
                     16 outputs (one per pad)
                   </li>
-                  <li className={styles.hint}>
+                  <li id="pad-layout-hint" role="none" className={styles.hint}>
                     Also pick Multi-Output (16xStereo) when you add Citizen
                     Sampler in your DAW.
                   </li>
