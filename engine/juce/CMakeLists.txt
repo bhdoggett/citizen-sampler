@@ -14,6 +14,8 @@ juce_add_plugin(CitizenSampler
   COMPANY_WEBSITE "https://citizensampler.com"
   BUNDLE_ID "com.doggettsystems.citizensampler"
   PRODUCT_NAME "Citizen Sampler"
+  # Rendered from assets/app-icon.svg, which matches the web favicon
+  ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/assets/app-icon.png"
   PLUGIN_MANUFACTURER_CODE Dgsy
   PLUGIN_CODE CtSm
   AU_MAIN_TYPE kAudioUnitType_MusicDevice
