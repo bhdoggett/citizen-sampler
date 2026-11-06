@@ -4,11 +4,14 @@ import { Circle, Music3 } from "lucide-react";
 import styles from "./Transport.module.css";
 import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useUIContext } from "src/app/contexts/UIContext";
-import { useEngine } from "src/lib/engine/react";
+import { useEngine, useHostContext } from "src/lib/engine/react";
+
+const HOST_PLAYING_TITLE = "Stopped while your DAW plays";
 
 const Transport = () => {
   const { loopIsPlaying, isRecording } = useAudioContext();
   const engine = useEngine();
+  const { hostPlaying } = useHostContext();
   const [metronomeActive, setMetronomeActive] = useState(false);
 
   useEffect(() => {
@@ -16,15 +19,16 @@ const Transport = () => {
   }, [engine, metronomeActive]);
 
   const handlePlay = useCallback(async () => {
-    if (loopIsPlaying) return;
+    if (loopIsPlaying || hostPlaying) return;
     await engine.start();
     engine.send({ type: "play" });
-  }, [engine, loopIsPlaying]);
+  }, [engine, loopIsPlaying, hostPlaying]);
 
   const handleRecord = useCallback(() => {
+    if (hostPlaying) return;
     engine.send({ type: "setRecording", on: !isRecording });
     if (!loopIsPlaying) handlePlay();
-  }, [engine, isRecording, loopIsPlaying, handlePlay]);
+  }, [engine, hostPlaying, isRecording, loopIsPlaying, handlePlay]);
 
   // Stopping also ends recording
   const handleStop = useCallback(() => {
@@ -79,7 +83,8 @@ const Transport = () => {
       <button
         className={`${styles.button} ${loopIsPlaying ? styles.playing : ""}`}
         onClick={handlePlay}
-        title="Play (Space)"
+        disabled={hostPlaying}
+        title={hostPlaying ? HOST_PLAYING_TITLE : "Play (Space)"}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -96,7 +101,8 @@ const Transport = () => {
       <button
         className={`${styles.button} ${isRecording ? styles.recording : ""}`}
         onClick={handleRecord}
-        title="Record (Ctrl + R)"
+        disabled={hostPlaying}
+        title={hostPlaying ? HOST_PLAYING_TITLE : "Record (Ctrl + R)"}
       >
         <Circle size={20} strokeWidth={2} />
       </button>

@@ -3,6 +3,7 @@ import { useAudioContext } from "../../app/contexts/AudioContext";
 import { useLoops } from "src/lib/song/react";
 import { useUIContext } from "src/app/contexts/UIContext";
 import LoopProgressBar from "./LoopProgress";
+import { useHostContext } from "src/lib/engine/react";
 import { useSelectLoop } from "src/app/hooks/useSelectLoop";
 
 import type { LoopSettings } from "../../types/audioTypes";
@@ -14,6 +15,8 @@ const Loop = () => {
   const { setAllLoopSettings, currentLoop, loopIsPlaying } = useAudioContext();
   const allLoopSettings = useLoops();
   const { openDialog } = useUIContext();
+  const host = useHostContext();
+  const hostTempo = host.isPlugin ? host.tempo : null;
 
   const handleSelectLoop = useSelectLoop();
 
@@ -62,8 +65,17 @@ const Loop = () => {
               type="number"
               min="40"
               max="240"
-              value={allLoopSettings[currentLoop]?.bpm ?? DEFAULT_LOOP_TIMING.bpm}
-              onChange={(e) => updateLoopSetting("bpm", Number(e.target.value))}
+              value={
+                hostTempo !== null
+                  ? Math.round(hostTempo * 100) / 100
+                  : (allLoopSettings[currentLoop]?.bpm ?? DEFAULT_LOOP_TIMING.bpm)
+              }
+              readOnly={hostTempo !== null}
+              title={hostTempo !== null ? "Follows your DAW's tempo" : undefined}
+              onChange={(e) => {
+                if (hostTempo !== null) return;
+                updateLoopSetting("bpm", Number(e.target.value));
+              }}
               className={styles.input}
             />
           </div>

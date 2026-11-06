@@ -12,6 +12,7 @@ function setup() {
     subscribe: () => () => {},
     start: () => Promise.resolve(),
     renderStem: () => Promise.resolve(null),
+    saveMidi: () => Promise.resolve(),
     dispose: () => {},
   };
   const view = createEngineView(() => () => {});

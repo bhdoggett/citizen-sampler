@@ -1,8 +1,9 @@
 import toWav from "audiobuffer-to-wav";
 import { useSongStore } from "src/lib/song/react";
 import { useAudioContext } from "../contexts/AudioContext";
+import { useUIContext } from "../contexts/UIContext";
 import { useEngine } from "src/lib/engine/react";
-import type { StemAudio } from "src/lib/engine/protocol";
+import type { SavedStems, StemAudio } from "src/lib/engine/protocol";
 import type { LoopName } from "../../types/audioTypes";
 import { LOOP_NAMES } from "src/lib/constants/loops";
 import { padNumber } from "src/lib/constants/padLayout";
@@ -18,10 +19,20 @@ function asAudioBuffer(stem: StemAudio): AudioBuffer {
   } as AudioBuffer;
 }
 
+function savedStemsMessage({ saved, failed = 0, folder }: SavedStems): string {
+  if (saved > 0) {
+    const stems = `${saved} ${saved === 1 ? "stem" : "stems"}`;
+    return `Saved ${stems} to ${folder}${failed > 0 ? ` (${failed} failed)` : ""}.`;
+  }
+  if (failed > 0) return `Could not save stems to ${folder}.`;
+  return "No stems to export: add hits to a loop first.";
+}
+
 const useDownloadWavStems = () => {
   const { songTitle } = useAudioContext();
   const store = useSongStore();
   const engine = useEngine();
+  const { openDialog } = useUIContext();
 
   // Download a given pad's loop as a WAV file
   const downloadWav = async (id: string, loop: LoopName) => {
@@ -39,7 +50,24 @@ const useDownloadWavStems = () => {
     URL.revokeObjectURL(url);
   };
 
+  // The desktop app and plugin write the files natively: a WebView ignores
+  // browser downloads
+  const saveStemsNatively = async (saveStems: NonNullable<typeof engine.saveStems>) => {
+    let message: string;
+    try {
+      message = savedStemsMessage(await saveStems(songTitle));
+    } catch (error) {
+      console.error("Failed to export stems:", error);
+      message = "Could not export stems.";
+    }
+    openDialog({ type: "api-response", message });
+  };
+
   const downloadAllWavs = async () => {
+    if (engine.saveStems) {
+      await saveStemsNatively(engine.saveStems.bind(engine));
+      return;
+    }
     // One render at a time
     for (const id of Object.keys(store.getState().samples)) {
       for (const loop of LOOP_NAMES) {

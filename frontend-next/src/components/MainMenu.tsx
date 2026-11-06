@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useSongStore } from "src/lib/song/react";
+import { useEngine, useHostContext } from "src/lib/engine/react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "../app/contexts/AuthContext";
 import { useAudioContext } from "../app/contexts/AudioContext";
@@ -41,6 +42,8 @@ const Menu: React.FC = () => {
   } = useAudioContext();
   const downloadAllWavStems = useDownloadWavStems();
   const store = useSongStore();
+  const engine = useEngine();
+  const { isPlugin, layout } = useHostContext();
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -115,13 +118,15 @@ const Menu: React.FC = () => {
     }
   };
 
+  // Exports can take a while, so close the menu as they start
   const handleDownloadWavStems = async () => {
-    await downloadAllWavStems();
     setMenuOpen(false);
+    await downloadAllWavStems();
   };
 
   useEffect(() => {
-    if (!token) return;
+    // Accounts do not exist inside the plugin
+    if (!token || isPlugin) return;
     // Only a rejected token logs the user out. An outage leaves the session
     // alone.
     const verifyLogin = async () => {
@@ -146,7 +151,7 @@ const Menu: React.FC = () => {
     verifyLogin();
     // Only run on mount or when token changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, isPlugin]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -206,7 +211,7 @@ const Menu: React.FC = () => {
         {menuOpen && (
           <div className={styles.menu}>
             <ul>
-              {isAuthenticated ? (
+              {isPlugin ? null : isAuthenticated ? (
                 <>
                   <li
                     className={styles.item}
@@ -275,6 +280,31 @@ const Menu: React.FC = () => {
                 </>
               )}
 
+              {isPlugin && (
+                <>
+                  <li
+                    className={`${styles.item} ${styles.check}`}
+                    role="menuitemcheckbox"
+                    aria-checked={layout === "multiOut"}
+                    aria-describedby="pad-layout-hint"
+                    onClick={() =>
+                      engine.send({
+                        type: "setPadLayout",
+                        layout: layout === "multiOut" ? "kit" : "multiOut",
+                      })
+                    }
+                  >
+                    <span className={styles.checkBox} aria-hidden="true">
+                      {layout === "multiOut" ? "\u2713" : ""}
+                    </span>
+                    16 outputs (one per pad)
+                  </li>
+                  <li id="pad-layout-hint" role="none" className={styles.hint}>
+                    Also pick Multi-Output (16xStereo) when you add Citizen
+                    Sampler in your DAW.
+                  </li>
+                </>
+              )}
               <li className={styles.divider} aria-hidden="true" />
               <li
                 className={styles.item}

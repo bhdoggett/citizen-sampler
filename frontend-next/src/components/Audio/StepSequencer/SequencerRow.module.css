@@ -97,18 +97,29 @@
   border-right-color: var(--ink);
 }
 
-.clear {
+.actions {
   position: sticky;
   right: 0;
   z-index: 20;
+  display: flex;
+  align-items: stretch;
+  border-left: var(--line);
+  background: var(--paper-2);
+}
+
+/* The MIDI export */
+.actions > :first-child {
+  align-self: center;
+  padding-left: var(--space-1);
+}
+
+.clear {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   min-width: 28px;
   color: transparent;
-  border-left: var(--line);
-  background: var(--paper-2);
 }
 
 /* Trash only shows on the row being pointed at */

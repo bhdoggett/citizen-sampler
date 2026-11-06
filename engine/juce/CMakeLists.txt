@@ -14,6 +14,8 @@ juce_add_plugin(CitizenSampler
   COMPANY_WEBSITE "https://citizensampler.com"
   BUNDLE_ID "com.doggettsystems.citizensampler"
   PRODUCT_NAME "Citizen Sampler"
+  # Rendered from assets/app-icon.svg, which matches the web favicon
+  ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/assets/app-icon.png"
   PLUGIN_MANUFACTURER_CODE Dgsy
   PLUGIN_CODE CtSm
   AU_MAIN_TYPE kAudioUnitType_MusicDevice
@@ -69,6 +71,7 @@ target_sources(CitizenSampler PRIVATE
   PluginProcessor.cpp
   PluginEditor.cpp
   SampleLoader.cpp
+  StemFiles.cpp
   UiBundle.cpp
   Wire.cpp
 )
@@ -93,10 +96,27 @@ target_link_libraries(CitizenSampler
     juce::juce_recommended_warning_flags
 )
 
+# Ad-hoc sign every local Mac build. Logic and macOS reject unsigned bundles,
+# and Logic hides a plugin that fails its scan. scripts/package-mac.sh signs
+# release builds again with the Developer ID (--force replaces this).
+if(APPLE)
+  foreach(format AU VST3 Standalone)
+    set(target CitizenSampler_${format})
+    if(TARGET ${target})
+      get_target_property(bundle ${target} JUCE_PLUGIN_ARTEFACT_FILE)
+      add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND codesign --force --deep --sign - "${bundle}"
+        COMMENT "Ad-hoc signing ${format}"
+        VERBATIM)
+    endif()
+  endforeach()
+endif()
+
 # Wire format and UI bundle tests, against juce_core only
 if(CITIZEN_BUILD_TESTS)
   juce_add_console_app(CitizenWireTests PRODUCT_NAME "CitizenWireTests")
-  target_sources(CitizenWireTests PRIVATE Wire.cpp UiBundle.cpp tests/WireTest.cpp tests/UiBundleTest.cpp)
+  target_sources(CitizenWireTests PRIVATE Wire.cpp UiBundle.cpp StemFiles.cpp
+    tests/WireTest.cpp tests/UiBundleTest.cpp tests/StemFilesTest.cpp)
   target_compile_definitions(CitizenWireTests PRIVATE JUCE_STANDALONE_APPLICATION=1)
   target_link_libraries(CitizenWireTests PRIVATE citizen_core juce::juce_core doctest::doctest
     juce::juce_recommended_config_flags)

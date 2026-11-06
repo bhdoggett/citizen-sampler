@@ -1,5 +1,5 @@
 import type { LoopName } from "src/types/audioTypes";
-import type { Engine, EngineCommand, EngineEvent, StemAudio } from "../protocol";
+import type { Engine, EngineCommand, EngineEvent, SavedStems, StemAudio } from "../protocol";
 
 // The object JUCE's WebBrowserComponent injects when native integration is on
 type ListenerToken = unknown;
@@ -30,6 +30,15 @@ const COMPLETE_EVENT = "__juce__complete";
 
 type WireStem = { sampleRate: number; channels: number[][] } | null;
 
+function toBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const step = 0x8000;
+  for (let i = 0; i < bytes.length; i += step) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + step));
+  }
+  return btoa(binary);
+}
+
 // The desktop engine: commands go to the C++ engine through the JUCE
 // WebView, and its events come back the same way.
 export class JuceBridgeEngine implements Engine {
@@ -53,6 +62,9 @@ export class JuceBridgeEngine implements Engine {
         this.pending.delete(promiseId);
       }),
     ];
+    // The engine's startup hostContext may have gone out before the page
+    // was listening
+    this.send({ type: "requestHostContext" });
   }
 
   send(command: EngineCommand): void {
@@ -78,6 +90,23 @@ export class JuceBridgeEngine implements Engine {
       sampleRate: result.sampleRate,
       channels: result.channels.map((channel) => Float32Array.from(channel)),
     };
+  }
+
+  async saveStems(songTitle: string): Promise<SavedStems> {
+    const result = (await this.invoke("saveStems", [songTitle])) as SavedStems | null;
+    const saved = result?.saved ?? 0;
+    const failed = result?.failed ?? 0;
+    if (saved === 0 && failed === 0) return { saved: 0 };
+    return { saved, ...(failed > 0 && { failed }), folder: result?.folder };
+  }
+
+  async saveMidi(fileName: string, bytes: Uint8Array): Promise<void> {
+    const saved = await this.invoke("saveMidi", [fileName, toBase64(bytes)]);
+    if (saved !== true) throw new Error(`Could not save ${fileName}`);
+  }
+
+  dragMidi(fileName: string, bytes: Uint8Array): void {
+    void this.invoke("dragMidi", [fileName, toBase64(bytes)]);
   }
 
   dispose(): void {

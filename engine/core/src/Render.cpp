@@ -18,7 +18,9 @@ std::optional<StemJob> Engine::stemJob(const std::string& padId, Loop loop) cons
         return entry.second->state.settings.solo;
     });
     const auto& s = pad.state.settings;
-    return StemJob{pad.state, pad.buffer, *loopSettings, loop,
+    LoopSettings settings = *loopSettings;
+    settings.timing = *timing(loop);
+    return StemJob{pad.state, pad.buffer, settings, loop,
                    computeGain(s.mute, s.solo, solosExist) == 0.0f};
 }
 

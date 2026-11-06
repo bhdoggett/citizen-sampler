@@ -25,6 +25,34 @@
   }
 }
 
+/* Desktop app and plugin: the window is the UI. useFitToWindow sets
+   --fit-scale so .fitBox (frame and credit) fills the window. */
+.pageFit {
+  justify-content: center;
+  height: 100vh;
+  padding: var(--space-2);
+  overflow: hidden;
+}
+
+.fitBox {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: center;
+  zoom: var(--fit-scale, 1);
+}
+
+/* Web: the wrapper takes no part in layout */
+.fitBoxOff {
+  display: contents;
+}
+
+/* A fixed natural width, whatever the window width, so the scale alone
+   sizes the UI */
+.fitBox .frame {
+  width: 800px;
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -159,6 +187,14 @@
   line-height: 1.6;
   text-align: center;
   color: var(--page-text);
+}
+
+.fitBox .footer {
+  display: flex;
+  gap: 1ch;
+  margin-top: var(--space-1);
+  font-size: var(--text-2xs);
+  line-height: 1.4;
 }
 
 .footer a {

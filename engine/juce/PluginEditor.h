@@ -7,8 +7,9 @@
 namespace citizen {
 
 // The web UI in a WebView, wired to the processor: engineCommand events go
-// to the engine, engine events come back as engineEvent, and renderStem is a
-// native function. Event ids match frontend-next/src/lib/engine/juce.
+// to the engine, engine events come back as engineEvent, and renderStem,
+// saveStems, saveMidi and dragMidi are native functions. Event ids match
+// frontend-next/src/lib/engine/juce.
 class CitizenEditor : public juce::AudioProcessorEditor, private juce::Timer {
 public:
     explicit CitizenEditor(CitizenProcessor& owner);
@@ -18,7 +19,7 @@ public:
 
 private:
     void timerCallback() override;
-    static juce::WebBrowserComponent::Options browserOptions(CitizenProcessor& owner);
+    static juce::WebBrowserComponent::Options browserOptions(CitizenProcessor& owner, CitizenEditor& editor);
 
     CitizenProcessor& processor_;
     juce::WebBrowserComponent browser_;

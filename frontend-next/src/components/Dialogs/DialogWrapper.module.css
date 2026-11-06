@@ -22,6 +22,9 @@
   background: var(--paper);
   border: var(--line-strong);
   box-shadow: var(--shadow-hard);
+  /* Matches the UI's scale in the desktop app and plugin (useFitToWindow);
+     unset, so 1, on the web */
+  zoom: var(--fit-scale, 1);
 }
 
 .bar {

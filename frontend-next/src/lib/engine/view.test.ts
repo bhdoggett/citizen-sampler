@@ -81,4 +81,30 @@ describe("createEngineView", () => {
     emit({ type: "loading", pending: 1 });
     expect(listener).toHaveBeenCalledTimes(1);
   });
+
+  it("starts as a standalone kit and follows hostContext events", () => {
+    const { view, emit } = setup();
+    expect(view.getState().host).toEqual({
+      isPlugin: false,
+      layout: "kit",
+      tempo: null,
+      hostPlaying: false,
+    });
+    emit({ type: "hostContext", isPlugin: true, layout: "multiOut", tempo: 128, hostPlaying: true });
+    expect(view.getState().host).toEqual({
+      isPlugin: true,
+      layout: "multiOut",
+      tempo: 128,
+      hostPlaying: true,
+    });
+  });
+
+  it("keeps each pad's loaded sample length", () => {
+    const { view, emit } = setup();
+    expect(view.getState().padDurations).toEqual({});
+    emit({ type: "padLoaded", padId: "pad-1", duration: 1.5 });
+    emit({ type: "padLoaded", padId: "pad-2", duration: 0.5 });
+    emit({ type: "padLoaded", padId: "pad-1", duration: 2 });
+    expect(view.getState().padDurations).toEqual({ "pad-1": 2, "pad-2": 0.5 });
+  });
 });

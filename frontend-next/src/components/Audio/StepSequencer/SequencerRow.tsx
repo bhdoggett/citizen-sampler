@@ -2,6 +2,7 @@ import React, { memo, useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import SequencerEvent from "./SequencerEvent";
 import SequencerPadButton from "./SequencerPadButton";
+import MidiExport from "./MidiExport";
 import type { GridEvent } from "./hooks/useSequencerGrid";
 import type { SampleTypeFE } from "src/types/audioTypesFE";
 import styles from "./SequencerRow.module.css";
@@ -183,15 +184,20 @@ const SequencerRow: React.FC<SequencerRowProps> = memo(
           </div>
         </div>
 
-        {/* Clear row trash icon - drum mode only */}
-        {!pianoRollMode && onClearRow && (
-          <button
-            className={styles.clear}
-            onClick={() => onClearRow(padId)}
-            title="Clear row"
-          >
-            <Trash2 size={14} />
-          </button>
+        {/* Row actions: MIDI export and clear - drum mode only */}
+        {!pianoRollMode && (
+          <div className={styles.actions}>
+            <MidiExport unit={{ kind: "pad", padId }} compact />
+            {onClearRow && (
+              <button
+                className={styles.clear}
+                onClick={() => onClearRow(padId)}
+                title="Clear row"
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
         )}
       </div>
     );

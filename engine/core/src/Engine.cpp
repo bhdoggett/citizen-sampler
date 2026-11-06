@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string_view>
 
 #include "citizen/Notes.h"
 #include "citizen/Rules.h"
@@ -21,6 +22,21 @@ template <class... Ts>
 Overloaded(Ts...) -> Overloaded<Ts...>;
 } // namespace
 
+std::optional<int> padNumber(const std::string& padId) {
+    constexpr std::string_view kPrefix = "pad-";
+    if (padId.size() <= kPrefix.size() || padId.size() > kPrefix.size() + 2 ||
+        padId.compare(0, kPrefix.size(), kPrefix) != 0) {
+        return std::nullopt;
+    }
+    int n = 0;
+    for (size_t i = kPrefix.size(); i < padId.size(); ++i) {
+        if (padId[i] < '0' || padId[i] > '9') return std::nullopt;
+        n = n * 10 + (padId[i] - '0');
+    }
+    if (n < 1 || n > kPadCount) return std::nullopt;
+    return n;
+}
+
 Engine::Engine() : clicks_(kMetronomeVoices) {
     LiveInput::Deps deps;
     deps.attack = [this](const std::string& padId, const std::string& note, double velocity) {
@@ -37,10 +53,10 @@ Engine::Engine() : clicks_(kMetronomeVoices) {
     };
     deps.recordingPosition = [this]() -> std::optional<LiveInput::Position> {
         const auto t = timing(currentLoop_);
-        if (!playing_ || !recording_ || !t) return std::nullopt;
+        if (suppressRecording_ || !playing_ || !recording_ || !t) return std::nullopt;
         return LiveInput::Position{currentLoop_, secondsToTicks(position_, t->bpm)};
     };
-    deps.isRecording = [this] { return playing_ && recording_; };
+    deps.isRecording = [this] { return !suppressRecording_ && playing_ && recording_; };
     deps.transportSeconds = [this] { return position_; };
     deps.loopTiming = [this](Loop loop) { return timing(loop); };
     deps.emit = [this](Event event) { events_.push_back(std::move(event)); };
@@ -62,16 +78,76 @@ void Engine::prepare(double sampleRate, int maxBlockFrames) {
     maxBlockFrames_ = std::max(1, maxBlockFrames);
     mixL_.assign(maxBlockFrames_, 0.0f);
     mixR_.assign(maxBlockFrames_, 0.0f);
+    events_.reserve(kEventCapacity);
     for (auto& [id, pad] : pads_) {
         pad->channel.prepare(sampleRate_, maxBlockFrames_);
         pad->channel.setSettings(pad->state.settings);
     }
 }
 
+namespace {
+constexpr double kTempoStep = 0.01;
+}
+
 std::optional<LoopTiming> Engine::timing(Loop loop) const {
     const auto& settings = loops_[loopIndex(loop)];
     if (!settings) return std::nullopt;
-    return settings->timing;
+    LoopTiming t = settings->timing;
+    if (const auto tempo = hostTempo()) t.bpm = *tempo;
+    return t;
+}
+
+std::optional<double> Engine::hostTempo() const {
+    if (host_.isPlugin) return host_.tempo;
+    return std::nullopt;
+}
+
+void Engine::setPadLayout(PadLayout layout) {
+    if (layout == layout_) return;
+    layout_ = layout;
+    emitHostContext();
+}
+
+void Engine::emitHostContext() {
+    events_.push_back(evt::HostContext{host_.isPlugin, layout_, host_.tempo, host_.playing});
+}
+
+void Engine::setHost(const HostState& incoming) {
+    // A host can report no tempo as 0 or NaN before its transport is valid
+    HostState host = incoming;
+    if (host.tempo && !(std::isfinite(*host.tempo) && *host.tempo > 0.0)) host.tempo.reset();
+    // Tempo automation moves every block: follow only changes of 0.01 BPM or
+    // more from the tempo last applied
+    if (host.tempo && host_.tempo && std::abs(*host.tempo - *host_.tempo) < kTempoStep) {
+        host.tempo = host_.tempo;
+    }
+    const bool tempoChanged = host.tempo != host_.tempo;
+    if (host.isPlugin == host_.isPlugin && host.playing == host_.playing && !tempoChanged) return;
+
+    const auto oldTempo = hostTempo();
+    const bool hostStarted = host.playing && !host_.playing;
+    host_ = host;
+    const auto newTempo = hostTempo();
+
+    emitHostContext();
+    if (hostStarted) stop(); // also ends recording
+    if (oldTempo != newTempo) {
+        // Rebuilding allocates, so on the audio thread it waits until the
+        // pattern plays, unless it already does
+        if (playing_) rebuildSchedules();
+        else schedulesStale_ = true;
+        if (const auto t = timing(currentLoop_)) {
+            position_ = std::fmod(position_, loopDurationSeconds(*t));
+        }
+        emitTransport();
+    }
+}
+
+void Engine::setIsPlugin(bool isPlugin) {
+    if (isPlugin == host_.isPlugin) return;
+    HostState host = host_;
+    host.isPlugin = isPlugin;
+    setHost(host);
 }
 
 double Engine::swing() const {
@@ -91,15 +167,25 @@ void Engine::handle(const Command& command) {
             },
             [this](const cmd::SetLoops& c) { setLoops(c.loops); },
             [this](const cmd::SetCurrentLoop& c) { setCurrentLoop(c.loop); },
-            [this](const cmd::Play&) { play(); },
+            [this](const cmd::Play&) {
+                if (host_.playing) {
+                    emitTransport();
+                    return;
+                }
+                play();
+            },
             [this](const cmd::Stop&) { stop(); },
             [this](const cmd::SetRecording& c) {
+                if (c.on && host_.playing) {
+                    emitTransport();
+                    return;
+                }
                 recording_ = c.on;
                 emitTransport();
             },
             [this](const cmd::SetMetronome& c) { metronomeOn_ = c.on; },
-            [this](const cmd::Press& c) { live_->press(c.padId, c.note, c.velocity); },
-            [this](const cmd::Release& c) { live_->release(c.padId, c.note); },
+            [this](const cmd::Press& c) { press(c.padId, c.note, c.velocity); },
+            [this](const cmd::Release& c) { release(c.padId, c.note); },
             // The tuner has no native pitch detection yet
             [](const cmd::SetTunerPad&) {},
             [this](const cmd::PreviewSample& c) {
@@ -117,8 +203,51 @@ void Engine::handle(const Command& command) {
                 previewUrl_.reset();
                 previewRequest_.reset();
             },
+            [this](const cmd::SetPadLayout& c) { setPadLayout(c.layout); },
+            [this](const cmd::RequestHostContext&) { emitHostContext(); },
         },
         command);
+}
+
+// In the plugin's kit layout a pad plays one sound, so a pitched press is
+// heard but not recorded. The standalone app records it as the web app does.
+void Engine::press(const std::string& padId, const std::string& note, double velocity) {
+    suppressRecording_ = host_.isPlugin && layout_ == PadLayout::Kit && note != "C4";
+    live_->press(padId, note, velocity);
+    suppressRecording_ = false;
+}
+
+void Engine::release(const std::string& padId, const std::string& note) {
+    suppressRecording_ = host_.isPlugin && layout_ == PadLayout::Kit && note != "C4";
+    live_->release(padId, note);
+    suppressRecording_ = false;
+}
+
+void Engine::midiNoteOn(int channel, int note, double velocity) {
+    if (channel < 1 || channel > kPadCount || note < 0 || note > 127) return;
+    std::string padId;
+    std::string trigger;
+    if (layout_ == PadLayout::Kit) {
+        if (note < 36 || note > 51) return;
+        padId = "pad-" + std::to_string(note - 35);
+        trigger = "C4";
+    } else {
+        padId = "pad-" + std::to_string(channel);
+        const auto pad = pads_.find(padId);
+        if (pad == pads_.end()) return;
+        trigger = midiToNote(note + 60 - midiOf(pad->second->state.settings.baseNote));
+    }
+    auto& held = heldMidi_[(channel - 1) * 128 + note];
+    held.emplace(padId, trigger);
+    press(padId, trigger, velocity);
+}
+
+void Engine::midiNoteOff(int channel, int note) {
+    if (channel < 1 || channel > kPadCount || note < 0 || note > 127) return;
+    auto& held = heldMidi_[(channel - 1) * 128 + note];
+    if (!held) return;
+    release(held->first, held->second);
+    held.reset();
 }
 
 void Engine::setPad(const std::string& padId, const PadState& state) {
@@ -137,7 +266,9 @@ void Engine::setPad(const std::string& padId, const PadState& state) {
         pad.bufferUrl.clear();
         pad.channel.setBuffer(nullptr);
     }
-    if (const auto t = timing(currentLoop_)) {
+    if (schedulesStale_) {
+        rebuildSchedules();
+    } else if (const auto t = timing(currentLoop_)) {
         pad.schedule = buildSchedule(pad.state, currentLoop_, *t);
     }
     applyGains();
@@ -203,6 +334,7 @@ void Engine::applyGains() {
 }
 
 void Engine::rebuildSchedules() {
+    schedulesStale_ = false;
     const auto t = timing(currentLoop_);
     for (auto& [id, pad] : pads_) {
         pad->schedule = t ? buildSchedule(pad->state, currentLoop_, *t) : std::vector<ScheduledHit>{};
@@ -229,6 +361,7 @@ void Engine::setCurrentLoop(Loop loop) {
 
 void Engine::play() {
     if (playing_) return;
+    if (schedulesStale_) rebuildSchedules();
     playing_ = true;
     emitTransport();
 }
@@ -362,12 +495,29 @@ void Engine::process(float* const* out, int numChannels, int numFrames) {
             position_ = from;
         }
 
-        std::fill_n(mixL_.begin(), n, 0.0f);
-        std::fill_n(mixR_.begin(), n, 0.0f);
-        for (auto& [id, pad] : pads_) pad->channel.process(mixL_.data(), mixR_.data(), n);
-        for (auto& click : clicks_) click.render(mixL_.data(), mixR_.data(), n);
+        const bool multiOut = layout_ == PadLayout::MultiOut && numChannels >= 2 * kPadCount;
+        float* mixL = mixL_.data();
+        float* mixR = mixR_.data();
+        if (multiOut) {
+            // Each pad renders straight into its own pair; clicks and preview
+            // go to the first pair
+            for (int ch = 0; ch < numChannels; ++ch) std::fill_n(out[ch] + done, n, 0.0f);
+            for (auto& [id, pad] : pads_) {
+                if (const auto number = padNumber(id)) {
+                    const int ch = 2 * (*number - 1);
+                    pad->channel.process(out[ch] + done, out[ch + 1] + done, n);
+                }
+            }
+            mixL = out[0] + done;
+            mixR = out[1] + done;
+        } else {
+            std::fill_n(mixL, n, 0.0f);
+            std::fill_n(mixR, n, 0.0f);
+            for (auto& [id, pad] : pads_) pad->channel.process(mixL, mixR, n);
+        }
+        for (auto& click : clicks_) click.render(mixL, mixR, n);
         if (preview_.active()) {
-            preview_.render(mixL_.data(), mixR_.data(), n);
+            preview_.render(mixL, mixR, n);
             if (!preview_.active() && previewUrl_) {
                 events_.push_back(evt::PreviewEnded{*previewUrl_});
                 previewUrl_.reset();
@@ -375,16 +525,18 @@ void Engine::process(float* const* out, int numChannels, int numFrames) {
             }
         }
 
-        for (int ch = 0; ch < numChannels; ++ch) {
-            float* dest = out[ch] + done;
-            if (numChannels == 1) {
-                for (int i = 0; i < n; ++i) dest[i] = 0.5f * (mixL_[i] + mixR_[i]);
-            } else if (ch == 0) {
-                std::copy_n(mixL_.begin(), n, dest);
-            } else if (ch == 1) {
-                std::copy_n(mixR_.begin(), n, dest);
-            } else {
-                std::fill_n(dest, n, 0.0f);
+        if (!multiOut) {
+            for (int ch = 0; ch < numChannels; ++ch) {
+                float* dest = out[ch] + done;
+                if (numChannels == 1) {
+                    for (int i = 0; i < n; ++i) dest[i] = 0.5f * (mixL_[i] + mixR_[i]);
+                } else if (ch == 0) {
+                    std::copy_n(mixL_.begin(), n, dest);
+                } else if (ch == 1) {
+                    std::copy_n(mixR_.begin(), n, dest);
+                } else {
+                    std::fill_n(dest, n, 0.0f);
+                }
             }
         }
 
@@ -404,6 +556,8 @@ void Engine::process(float* const* out, int numChannels, int numFrames) {
 std::vector<Event> Engine::takeEvents() {
     std::vector<Event> out;
     out.swap(events_);
+    // Keep room so the audio thread's events don't allocate
+    events_.reserve(kEventCapacity);
     return out;
 }
 

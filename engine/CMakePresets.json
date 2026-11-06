@@ -1,0 +1,57 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "core",
+      "displayName": "Engine core + tests (no JUCE)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CITIZEN_BUILD_TESTS": "ON",
+        "CITIZEN_BUILD_JUCE": "OFF",
+        "CMAKE_OSX_ARCHITECTURES": "arm64"
+      }
+    },
+    {
+      "name": "dev",
+      "displayName": "Dev app + plugins (UI from localhost:3000)",
+      "description": "Run `pnpm dev` in frontend-next before opening the app.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-juce",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CITIZEN_BUILD_TESTS": "ON",
+        "CITIZEN_BUILD_JUCE": "ON",
+        "CMAKE_OSX_ARCHITECTURES": "arm64"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release app + plugins (UI bundled)",
+      "description": "Run `NEXT_OUTPUT=export pnpm build` in frontend-next first.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CITIZEN_BUILD_TESTS": "ON",
+        "CITIZEN_BUILD_JUCE": "ON",
+        "CITIZEN_UI_DIR": "${sourceDir}/../frontend-next/out",
+        "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "core",
+      "configurePreset": "core"
+    },
+    {
+      "name": "dev",
+      "configurePreset": "dev"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    }
+  ]
+}

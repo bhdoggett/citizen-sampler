@@ -26,6 +26,8 @@ import { useSelectLoop } from "./hooks/useSelectLoop";
 import { isLoopName } from "src/lib/constants/loops";
 import { readString, writeString } from "src/lib/storage";
 import { needsAudioUnlock } from "src/lib/desktop";
+import { hasJuceBackend } from "src/lib/engine/juce/juceBridgeEngine";
+import useFitToWindow from "src/lib/useFitToWindow";
 import About from "src/components/Dialogs/About";
 import HelpShortcuts from "src/components/Dialogs/HelpShortcuts";
 import Welcome from "src/components/Dialogs/Welcome";
@@ -70,6 +72,14 @@ export default function Home() {
   const handleSelectLoop = useSelectLoop();
 
   const padsViewRef = useRef<HTMLDivElement>(null);
+
+  // The desktop app and plugin scale the UI to fill their window. Read after
+  // mount: the static export renders without the JUCE backend.
+  const fitRef = useRef<HTMLDivElement>(null);
+  const [fitToWindow, setFitToWindow] = useState(false);
+  useEffect(() => setFitToWindow(hasJuceBackend()), []);
+  useFitToWindow(fitRef, fitToWindow);
+
   const [padsViewHeight, setPadsViewHeight] = useState<number | undefined>(
     undefined,
   );
@@ -147,89 +157,91 @@ export default function Home() {
 
   return (
     <>
-      <div className={styles.page}>
-        <div className={styles.frame}>
-          {/* Header - NOT blurred */}
-          <header className={styles.header}>
-            <h1 className={styles.title}>Citizen Sampler</h1>
-            <DesktopDownload />
-            <MidiHandler />
-            <MainMenu />
-          </header>
+      <div className={fitToWindow ? `${styles.page} ${styles.pageFit}` : styles.page}>
+        <div ref={fitRef} className={fitToWindow ? styles.fitBox : styles.fitBoxOff}>
+          <div className={styles.frame}>
+            {/* Header - NOT blurred */}
+            <header className={styles.header}>
+              <h1 className={styles.title}>Citizen Sampler</h1>
+              <DesktopDownload />
+              <MidiHandler />
+              <MainMenu />
+            </header>
 
-          {/* Audio Components Container - This gets blurred */}
-          <div className={styles.workspace}>
-            <div className={contentHidden ? styles.blurred : undefined}>
-              <div className={styles.topRow}>
-                <SampleSettings />
-                <div className={styles.sideColumn}>
-                  <Transport />
-                  <Loop />
+            {/* Audio Components Container - This gets blurred */}
+            <div className={styles.workspace}>
+              <div className={contentHidden ? styles.blurred : undefined}>
+                <div className={styles.topRow}>
+                  <SampleSettings />
+                  <div className={styles.sideColumn}>
+                    <Transport />
+                    <Loop />
+                  </div>
+                </div>
+                <div className={styles.bottomRow}>
+                  {/* Pads / Sequencer toggle */}
+                  <div className={styles.viewTabs}>
+                    <button
+                      onClick={() => setSequencerVisible(false)}
+                      className={`${styles.viewTab} ${!sequencerVisible ? styles.viewTabActive : ""}`}
+                      title="PADS (Shift + P)"
+                    >
+                      <span className={styles.viewTabLabel}>PADS</span>
+                    </button>
+                    <button
+                      onClick={() => setSequencerVisible(true)}
+                      className={`${styles.viewTab} ${sequencerVisible ? styles.viewTabActive : ""}`}
+                      title="SEQUENCER (Shift + S)"
+                    >
+                      <span className={styles.viewTabLabel}>SEQUENCER</span>
+                    </button>
+                  </div>
+
+                  <div className={styles.views}>
+                    {/* DrumMachine stays mounted so its pad hotkeys work from the sequencer view */}
+                    <div
+                      ref={padsViewRef}
+                      className={sequencerVisible ? styles.hidden : styles.padsView}
+                    >
+                      <DrumMachine />
+                      <PitchGrid />
+                    </div>
+                    {sequencerVisible && (
+                      <StepSequencer maxHeight={padsViewHeight} />
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className={styles.bottomRow}>
-                {/* Pads / Sequencer toggle */}
-                <div className={styles.viewTabs}>
-                  <button
-                    onClick={() => setSequencerVisible(false)}
-                    className={`${styles.viewTab} ${!sequencerVisible ? styles.viewTabActive : ""}`}
-                    title="PADS (Shift + P)"
-                  >
-                    <span className={styles.viewTabLabel}>PADS</span>
-                  </button>
-                  <button
-                    onClick={() => setSequencerVisible(true)}
-                    className={`${styles.viewTab} ${sequencerVisible ? styles.viewTabActive : ""}`}
-                    title="SEQUENCER (Shift + S)"
-                  >
-                    <span className={styles.viewTabLabel}>SEQUENCER</span>
-                  </button>
-                </div>
 
-                <div className={styles.views}>
-                  {/* DrumMachine stays mounted so its pad hotkeys work from the sequencer view */}
-                  <div
-                    ref={padsViewRef}
-                    className={sequencerVisible ? styles.hidden : styles.padsView}
-                  >
-                    <DrumMachine />
-                    <PitchGrid />
-                  </div>
-                  {sequencerVisible && (
-                    <StepSequencer maxHeight={padsViewHeight} />
+              {/* Overlay when content should be blurred */}
+              {contentHidden && (
+                <div className={styles.overlay}>
+                  {samplersLoading ? (
+                    <Spinner />
+                  ) : (
+                    <button
+                      onClick={() => setMakeBeatsButtonPressed(true)}
+                      className={styles.makeBeats}
+                    >
+                      Make Beats
+                    </button>
                   )}
                 </div>
-              </div>
+              )}
             </div>
-
-            {/* Overlay when content should be blurred */}
-            {contentHidden && (
-              <div className={styles.overlay}>
-                {samplersLoading ? (
-                  <Spinner />
-                ) : (
-                  <button
-                    onClick={() => setMakeBeatsButtonPressed(true)}
-                    className={styles.makeBeats}
-                  >
-                    Make Beats
-                  </button>
-                )}
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Footer - NOT blurred */}
-        <footer className={styles.footer}>
-          <p>
-            Inspired and made possible by{" "}
-            <Link href="https://citizen-dj.labs.loc.gov/">Citizen DJ</Link>
-          </p>
-          <p>
-            and the <Link href="https://loc.gov/">Library of Congress</Link>
-          </p>
-        </footer>
+          {/* Footer - NOT blurred */}
+          <footer className={styles.footer}>
+            <p>
+              Inspired and made possible by{" "}
+              <Link href="https://citizen-dj.labs.loc.gov/">Citizen DJ</Link>
+            </p>
+            <p>
+              and the <Link href="https://loc.gov/">Library of Congress</Link>
+            </p>
+          </footer>
+        </div>
       </div>
 
       {/* Menu Dialogues */}

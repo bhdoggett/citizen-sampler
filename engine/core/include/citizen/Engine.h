@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <functional>
 #include <map>
 #include <memory>
@@ -29,6 +30,13 @@ struct StemJob {
 
 // Render a stem offline as a stereo buffer
 SampleBuffer renderStem(const StemJob& job, double sampleRate);
+
+// What the plugin host reports, sent to the engine every audio block
+struct HostState {
+    bool isPlugin = false;
+    std::optional<double> tempo; // beats per minute; replaces every loop's bpm in a plugin
+    bool playing = false;        // the host's transport
+};
 
 // The sound engine behind the UI boundary: it follows the pads and loops it
 // is sent, plays and records, and reports back through events. Mirrors the
@@ -78,6 +86,19 @@ public:
     std::optional<SampleBuffer> renderStem(const std::string& padId, Loop loop,
                                            double sampleRate) const;
 
+    void setPadLayout(PadLayout layout);
+    PadLayout padLayout() const { return layout_; }
+    // Called every block: acts and emits only when something changed
+    void setHost(const HostState& host);
+    // Whether this is a plugin, known before the host processes any audio.
+    // Emits a host context when it changes.
+    void setIsPlugin(bool isPlugin);
+    // Queues the current host context, e.g. when an editor opens
+    void emitHostContext();
+    // MIDI from the host. `channel` is 1 to 16, `velocity` 0 to 1.
+    void midiNoteOn(int channel, int note, double velocity);
+    void midiNoteOff(int channel, int note);
+
     double sampleRate() const { return sampleRate_; }
     bool playing() const { return playing_; }
     double position() const { return position_; }
@@ -101,6 +122,8 @@ private:
         Event event;
     };
 
+    void press(const std::string& padId, const std::string& note, double velocity);
+    void release(const std::string& padId, const std::string& note);
     void setPad(const std::string& padId, const PadState& state);
     void setLoops(const AllLoopSettings& loops);
     void setCurrentLoop(Loop loop);
@@ -111,6 +134,7 @@ private:
     void rebuildSchedules();
     void applyGains();
     std::optional<LoopTiming> timing(Loop loop) const;
+    std::optional<double> hostTempo() const;
     double swing() const;
     double nowSeconds() const { return static_cast<double>(frameClock_) / sampleRate_; }
     std::optional<double> attack(const std::string& padId, const std::string& note, double velocity);
@@ -130,11 +154,24 @@ private:
     double position_ = 0.0;      // seconds into the current loop
     long long frameClock_ = 0;   // frames processed since prepare
 
+    // The pad and trigger note each held MIDI note started, by channel and
+    // note, so its note-off releases the same voice
+    using HeldMidi = std::optional<std::pair<std::string, std::string>>;
+    std::array<HeldMidi, kPadCount * 128> heldMidi_;
+    PadLayout layout_ = PadLayout::Kit;
+    HostState host_;
+    // Set while a press that must not be recorded is going through live_
+    bool suppressRecording_ = false;
+
     std::unique_ptr<LiveInput> live_;
     std::vector<Timer> timers_;
     int nextTimer_ = 1;
     std::vector<Due> due_;
+    // Reserved in prepare() and after every takeEvents()
+    static constexpr size_t kEventCapacity = 256;
     std::vector<Event> events_;
+    // A host tempo change while stopped; rebuilt on the message thread
+    bool schedulesStale_ = false;
 
     std::shared_ptr<const SampleBuffer> clickHigh_, clickLow_;
     std::vector<Voice> clicks_;

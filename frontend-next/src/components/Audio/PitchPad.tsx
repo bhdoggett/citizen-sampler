@@ -10,11 +10,12 @@ import styles from "./PitchPad.module.css";
 type PitchPadProps = {
   note: string;
   pitchPadsRef: React.RefObject<Record<string, HTMLButtonElement | null>>;
+  disabled?: boolean;
 };
 
 // Plays the selected pad's sample at one pitch
 const PitchPad = forwardRef(function PitchPad(
-  { note, pitchPadsRef }: PitchPadProps,
+  { note, pitchPadsRef, disabled = false }: PitchPadProps,
   ref
 ) {
   const { selectedSampleId } = useAudioContext();
@@ -33,12 +34,14 @@ const PitchPad = forwardRef(function PitchPad(
 
   // The engine owns the sound and records the hit; see liveInput.ts
   const handlePress = useCallback(() => {
+    if (disabled) return;
     engine.send({ type: "press", padId: selectedSampleId, note: playNote, velocity: 1 });
-  }, [engine, selectedSampleId, playNote]);
+  }, [engine, selectedSampleId, playNote, disabled]);
 
   const handleRelease = useCallback(() => {
+    if (disabled) return;
     engine.send({ type: "release", padId: selectedSampleId, note: playNote });
-  }, [engine, selectedSampleId, playNote]);
+  }, [engine, selectedSampleId, playNote, disabled]);
 
   const isActive = pitchIsPlaying || rootPadPlaying || activeMidiNotes.has(note);
 
@@ -53,6 +56,7 @@ const PitchPad = forwardRef(function PitchPad(
         pitchPadsRef.current[note] = el;
       }} // handle touch events in PitchGrid.tsx
       // Only keep mouse events for desktop
+      disabled={disabled}
       onMouseDown={handlePress}
       onMouseEnter={(e) => {
         if (e.buttons === 1) {

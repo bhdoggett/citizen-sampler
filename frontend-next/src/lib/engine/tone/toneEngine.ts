@@ -138,6 +138,10 @@ export class ToneEngine implements Engine {
         return this.previewSample(command.url);
       case "stopPreview":
         return this.stopPreview();
+      // The web engine has no host and one output
+      case "setPadLayout":
+      case "requestHostContext":
+        return;
     }
   }
 
@@ -484,5 +488,21 @@ export class ToneEngine implements Engine {
       buffer.getChannelData(i),
     );
     return { sampleRate: buffer.sampleRate, channels };
+  }
+
+  // ---- MIDI ----
+
+  saveMidi(fileName: string, bytes: Uint8Array): Promise<void> {
+    const blob = new Blob([bytes as BlobPart], { type: "audio/midi" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    // Some browsers start the download after click() returns
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+    return Promise.resolve();
   }
 }

@@ -297,3 +297,442 @@ TEST_CASE("a pad whose sample failed to load is not asked for again") {
     rig.engine.handle(cmd::SetPad{"pad-1", PadState{"https://example.com/other.wav"}});
     CHECK(rig.engine.padsNeedingAudio().size() == 1);
 }
+
+namespace {
+std::vector<evt::HitRecorded> hitsOf(const Rig& rig) { return rig.eventsOf<evt::HitRecorded>(); }
+
+void recordPress(Rig& rig, const std::string& note) {
+    rig.engine.handle(cmd::SetRecording{true});
+    rig.engine.handle(cmd::Play{});
+    rig.run(0.5);
+    rig.engine.handle(cmd::Press{"pad-1", note, 1.0});
+    rig.run(0.1);
+    rig.engine.handle(cmd::Release{"pad-1", note});
+    rig.run(0.01);
+}
+} // namespace
+
+TEST_CASE("padNumber reads pad-1 to pad-16 only") {
+    CHECK(padNumber("pad-7") == 7);
+    CHECK(padNumber("pad-16") == 16);
+    CHECK(!padNumber("pad-0"));
+    CHECK(!padNumber("pad-17"));
+    CHECK(!padNumber("pad-"));
+    CHECK(!padNumber("pad-1x"));
+    CHECK(!padNumber("kick"));
+}
+
+TEST_CASE("kit layout maps notes 36-51 to pads 1-16 on any channel") {
+    Rig rig;
+    rig.addPad("pad-1");
+    rig.addPad("pad-16");
+    CHECK(rig.engine.padLayout() == PadLayout::Kit);
+    rig.engine.midiNoteOn(5, 36, 1.0);
+    rig.engine.midiNoteOn(1, 51, 1.0);
+    rig.run(0.01);
+    auto started = rig.eventsOf<evt::VoiceStarted>();
+    REQUIRE(started.size() == 2);
+    CHECK(started[0].padId == "pad-1");
+    CHECK(started[0].note == "C4");
+    CHECK(started[1].padId == "pad-16");
+}
+
+TEST_CASE("kit layout ignores notes outside 36-51") {
+    Rig rig;
+    rig.addPad("pad-1");
+    rig.addPad("pad-16");
+    rig.engine.midiNoteOn(1, 35, 1.0);
+    rig.engine.midiNoteOn(1, 52, 1.0);
+    rig.run(0.01);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().empty());
+}
+
+TEST_CASE("multi-out maps channel to pad and transposes against baseNote") {
+    Rig rig;
+    PadState pad;
+    pad.settings.baseNote = "A3"; // MIDI 57
+    rig.addPad("pad-3", pad);
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.midiNoteOn(3, 57, 1.0);
+    rig.engine.midiNoteOn(3, 59, 1.0);
+    rig.engine.midiNoteOn(2, 57, 1.0); // no pad-2
+    rig.run(0.01);
+    auto started = rig.eventsOf<evt::VoiceStarted>();
+    REQUIRE(started.size() == 2);
+    CHECK(started[0].padId == "pad-3");
+    CHECK(started[0].note == "C4");
+    CHECK(started[1].note == "D4");
+}
+
+TEST_CASE("multi-out note-off releases the note the note-on started") {
+    Rig rig;
+    rig.addPad("pad-3", {}, 5.0);
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.midiNoteOn(3, 62, 1.0);
+    rig.run(0.05);
+    PadState changed;
+    changed.url = "https://example.com/pad-3.wav";
+    changed.settings.baseNote = "C2";
+    rig.engine.handle(cmd::SetPad{"pad-3", changed});
+    rig.engine.midiNoteOff(3, 62);
+    rig.run(0.2);
+    CHECK(rig.eventsOf<evt::VoiceEnded>().size() == 1);
+}
+
+TEST_CASE("MIDI for a pad with no sample is silent and records nothing") {
+    Rig rig;
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.handle(cmd::SetRecording{true});
+    rig.engine.handle(cmd::Play{});
+    rig.run(0.2);
+    rig.engine.midiNoteOn(7, 60, 1.0);
+    rig.run(0.1);
+    rig.engine.midiNoteOff(7, 60);
+    rig.run(0.01);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().empty());
+    CHECK(hitsOf(rig).empty());
+}
+
+TEST_CASE("extreme chromatic notes do not crash") {
+    Rig rig;
+    rig.addPad("pad-1");
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.midiNoteOn(1, 0, 1.0);
+    rig.engine.midiNoteOn(1, 127, 1.0);
+    rig.run(0.1);
+    rig.engine.midiNoteOff(1, 0);
+    rig.engine.midiNoteOff(1, 127);
+    rig.run(0.1);
+}
+
+TEST_CASE("kit layout in the plugin does not record pitched presses") {
+    Rig rig;
+    rig.addPad("pad-1");
+    rig.engine.setIsPlugin(true);
+    recordPress(rig, "D4");
+    CHECK(rig.eventsOf<evt::VoiceStarted>().size() == 1);
+    CHECK(hitsOf(rig).empty());
+    recordPress(rig, "C4");
+    CHECK(hitsOf(rig).size() == 1);
+}
+
+TEST_CASE("the standalone app records pitched presses in the kit layout") {
+    Rig rig;
+    rig.addPad("pad-1");
+    CHECK(rig.engine.padLayout() == PadLayout::Kit);
+    recordPress(rig, "D4");
+    auto hits = hitsOf(rig);
+    REQUIRE(hits.size() == 1);
+    CHECK(hits[0].event.note == "D4");
+}
+
+TEST_CASE("multi-out records pitched presses") {
+    Rig rig;
+    rig.addPad("pad-1");
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    recordPress(rig, "D4");
+    auto hits = hitsOf(rig);
+    REQUIRE(hits.size() == 1);
+    CHECK(hits[0].event.note == "D4");
+}
+
+namespace {
+// Process `frames` into `channels` channels; returns one buffer per channel
+std::vector<std::vector<float>> runChannels(Rig& rig, int channels, int frames) {
+    std::vector<std::vector<float>> bufs(channels, std::vector<float>(frames, 0.7f)); // dirty on purpose
+    std::vector<float*> ptrs;
+    for (auto& b : bufs) ptrs.push_back(b.data());
+    rig.engine.process(ptrs.data(), channels, frames);
+    for (auto& e : rig.engine.takeEvents()) rig.events.push_back(std::move(e));
+    return bufs;
+}
+} // namespace
+
+TEST_CASE("multi-out renders each pad to its own channel pair") {
+    Rig rig;
+    rig.addPad("pad-1");
+    rig.addPad("pad-3");
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.handle(cmd::Press{"pad-1", "C4", 1.0});
+    rig.engine.handle(cmd::Press{"pad-3", "C4", 1.0});
+    auto out = runChannels(rig, 32, 100);
+    CHECK(peak(out[0]) > 0.5);
+    CHECK(peak(out[1]) > 0.5);
+    CHECK(peak(out[4]) > 0.5);
+    CHECK(peak(out[5]) > 0.5);
+    CHECK(peak(out[2]) == 0.0);
+    CHECK(peak(out[3]) == 0.0);
+    for (int ch = 6; ch < 32; ++ch) CHECK(peak(out[ch]) == 0.0);
+}
+
+TEST_CASE("multi-out sends preview to the first pair") {
+    Rig rig;
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.handle(cmd::PreviewSample{"https://example.com/p.wav"});
+    rig.engine.setPreviewBuffer("https://example.com/p.wav", constant(0.1));
+    auto out = runChannels(rig, 32, 50);
+    CHECK(peak(out[0]) > 0.5);
+    CHECK(peak(out[2]) == 0.0);
+}
+
+TEST_CASE("kit layout with 32 channels still mixes into the first pair") {
+    Rig rig;
+    rig.addPad("pad-3");
+    rig.engine.handle(cmd::Press{"pad-3", "C4", 1.0});
+    auto out = runChannels(rig, 32, 100);
+    CHECK(peak(out[0]) > 0.5);
+    for (int ch = 2; ch < 32; ++ch) CHECK(peak(out[ch]) == 0.0);
+}
+
+namespace {
+HostState pluginHost(std::optional<double> tempo, bool playing = false) {
+    HostState host;
+    host.isPlugin = true;
+    host.tempo = tempo;
+    host.playing = playing;
+    return host;
+}
+
+double lastLoopDuration(Rig& rig) {
+    auto transport = rig.eventsOf<evt::Transport>();
+    return transport.back().loopDuration;
+}
+} // namespace
+
+TEST_CASE("host tempo overrides loop bpm in a plugin") {
+    Rig rig;
+    rig.engine.setHost(pluginHost(60.0));
+    rig.engine.handle(cmd::SetLoops{loops()});
+    rig.run(0.0);
+    CHECK(lastLoopDuration(rig) == doctest::Approx(8.0));
+}
+
+TEST_CASE("host tempo is ignored outside a plugin") {
+    Rig rig;
+    HostState host;
+    host.tempo = 60.0;
+    rig.engine.setHost(host);
+    rig.engine.handle(cmd::SetLoops{loops()});
+    rig.run(0.0);
+    CHECK(lastLoopDuration(rig) == doctest::Approx(4.0));
+}
+
+TEST_CASE("host tempo change while playing keeps position inside the loop") {
+    Rig rig;
+    PadState pad;
+    pad.events[0] = {hitAt(0)};
+    rig.addPad("pad-1", pad);
+    rig.engine.setHost(pluginHost(120.0));
+    rig.engine.handle(cmd::Play{});
+    rig.run(3.5);
+    rig.engine.setHost(pluginHost(240.0)); // 2 s loop
+    CHECK(rig.engine.position() < 2.0); // wrapped by setHost itself
+    rig.events.clear();
+    rig.run(0.1);
+    auto transport = rig.eventsOf<evt::Transport>();
+    REQUIRE_FALSE(transport.empty());
+    CHECK(transport.back().loopDuration == doctest::Approx(2.0));
+    CHECK(transport.back().position < 2.0);
+    CHECK(rig.engine.position() < 2.0);
+    // Hits still fire in the new loop
+    rig.run(2.0);
+    CHECK_FALSE(rig.eventsOf<evt::VoiceStarted>().empty());
+}
+
+TEST_CASE("host starting playback stops the plugin pattern") {
+    Rig rig;
+    rig.engine.handle(cmd::SetRecording{true});
+    rig.engine.handle(cmd::Play{});
+    rig.run(0.5);
+    rig.engine.setHost(pluginHost(std::nullopt, true));
+    rig.run(0.1);
+    auto transport = rig.eventsOf<evt::Transport>();
+    REQUIRE_FALSE(transport.empty());
+    CHECK_FALSE(transport.back().playing);
+    CHECK_FALSE(transport.back().recording);
+    CHECK_FALSE(rig.engine.playing());
+}
+
+TEST_CASE("plugin play is ignored while the host plays") {
+    Rig rig;
+    rig.engine.setHost(pluginHost(std::nullopt, true));
+    rig.engine.handle(cmd::Play{});
+    CHECK_FALSE(rig.engine.playing());
+    rig.engine.handle(cmd::SetRecording{true});
+    rig.engine.handle(cmd::Stop{});
+    rig.engine.setHost(pluginHost(std::nullopt, false));
+    rig.engine.handle(cmd::Play{});
+    CHECK(rig.engine.playing());
+    for (auto& e : rig.engine.takeEvents()) {
+        if (auto* t = std::get_if<evt::Transport>(&e)) CHECK_FALSE(t->recording);
+    }
+}
+
+TEST_CASE("host stopping does not start the plugin pattern") {
+    Rig rig;
+    rig.engine.setHost(pluginHost(std::nullopt, true));
+    rig.engine.setHost(pluginHost(std::nullopt, false));
+    CHECK_FALSE(rig.engine.playing());
+}
+
+TEST_CASE("hostContext is emitted on change only") {
+    Rig rig;
+    rig.engine.takeEvents();
+    rig.engine.setHost(pluginHost(120.0));
+    rig.engine.setHost(pluginHost(120.0));
+    auto count = [&] {
+        size_t n = 0;
+        for (auto& e : rig.engine.takeEvents()) n += std::holds_alternative<evt::HostContext>(e);
+        return n;
+    };
+    CHECK(count() == 1);
+    rig.engine.setHost(pluginHost(90.0));
+    CHECK(count() == 1);
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    rig.engine.setPadLayout(PadLayout::MultiOut);
+    CHECK(count() == 1);
+    rig.engine.emitHostContext();
+    auto events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    auto* ctx = std::get_if<evt::HostContext>(&events[0]);
+    REQUIRE(ctx);
+    CHECK(ctx->isPlugin);
+    CHECK(ctx->layout == PadLayout::MultiOut);
+    CHECK(*ctx->tempo == doctest::Approx(90.0));
+    CHECK_FALSE(ctx->hostPlaying);
+}
+
+TEST_CASE("setIsPlugin reports a change once") {
+    Rig rig;
+    rig.engine.takeEvents();
+    rig.engine.setIsPlugin(true);
+    rig.engine.setIsPlugin(true);
+    auto events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    auto* ctx = std::get_if<evt::HostContext>(&events[0]);
+    REQUIRE(ctx);
+    CHECK(ctx->isPlugin);
+    CHECK(ctx->layout == PadLayout::Kit);
+    rig.engine.setIsPlugin(false);
+    events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    REQUIRE(std::get_if<evt::HostContext>(&events[0]));
+    CHECK_FALSE(std::get_if<evt::HostContext>(&events[0])->isPlugin);
+}
+
+TEST_CASE("requestHostContext emits one hostContext") {
+    Rig rig;
+    rig.engine.setHost(pluginHost(100.0));
+    rig.engine.takeEvents();
+    rig.engine.handle(cmd::RequestHostContext{});
+    auto events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    auto* ctx = std::get_if<evt::HostContext>(&events[0]);
+    REQUIRE(ctx);
+    CHECK(ctx->isPlugin);
+    CHECK(*ctx->tempo == doctest::Approx(100.0));
+}
+
+TEST_CASE("setPadLayout changes the layout and reports it") {
+    Rig rig;
+    rig.engine.takeEvents();
+    rig.engine.handle(cmd::SetPadLayout{PadLayout::MultiOut});
+    CHECK(rig.engine.padLayout() == PadLayout::MultiOut);
+    auto events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    auto* ctx = std::get_if<evt::HostContext>(&events[0]);
+    REQUIRE(ctx);
+    CHECK(ctx->layout == PadLayout::MultiOut);
+    rig.engine.handle(cmd::SetPadLayout{PadLayout::Kit});
+    CHECK(rig.engine.padLayout() == PadLayout::Kit);
+}
+
+TEST_CASE("host tempo change while stopped applies when play starts") {
+    Rig rig;
+    PadState pad;
+    pad.events[0] = {hitAt(192)}; // beat 2: 0.5 s at 120 BPM, 1 s at 60 BPM
+    rig.engine.setHost(pluginHost(120.0));
+    rig.addPad("pad-1", pad);
+    rig.engine.setHost(pluginHost(60.0));
+    rig.engine.handle(cmd::Play{});
+    rig.run(0.75);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().empty());
+    rig.run(0.5);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().size() == 1);
+}
+
+TEST_CASE("host tempo change while stopped applies to a pad set before play") {
+    Rig rig;
+    PadState pad;
+    pad.events[0] = {hitAt(192)};
+    rig.engine.setHost(pluginHost(120.0));
+    rig.addPad("pad-1", pad);
+    rig.addPad("pad-2");
+    rig.engine.setHost(pluginHost(60.0));
+    rig.addPad("pad-2"); // setPad on another pad must not leave pad-1 stale
+    rig.engine.handle(cmd::Play{});
+    rig.run(0.75);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().empty());
+    rig.run(0.5);
+    CHECK(rig.eventsOf<evt::VoiceStarted>().size() == 1);
+}
+
+TEST_CASE("stem jobs use the host tempo") {
+    Rig rig;
+    PadState pad;
+    pad.events[0] = {hitAt(0)};
+    rig.addPad("pad-1", pad);
+    rig.engine.setHost(pluginHost(60.0));
+    auto job = rig.engine.stemJob("pad-1", Loop::A);
+    REQUIRE(job);
+    CHECK(job->loop.timing.bpm == doctest::Approx(60.0));
+}
+
+TEST_CASE("a host tempo of zero or NaN is no override") {
+    for (double bad : {0.0, -10.0, std::nan("")}) {
+        Rig rig;
+        rig.engine.handle(cmd::Play{});
+        rig.run(1.0);
+        rig.engine.setHost(pluginHost(bad));
+        rig.run(0.1);
+        CHECK(lastLoopDuration(rig) == doctest::Approx(4.0));
+        CHECK(std::isfinite(rig.engine.position()));
+        CHECK(rig.engine.position() == doctest::Approx(1.1));
+    }
+}
+
+TEST_CASE("host tempo changes under 0.01 BPM are ignored") {
+    Rig rig;
+    rig.engine.takeEvents();
+    auto count = [&] {
+        size_t n = 0;
+        for (auto& e : rig.engine.takeEvents()) n += std::holds_alternative<evt::HostContext>(e);
+        return n;
+    };
+    rig.engine.setHost(pluginHost(120.0));
+    CHECK(count() == 1);
+    rig.engine.setHost(pluginHost(120.005));
+    CHECK(count() == 0);
+    rig.engine.setHost(pluginHost(120.009)); // still within 0.01 of the applied 120.0
+    CHECK(count() == 0);
+    rig.engine.setHost(pluginHost(120.02));
+    CHECK(count() == 1);
+}
+
+TEST_CASE("an ignored play or record while the host plays resyncs the transport") {
+    Rig rig;
+    rig.engine.setHost(pluginHost(std::nullopt, true));
+    rig.engine.takeEvents();
+    rig.engine.handle(cmd::Play{});
+    auto events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    auto* t = std::get_if<evt::Transport>(&events[0]);
+    REQUIRE(t);
+    CHECK_FALSE(t->playing);
+    rig.engine.handle(cmd::SetRecording{true});
+    events = rig.engine.takeEvents();
+    REQUIRE(events.size() == 1);
+    t = std::get_if<evt::Transport>(&events[0]);
+    REQUIRE(t);
+    CHECK_FALSE(t->recording);
+}

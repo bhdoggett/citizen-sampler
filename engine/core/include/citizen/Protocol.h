@@ -25,12 +25,17 @@ struct Release { std::string padId; std::string note; };
 struct SetTunerPad { std::optional<std::string> padId; };
 struct PreviewSample { std::string url; };
 struct StopPreview {};
+// Kit or one output pair per pad; a plugin setting saved with the session
+struct SetPadLayout { PadLayout layout; };
+// The UI asks again for the hostContext it may have missed while loading
+struct RequestHostContext {};
 } // namespace cmd
 
 using Command = std::variant<cmd::SetPad, cmd::RemovePad, cmd::SetLoops, cmd::SetCurrentLoop,
                              cmd::Play, cmd::Stop, cmd::SetRecording, cmd::SetMetronome,
                              cmd::Press, cmd::Release, cmd::SetTunerPad, cmd::PreviewSample,
-                             cmd::StopPreview>;
+                             cmd::StopPreview, cmd::SetPadLayout,
+                             cmd::RequestHostContext>;
 
 namespace evt {
 struct Transport {
@@ -39,6 +44,12 @@ struct Transport {
     Loop loop;
     double position;     // seconds into the loop
     double loopDuration; // seconds
+};
+struct HostContext {
+    bool isPlugin;
+    PadLayout layout;
+    std::optional<double> tempo; // the host's tempo, when it reports one
+    bool hostPlaying;
 };
 struct VoiceStarted { std::string padId; std::string note; };
 struct VoiceEnded { std::string padId; std::string note; };
@@ -53,6 +64,6 @@ struct PreviewEnded { std::string url; };
 
 using Event = std::variant<evt::Transport, evt::VoiceStarted, evt::VoiceEnded, evt::HitRecorded,
                            evt::Loading, evt::PadLoaded, evt::PadLoadFailed, evt::Pitch,
-                           evt::PreviewStarted, evt::PreviewEnded>;
+                           evt::PreviewStarted, evt::PreviewEnded, evt::HostContext>;
 
 } // namespace citizen

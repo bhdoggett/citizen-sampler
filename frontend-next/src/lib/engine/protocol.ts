@@ -25,7 +25,12 @@ export type EngineCommand =
   | { type: "release"; padId: string; note: string }
   | { type: "setTunerPad"; padId: string | null }
   | { type: "previewSample"; url: string }
-  | { type: "stopPreview" };
+  | { type: "stopPreview" }
+  // Plugin only: kit, or one output pair per pad
+  | { type: "setPadLayout"; layout: HostContext["layout"] }
+  // Asks for a fresh hostContext event, in case the first was sent before
+  // the UI was listening
+  | { type: "requestHostContext" };
 
 export type TransportEvent = {
   type: "transport";
@@ -37,8 +42,17 @@ export type TransportEvent = {
   loopDuration: number;
 };
 
+export type HostContext = {
+  isPlugin: boolean;
+  layout: "kit" | "multiOut";
+  // BPM reported by the host, null when there is none
+  tempo: number | null;
+  hostPlaying: boolean;
+};
+
 export type EngineEvent =
   | TransportEvent
+  | ({ type: "hostContext" } & HostContext)
   | { type: "voiceStarted"; padId: string; note: string }
   | { type: "voiceEnded"; padId: string; note: string }
   | { type: "hitRecorded"; padId: string; loop: LoopName; event: SampleEventFE }
@@ -54,11 +68,23 @@ export type StemAudio = {
   channels: Float32Array[];
 };
 
+// What a native stem export wrote; failed counts stems it could not write
+export type SavedStems = { saved: number; failed?: number; folder?: string };
+
 export interface Engine {
   send(command: EngineCommand): void;
   subscribe(listener: (event: EngineEvent) => void): () => void;
   // Browsers only allow audio after a user gesture
   start(): Promise<void>;
   renderStem(padId: string, loop: LoopName): Promise<StemAudio | null>;
+  // Browser download on the web; a file in ~/Music/Citizen Sampler/MIDI in
+  // the desktop app and plugin
+  saveMidi(fileName: string, bytes: Uint8Array): Promise<void>;
+  // Desktop app and plugin only: write every stem as a WAV file under
+  // ~/Music/Citizen Sampler/Stems and show the folder. The web downloads
+  // each stem from renderStem instead.
+  saveStems?(songTitle: string): Promise<SavedStems>;
+  // Desktop app and plugin only: drag the file out of the window, into a DAW
+  dragMidi?(fileName: string, bytes: Uint8Array): void;
   dispose(): void;
 }

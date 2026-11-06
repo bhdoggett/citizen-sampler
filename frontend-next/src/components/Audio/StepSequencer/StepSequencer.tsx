@@ -7,7 +7,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import { useTransportAnchor } from "src/lib/engine/react";
+import { useEffectiveLoopSettings, useTransportAnchor } from "src/lib/engine/react";
 import { useAllSamples, useLoops } from "src/lib/song/react";
 import { currentPosition } from "src/lib/engine/transportClock";
 import { useAudioContext } from "src/app/contexts/AudioContext";
@@ -67,7 +67,8 @@ const StepSequencer: React.FC<StepSequencerProps> = ({ maxHeight }) => {
   const transportAnchor = useTransportAnchor();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const loopSettings = allLoopSettings[currentLoop];
+  // Read-only: in the plugin it carries the host tempo, so it is never saved
+  const loopSettings = useEffectiveLoopSettings(allLoopSettings[currentLoop]);
 
   const { totalColumns, gridEvents, bars, beats } = useSequencerGrid({
     loopSettings,

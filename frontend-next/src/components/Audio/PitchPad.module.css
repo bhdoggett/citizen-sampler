@@ -32,3 +32,10 @@
 .pitchPad:focus-visible {
   outline: none;
 }
+
+.pitchPad:disabled,
+.pitchPad:disabled:hover {
+  color: var(--muted);
+  background: var(--paper-2);
+  cursor: not-allowed;
+}

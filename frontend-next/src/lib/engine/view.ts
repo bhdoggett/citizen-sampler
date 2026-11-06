@@ -1,4 +1,4 @@
-import type { EngineEvent } from "./protocol";
+import type { EngineEvent, HostContext } from "./protocol";
 import type { TransportAnchor } from "./transportClock";
 
 type VoiceStart = { note: string; startedAt: number; endedAt: number | null };
@@ -6,11 +6,14 @@ type VoiceStart = { note: string; startedAt: number; endedAt: number | null };
 // What the UI knows about the engine, built only from engine events
 export type EngineViewState = {
   transport: TransportAnchor;
+  host: HostContext;
   // Sounding notes per pad
   voices: Record<string, readonly string[]>;
   // Latest voice per pad, for the waveform playhead
   lastVoice: Record<string, VoiceStart>;
   loadingPads: number;
+  // Seconds of each pad's loaded sample
+  padDurations: Record<string, number>;
   pitch: { padId: string; frequency: number | null } | null;
   preview: { url: string; duration: number; startedAt: number } | null;
 };
@@ -33,9 +36,11 @@ const initialState = (now: number): EngineViewState => ({
     loopDuration: 0,
     receivedAt: now,
   },
+  host: { isPlugin: false, layout: "kit", tempo: null, hostPlaying: false },
   voices: {},
   lastVoice: {},
   loadingPads: 0,
+  padDurations: {},
   pitch: null,
   preview: null,
 });
@@ -48,6 +53,10 @@ function reduce(
   switch (event.type) {
     case "transport":
       return { ...state, transport: { ...event, receivedAt: now } };
+    case "hostContext": {
+      const { isPlugin, layout, tempo, hostPlaying } = event;
+      return { ...state, host: { isPlugin, layout, tempo, hostPlaying } };
+    }
     case "voiceStarted": {
       const notes = state.voices[event.padId] ?? [];
       return {
@@ -79,6 +88,10 @@ function reduce(
     }
     case "loading":
       return { ...state, loadingPads: event.pending };
+    case "padLoaded":
+      return state.padDurations[event.padId] === event.duration
+        ? state
+        : { ...state, padDurations: { ...state.padDurations, [event.padId]: event.duration } };
     case "pitch":
       return { ...state, pitch: { padId: event.padId, frequency: event.frequency } };
     case "previewStarted":
